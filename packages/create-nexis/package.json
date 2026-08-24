@@ -1,6 +1,6 @@
 {
   "name": "@mohammedaydan/create-nexis",
-  "version": "0.1.2",
+  "version": "2.0.0",
   "description": "Create a Nexis application",
   "type": "module",
   "files": [
@@ -18,7 +18,8 @@
     "access": "public"
   },
   "bin": {
-    "create-nexis": "dist/bin.js"
+    "create-nexis": "dist/bin.js",
+    "create-nexis-app": "dist/bin.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json"
