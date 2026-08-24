@@ -2,6 +2,8 @@ import type { Serializable } from '@nexis/core'
 import { isSerializable } from '@nexis/core'
 
 export const RESUME_FORMAT_VERSION = 1 as const
+export const MAX_RESUME_DEPTH = 8
+export const MAX_RESUME_PAYLOAD_BYTES = 32 * 1024
 
 export interface ResumePayload {
   readonly version: typeof RESUME_FORMAT_VERSION
@@ -17,18 +19,51 @@ export interface ResumeManifest {
   readonly handlers: Readonly<Record<string, HandlerReference>>
 }
 
+function isResumableValue(
+  value: unknown,
+  depth = 0,
+  seen = new WeakSet<object>(),
+): value is Serializable {
+  if (depth > MAX_RESUME_DEPTH) return false
+  if (value === null || typeof value === 'string' || typeof value === 'boolean') return true
+  if (typeof value === 'number') return Number.isFinite(value)
+  if (typeof value !== 'object') return false
+  if (seen.has(value)) return false
+  seen.add(value)
+  const valid = Array.isArray(value)
+    ? value.every((item) => isResumableValue(item, depth + 1, seen))
+    : Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null
+      ? Object.values(value as Record<string, unknown>).every((item) =>
+          isResumableValue(item, depth + 1, seen),
+        )
+      : false
+  seen.delete(value)
+  return valid
+}
+
+function payloadSize(value: string): number {
+  return new TextEncoder().encode(value).byteLength
+}
+
 export function serializeResumeState(state: unknown): string {
-  if (!isSerializable(state)) {
+  if (!isSerializable(state) || !isResumableValue(state)) {
     throw new TypeError(
-      'Nexis resumability state must contain only serializable primitives, arrays, and plain objects.',
+      `Nexis resumability state must contain only serializable plain data with maximum depth ${MAX_RESUME_DEPTH}.`,
     )
   }
 
   const payload: ResumePayload = { version: RESUME_FORMAT_VERSION, state }
-  return JSON.stringify(payload)
+  const serialized = JSON.stringify(payload)
+  if (payloadSize(serialized) > MAX_RESUME_PAYLOAD_BYTES) {
+    throw new RangeError(`Nexis resumability payload exceeds ${MAX_RESUME_PAYLOAD_BYTES} bytes.`)
+  }
+  return serialized
 }
 
 export function deserializeResumeState(serialized: string): Serializable {
+  if (payloadSize(serialized) > MAX_RESUME_PAYLOAD_BYTES) {
+    throw new RangeError(`Nexis resumability payload exceeds ${MAX_RESUME_PAYLOAD_BYTES} bytes.`)
+  }
   let payload: unknown
   try {
     payload = JSON.parse(serialized)
@@ -40,7 +75,8 @@ export function deserializeResumeState(serialized: string): Serializable {
     typeof payload !== 'object' ||
     payload === null ||
     (payload as { version?: unknown }).version !== RESUME_FORMAT_VERSION ||
-    !isSerializable((payload as { state?: unknown }).state)
+    !isSerializable((payload as { state?: unknown }).state) ||
+    !isResumableValue((payload as { state?: unknown }).state)
   ) {
     throw new TypeError('Invalid or unsupported Nexis resumability payload.')
   }
@@ -57,4 +93,32 @@ export function createHandlerReference(chunk: string, exportName: string): Handl
 export function createResumeAttribute(id: string, reference: HandlerReference): string {
   if (!/^[a-zA-Z0-9_-]+$/.test(id)) throw new TypeError('Invalid resumability boundary id.')
   return `${id}:${reference.chunk}#${reference.exportName}`
+}
+
+export type ResumeImport = (chunk: string) => Promise<Record<string, unknown>>
+
+export function bootstrapResumability(
+  root: Document | HTMLElement,
+  load: ResumeImport,
+): () => void {
+  const listeners: Array<() => void> = []
+  const elements = root.querySelectorAll<HTMLElement>('[data-nx-on-click]')
+  for (const element of elements) {
+    const attribute = element.dataset.nxOnClick
+    if (!attribute) continue
+    const separator = attribute.indexOf('#')
+    if (separator < 1) continue
+    const chunk = attribute.slice(0, separator)
+    const exportName = attribute.slice(separator + 1)
+    const onClick = async () => {
+      const module = await load(chunk)
+      const handler = module[exportName]
+      if (typeof handler !== 'function')
+        throw new TypeError(`Missing resumable handler export: ${exportName}`)
+      await handler({ element })
+    }
+    element.addEventListener('click', onClick)
+    listeners.push(() => element.removeEventListener('click', onClick))
+  }
+  return () => listeners.splice(0).forEach((dispose) => dispose())
 }

@@ -1,5 +1,5 @@
 import type { Child } from '@nexis/core'
-import { renderToString } from './index'
+import { renderToString } from './index.js'
 
 export type RenderMode =
   | { readonly mode: 'static' }

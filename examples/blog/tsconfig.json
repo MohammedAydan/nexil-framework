@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "jsx": "react-jsx",
+    "jsxImportSource": "@nexis/jsx-runtime"
+  },
+  "include": ["src/**/*.tsx", "src/**/*.ts"]
+}

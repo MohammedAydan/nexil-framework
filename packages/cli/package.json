@@ -2,6 +2,10 @@
   "name": "@nexis/cli",
   "version": "0.1.0",
   "type": "module",
+  "dependencies": {
+    "@nexis/vite-plugin": "workspace:*",
+    "vite": "^7.3.6"
+  },
   "bin": {
     "nexis": "dist/bin.js"
   },
@@ -12,7 +16,7 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json && printf '#!/usr/bin/env node\\nimport { parseCommand, helpText } from \"./index.js\";\\nconsole.log(helpText());\\n' > dist/bin.js",
+    "build": "tsc -p tsconfig.json",
     "test": "vitest run"
   }
 }

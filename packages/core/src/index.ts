@@ -42,15 +42,24 @@ export function element(
   return { kind: 'element', tag, props, children }
 }
 
-export function isSerializable(value: unknown): value is Serializable {
+export function isSerializable(
+  value: unknown,
+  seen = new WeakSet<object>(),
+): value is Serializable {
   if (value === null || typeof value === 'string' || typeof value === 'boolean') return true
   if (typeof value === 'number') return Number.isFinite(value)
-  if (Array.isArray(value)) return value.every(isSerializable)
   if (typeof value !== 'object') return false
+  if (seen.has(value)) return false
+  seen.add(value)
 
   const prototype = Object.getPrototypeOf(value)
-  if (prototype !== Object.prototype && prototype !== null) return false
-  return Object.values(value as Record<string, unknown>).every(isSerializable)
+  const valid = Array.isArray(value)
+    ? value.every((item) => isSerializable(item, seen))
+    : prototype === Object.prototype || prototype === null
+      ? Object.values(value as Record<string, unknown>).every((item) => isSerializable(item, seen))
+      : false
+  seen.delete(value)
+  return valid
 }
 
 export interface RequestContext {

@@ -1,5 +1,7 @@
-import { mkdir, writeFile } from 'node:fs/promises'
-import { join, resolve } from 'node:path'
+import { mkdir, readdir, stat, writeFile } from 'node:fs/promises'
+import { join, relative, resolve } from 'node:path'
+import { build, createServer, preview } from 'vite'
+import nexis from '@nexis/vite-plugin'
 
 export type NexisCommand = 'create' | 'dev' | 'build' | 'start' | 'check' | 'analyze' | 'routes'
 
@@ -49,6 +51,62 @@ function assertProjectName(name: string): void {
       'Project name must be 1–64 characters, start with a letter, and contain no path separators.',
     )
   }
+}
+
+async function discoverRoutes(directory: string, root: string): Promise<string[]> {
+  const entries = await readdir(directory, { withFileTypes: true })
+  const routes: string[] = []
+  for (const entry of entries) {
+    const file = join(directory, entry.name)
+    if (entry.isDirectory()) routes.push(...(await discoverRoutes(file, root)))
+    else if (/\.(tsx|jsx|ts|js)$/.test(entry.name) && !entry.name.startsWith('layout.'))
+      routes.push(relative(root, file))
+  }
+  return routes.sort()
+}
+
+export async function runCli(argv: readonly string[], cwd = process.cwd()): Promise<string> {
+  const parsed = parseCommand(argv)
+  if (parsed.command === 'help') return helpText()
+  if (parsed.command === 'create') {
+    const name = parsed.args[0]
+    if (!name) throw new Error('Usage: nexis create <name>')
+    return `Created ${await createProject(name, cwd)}`
+  }
+
+  const root = resolve(cwd)
+  if (parsed.command === 'routes') {
+    const routes = await discoverRoutes(join(root, 'src', 'routes'), join(root, 'src', 'routes'))
+    return routes.join('\n')
+  }
+  if (parsed.command === 'analyze') {
+    const routes = await discoverRoutes(join(root, 'src', 'routes'), join(root, 'src', 'routes'))
+    return routes
+      .map(
+        (route) =>
+          `Route: /${route
+            .replace(/\\/g, '/')
+            .replace(/\.(tsx|jsx|ts|js)$/, '')
+            .replace(/\/index$/, '')}`,
+      )
+      .join('\n')
+  }
+  if (parsed.command === 'check' || parsed.command === 'build') {
+    await build({ root, plugins: [nexis({ root })], logLevel: 'error', build: { ssr: false } })
+    return parsed.command === 'check' ? 'Nexis checks passed.' : 'Nexis build completed.'
+  }
+  if (parsed.command === 'dev') {
+    const server = await createServer({ root, plugins: [nexis({ root })] })
+    await server.listen()
+    return `Nexis dev server running at ${server.resolvedUrls?.local?.[0] ?? 'local URL'}`
+  }
+  if (parsed.command === 'start') {
+    const server = await preview({ root })
+    return `Nexis production server running at ${server.resolvedUrls?.local?.[0] ?? 'local URL'}`
+  }
+  // Keep the command exhaustive if a new command is added to NexisCommand.
+  const unreachable: never = parsed.command
+  return unreachable
 }
 
 export async function createProject(name: string, parent = process.cwd()): Promise<string> {

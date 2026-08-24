@@ -73,6 +73,6 @@ export function renderToString(root: Child): string {
   return renderChild(root)
 }
 
-export type { RenderCache, RenderMode, RenderOutput, RouteRenderInput } from './modes'
-export { renderRoute } from './modes'
-export { renderToStream } from './stream'
+export type { RenderCache, RenderMode, RenderOutput, RouteRenderInput } from './modes.js'
+export { renderRoute } from './modes.js'
+export { renderToStream } from './stream.js'

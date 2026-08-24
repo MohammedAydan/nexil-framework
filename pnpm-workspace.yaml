@@ -4,3 +4,6 @@ packages:
 
 disableSelfInstall: true
 strictPeerDependencies: true
+onlyBuiltDependencies:
+  - esbuild
+  - sharp

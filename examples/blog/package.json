@@ -1,0 +1,14 @@
+{
+  "name": "@nexis/example-blog",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@nexis/core": "workspace:*",
+    "@nexis/jsx-runtime": "workspace:*",
+    "@nexis/seo": "workspace:*",
+    "zod": "^4.1.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  }
+}

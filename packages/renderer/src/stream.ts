@@ -1,5 +1,5 @@
 import type { Child } from '@nexis/core'
-import { renderToString } from './index'
+import { renderToString } from './index.js'
 
 export function renderToStream(root: Child | Promise<Child>): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder()

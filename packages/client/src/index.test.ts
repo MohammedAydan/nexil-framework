@@ -20,6 +20,17 @@ describe('resumability payloads', () => {
   it('rejects malformed and unsupported payloads', () => {
     expect(() => deserializeResumeState('{"version":99,"state":null}')).toThrow(/unsupported/)
     expect(() => deserializeResumeState('not-json')).toThrow(/expected JSON/)
+    expect(() => deserializeResumeState('x'.repeat(32 * 1024 + 1))).toThrow(/32.*bytes/)
+  })
+
+  it('rejects deep, oversized, and cyclic state payloads', () => {
+    let deep: unknown = 'leaf'
+    for (let index = 0; index < 9; index += 1) deep = { deep }
+    expect(() => serializeResumeState(deep)).toThrow(/maximum depth 8/)
+    expect(() => serializeResumeState({ value: 'x'.repeat(32 * 1024) })).toThrow(/32.*bytes/)
+    const cyclic: Record<string, unknown> = {}
+    cyclic.self = cyclic
+    expect(() => serializeResumeState(cyclic)).toThrow(/serializable/)
   })
 })
 

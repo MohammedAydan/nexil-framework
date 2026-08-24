@@ -1,7 +1,14 @@
 {
-  "name": "@nexis/media",
+  "name": "@nexis/vite-plugin",
   "version": "0.1.0",
   "type": "module",
+  "dependencies": {
+    "@babel/parser": "^7.29.8",
+    "@babel/traverse": "^7.29.8",
+    "@nexis/compiler": "workspace:*",
+    "magic-string": "^0.30.21",
+    "vite": "^7.3.6"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -11,8 +18,5 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "vitest run"
-  },
-  "dependencies": {
-    "sharp": "^0.35.3"
   }
 }

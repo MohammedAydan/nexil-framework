@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { fontFace, imageAttributes } from './index'
+import { describe, expect, it, vi } from 'vitest'
+import { fontFace, imageAttributes, selfHostFont, transformImage } from './index'
 
 describe('imageAttributes', () => {
   it('creates responsive, lazy image attributes with stable dimensions', () => {
@@ -27,11 +27,44 @@ describe('imageAttributes', () => {
   })
 })
 
+describe('image pipeline', () => {
+  it('generates WebP and AVIF variants at requested widths', async () => {
+    const svg = new TextEncoder().encode(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect width="20" height="20" fill="red"/></svg>',
+    )
+    const variants = await transformImage(svg, 'hero', [20])
+    expect(variants.map((variant) => variant.fileName)).toEqual(['hero-20.webp', 'hero-20.avif'])
+    expect(variants.every((variant) => variant.bytes.byteLength > 0)).toBe(true)
+  })
+})
+
 describe('fontFace', () => {
   it('creates a self-hosted woff2 declaration with swap by default', () => {
     expect(
       fontFace({ family: 'Inter', weight: [400, 600], source: '/fonts/inter.woff2' }),
     ).toContain('font-display:swap')
+  })
+
+  it('self-hosts an allowlisted font and returns preload metadata', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(new Uint8Array([1, 2, 3]), { headers: { 'content-type': 'font/woff2' } }),
+      ),
+    )
+    const writes: Array<{ fileName: string; bytes: Uint8Array }> = []
+    const result = await selfHostFont(
+      'https://fonts.example.test/inter.woff2',
+      async (fileName, bytes) => {
+        writes.push({ fileName, bytes })
+      },
+      ['https://fonts.example.test'],
+    )
+    expect(result.preload.as).toBe('font')
+    expect(result.preload.crossOrigin).toBe('anonymous')
+    expect(writes[0]?.fileName).toBe('inter.woff2')
+    vi.unstubAllGlobals()
   })
 
   it('rejects unsafe family names and invalid weights', () => {
