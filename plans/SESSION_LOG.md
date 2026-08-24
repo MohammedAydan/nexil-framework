@@ -1,5 +1,42 @@
 # Session Log
 
+## Session: 2026-08-25 ~01:30–03:00 (local) — v2.0.0 GA
+
+### What was done
+
+- Resumability runtime unified (ADR-005): RESUMABILITY_BOOTSTRAP owned by
+  vite-plugin, imported via absolute /nexis-chunks/ URLs; dev middleware serves
+  bootstrap+chunks; builds emit identical static paths; TS handler chunks pass
+  through esbuild (plain-JS output guaranteed, regression-tested).
+- transformNexisSource became async (esbuild); all callers updated.
+- Scaffold templates upgraded: real resumable counter, bootstrap script tag,
+  DOM libs, reactivity dependency, ^2.0.0 ranges, create-nexis-app bin alias
+  (ADR-002 amendment), invokedAs-aware usage message.
+- README rewritten as GA documentation hub (truthful APIs only).
+- tests/e2e/deno-runtime.spec.ts added (adapters/renderRoute modes incl ISR
+  SWR/escaping/bootstrap contract); playwright testIgnore; CI steps added;
+  --allow-env required (vite probes env); bootstrap extracted to zero-dep
+  module so the spec never loads vite under Deno.
+- All 18 public packages bumped to 2.0.0 (ADR-006); tag v2.0.0 pushed;
+  Publish packages workflow completed SUCCESS on first live run.
+- External consumer validation at 2.0.0: dlx scaffold → install (all five deps
+  resolve at 2.0.0) → build → check:budget → start serves 200 (+bootstrap).
+  create-nexis-app alias form verified via pnpm dlx --package=…
+
+### Incident notes
+
+- Accidentally overwrote vite-plugin/src/index.ts with a fragment (write tool
+  misuse); restored from git immediately, then applied the intended edit.
+- Two CI quality failures were caught and root-caused: (1) Deno env capability,
+  (2) vite-in-barrel layering; both fixed and pushed.
+
+### State at end of session
+
+- Registry: all packages at 2.0.0 (publish workflow green).
+- Main HEAD da94162 awaiting green quality confirmation (deno fix).
+- Next: none blocking; optional follow-up = route HTML emission in build
+  (documented roadmap in README limitations discussion).
+
 ## Session: 2026-08-25 ~00:20–01:30 (local)
 
 ### What was done
