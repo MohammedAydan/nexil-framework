@@ -1,10 +1,5 @@
 export type Serializable =
-  | string
-  | number
-  | boolean
-  | null
-  | Serializable[]
-  | { readonly [key: string]: Serializable }
+  string | number | boolean | null | Serializable[] | { readonly [key: string]: Serializable }
 
 export type Child = RenderNode | string | number | boolean | null | undefined | Child[]
 
@@ -64,6 +59,9 @@ export interface RequestContext {
   readonly values: Map<symbol, unknown>
 }
 
-export function createRequestContext(request: Request, id = crypto.randomUUID()): RequestContext {
+export function createRequestContext(
+  request: Request,
+  id: string = crypto.randomUUID(),
+): RequestContext {
   return { request, id, values: new Map() }
 }

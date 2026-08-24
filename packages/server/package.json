@@ -2,10 +2,13 @@
   "name": "@nexis/server",
   "version": "0.1.0",
   "type": "module",
+  "dependencies": {
+    "@nexis/core": "workspace:*"
+  },
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
   "scripts": {

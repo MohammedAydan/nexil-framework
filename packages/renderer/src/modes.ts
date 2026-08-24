@@ -42,16 +42,28 @@ export async function renderRoute(input: RouteRenderInput): Promise<RenderOutput
     if (!input.cache) throw new TypeError('ISR requires an injected cache implementation.')
     const cached = await input.cache.get(input.key)
     if (cached && cached.expiresAt > now()) {
-      return { html: cached.html, mode: 'isr', cacheControl: `s-maxage=${mode.revalidate}`, stale: false }
+      return {
+        html: cached.html,
+        mode: 'isr',
+        cacheControl: `s-maxage=${mode.revalidate}`,
+        stale: false,
+      }
     }
 
     const html = renderToString(await input.render())
     await input.cache.set(input.key, { html, expiresAt: now() + mode.revalidate * 1000 })
-    return { html, mode: 'isr', cacheControl: `s-maxage=${mode.revalidate}`, stale: Boolean(cached) }
+    return {
+      html,
+      mode: 'isr',
+      cacheControl: `s-maxage=${mode.revalidate}`,
+      stale: Boolean(cached),
+    }
   }
 
   const html = renderToString(await input.render())
-  if (mode.mode === 'static') return { html, mode: 'static', cacheControl: 'public, immutable', stale: false }
-  if (mode.mode === 'partial') return { html, mode: 'partial', cacheControl: 'public, max-age=0', stale: false }
+  if (mode.mode === 'static')
+    return { html, mode: 'static', cacheControl: 'public, immutable', stale: false }
+  if (mode.mode === 'partial')
+    return { html, mode: 'partial', cacheControl: 'public, max-age=0', stale: false }
   return { html, mode: 'server', cacheControl: 'private, no-store', stale: false }
 }

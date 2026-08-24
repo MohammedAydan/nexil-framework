@@ -19,9 +19,11 @@ describe('module boundaries', () => {
   })
 
   it('detects secret-like environment access in client modules', () => {
-    expect(findSecretExposure('src/client/config.ts', 'const x = process.env.API_SECRET')?.code).toBe(
-      'NEXIS_SECRET_EXPOSURE',
-    )
-    expect(findSecretExposure('src/server/config.ts', 'const x = process.env.API_SECRET')).toBeUndefined()
+    expect(
+      findSecretExposure('src/client/config.ts', 'const x = process.env.API_SECRET')?.code,
+    ).toBe('NEXIS_SECRET_EXPOSURE')
+    expect(
+      findSecretExposure('src/server/config.ts', 'const x = process.env.API_SECRET'),
+    ).toBeUndefined()
   })
 })

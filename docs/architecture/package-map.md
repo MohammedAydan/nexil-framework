@@ -18,24 +18,24 @@ compiler -> dev-server -> cli
 
 ## Package ownership
 
-| Package | Initial status | Allowed responsibilities |
-|---|---|---|
-| `core` | active | nodes, components, serializable values, request context |
-| `reactivity` | active | signals, computed values, subscriptions |
-| `jsx-runtime` | active | JSX factory and intrinsic types |
-| `renderer` | active | escaped deterministic SSR output and render modes |
-| `client` | active | versioned resumability payloads and handler references |
-| `compiler` | active | boundary diagnostics and performance budgets |
-| `server` | active | request-scoped data, secure cookies, security headers |
-| `router` | active | traversal-safe route discovery and matching |
-| `seo` | active | validated metadata, JSON-LD, sitemap, robots |
-| `media` | active | dimension-safe image and local font contracts |
-| `css` | active | deterministic compile-time style extraction |
-| `actions` | active | validation, authorization, origin and idempotency primitives |
-| `state` | active | scoped stores, selectors, snapshots, lifecycle |
-| `dev-server` | planned | HMR and development diagnostics |
-| `cli` | planned | create, dev, build, start, check, analyze, routes |
-| `adapters` | active | Node, Cloudflare, Deno runtime integration |
+| Package       | Initial status | Allowed responsibilities                                     |
+| ------------- | -------------- | ------------------------------------------------------------ |
+| `core`        | active         | nodes, components, serializable values, request context      |
+| `reactivity`  | active         | signals, computed values, subscriptions                      |
+| `jsx-runtime` | active         | JSX factory and intrinsic types                              |
+| `renderer`    | active         | escaped deterministic SSR output and render modes            |
+| `client`      | active         | versioned resumability payloads and handler references       |
+| `compiler`    | active         | boundary diagnostics and performance budgets                 |
+| `server`      | active         | request-scoped data, secure cookies, security headers        |
+| `router`      | active         | traversal-safe route discovery and matching                  |
+| `seo`         | active         | validated metadata, JSON-LD, sitemap, robots                 |
+| `media`       | active         | dimension-safe image and local font contracts                |
+| `css`         | active         | deterministic compile-time style extraction                  |
+| `actions`     | active         | validation, authorization, origin and idempotency primitives |
+| `state`       | active         | scoped stores, selectors, snapshots, lifecycle               |
+| `dev-server`  | planned        | HMR and development diagnostics                              |
+| `cli`         | planned        | create, dev, build, start, check, analyze, routes            |
+| `adapters`    | active         | Node, Cloudflare, Deno runtime integration                   |
 
 ## Rules
 

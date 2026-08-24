@@ -15,9 +15,9 @@ async function readText(stream: ReadableStream<Uint8Array>): Promise<string> {
 
 describe('renderToStream', () => {
   it('streams asynchronously resolved HTML', async () => {
-    await expect(readText(renderToStream(Promise.resolve(element('h1', {}, 'Streamed'))))).resolves.toBe(
-      '<h1>Streamed</h1>',
-    )
+    await expect(
+      readText(renderToStream(Promise.resolve(element('h1', {}, 'Streamed')))),
+    ).resolves.toBe('<h1>Streamed</h1>')
   })
 
   it('propagates render failures to the reader', async () => {

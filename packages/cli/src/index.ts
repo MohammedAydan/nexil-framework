@@ -8,12 +8,21 @@ export interface ParsedCommand {
   readonly args: readonly string[]
 }
 
-const commands = new Set<NexisCommand>(['create', 'dev', 'build', 'start', 'check', 'analyze', 'routes'])
+const commands = new Set<NexisCommand>([
+  'create',
+  'dev',
+  'build',
+  'start',
+  'check',
+  'analyze',
+  'routes',
+])
 
 export function parseCommand(argv: readonly string[]): ParsedCommand {
   const [first, ...args] = argv
   if (!first || first === '--help' || first === '-h') return { command: 'help', args }
-  if (!commands.has(first as NexisCommand)) throw new Error(`Unknown Nexis command: ${first}. Run nexis --help.`)
+  if (!commands.has(first as NexisCommand))
+    throw new Error(`Unknown Nexis command: ${first}. Run nexis --help.`)
   return { command: first as NexisCommand, args }
 }
 
@@ -36,7 +45,9 @@ export function helpText(): string {
 
 function assertProjectName(name: string): void {
   if (!/^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/.test(name) || name === 'node_modules') {
-    throw new TypeError('Project name must be 1–64 characters, start with a letter, and contain no path separators.')
+    throw new TypeError(
+      'Project name must be 1–64 characters, start with a letter, and contain no path separators.',
+    )
   }
 }
 

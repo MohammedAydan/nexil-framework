@@ -5,7 +5,10 @@ describe('request-scoped data', () => {
   it('deduplicates concurrent requests with the same key within one request', async () => {
     const context = createDataContext(new Request('https://example.test/'))
     const loader = vi.fn(async () => 'value')
-    const [first, second] = await Promise.all([data(context, 'product:1', loader), data(context, 'product:1', loader)])
+    const [first, second] = await Promise.all([
+      data(context, 'product:1', loader),
+      data(context, 'product:1', loader),
+    ])
     expect(first).toBe('value')
     expect(second).toBe('value')
     expect(loader).toHaveBeenCalledTimes(1)

@@ -15,7 +15,9 @@ export interface ServerAction<Input, Output> {
   execute(context: ActionContext, input: unknown): Promise<Output>
 }
 
-export function action<Input, Output>(options: ActionOptions<Input, Output>): ServerAction<Input, Output> {
+export function action<Input, Output>(
+  options: ActionOptions<Input, Output>,
+): ServerAction<Input, Output> {
   return {
     async execute(context, input) {
       const validated = await options.validate(input)
@@ -25,7 +27,10 @@ export function action<Input, Output>(options: ActionOptions<Input, Output>): Se
   }
 }
 
-export function assertTrustedOrigin(request: Request, allowedOrigins: readonly string[] = []): void {
+export function assertTrustedOrigin(
+  request: Request,
+  allowedOrigins: readonly string[] = [],
+): void {
   const origin = request.headers.get('origin')
   if (!origin) return
   let normalized: string

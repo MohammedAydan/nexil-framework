@@ -25,10 +25,7 @@ export interface BudgetReport {
   readonly violations: readonly BudgetViolation[]
 }
 
-export function checkBudget(
-  input: RouteBudgetInput,
-  budget = DEFAULT_BUDGET,
-): BudgetReport {
+export function checkBudget(input: RouteBudgetInput, budget = DEFAULT_BUDGET): BudgetReport {
   const violations: BudgetViolation[] = []
   const clientLimit = input.interactive
     ? budget.interactiveClientJsGzipBytes

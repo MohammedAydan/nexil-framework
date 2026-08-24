@@ -18,9 +18,9 @@ describe('stores', () => {
   })
 
   it('rejects non-serializable initial state and state updates', () => {
-    expect(() => createStore({ fn: () => undefined })).toThrow(/serializable/)
+    expect(() => createStore({ fn: () => undefined } as never)).toThrow(/serializable/)
     const store = createStore({ value: 1 })
-    expect(() => store.set({ fn: () => undefined })).toThrow(/serializable/)
+    expect(() => store.set({ fn: () => undefined } as never)).toThrow(/serializable/)
   })
 
   it('reuses stores by scope and key and blocks use after registry disposal', () => {

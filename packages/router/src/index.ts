@@ -17,12 +17,18 @@ export interface RouteMatch {
 }
 
 function normalizeFile(file: string): string[] {
-  if (file.includes('\\') || file.split('/').includes('..')) throw new TypeError('Unsafe route file path.')
-  return file.replace(/^\.?\//, '').split('/').filter(Boolean)
+  if (file.includes('\\') || file.split('/').includes('..'))
+    throw new TypeError('Unsafe route file path.')
+  return file
+    .replace(/^\.?\//, '')
+    .split('/')
+    .filter(Boolean)
 }
 
 export function routeFromFile(file: string): RouteRecord {
-  const segments = normalizeFile(file)
+  let segments = normalizeFile(file)
+  const routesIndex = segments.lastIndexOf('routes')
+  if (routesIndex >= 0) segments = segments.slice(routesIndex + 1)
   if (segments.length === 0) throw new TypeError('Route file cannot be empty.')
   const filename = segments.pop() as string
   const stem = filename.replace(/\.(tsx|ts|jsx|js)$/, '')
@@ -47,7 +53,8 @@ export function routeFromFile(file: string): RouteRecord {
       params.push({ name, kind: 'dynamic' })
       return [`:${name}`]
     }
-    if (segment.includes('[') || segment.includes(']')) throw new TypeError(`Invalid route segment: ${segment}`)
+    if (segment.includes('[') || segment.includes(']'))
+      throw new TypeError(`Invalid route segment: ${segment}`)
     params.push({ name: segment, kind: 'static' })
     return [segment]
   })
@@ -56,13 +63,22 @@ export function routeFromFile(file: string): RouteRecord {
     file,
     pattern: `/${patternParts.join('/')}` || '/',
     params,
-    score: params.reduce((total, param) => total + (param.kind === 'static' ? 10 : param.kind === 'dynamic' ? 5 : 1), 0),
+    score: params.reduce(
+      (total, param) => total + (param.kind === 'static' ? 10 : param.kind === 'dynamic' ? 5 : 1),
+      0,
+    ),
   }
 }
 
 export function matchRoute(route: RouteRecord, pathname: string): RouteMatch | undefined {
-  const pathSegments = pathname.replace(/^\/+|\/+$/g, '').split('/').filter(Boolean)
-  const routeSegments = route.pattern.replace(/^\/+|\/+$/g, '').split('/').filter(Boolean)
+  const pathSegments = pathname
+    .replace(/^\/+|\/+$/g, '')
+    .split('/')
+    .filter(Boolean)
+  const routeSegments = route.pattern
+    .replace(/^\/+|\/+$/g, '')
+    .split('/')
+    .filter(Boolean)
   const params: Record<string, string | string[]> = {}
   let pathIndex = 0
 
@@ -91,7 +107,10 @@ export function matchRoute(route: RouteRecord, pathname: string): RouteMatch | u
   return { route, params }
 }
 
-export function resolveRoute(routes: readonly RouteRecord[], pathname: string): RouteMatch | undefined {
+export function resolveRoute(
+  routes: readonly RouteRecord[],
+  pathname: string,
+): RouteMatch | undefined {
   return [...routes]
     .sort((left, right) => right.score - left.score || right.pattern.length - left.pattern.length)
     .map((route) => matchRoute(route, pathname))

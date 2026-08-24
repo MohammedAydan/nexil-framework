@@ -2,6 +2,10 @@
   "name": "@nexis/example-hello",
   "private": true,
   "type": "module",
+  "dependencies": {
+    "@nexis/core": "workspace:*",
+    "@nexis/jsx-runtime": "workspace:*"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json"
   }

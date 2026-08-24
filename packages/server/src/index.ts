@@ -9,7 +9,11 @@ export function createDataContext(request: Request): DataContext {
   return { request, pending: new Map() }
 }
 
-export function data<T>(context: DataContext, key: string, loader: () => T | Promise<T>): Promise<T> {
+export function data<T>(
+  context: DataContext,
+  key: string,
+  loader: () => T | Promise<T>,
+): Promise<T> {
   if (!/^[\w:./-]+$/.test(key)) throw new TypeError('Data keys must be non-empty safe identifiers.')
   const existing = context.pending.get(key)
   if (existing) return existing as Promise<T>
@@ -37,11 +41,13 @@ export function serializeCookie(name: string, value: string, options: CookieOpti
   assertToken(value, 'value')
   const path = options.path ?? '/'
   if (!path.startsWith('/') || /[\r\n;]/.test(path)) throw new TypeError('Invalid cookie path.')
-  const parts = [`${name}=${encodeURIComponent(value)}`, `Path=${path}`, `SameSite=${options.sameSite ?? 'Lax'}`]
+  const parts = [`${name}=${encodeURIComponent(value)}`, `Path=${path}`]
   if (options.secure ?? true) parts.push('Secure')
   if (options.httpOnly ?? true) parts.push('HttpOnly')
+  parts.push(`SameSite=${options.sameSite ?? 'Lax'}`)
   if (options.maxAge !== undefined) {
-    if (!Number.isInteger(options.maxAge) || options.maxAge < 0) throw new TypeError('Invalid cookie maxAge.')
+    if (!Number.isInteger(options.maxAge) || options.maxAge < 0)
+      throw new TypeError('Invalid cookie maxAge.')
     parts.push(`Max-Age=${options.maxAge}`)
   }
   if (options.expires) parts.push(`Expires=${options.expires.toUTCString()}`)
@@ -53,10 +59,14 @@ export function serializeCookie(name: string, value: string, options: CookieOpti
 }
 
 export function createSecurityHeaders(nonce?: string): Headers {
-  if (nonce !== undefined && !/^[a-zA-Z0-9+/_-]+={0,2}$/.test(nonce)) throw new TypeError('Invalid CSP nonce.')
+  if (nonce !== undefined && !/^[a-zA-Z0-9+/_-]+={0,2}$/.test(nonce))
+    throw new TypeError('Invalid CSP nonce.')
   const scriptSource = nonce ? ` 'nonce-${nonce}'` : ''
   const headers = new Headers()
-  headers.set('Content-Security-Policy', `default-src 'self'; script-src 'self'${scriptSource}; object-src 'none'; base-uri 'self'; frame-ancestors 'none'`)
+  headers.set(
+    'Content-Security-Policy',
+    `default-src 'self'; script-src 'self'${scriptSource}; object-src 'none'; base-uri 'self'; frame-ancestors 'none'`,
+  )
   headers.set('X-Content-Type-Options', 'nosniff')
   headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
   headers.set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()')

@@ -8,43 +8,43 @@
 
 ## ما تم تسليمه
 
-| المجال | التنفيذ المتاح |
-|---|---|
-| RFC والحوكمة | `docs/adr/README.md` يثبت ADR-009 إلى ADR-015، مع package map وسياسة أمان |
-| Monorepo | manifest، pnpm workspace، TypeScript strict، Vitest، ESLint، Prettier، CI baseline |
-| Core | nodes وcomponents وserializable-value validation وrequest-local context |
-| Reactivity | writable signals وcomputed values وsubscriptions وno-op update behavior |
-| JSX | JSX factory وFragment وintrinsic typings متوافقة مع `react-jsx` |
-| SSR | deterministic string renderer، HTML escaping، safe attributes، void elements، وWeb Standard stream facade |
-| Resumability | versioned JSON envelope، رفض القيم غير القابلة للتسلسل، handler references، والتحقق من أسماء chunks |
-| Render modes | static افتراضيًا، ISR مع cache injection، server private output، وpartial experimental contract |
-| Compiler | server/client boundary diagnostics، secret-like environment detection، budget checks، وhard assertions |
-| Routing | static/dynamic/catch-all/optional catch-all matching، precedence، decoding، traversal rejection |
-| SEO | metadata validation، canonical URL validation، safe JSON-LD، sitemap، robots |
-| Media | image dimensions وalt وresponsive srcset، local font-face contracts، وpriority/loading semantics |
-| CSS | deterministic compile-time style extraction بلا styling runtime |
-| Server/actions | request-local data dedup، secure cookie defaults، CSP/security headers، trusted origins، idempotency |
-| State | scoped stores، selectors، serializable snapshots، registry reuse/disposal |
-| Adapters | Node/Cloudflare/Deno Web Standard wrappers وcapability matrix |
-| CLI/DX | safe project generator، help/parser، strict generated project config، وdev revision facade |
-| Documentation | compatibility matrix، security control matrix، release checklist، وتنفيذ report نهائي |
+| المجال         | التنفيذ المتاح                                                                                            |
+| -------------- | --------------------------------------------------------------------------------------------------------- |
+| RFC والحوكمة   | `docs/adr/README.md` يثبت ADR-009 إلى ADR-015، مع package map وسياسة أمان                                 |
+| Monorepo       | manifest، pnpm workspace، TypeScript strict، Vitest، ESLint، Prettier، CI baseline                        |
+| Core           | nodes وcomponents وserializable-value validation وrequest-local context                                   |
+| Reactivity     | writable signals وcomputed values وsubscriptions وno-op update behavior                                   |
+| JSX            | JSX factory وFragment وintrinsic typings متوافقة مع `react-jsx`                                           |
+| SSR            | deterministic string renderer، HTML escaping، safe attributes، void elements، وWeb Standard stream facade |
+| Resumability   | versioned JSON envelope، رفض القيم غير القابلة للتسلسل، handler references، والتحقق من أسماء chunks       |
+| Render modes   | static افتراضيًا، ISR مع cache injection، server private output، وpartial experimental contract           |
+| Compiler       | server/client boundary diagnostics، secret-like environment detection، budget checks، وhard assertions    |
+| Routing        | static/dynamic/catch-all/optional catch-all matching، precedence، decoding، traversal rejection           |
+| SEO            | metadata validation، canonical URL validation، safe JSON-LD، sitemap، robots                              |
+| Media          | image dimensions وalt وresponsive srcset، local font-face contracts، وpriority/loading semantics          |
+| CSS            | deterministic compile-time style extraction بلا styling runtime                                           |
+| Server/actions | request-local data dedup، secure cookie defaults، CSP/security headers، trusted origins، idempotency      |
+| State          | scoped stores، selectors، serializable snapshots، registry reuse/disposal                                 |
+| Adapters       | Node/Cloudflare/Deno Web Standard wrappers وcapability matrix                                             |
+| CLI/DX         | safe project generator، help/parser، strict generated project config، وdev revision facade                |
+| Documentation  | compatibility matrix، security control matrix، release checklist، وتنفيذ report نهائي                     |
 
 ## الملفات الرئيسية
 
-| الملف | الغرض |
-|---|---|
-| [`README.md`](./README.md) | تعريف المشروع وعقده المعماري وأوامر التطوير |
-| [`SECURITY.md`](./SECURITY.md) | سياسة الأمان وrelease severity policy |
-| [`docs/adr/README.md`](./docs/adr/README.md) | القرارات المعمارية الملزمة |
-| [`docs/architecture/package-map.md`](./docs/architecture/package-map.md) | تقسيم الحزم واتجاه الاعتماديات |
-| [`docs/security/control-matrix.md`](./docs/security/control-matrix.md) | ربط الحدود والثغرات المحتملة بضوابط واختبارات |
-| [`docs/compatibility.md`](./docs/compatibility.md) | سياسة دعم المكتبات الخارجية وPPR experimental track |
-| [`docs/release-checklist.md`](./docs/release-checklist.md) | شروط RC وProduction Ready |
-| [`packages/core/src/index.ts`](./packages/core/src/index.ts) | Core contracts |
-| [`packages/reactivity/src/index.ts`](./packages/reactivity/src/index.ts) | Signals وcomputed |
-| [`packages/renderer/src/index.ts`](./packages/renderer/src/index.ts) | SSR renderer |
-| [`packages/client/src/index.ts`](./packages/client/src/index.ts) | Resumability payloads |
-| [`packages/compiler/src/index.ts`](./packages/compiler/src/index.ts) | Compiler diagnostics وbudget |
+| الملف                                                                    | الغرض                                               |
+| ------------------------------------------------------------------------ | --------------------------------------------------- |
+| [`README.md`](./README.md)                                               | تعريف المشروع وعقده المعماري وأوامر التطوير         |
+| [`SECURITY.md`](./SECURITY.md)                                           | سياسة الأمان وrelease severity policy               |
+| [`docs/adr/README.md`](./docs/adr/README.md)                             | القرارات المعمارية الملزمة                          |
+| [`docs/architecture/package-map.md`](./docs/architecture/package-map.md) | تقسيم الحزم واتجاه الاعتماديات                      |
+| [`docs/security/control-matrix.md`](./docs/security/control-matrix.md)   | ربط الحدود والثغرات المحتملة بضوابط واختبارات       |
+| [`docs/compatibility.md`](./docs/compatibility.md)                       | سياسة دعم المكتبات الخارجية وPPR experimental track |
+| [`docs/release-checklist.md`](./docs/release-checklist.md)               | شروط RC وProduction Ready                           |
+| [`packages/core/src/index.ts`](./packages/core/src/index.ts)             | Core contracts                                      |
+| [`packages/reactivity/src/index.ts`](./packages/reactivity/src/index.ts) | Signals وcomputed                                   |
+| [`packages/renderer/src/index.ts`](./packages/renderer/src/index.ts)     | SSR renderer                                        |
+| [`packages/client/src/index.ts`](./packages/client/src/index.ts)         | Resumability payloads                               |
+| [`packages/compiler/src/index.ts`](./packages/compiler/src/index.ts)     | Compiler diagnostics وbudget                        |
 
 ## الضوابط الأمنية المطبقة
 
@@ -69,17 +69,17 @@ pnpm budget
 
 ## العناصر المتبقية قبل Production Ready
 
-| الأولوية | العنصر | سبب بقائه |
-|---|---|---|
-| P0 | تشغيل CI فعليًا وإنشاء/تثبيت `pnpm-lock.yaml` | لا يمكن اعتبار reproducibility مثبتة دون lockfile وتنفيذ فعلي |
-| P0 | Browser E2E للـresumability وforms وCSP وcookies | اختبارات unit لا تثبت سلوك المتصفح أو initial-paint execution |
-| P0 | مراجعة أمنية ديناميكية وفق control matrix | بعض الضوابط تحتاج deployment/runtime evidence |
-| P1 | ربط Vite فعليًا بـcompiler/dev-server | الموجود الآن contracts وfacades، لا build pipeline كامل |
-| P1 | actual AVIF/WebP/font asset pipeline | media contracts موجودة، والتحويل الفعلي يحتاج asset toolchain |
-| P1 | تشغيل parity على Node وCloudflare Workers وDeno Deploy | adapters موجودة، لكن smoke tests الفعلية تحتاج بيئات نشر |
-| P1 | serializer size/depth limits وfuzz harness | plain-object validation موجود، والحدود التشغيلية تحتاج توصيلًا |
-| P2 | compatibility fixtures فعلية لـaxios/zod/Prisma/Drizzle/Firebase | السياسة موثقة، لكن integrations تحتاج أمثلة build/run منفصلة |
-| P2 | إكمال dispatch الفعلي لأوامر CLI (`dev/build/start/check/analyze/routes`) | parser وgenerator وhelp موجودة؛ orchestration الكامل ما زال مطلوبًا |
+| الأولوية | العنصر                                                                    | سبب بقائه                                                           |
+| -------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| P0       | تشغيل CI فعليًا وإنشاء/تثبيت `pnpm-lock.yaml`                             | لا يمكن اعتبار reproducibility مثبتة دون lockfile وتنفيذ فعلي       |
+| P0       | Browser E2E للـresumability وforms وCSP وcookies                          | اختبارات unit لا تثبت سلوك المتصفح أو initial-paint execution       |
+| P0       | مراجعة أمنية ديناميكية وفق control matrix                                 | بعض الضوابط تحتاج deployment/runtime evidence                       |
+| P1       | ربط Vite فعليًا بـcompiler/dev-server                                     | الموجود الآن contracts وfacades، لا build pipeline كامل             |
+| P1       | actual AVIF/WebP/font asset pipeline                                      | media contracts موجودة، والتحويل الفعلي يحتاج asset toolchain       |
+| P1       | تشغيل parity على Node وCloudflare Workers وDeno Deploy                    | adapters موجودة، لكن smoke tests الفعلية تحتاج بيئات نشر            |
+| P1       | serializer size/depth limits وfuzz harness                                | plain-object validation موجود، والحدود التشغيلية تحتاج توصيلًا      |
+| P2       | compatibility fixtures فعلية لـaxios/zod/Prisma/Drizzle/Firebase          | السياسة موثقة، لكن integrations تحتاج أمثلة build/run منفصلة        |
+| P2       | إكمال dispatch الفعلي لأوامر CLI (`dev/build/start/check/analyze/routes`) | parser وgenerator وhelp موجودة؛ orchestration الكامل ما زال مطلوبًا |
 
 ## قرار الإصدار
 
@@ -87,8 +87,8 @@ pnpm budget
 
 ## المراجع
 
-[1]: https://owasp.org/www-project-application-security-verification-standard/ "OWASP Application Security Verification Standard"
-[2]: https://github.com/OWASP/ASVS "OWASP ASVS repository and Version 5.0 materials"
-[3]: https://www.w3.org/TR/CSP3/ "W3C Content Security Policy Level 3"
-[4]: https://fetch.spec.whatwg.org/ "WHATWG Fetch Standard"
-[5]: https://www.rfc-editor.org/rfc/rfc6265 "IETF RFC 6265 — HTTP State Management Mechanism"
+[1]: https://owasp.org/www-project-application-security-verification-standard/ 'OWASP Application Security Verification Standard'
+[2]: https://github.com/OWASP/ASVS 'OWASP ASVS repository and Version 5.0 materials'
+[3]: https://www.w3.org/TR/CSP3/ 'W3C Content Security Policy Level 3'
+[4]: https://fetch.spec.whatwg.org/ 'WHATWG Fetch Standard'
+[5]: https://www.rfc-editor.org/rfc/rfc6265 'IETF RFC 6265 — HTTP State Management Mechanism'

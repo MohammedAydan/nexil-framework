@@ -2,23 +2,23 @@
 
 ## Implemented in this baseline
 
-| Area | Baseline evidence |
-|---|---|
-| Architecture | ADR-009 through ADR-015 and package dependency rules |
-| Core | validated nodes, serializable values, request-local context |
-| Reactivity | writable signals, computed values, subscriptions, disposal-oriented design |
-| SSR | deterministic escaping renderer and Web Standard stream facade |
-| Resumability | versioned payloads and validated handler references |
-| Render modes | static, ISR with injected cache, server-private, and partial contracts |
-| Compiler | server/client boundary diagnostics and hard budget API |
-| Router | static, dynamic, required/optional catch-all matching with traversal rejection |
-| SEO | metadata validation, safe JSON-LD, sitemap, robots |
-| Media | local-source image dimensions/alt and self-hosted font contracts |
-| CSS | deterministic compile-time extraction contract |
+| Area           | Baseline evidence                                                                  |
+| -------------- | ---------------------------------------------------------------------------------- |
+| Architecture   | ADR-009 through ADR-015 and package dependency rules                               |
+| Core           | validated nodes, serializable values, request-local context                        |
+| Reactivity     | writable signals, computed values, subscriptions, disposal-oriented design         |
+| SSR            | deterministic escaping renderer and Web Standard stream facade                     |
+| Resumability   | versioned payloads and validated handler references                                |
+| Render modes   | static, ISR with injected cache, server-private, and partial contracts             |
+| Compiler       | server/client boundary diagnostics and hard budget API                             |
+| Router         | static, dynamic, required/optional catch-all matching with traversal rejection     |
+| SEO            | metadata validation, safe JSON-LD, sitemap, robots                                 |
+| Media          | local-source image dimensions/alt and self-hosted font contracts                   |
+| CSS            | deterministic compile-time extraction contract                                     |
 | Server/actions | request data dedup, secure cookies, CSP headers, origin and idempotency primitives |
-| State | scoped stores, selectors, snapshots, registry lifecycle |
-| Adapters | Node/Cloudflare/Deno handler wrappers and capability matrix |
-| CLI/DX | safe project generator, commands, help, and dev revision facade |
+| State          | scoped stores, selectors, snapshots, registry lifecycle                            |
+| Adapters       | Node/Cloudflare/Deno handler wrappers and capability matrix                        |
+| CLI/DX         | safe project generator, commands, help, and dev revision facade                    |
 
 ## Mandatory pre-release commands
 

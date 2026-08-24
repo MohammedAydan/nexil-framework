@@ -15,8 +15,12 @@ export interface Store<T extends Serializable> {
   readonly dispose: () => void
 }
 
-export function createStore<T extends Serializable>(initial: T, scope: StateScope = 'local'): Store<T> {
-  if (!isSerializable(initial)) throw new TypeError('Nexis store initial state must be serializable.')
+export function createStore<T extends Serializable>(
+  initial: T,
+  scope: StateScope = 'local',
+): Store<T> {
+  if (!isSerializable(initial))
+    throw new TypeError('Nexis store initial state must be serializable.')
   const signal = state(initial)
   const selectors = new Set<Unsubscribe>()
   let disposed = false
@@ -34,7 +38,8 @@ export function createStore<T extends Serializable>(initial: T, scope: StateScop
     set: (next) => {
       assertActive()
       const resolved = typeof next === 'function' ? (next as (previous: T) => T)(signal()) : next
-      if (!isSerializable(resolved)) throw new TypeError('Nexis store state must remain serializable.')
+      if (!isSerializable(resolved))
+        throw new TypeError('Nexis store state must remain serializable.')
       signal.set(resolved)
     },
     select: <Selected>(selector: (value: T) => Selected) => {
@@ -58,7 +63,11 @@ export function createStore<T extends Serializable>(initial: T, scope: StateScop
 }
 
 export interface StateRegistry {
-  readonly getOrCreate: <T extends Serializable>(scope: StateScope, key: string, initial: T) => Store<T>
+  readonly getOrCreate: <T extends Serializable>(
+    scope: StateScope,
+    key: string,
+    initial: T,
+  ) => Store<T>
   readonly dispose: () => void
 }
 
@@ -69,10 +78,10 @@ export function createStateRegistry(): StateRegistry {
       if (!/^[a-zA-Z0-9:_-]+$/.test(key)) throw new TypeError('Invalid state store key.')
       const id = `${scope}:${key}`
       const existing = stores.get(id)
-      if (existing) return existing as Store<T>
-      const created = createStore(initial, scope) as Store<Serializable>
+      if (existing) return existing as unknown as Store<T>
+      const created = createStore(initial, scope) as unknown as Store<Serializable>
       stores.set(id, created)
-      return created as Store<T>
+      return created as unknown as Store<T>
     },
     dispose: () => {
       for (const store of stores.values()) store.dispose()

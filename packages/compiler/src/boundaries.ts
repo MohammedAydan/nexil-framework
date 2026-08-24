@@ -1,7 +1,8 @@
 export type ModuleBoundary = 'server' | 'client' | 'shared'
 
 export interface BoundaryDiagnostic {
-  readonly code: 'NEXIS_SERVER_IMPORT_IN_CLIENT' | 'NEXIS_CLIENT_IMPORT_IN_SERVER' | 'NEXIS_SECRET_EXPOSURE'
+  readonly code:
+    'NEXIS_SERVER_IMPORT_IN_CLIENT' | 'NEXIS_CLIENT_IMPORT_IN_SERVER' | 'NEXIS_SECRET_EXPOSURE'
   readonly importer: string
   readonly imported?: string
   readonly message: string
@@ -35,9 +36,13 @@ export function validateImport(importer: string, imported: string): BoundaryDiag
   return undefined
 }
 
-export function findSecretExposure(moduleId: string, source: string): BoundaryDiagnostic | undefined {
+export function findSecretExposure(
+  moduleId: string,
+  source: string,
+): BoundaryDiagnostic | undefined {
   if (classifyModule(moduleId) !== 'client') return undefined
-  const secretPattern = /(?:process\.env|import\.meta\.env)\.(?:SECRET|TOKEN|PASSWORD|PRIVATE|KEY)/
+  const secretPattern =
+    /(?:process\.env|import\.meta\.env)\.[A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|PRIVATE|KEY)\b/
   if (!secretPattern.test(source)) return undefined
   return {
     code: 'NEXIS_SECRET_EXPOSURE',
