@@ -1,5 +1,5 @@
 import { mkdir, readdir, writeFile } from 'node:fs/promises'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { createInterface } from 'node:readline/promises'
 import { stdin as input, stdout as output } from 'node:process'
 
@@ -14,6 +14,26 @@ export interface ScaffoldOptions {
 export interface ResolvedScaffoldOptions {
   readonly language: ScaffoldLanguage
   readonly tailwind: boolean
+}
+
+export interface PathOperations {
+  readonly relative: (from: string, to: string) => string
+  readonly isAbsolute: (path: string) => boolean
+}
+
+export function isContainedPath(
+  parent: string,
+  child: string,
+  pathOperations: PathOperations = { relative, isAbsolute },
+  separator = sep,
+): boolean {
+  const relation = pathOperations.relative(parent, child)
+  return (
+    relation !== '' &&
+    relation !== '..' &&
+    !relation.startsWith(`..${separator}`) &&
+    !pathOperations.isAbsolute(relation)
+  )
 }
 
 const PROJECT_NAME = /^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/
@@ -152,7 +172,7 @@ export async function scaffoldProject(
   assertScaffoldProjectName(name)
   const directory = resolve(parent, name)
   const parentDirectory = resolve(parent)
-  if (directory === parentDirectory || !directory.startsWith(`${parentDirectory}/`))
+  if (!isContainedPath(parentDirectory, directory))
     throw new TypeError('Project directory must be contained by the selected parent directory.')
 
   let entries: string[] = []
@@ -178,7 +198,7 @@ export async function scaffoldProject(
   await mkdir(directory, { recursive: true })
   for (const [file, content] of Object.entries(files)) {
     const destination = resolve(directory, file)
-    if (!destination.startsWith(`${directory}/`))
+    if (!isContainedPath(directory, destination))
       throw new TypeError(`Refusing to write outside scaffold directory: ${file}`)
     await mkdir(dirname(destination), { recursive: true })
     await writeFile(destination, content, { encoding: 'utf8', flag: 'wx' })

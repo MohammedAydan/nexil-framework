@@ -1,9 +1,9 @@
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, win32 } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { createProject, helpText, parseCommand, runCli } from './index'
-import { parseScaffoldArgs, scaffoldProject } from './scaffold'
+import { isContainedPath, parseScaffoldArgs, scaffoldProject } from './scaffold'
 
 describe('Nexis CLI', () => {
   it('parses supported commands and help', () => {
@@ -21,6 +21,34 @@ describe('Nexis CLI', () => {
     await expect(runCli(['routes'], directory)).resolves.toContain('index.tsx')
     await expect(runCli(['build'], directory)).resolves.toContain('build completed')
     await expect(runCli(['analyze'], directory)).resolves.toMatch(/\/\s+\d+\s+\d+\s+static/)
+  })
+
+  it('handles Windows-style path containment without POSIX separators', () => {
+    const parent = 'D:\\Projects\\Test\\nexis-framework'
+    expect(
+      isContainedPath(
+        parent,
+        `${parent}\\my-nexis-app`,
+        { relative: win32.relative, isAbsolute: win32.isAbsolute },
+        '\\',
+      ),
+    ).toBe(true)
+    expect(
+      isContainedPath(
+        parent,
+        'D:\\Projects\\Test\\other-app',
+        { relative: win32.relative, isAbsolute: win32.isAbsolute },
+        '\\',
+      ),
+    ).toBe(false)
+    expect(
+      isContainedPath(
+        parent,
+        'D:\\Projects\\Test\\nexis-framework\\..\\escape',
+        { relative: win32.relative, isAbsolute: win32.isAbsolute },
+        '\\',
+      ),
+    ).toBe(false)
   })
 
   it('supports deterministic TSX and JSX scaffold variants', async () => {
