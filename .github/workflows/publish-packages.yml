@@ -1,18 +1,32 @@
 name: Publish packages
 
+# Releases are deliberate and tag-driven: push a `v<version>` tag (e.g. v0.1.2)
+# after updating package versions. Every push of a new tag runs the full gate
+# suite, validates the packed tarballs, then publishes all non-private packages
+# under packages/* to GitHub Packages in dependency-safe (topological) order.
+
 on:
-  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
 
 permissions:
   contents: read
   packages: write
 
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
@@ -20,30 +34,57 @@ jobs:
           version: 10.15.0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
-          registry-url: https://npm.pkg.github.com
 
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build packages
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Unit and integration tests
+        run: pnpm test
+
+      - name: Build workspace
         run: pnpm build
 
-      - name: Configure GitHub Packages scope
+      - name: Validate packed tarballs (dry run)
+        run: |
+          pnpm publish:github:dry > pack-report.log 2>&1 || { cat pack-report.log; exit 1; }
+          echo "Packages matched: $(grep -c 'npm notice package:' pack-report.log)"
+          if grep -q 'workspace:' pack-report.log; then
+            echo '::error::Unresolved workspace dependency leaked into a tarball manifest'
+            exit 1
+          fi
+          if grep -Eq 'notice .*(test\.js|test\.d\.ts)' pack-report.log; then
+            echo '::error::Test artifacts leaked into a tarball'
+            exit 1
+          fi
+
+      # Isolated npm config keeps credentials out of the workspace and out of logs.
+      - name: Configure GitHub Packages authentication
         run: |
           {
             echo "@mohammedaydan:registry=https://npm.pkg.github.com"
             echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}"
-          } > "$NPM_CONFIG_USERCONFIG"
+          } > "$RUNNER_TEMP/publish.npmrc"
         env:
-          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/.npmrc
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish framework packages
-        run: pnpm publish --recursive --filter "./packages/*" --no-git-checks --access public
+      - name: Publish public packages (dependency order)
+        run: pnpm publish:github
         env:
-          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/.npmrc
+          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/publish.npmrc
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify initializer is resolvable
+        run: npm view @mohammedaydan/create-nexis version --registry=https://npm.pkg.github.com
+        env:
+          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/publish.npmrc
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
