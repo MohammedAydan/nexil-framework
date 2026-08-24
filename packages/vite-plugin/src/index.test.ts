@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { transformNexisSource } from './index'
 
 describe('Nexis Vite transform', () => {
-  it('extracts a dollar event boundary into a hashed lazy chunk', () => {
-    const result = transformNexisSource(
+  it('extracts a dollar event boundary into a hashed lazy chunk', async () => {
+    const result = await transformNexisSource(
       "const handler = (event) => event.currentTarget.textContent = 'ok'\nconst view = <button onClick$={handler}>Click</button>",
       '/app/src/routes/index.tsx',
     )
@@ -13,26 +13,36 @@ describe('Nexis Vite transform', () => {
     expect(result.chunks[0]?.source).toContain('handler_')
   })
 
-  it('rejects server imports in client modules', () => {
-    expect(() =>
+  it('strips TypeScript annotations from emitted handler chunks', async () => {
+    const result = await transformNexisSource(
+      `export default function Counter() {\n  return <button onClick$={({ element }: { element: HTMLElement }) => { element.textContent = '1' }}>0</button>\n}\n`,
+      '/app/src/routes/counter.tsx',
+    )
+    const source = result.chunks[0]?.source ?? ''
+    expect(source).not.toContain(': { element: HTMLElement }')
+    expect(source).toContain('(event)')
+  })
+
+  it('rejects server imports in client modules', async () => {
+    await expect(
       transformNexisSource(
         "import session from '../server/session'\nexport const view = <div />",
         '/app/src/client/view.tsx',
       ),
-    ).toThrow(/NEXIS_SERVER_IMPORT_IN_CLIENT/)
+    ).rejects.toThrow(/NEXIS_SERVER_IMPORT_IN_CLIENT/)
   })
 
-  it('rejects secret-like environment access in client modules', () => {
-    expect(() =>
+  it('rejects secret-like environment access in client modules', async () => {
+    await expect(
       transformNexisSource(
         'export const key = import.meta.env.PUBLIC_API_SECRET',
         '/app/src/client/config.ts',
       ),
-    ).toThrow(/NEXIS_SECRET_EXPOSURE/)
+    ).rejects.toThrow(/NEXIS_SECRET_EXPOSURE/)
   })
 
-  it('extracts static JSX styles into CSS output', () => {
-    const result = transformNexisSource(
+  it('extracts static JSX styles into CSS output', async () => {
+    const result = await transformNexisSource(
       "const view = <div style={{ color: 'red', marginTop: 4 }} />",
       '/app/src/routes/index.tsx',
     )

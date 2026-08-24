@@ -59,7 +59,7 @@ describe('Nexis CLI', () => {
         dependencies: { '@mohammedaydan/cli': string }
         nexis: { source: string; registry: string }
       }
-      expect(packageJson.dependencies['@mohammedaydan/cli']).toBe('^0.1.0')
+      expect(packageJson.dependencies['@mohammedaydan/cli']).toBe('^2.0.0')
       expect(packageJson.nexis).toEqual({
         routeExtension: 'tsx',
         source: 'github-packages',
@@ -147,7 +147,7 @@ describe('Nexis CLI', () => {
     ) as { routes: Array<{ interactive: boolean; bootstrapGzipBytes: number }> }
     expect(manifest.routes[0]?.interactive).toBe(true)
     expect(manifest.routes[0]?.bootstrapGzipBytes).toBeGreaterThan(0)
-    expect(await readFile(join(directory, 'dist/client/bootstrap.js'), 'utf8')).toContain(
+    expect(await readFile(join(directory, 'dist/nexis-bootstrap.js'), 'utf8')).toContain(
       'querySelectorAll',
     )
   })

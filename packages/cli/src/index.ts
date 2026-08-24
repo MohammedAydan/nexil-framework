@@ -3,7 +3,7 @@ import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join, relative, resolve } from 'node:path'
 import { build, createServer, preview } from 'vite'
 import { assertBudget, checkBudget } from '@mohammedaydan/compiler'
-import nexis, { transformNexisSource } from '@mohammedaydan/vite-plugin'
+import nexis, { RESUMABILITY_BOOTSTRAP, transformNexisSource } from '@mohammedaydan/vite-plugin'
 export { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 import { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 
@@ -73,23 +73,6 @@ interface BuildManifest {
   readonly routes: readonly BuildRouteRecord[]
 }
 
-const RESUMABILITY_BOOTSTRAP = `const elements = document.querySelectorAll('[data-nx-on-click]');
-for (const element of elements) {
-  const reference = element.dataset.nxOnClick;
-  if (!reference) continue;
-  const separator = reference.indexOf('#');
-  if (separator < 1) continue;
-  const chunk = reference.slice(0, separator);
-  const exportName = reference.slice(separator + 1);
-  element.addEventListener('click', async () => {
-    const module = await import('./chunks/' + chunk);
-    const handler = module[exportName];
-    if (typeof handler !== 'function') throw new TypeError('Missing resumable handler export: ' + exportName);
-    await handler({ element });
-  });
-}
-`
-
 async function discoverRoutes(directory: string, root: string): Promise<string[]> {
   const entries = await readdir(directory, { withFileTypes: true })
   const routes: string[] = []
@@ -102,6 +85,9 @@ async function discoverRoutes(directory: string, root: string): Promise<string[]
   return routes.sort()
 }
 
+const BOOTSTRAP_FILE = 'nexis-bootstrap.js'
+const CHUNK_DIRECTORY = 'nexis-chunks'
+
 async function buildArtifacts(root: string): Promise<BuildManifest> {
   const routeRoot = join(root, 'src', 'routes')
   const routes = await discoverRoutes(routeRoot, routeRoot)
@@ -109,7 +95,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   const outputRoot = join(root, 'dist')
   await rm(outputRoot, { recursive: true, force: true })
   const serverRoot = join(outputRoot, 'server', 'routes')
-  const chunkRoot = join(outputRoot, 'client', 'chunks')
+  const chunkRoot = join(outputRoot, CHUNK_DIRECTORY)
   const assetRoot = join(outputRoot, 'client', 'assets')
   await mkdir(serverRoot, { recursive: true })
   await mkdir(chunkRoot, { recursive: true })
@@ -125,12 +111,12 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   }
   const records: BuildRouteRecord[] = []
   const cssAssets = new Set<string>()
-  const bootstrapGzipBytes = gzipSync(Buffer.from(RESUMABILITY_BOOTSTRAP)).byteLength
   let hasInteractiveRoute = false
+  const bootstrapGzipBytes = gzipSync(Buffer.from(RESUMABILITY_BOOTSTRAP)).byteLength
   for (const route of routes) {
     const sourcePath = join(routeRoot, route)
     const source = await readFile(sourcePath, 'utf8')
-    const transformed = transformNexisSource(source, sourcePath)
+    const transformed = await transformNexisSource(source, sourcePath)
     const outputName = route.replace(/\\/g, '/').replace(/\.(tsx|jsx|ts|js)$/, '.js')
     await mkdir(join(serverRoot, outputName, '..'), { recursive: true })
     await writeFile(join(serverRoot, outputName), transformed.code, 'utf8')
@@ -163,8 +149,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   }
   if (cssAssets.size > 0)
     await writeFile(join(assetRoot, 'nexis.css'), [...cssAssets].join(''), 'utf8')
-  if (hasInteractiveRoute)
-    await writeFile(join(outputRoot, 'client', 'bootstrap.js'), RESUMABILITY_BOOTSTRAP, 'utf8')
+  if (hasInteractiveRoute) await writeFile(join(outputRoot, BOOTSTRAP_FILE), RESUMABILITY_BOOTSTRAP)
   const manifest: BuildManifest = { version: 1, routes: records }
   await writeFile(
     join(outputRoot, 'nexis-manifest.json'),

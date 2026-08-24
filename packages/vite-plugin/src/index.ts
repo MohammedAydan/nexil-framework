@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { parse } from '@babel/parser'
 import MagicString from 'magic-string'
+import { transformWithEsbuild } from 'vite'
 import type { Plugin } from 'vite'
 import { findSecretExposure, validateImport } from '@mohammedaydan/compiler'
 
@@ -26,6 +27,26 @@ export interface NexisTransformResult {
   readonly chunks: readonly LazyChunk[]
   readonly css: readonly string[]
 }
+
+// Single source of truth for the resumability runtime. Chunks are imported from
+// stable absolute URLs so development (served by middleware) and production
+// (static files) behave identically.
+export const RESUMABILITY_BOOTSTRAP = `const elements = document.querySelectorAll('[data-nx-on-click]');
+for (const element of elements) {
+  const reference = element.dataset.nxOnClick;
+  if (!reference) continue;
+  const separator = reference.indexOf('#');
+  if (separator < 1) continue;
+  const chunk = reference.slice(0, separator);
+  const exportName = reference.slice(separator + 1);
+  element.addEventListener('click', async () => {
+    const module = await import('/nexis-chunks/' + chunk);
+    const handler = module[exportName];
+    if (typeof handler !== 'function') throw new TypeError('Missing resumable handler export: ' + exportName);
+    await handler({ element });
+  });
+}
+`
 
 function hash(value: string): string {
   return createHash('sha256').update(value).digest('hex').slice(0, 12)
@@ -88,10 +109,13 @@ function parseSource(source: string, id: string): AstNode {
   }
 }
 
-export function transformNexisSource(source: string, id: string): NexisTransformResult {
+export async function transformNexisSource(
+  source: string,
+  id: string,
+): Promise<NexisTransformResult> {
   const ast = parseSource(source, id)
   const moduleDiagnostics: string[] = []
-  const chunks: LazyChunk[] = []
+  const chunkSpecs: Array<{ fileName: string; exportName: string; expressionSource: string }> = []
   const css: string[] = []
   const magic = new MagicString(source)
 
@@ -124,10 +148,7 @@ export function transformNexisSource(source: string, id: string): NexisTransform
       const idHash = hash(`${id}:${start}:${expressionSource}`)
       const exportName = `handler_${idHash}`
       const fileName = `chunk_${idHash}.js`
-      chunks.push({
-        fileName,
-        source: `export async function ${exportName}(event) { return (${expressionSource})(event) }\n`,
-      })
+      chunkSpecs.push({ fileName, exportName, expressionSource })
       magic.overwrite(start, end, `data-nx-on-click="${fileName}#${exportName}"`)
     }
 
@@ -161,6 +182,22 @@ export function transformNexisSource(source: string, id: string): NexisTransform
     moduleDiagnostics.push(`[${secretDiagnostic.code}] ${secretDiagnostic.message}`)
   if (moduleDiagnostics.length > 0) throw new Error(moduleDiagnostics.join('\n'))
 
+  // Route modules may be TypeScript: strip annotations so emitted chunks are
+  // always plain JavaScript, regardless of the authoring language.
+  const isTypeScript = /\.tsx?$/.test(id)
+  const chunks: LazyChunk[] = []
+  for (const { fileName, exportName, expressionSource } of chunkSpecs) {
+    const raw = `export async function ${exportName}(event) { return (${expressionSource})(event) }\n`
+    const source_ = isTypeScript
+      ? (
+          await transformWithEsbuild(raw, `${fileName}.ts`, {
+            loader: 'ts',
+          })
+        ).code
+      : raw
+    chunks.push({ fileName, source: source_ })
+  }
+
   return {
     code: magic.toString(),
     map: magic.generateMap({ hires: true }),
@@ -179,16 +216,50 @@ export function nexis(options: { readonly root?: string } = {}): Plugin {
       void options.root
       void config.root
     },
-    transform(source, id) {
+    configureServer(server) {
+      // Serve the resumability runtime and lazily extracted handler chunks under
+      // stable URLs so interactive routes work identically in dev and production.
+      server.middlewares.use((request, response, next) => {
+        if (request.method !== 'GET') return next()
+        const url = request.url ?? ''
+        if (url === '/nexis-bootstrap.js') {
+          response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' })
+          response.end(RESUMABILITY_BOOTSTRAP)
+          return
+        }
+        const match = /^\/nexis-chunks\/([A-Za-z0-9_.-]+\.js)$/.exec(url)
+        const chunkName = match?.[1]
+        if (chunkName !== undefined) {
+          const source = generatedChunks.get(chunkName)
+          if (source === undefined) {
+            response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' })
+            response.end(`Unknown Nexis chunk: ${chunkName}`)
+            return
+          }
+          response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' })
+          response.end(source)
+          return
+        }
+        return next()
+      })
+    },
+    async transform(source, id) {
       if (!/\.(tsx|jsx|ts|js)$/.test(id) || id.includes('/node_modules/')) return null
-      const result = transformNexisSource(source, id)
+      const result = await transformNexisSource(source, id)
       for (const chunk of result.chunks) generatedChunks.set(chunk.fileName, chunk.source)
       for (const css of result.css) generatedCss.add(css)
       return { code: result.code, map: result.map }
     },
     generateBundle() {
       for (const [fileName, source] of generatedChunks) {
-        this.emitFile({ type: 'asset', fileName, source })
+        this.emitFile({ type: 'asset', fileName: `nexis-chunks/${fileName}`, source })
+      }
+      if (generatedChunks.size > 0) {
+        this.emitFile({
+          type: 'asset',
+          fileName: 'nexis-bootstrap.js',
+          source: RESUMABILITY_BOOTSTRAP,
+        })
       }
       if (generatedCss.size > 0) {
         this.emitFile({

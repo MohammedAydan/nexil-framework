@@ -143,10 +143,11 @@ function packageJson(
         analyze: 'nexis analyze',
       },
       dependencies: {
-        '@mohammedaydan/cli': dependency('cli', '^0.1.0'),
-        '@mohammedaydan/core': dependency('core', '^0.1.0'),
-        '@mohammedaydan/media': dependency('media', '^0.1.0'),
-        '@mohammedaydan/seo': dependency('seo', '^0.1.0'),
+        '@mohammedaydan/cli': dependency('cli', '^2.0.0'),
+        '@mohammedaydan/core': dependency('core', '^2.0.0'),
+        '@mohammedaydan/media': dependency('media', '^2.0.0'),
+        '@mohammedaydan/reactivity': dependency('reactivity', '^2.0.0'),
+        '@mohammedaydan/seo': dependency('seo', '^2.0.0'),
       },
       devDependencies,
       nexis: {
@@ -171,6 +172,7 @@ function tsconfig(resolved: ResolvedScaffoldOptions): string {
   const config = {
     compilerOptions: {
       target: 'ES2022',
+      lib: ['ES2022', 'DOM', 'DOM.Iterable'],
       module: 'ESNext',
       moduleResolution: 'Bundler',
       jsx: 'react-jsx',
@@ -224,6 +226,7 @@ const LANDING_HTML = `<!doctype html>
       <section class="start shell" id="start"><div><p class="eyebrow">Start with the real thing</p><h2>A small route tree.<br /><span>A serious baseline.</span></h2><p>Scaffold a landing page, inspect the output, then add interaction one boundary at a time.</p></div><div class="install-card"><div class="install-label">terminal / first light</div><code><span class="prompt">$</span> pnpm dlx @mohammedaydan/create-nexis my-app --yes</code><code><span class="prompt">$</span> cd my-app && pnpm dev</code><a class="button button-primary" href="https://github.com/MohammedAydan/nexis-framework">Open Nexis on GitHub <span>↗</span></a></div></section>
     </main>
     <footer class="site-footer shell"><span>© Nexis framework</span><span>HTML-first by design.</span><span>Built for the next request.</span></footer>
+    <script type="module" src="/nexis-bootstrap.js"></script>
   </body>
 </html>
 `
@@ -233,13 +236,27 @@ const LANDING_CSS = `:root{--ink:#0b1020;--ink-soft:#536078;--paper:#f5f7fb;--bl
 
 function routeFiles(resolved: ResolvedScaffoldOptions): Record<string, string> {
   const extension = resolved.language === 'ts' ? 'tsx' : 'jsx'
+  const typedHandler = `({ element }: { element: HTMLElement }) => {
+        const next = Number(element.textContent || '0') + 1
+        element.textContent = String(next)
+        element.dataset.nxState = String(next)
+      }`
+  const untypedHandler = `({ element }) => {
+        const next = Number(element.textContent || '0') + 1
+        element.textContent = String(next)
+        element.dataset.nxState = String(next)
+      }`
+  const counterHandler = resolved.language === 'ts' ? typedHandler : untypedHandler
   return {
     [`src/routes/layout.${extension}`]:
       resolved.language === 'ts'
         ? `export default function Layout({ children }: { children?: unknown }) {\n  return <>{children}</>\n}\n`
         : `export default function Layout({ children }) {\n  return <>{children}</>\n}\n`,
-    [`src/routes/index.${extension}`]: `export const seo = { title: 'Nexis — HTML-first web apps', description: 'Build fast, resilient interfaces with Nexis.' }\n\nexport default function HomePage() {\n  return <main><p>Framework / v2.0</p><h1>Ship the page before the script.</h1><p>Nexis is an HTML-first TypeScript framework for interfaces that arrive useful, stay fast, and wake up only where a person touches them.</p><a href="#start">Build your first route</a></main>\n}\n`,
-    [`src/routes/counter.${extension}`]: `export default function Counter() {\n  return <button onClick$={() => undefined}>Clicks: 0</button>\n}\n`,
+    [`src/routes/index.${extension}`]: `export const seo = { title: 'Nexis — HTML-first web apps', description: 'Build fast, resilient interfaces with Nexis.' }\n\nexport default async function HomePage() {\n  return <main><p>Framework / v2.0</p><h1>Ship the page before the script.</h1><p>Nexis is an HTML-first TypeScript framework for interfaces that arrive useful, stay fast, and wake up only where a person touches them.</p><a href="/counter">Try the resumable counter →</a></main>\n}\n`,
+    [`src/routes/counter.${extension}`]:
+      resolved.language === 'ts'
+        ? `// Interactive route: the onClick$ expression is extracted into a lazily\n// loaded chunk. The page ships zero application JavaScript until first click.\nexport default function CounterPage() {\n  return (\n    <main>\n      <h1>Resumable counter</h1>\n      <button data-nx-state="0" onClick$={${counterHandler}}>\n        0\n      </button>\n    </main>\n  )\n}\n`
+        : `// Interactive route: the onClick$ expression is extracted into a lazily\n// loaded chunk. The page ships zero application JavaScript until first click.\nexport default function CounterPage() {\n  return (\n    <main>\n      <h1>Resumable counter</h1>\n      <button data-nx-state="0" onClick$={${counterHandler}}>\n        0\n      </button>\n    </main>\n  )\n}\n`,
     'src/shared/types.ts': `export interface AppMetadata {\n  readonly title: string\n  readonly description?: string\n}\n`,
   }
 }
