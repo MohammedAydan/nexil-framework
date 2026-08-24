@@ -1,6 +1,8 @@
 node_modules/
 dist/
 coverage/
+*.tsbuildinfo
+*.d.ts.map
 .vite/
 .turbo/
 .env
