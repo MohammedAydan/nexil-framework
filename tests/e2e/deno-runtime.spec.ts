@@ -12,7 +12,7 @@
  */
 import { createDenoAdapter } from '../../packages/adapters/dist/index.js'
 import { renderRoute, renderToString, escapeHtml } from '../../packages/renderer/dist/index.js'
-import { RESUMABILITY_BOOTSTRAP } from '../../packages/vite-plugin/dist/index.js'
+import { RESUMABILITY_BOOTSTRAP } from '../../packages/vite-plugin/dist/bootstrap.js'
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message)
