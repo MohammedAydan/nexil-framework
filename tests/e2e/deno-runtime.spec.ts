@@ -1,7 +1,11 @@
 /**
  * Deno runtime verification for the Nexis GA release.
  *
- * Executed by Deno itself (not Playwright/Node): `deno run --allow-read tests/e2e/deno-runtime.spec.ts`
+ * Executed by Deno itself (not Playwright/Node):
+ *   deno run --allow-read --allow-env tests/e2e/deno-runtime.spec.ts
+ * (--allow-env is required because the vite-plugin barrel imports vite, which
+ * probes environment variables such as CI at import time.)
+ *
  * It exercises the compiled artifacts exactly as an edge consumer would:
  * adapters (request/response contracts), renderer (render modes), and the
  * resumability bootstrap contract that production pages depend on.
