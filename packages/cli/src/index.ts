@@ -114,6 +114,15 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   await mkdir(serverRoot, { recursive: true })
   await mkdir(chunkRoot, { recursive: true })
   await mkdir(assetRoot, { recursive: true })
+  try {
+    await writeFile(
+      join(outputRoot, 'index.html'),
+      await readFile(join(root, 'index.html'), 'utf8'),
+      'utf8',
+    )
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+  }
   const records: BuildRouteRecord[] = []
   const cssAssets = new Set<string>()
   const bootstrapGzipBytes = gzipSync(Buffer.from(RESUMABILITY_BOOTSTRAP)).byteLength

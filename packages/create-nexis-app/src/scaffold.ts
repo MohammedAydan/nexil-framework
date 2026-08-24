@@ -1,4 +1,4 @@
-import { mkdir, readdir, writeFile } from 'node:fs/promises'
+import { access, mkdir, readdir, writeFile } from 'node:fs/promises'
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { createInterface } from 'node:readline/promises'
 import { stdin as input, stdout as output } from 'node:process'
@@ -101,15 +101,39 @@ async function promptOptions(options: ScaffoldOptions): Promise<ResolvedScaffold
   }
 }
 
-function packageJson(name: string, resolved: ResolvedScaffoldOptions): string {
+async function findFrameworkRoot(start: string): Promise<string | undefined> {
+  let current = resolve(start)
+  while (true) {
+    try {
+      await access(join(current, 'pnpm-workspace.yaml'))
+      await access(join(current, 'packages', 'cli', 'package.json'))
+      await access(join(current, 'packages', 'core', 'package.json'))
+      return current
+    } catch {
+      const parent = dirname(current)
+      if (parent === current) return undefined
+      current = parent
+    }
+  }
+}
+
+function packageJson(
+  name: string,
+  resolved: ResolvedScaffoldOptions,
+  directory: string,
+  frameworkRoot?: string,
+): string {
   const extension = resolved.language === 'ts' ? 'tsx' : 'jsx'
   const devDependencies: Record<string, string> = { typescript: '^5.8.0' }
   if (resolved.tailwind) devDependencies.tailwindcss = '^4.1.0'
+  const dependency = (packageDirectory: string, publishedVersion: string): string =>
+    frameworkRoot ? 'workspace:*' : publishedVersion
   return `${JSON.stringify(
     {
       name,
       private: true,
       type: 'module',
+      packageManager: 'pnpm@10.15.0',
       scripts: {
         dev: 'nexis dev',
         build: 'nexis build',
@@ -118,13 +142,13 @@ function packageJson(name: string, resolved: ResolvedScaffoldOptions): string {
         analyze: 'nexis analyze',
       },
       dependencies: {
-        '@nexis/cli': '^0.1.0',
-        '@nexis/core': '^0.1.0',
-        '@nexis/media': '^0.1.0',
-        '@nexis/seo': '^0.1.0',
+        '@nexis/cli': dependency('cli', '^0.1.0'),
+        '@nexis/core': dependency('core', '^0.1.0'),
+        '@nexis/media': dependency('media', '^0.1.0'),
+        '@nexis/seo': dependency('seo', '^0.1.0'),
       },
       devDependencies,
-      nexis: { routeExtension: extension },
+      nexis: { routeExtension: extension, source: frameworkRoot ? 'workspace' : 'npm' },
     },
     null,
     2,
@@ -184,12 +208,22 @@ export async function scaffoldProject(
   if (entries.length > 0) throw new Error(`Directory is not empty: ${directory}`)
 
   const resolved = await promptOptions(options)
+  const frameworkRoot = await findFrameworkRoot(parent)
   const files: Record<string, string> = {
-    'package.json': packageJson(name, resolved),
+    'package.json': packageJson(name, resolved, directory, frameworkRoot),
+    'index.html': `<!doctype html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n    <title>Hello Nexis</title>\n  </head>\n  <body>\n    <main><h1>Hello Nexis</h1><p>Rendered with Nexis.</p></main>\n  </body>\n</html>\n`,
     'tsconfig.json': tsconfig(resolved),
     'README.md': `# ${name}\n\nCreated with Nexis. Run \`pnpm install\`, then \`pnpm dev\`.\n`,
     'public/favicon.ico': '',
     ...routeFiles(resolved),
+  }
+  if (frameworkRoot) {
+    const packagesDirectory = relative(directory, join(frameworkRoot, 'packages')).replace(
+      /\\/g,
+      '/',
+    )
+    files['pnpm-workspace.yaml'] =
+      `packages:\n  - "."\n  - "${packagesDirectory}/*"\ndisableSelfInstall: true\nstrictPeerDependencies: true\nonlyBuiltDependencies:\n  - esbuild\n  - sharp\nallowBuilds:\n  esbuild: true\n  sharp: true\n`
   }
   if (resolved.tailwind) {
     files['src/styles.css'] = '@import "tailwindcss";\n'

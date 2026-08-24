@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, win32 } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -17,10 +17,34 @@ describe('Nexis CLI', () => {
     const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-'))
     const directory = await createProject('demo-app', parent)
     expect(await readFile(join(directory, 'src/routes/index.tsx'), 'utf8')).toContain('Hello Nexis')
+    expect(await readFile(join(directory, 'index.html'), 'utf8')).toContain(
+      '<title>Hello Nexis</title>',
+    )
     await expect(createProject('../escape', parent)).rejects.toThrow(/Project name/)
     await expect(runCli(['routes'], directory)).resolves.toContain('index.tsx')
     await expect(runCli(['build'], directory)).resolves.toContain('build completed')
     await expect(runCli(['analyze'], directory)).resolves.toMatch(/\/\s+\d+\s+\d+\s+static/)
+  })
+
+  it('uses local workspace dependencies when scaffolded inside the repository', async () => {
+    const parent = await mkdtemp(join(process.cwd(), '.nexis-scaffold-test-'))
+    try {
+      const result = await scaffoldProject('workspace-app', parent, { yes: true, language: 'ts' })
+      const packageJson = JSON.parse(
+        await readFile(join(result.directory, 'package.json'), 'utf8'),
+      ) as {
+        dependencies: { '@nexis/cli': string }
+      }
+      expect(packageJson.dependencies['@nexis/cli']).toBe('workspace:*')
+      expect(await readFile(join(result.directory, 'pnpm-workspace.yaml'), 'utf8')).toContain(
+        'onlyBuiltDependencies:',
+      )
+      expect(await readFile(join(result.directory, 'index.html'), 'utf8')).toContain(
+        '<title>Hello Nexis</title>',
+      )
+    } finally {
+      await rm(parent, { recursive: true, force: true })
+    }
   })
 
   it('handles Windows-style path containment without POSIX separators', () => {
