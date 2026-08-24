@@ -9,6 +9,10 @@ test('basic static route ships no JavaScript requests', async ({ page }) => {
   await page.goto('/examples/basic-app/', { waitUntil: 'networkidle' })
 
   expect(await page.locator('h1').textContent()).toBe('Nexis Basic App')
+  const image = page.locator('img')
+  expect(await image.getAttribute('src')).toBe('/examples/basic-app/assets/hero-320.webp')
+  expect(await image.getAttribute('srcset')).toContain('hero-640.webp 640w')
+  expect(await page.locator('link[rel="preload"][as="font"]').count()).toBe(1)
   expect(scripts).toEqual([])
 })
 

@@ -20,6 +20,7 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:edge": "node tests/parity/miniflare-smoke.mjs",
+    "test:node-runtime": "node tests/parity/node-smoke.mjs",
     "typecheck": "tsc -b",
     "security": "pnpm audit --audit-level high",
     "budget": "pnpm --filter @nexis/compiler test:budget"

@@ -27,9 +27,7 @@ const server = createServer((request, response) => {
     const relativePath = pathname.replace(/^\/+/, '')
     const file =
       relativePath === 'examples/basic-app' || relativePath.startsWith('examples/basic-app/')
-        ? resolve(
-            join(root, relativePath.replace('examples/basic-app', 'examples/basic-app/public')),
-          )
+        ? resolve(join(root, relativePath.replace('examples/basic-app', 'examples/basic-app/dist')))
         : resolve(join(root, relativePath))
     if (!file.startsWith(`${root}/`)) {
       response.writeHead(404)
@@ -44,10 +42,13 @@ const server = createServer((request, response) => {
     }
     const contentType =
       {
+        '.avif': 'image/avif',
         '.css': 'text/css; charset=utf-8',
         '.html': 'text/html; charset=utf-8',
         '.js': 'text/javascript; charset=utf-8',
         '.svg': 'image/svg+xml',
+        '.webp': 'image/webp',
+        '.woff2': 'font/woff2',
       }[extname(servedFile)] ?? 'application/octet-stream'
     response.writeHead(200, { 'Cache-Control': 'no-store', 'Content-Type': contentType })
     createReadStream(normalize(servedFile)).pipe(response)
