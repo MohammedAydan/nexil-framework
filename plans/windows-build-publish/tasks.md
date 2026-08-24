@@ -9,7 +9,7 @@
 - [x] Run e2e (6 pass) + node/edge smokes; deno unavailable (documented)
 - [x] Audit all package.json metadata for publishability
 - [x] Public list = all packages/* except create-nexis-app (now private)
-- [x] Exclude compiled *.test.* from tarballs via files negation
+- [x] Exclude compiled _.test._ from tarballs via files negation
 - [x] Add project .npmrc (scope routing only); verify no secrets
 - [x] Fix recursive publish filter failure (quote stripping) via pnpm -C packages
 - [x] Dry-run publish + inspect tarballs (no workspace:* leaks)
@@ -23,6 +23,7 @@
 - [~] Final clean commit(s); tree clean
 
 ## Post-publish discovery
+
 - All 18 packages landed PRIVATE on GitHub Packages (`access: public` in
   publishConfig does NOT control GitHub visibility). No REST API exists to flip
   visibility for user-owned npm packages (404 on change-visibility endpoint).

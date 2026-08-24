@@ -3,6 +3,7 @@
 ## Session: 2026-08-25 ~00:20–01:30 (local)
 
 ### What was done
+
 - Fixed Windows path bugs: `tests/e2e/build-basic-app.mjs` (`new URL().pathname` →
   `fileURLToPath`) and `tests/e2e/serve.mjs` (forward-slash containment checks →
   `path.relative`). E2E suite went from webServer-timeout to 6/6 passing.
@@ -29,15 +30,18 @@
 - Removed stale artifacts: old-scope `my-nexis-app/`, empty `REPORT.md`, logs.
 
 ### Decisions made
+
 - create-nexis-app superseded by create-nexis (ADR-002) — private, kept for reference.
 - Project .npmrc carries scope routing only; tokens stay user-level/env (ADR-003).
 - Tag-driven releases instead of per-push publishing (ADR-004).
 - Bumped cli/create-nexis to 0.1.2 rather than re-publishing immutable versions.
 
 ### Files changed
+
 See commits 17472bb, ba58a88, efbd72d, 6092bd2 (pushed to origin/main).
 
 ### State at end of session
+
 - Active feature: windows-build-publish — COMPLETE except GitHub-side visibility flip.
 - Last completed task: push + quality CI run triggered on 6092bd2.
 - Next task: manual one-time visibility change of the 18 GitHub Packages to public
@@ -45,6 +49,7 @@ See commits 17472bb, ba58a88, efbd72d, 6092bd2 (pushed to origin/main).
 - Blockers: none for the repo itself.
 
 ### Resume instructions
+
 Verify quality.yml finished green for 6092bd2. If the user has flipped package
 visibility to public, re-test anonymous `npm view` (still expect 401 — GitHub Packages
 npm always requires auth; visibility only affects who can install with their own token).
