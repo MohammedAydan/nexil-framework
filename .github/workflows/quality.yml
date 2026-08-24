@@ -33,11 +33,19 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Install Chromium for E2E
         run: pnpm exec playwright install --with-deps chromium
+
+      - name: Build workspace
+        run: pnpm build
 
       - name: Typecheck
         run: pnpm typecheck
@@ -53,6 +61,15 @@ jobs:
 
       - name: Real-browser E2E
         run: pnpm test:e2e
+
+      - name: Node runtime smoke
+        run: pnpm test:node-runtime
+
+      - name: Miniflare workerd smoke
+        run: pnpm test:edge
+
+      - name: Deno runtime smoke
+        run: pnpm test:deno
 
       - name: Dependency audit
         run: pnpm security

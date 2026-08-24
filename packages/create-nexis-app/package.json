@@ -1,0 +1,15 @@
+{
+  "name": "create-nexis-app",
+  "version": "0.1.0",
+  "description": "Create a Nexis application",
+  "type": "module",
+  "bin": {
+    "create-nexis-app": "dist/bin.js"
+  },
+  "dependencies": {
+    "@nexis/cli": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  }
+}

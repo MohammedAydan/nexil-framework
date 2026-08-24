@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { createProject, helpText, parseCommand, runCli } from './index'
+import { parseScaffoldArgs, scaffoldProject } from './scaffold'
 
 describe('Nexis CLI', () => {
   it('parses supported commands and help', () => {
@@ -20,6 +21,37 @@ describe('Nexis CLI', () => {
     await expect(runCli(['routes'], directory)).resolves.toContain('index.tsx')
     await expect(runCli(['build'], directory)).resolves.toContain('build completed')
     await expect(runCli(['analyze'], directory)).resolves.toMatch(/\/\s+\d+\s+\d+\s+static/)
+  })
+
+  it('supports deterministic TSX and JSX scaffold variants', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-scaffold-'))
+    expect(parseScaffoldArgs(['app', '--yes', '--js', '--tailwind'])).toEqual({
+      name: 'app',
+      options: { yes: true, language: 'js', tailwind: true },
+    })
+    expect(() => parseScaffoldArgs(['app', '--ts', '--js'])).toThrow(/only one/)
+
+    const result = await scaffoldProject('js-app', parent, {
+      yes: true,
+      language: 'js',
+      tailwind: true,
+    })
+    expect(await readFile(join(result.directory, 'src/routes/index.jsx'), 'utf8')).toContain(
+      'Hello Nexis',
+    )
+    expect(await readFile(join(result.directory, 'src/routes/counter.jsx'), 'utf8')).toContain(
+      'onClick$',
+    )
+    expect(await readFile(join(result.directory, 'tsconfig.json'), 'utf8')).toContain(
+      '"jsxImportSource": "@nexis/core"',
+    )
+    expect(await readFile(join(result.directory, 'tsconfig.json'), 'utf8')).toContain(
+      '"allowJs": true',
+    )
+    expect(await readFile(join(result.directory, 'src/styles.css'), 'utf8')).toContain(
+      'tailwindcss',
+    )
+    await expect(scaffoldProject('js-app', parent, { yes: true })).rejects.toThrow(/not empty/)
   })
 
   it('emits and measures bootstrap for an interactive route', async () => {

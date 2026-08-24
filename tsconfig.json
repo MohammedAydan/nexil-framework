@@ -16,6 +16,8 @@
     { "path": "./packages/state" },
     { "path": "./packages/adapters" },
     { "path": "./packages/cli" },
+    { "path": "./packages/create-nexis" },
+    { "path": "./packages/create-nexis-app" },
     { "path": "./packages/dev-server" },
     { "path": "./packages/vite-plugin" },
     { "path": "./examples/hello" },

@@ -4,6 +4,8 @@ import { join, relative, resolve } from 'node:path'
 import { build, createServer, preview } from 'vite'
 import { assertBudget, checkBudget } from '@nexis/compiler'
 import nexis, { transformNexisSource } from '@nexis/vite-plugin'
+export { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
+import { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 
 export type NexisCommand = 'create' | 'dev' | 'build' | 'start' | 'check' | 'analyze' | 'routes'
 
@@ -38,6 +40,7 @@ export function helpText(): string {
     '',
     'Commands:',
     '  create <name>  Create a zero-config Nexis application',
+    '                 Flags: --yes --ts --js --tailwind',
     '  dev            Start the development server',
     '  build          Build SSG/ISR/SSR bundles',
     '  start          Start a production build',
@@ -175,9 +178,9 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
   const parsed = parseCommand(argv)
   if (parsed.command === 'help') return helpText()
   if (parsed.command === 'create') {
-    const name = parsed.args[0]
-    if (!name) throw new Error('Usage: nexis create <name>')
-    return `Created ${await createProject(name, cwd)}`
+    const { name, options } = parseScaffoldArgs(parsed.args)
+    if (!name) throw new Error('Usage: nexis create <name> [--yes] [--ts|--js] [--tailwind]')
+    return `Created ${(await scaffoldProject(name, cwd, options)).directory}`
   }
 
   const root = resolve(cwd)
@@ -226,24 +229,5 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
 }
 
 export async function createProject(name: string, parent = process.cwd()): Promise<string> {
-  assertProjectName(name)
-  const directory = resolve(parent, name)
-  const routeDirectory = join(directory, 'src', 'routes')
-  await mkdir(routeDirectory, { recursive: true })
-  await writeFile(
-    join(directory, 'package.json'),
-    `${JSON.stringify({ name, private: true, type: 'module', scripts: { dev: 'nexis dev', build: 'nexis build', check: 'nexis check' }, dependencies: { '@nexis/cli': '^0.1.0', '@nexis/core': '^0.1.0', '@nexis/jsx-runtime': '^0.1.0' } }, null, 2)}\n`,
-    'utf8',
-  )
-  await writeFile(
-    join(directory, 'tsconfig.json'),
-    `${JSON.stringify({ compilerOptions: { strict: true, module: 'ESNext', moduleResolution: 'Bundler', target: 'ES2022', jsx: 'react-jsx', jsxImportSource: '@nexis/jsx-runtime' }, include: ['src/**/*.tsx'] }, null, 2)}\n`,
-    'utf8',
-  )
-  await writeFile(
-    join(routeDirectory, 'index.tsx'),
-    "/** @jsxImportSource @nexis/jsx-runtime */\n\nexport const seo = { title: 'My Nexis App' }\n\nexport default function Home() {\n  return <h1>Hello Nexis</h1>\n}\n",
-    'utf8',
-  )
-  return directory
+  return (await scaffoldProject(name, parent, { yes: true })).directory
 }

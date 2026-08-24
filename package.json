@@ -13,7 +13,7 @@
     "examples/*"
   ],
   "scripts": {
-    "build": "pnpm -r build",
+    "build": "find packages examples -type d -name dist -prune -exec rm -rf {} + && find packages examples -name '*.tsbuildinfo' -delete && pnpm -r --sort build",
     "check": "pnpm typecheck && pnpm lint && pnpm test",
     "format:check": "prettier --check .",
     "lint": "eslint .",
@@ -21,6 +21,7 @@
     "test:e2e": "playwright test",
     "test:edge": "node tests/parity/miniflare-smoke.mjs",
     "test:node-runtime": "node tests/parity/node-smoke.mjs",
+    "test:deno": "deno run --allow-read tests/parity/deno-smoke.ts",
     "typecheck": "tsc -b",
     "security": "pnpm audit --audit-level high",
     "budget": "pnpm --filter @nexis/compiler test:budget"

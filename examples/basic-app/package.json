@@ -3,6 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node ../../tests/e2e/build-basic-app.mjs"
+    "build": "pnpm --filter @nexis/media build && node ../../tests/e2e/build-basic-app.mjs"
+  },
+  "dependencies": {
+    "@nexis/media": "workspace:*"
   }
 }

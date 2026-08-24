@@ -41,7 +41,11 @@ importers:
         specifier: ^3.0.0
         version: 3.2.7(@types/node@22.20.1)
 
-  examples/basic-app: {}
+  examples/basic-app:
+    dependencies:
+      '@nexis/media':
+        specifier: workspace:*
+        version: link:../../packages/media
 
   examples/blog:
     dependencies:
@@ -120,6 +124,18 @@ importers:
   packages/compiler: {}
 
   packages/core: {}
+
+  packages/create-nexis:
+    dependencies:
+      '@nexis/cli':
+        specifier: workspace:*
+        version: link:../cli
+
+  packages/create-nexis-app:
+    dependencies:
+      '@nexis/cli':
+        specifier: workspace:*
+        version: link:../cli
 
   packages/css: {}
 
