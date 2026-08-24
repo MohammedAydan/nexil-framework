@@ -1,10 +1,11 @@
 {
   "name": "@mohammedaydan/create-nexis",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Create a Nexis application",
   "type": "module",
   "files": [
     "dist",
+    "!dist/**/*.test.*",
     "README.md"
   ],
   "repository": {

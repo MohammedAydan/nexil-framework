@@ -1,16 +1,10 @@
-# create-nexis-app
+# create-nexis-app (superseded)
 
-Compatibility alias for the Nexis project initializer. After publication to GitHub Packages, configure the `@mohammedaydan` scope and use:
+> **This package is superseded by [`@mohammedaydan/create-nexis`](../create-nexis) and is no longer published.**
+> It is kept in the monorepo for reference only.
 
-```bash
-npx --yes @mohammedaydan/create-nexis-app my-nexis-app --yes --ts
-```
+Use the canonical initializer instead:
 
-The initializer is published to GitHub Packages as `@mohammedaydan/create-nexis-app`. Configure `@mohammedaydan:registry=https://npm.pkg.github.com` and a classic token with `read:packages` before using it. The initializer supports `--js`, `--tailwind`, and `--no-tailwind`.
-
-For a repository checkout before GitHub Packages publication, build the package and invoke its generated binary directly:
-
-```bash
-pnpm --filter @mohammedaydan/create-nexis-app build
-node packages/create-nexis-app/dist/bin.js my-nexis-app --yes --ts
+```powershell
+pnpm dlx @mohammedaydan/create-nexis my-nexis-app --yes --ts
 ```

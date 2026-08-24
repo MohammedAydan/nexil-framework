@@ -137,6 +137,7 @@ function packageJson(
       scripts: {
         dev: 'nexis dev',
         build: 'nexis build',
+        start: 'nexis start',
         check: 'nexis check --budget',
         'check:budget': 'nexis check --budget',
         analyze: 'nexis analyze',
@@ -153,6 +154,13 @@ function packageJson(
         source: frameworkRoot ? 'workspace' : 'github-packages',
         registry: 'https://npm.pkg.github.com',
       },
+      ...(frameworkRoot
+        ? {}
+        : {
+            pnpm: {
+              onlyBuiltDependencies: ['esbuild', 'sharp'],
+            },
+          }),
     },
     null,
     2,

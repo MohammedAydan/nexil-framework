@@ -1,7 +1,8 @@
 {
   "name": "@mohammedaydan/create-nexis-app",
   "version": "0.1.0",
-  "description": "Create a Nexis application",
+  "private": true,
+  "description": "[Superseded by @mohammedaydan/create-nexis] Create a Nexis application",
   "type": "module",
   "files": [
     "dist",

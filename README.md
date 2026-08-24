@@ -41,7 +41,7 @@ pnpm dev
 
 ```bash
 # npm
-npx --yes @mohammedaydan/create-nexis-app my-nexis-app --yes --ts
+npx --yes @mohammedaydan/create-nexis my-nexis-app --yes --ts
 cd my-nexis-app
 npm install
 npm run dev
@@ -59,7 +59,9 @@ The initializer also accepts `--js` for JSX projects, `--tailwind` to add Tailwi
 
 ### Windows or private-repository checkout
 
-Until `create-nexis` is published to npm, run the initializer directly from a clone of the repository. In PowerShell:
+### Running the initializer from a repository clone
+
+To run the initializer directly from a clone of the repository instead of `pnpm dlx`:
 
 ```powershell
 pnpm install --frozen-lockfile
@@ -67,14 +69,7 @@ pnpm --filter @mohammedaydan/create-nexis build
 node .\packages\create-nexis\dist\bin.js my-nexis-app --yes --ts
 ```
 
-The compatibility binary is also available locally:
-
-```powershell
-pnpm --filter @mohammedaydan/create-nexis-app build
-node .\packages\create-nexis-app\dist\bin.js my-nexis-app --yes --ts
-```
-
-If the command reports `ERR_PNPM_FETCH_404`, check that the scoped package has been published to GitHub Packages and that the configured token has `read:packages`. The unscoped `pnpm create nexis` form targets npmjs and is not the GitHub Packages installation form.
+If a command reports `ERR_PNPM_FETCH_404`, check that the scoped package has been published to GitHub Packages (see `.github/workflows/publish-packages.yml`) and that your token has `read:packages`. The unscoped `pnpm create nexis` form targets npmjs and is not the GitHub Packages installation form.
 
 ## Generated project structure
 

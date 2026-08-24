@@ -13,7 +13,7 @@
     "examples/*"
   ],
   "scripts": {
-    "build": "find packages examples -type d -name dist -prune -exec rm -rf {} + && find packages examples -name '*.tsbuildinfo' -delete && pnpm -r --sort build",
+    "build": "pnpm -r --sort build",
     "check": "pnpm typecheck && pnpm lint && pnpm test",
     "format:check": "prettier --check .",
     "lint": "eslint .",
@@ -25,8 +25,8 @@
     "typecheck": "tsc -b",
     "security": "pnpm audit --audit-level high",
     "budget": "pnpm --filter @mohammedaydan/compiler test:budget",
-    "publish:github": "pnpm publish --recursive --filter ./packages/* --no-git-checks --access public",
-    "publish:github:dry": "pnpm publish --recursive --filter ./packages/* --no-git-checks --dry-run --access public"
+    "publish:github": "pnpm -C packages publish -r --no-git-checks --access public",
+    "publish:github:dry": "pnpm -C packages publish -r --no-git-checks --dry-run --access public"
   },
   "devDependencies": {
     "@babel/parser": "^7.29.8",

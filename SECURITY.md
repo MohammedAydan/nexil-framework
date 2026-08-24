@@ -17,3 +17,9 @@ Please do not disclose an exploitable issue publicly before maintainers have had
 ## Release policy
 
 A release candidate cannot ship with an unaccepted critical or high-severity security finding, secret leakage, cross-request data leakage, or a failing boundary/CSRF/CSP/cookie regression suite.
+
+## Credential handling for GitHub Packages
+
+- Never commit tokens to this repository. Project `.npmrc` contains scope routing only; authentication lives in the user-level `~/.npmrc` or environment variables (`GITHUB_TOKEN` / `NODE_AUTH_TOKEN`).
+- CI publishing uses the workflow-scoped `GITHUB_TOKEN` with `contents: read` and `packages: write` only.
+- If a token is ever exposed (chat, logs, screenshots), treat it as compromised: **revoke it immediately** at <https://github.com/settings/tokens>, then issue a fresh token with the minimum required scope (`read:packages` for consumers; `write:packages` only where publishing).
