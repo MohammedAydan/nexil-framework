@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { parseScaffoldArgs, scaffoldProject } from '@nexis/cli'
+import { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 
 const { name, options } = parseScaffoldArgs(process.argv.slice(2))
 if (!name)

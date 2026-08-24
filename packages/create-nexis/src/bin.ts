@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { scaffoldProject, parseScaffoldArgs } from '@nexis/cli'
+import { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 
 const { name, options } = parseScaffoldArgs(process.argv.slice(2))
 if (!name) throw new Error('Usage: create-nexis <project-name> [--yes] [--ts|--js] [--tailwind]')

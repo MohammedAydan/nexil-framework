@@ -22,7 +22,7 @@ For user-facing performance targets, the recommended production budgets are **LC
 
 ## Quickstart
 
-The recommended path is the standalone initializer. It supports both the `create-nexis` and `create-nexis-app` package names and accepts deterministic flags for automation.
+The recommended path is the standalone initializer. It supports both the `create-nexis` and `create-nexis-app` package names and accepts deterministic flags for automation. The npm commands below become available after the initializer packages are published to the public npm registry. A private GitHub repository alone does not make a package resolvable by `pnpm create`; package managers resolve that syntax through npm’s registry.
 
 ```bash
 # pnpm
@@ -49,6 +49,25 @@ yarn dev
 ```
 
 The initializer also accepts `--js` for JSX projects, `--tailwind` to add Tailwind metadata, and `--no-tailwind` to make the default explicit. Running `nexis create <name> --yes` delegates to the same scaffold engine used by the standalone packages.
+
+### Windows or private-repository checkout
+
+Until `create-nexis` is published to npm, run the initializer directly from a clone of the repository. In PowerShell:
+
+```powershell
+pnpm install --frozen-lockfile
+pnpm --filter create-nexis build
+node .\packages\create-nexis\dist\bin.js my-nexis-app --yes --ts
+```
+
+The compatibility binary is also available locally:
+
+```powershell
+pnpm --filter create-nexis-app build
+node .\packages\create-nexis-app\dist\bin.js my-nexis-app --yes --ts
+```
+
+If the command reports `ERR_PNPM_FETCH_404`, it means npm has no published package named `create-nexis` yet; it is not a project-name or PowerShell syntax error.
 
 ## Generated project structure
 

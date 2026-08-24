@@ -3,11 +3,15 @@
   "version": "0.1.0",
   "description": "Create a Nexis application",
   "type": "module",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "create-nexis": "dist/bin.js"
-  },
-  "dependencies": {
-    "@nexis/cli": "workspace:*"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json"

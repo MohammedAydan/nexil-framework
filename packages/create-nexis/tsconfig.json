@@ -7,6 +7,5 @@
     "outDir": "dist",
     "rootDir": "src"
   },
-  "include": ["src/**/*.ts"],
-  "references": [{ "path": "../cli" }]
+  "include": ["src/**/*.ts"]
 }

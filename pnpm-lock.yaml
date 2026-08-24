@@ -125,17 +125,9 @@ importers:
 
   packages/core: {}
 
-  packages/create-nexis:
-    dependencies:
-      '@nexis/cli':
-        specifier: workspace:*
-        version: link:../cli
+  packages/create-nexis: {}
 
-  packages/create-nexis-app:
-    dependencies:
-      '@nexis/cli':
-        specifier: workspace:*
-        version: link:../cli
+  packages/create-nexis-app: {}
 
   packages/css: {}
 
