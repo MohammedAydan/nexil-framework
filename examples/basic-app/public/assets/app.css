@@ -1,0 +1,29 @@
+@font-face {
+  font-family: 'Nexis Inter';
+  src: url('/examples/basic-app/assets/inter.woff2') format('woff2');
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+  font-family: 'Nexis Inter', system-ui, sans-serif;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #111827;
+  color: #e5e7eb;
+}
+main {
+  width: min(48rem, calc(100% - 3rem));
+  margin: 0 auto;
+  padding: 5rem 0;
+}
+h1 {
+  letter-spacing: -0.04em;
+}
+img {
+  display: block;
+  max-width: 100%;
+  border-radius: 1rem;
+}

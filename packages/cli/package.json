@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "type": "module",
   "dependencies": {
+    "@nexis/compiler": "workspace:*",
     "@nexis/vite-plugin": "workspace:*",
     "vite": "^7.3.6"
   },

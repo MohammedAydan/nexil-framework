@@ -1,0 +1,8 @@
+{
+  "name": "@nexis/example-basic-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node ../../tests/e2e/build-basic-app.mjs"
+  }
+}

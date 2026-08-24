@@ -6,18 +6,51 @@ const root = resolve(process.cwd())
 const server = createServer((request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url ?? '/', 'http://localhost').pathname)
-    const file = resolve(join(root, pathname.replace(/^\/+/, '')))
-    if (!file.startsWith(`${root}/`) || !statSync(file).isFile()) {
+    if (
+      pathname === '/examples/basic-app/ssr-stream' ||
+      pathname === '/examples/basic-app/ssr-stream/'
+    ) {
+      response.writeHead(200, {
+        'Cache-Control': 'private, no-store',
+        'Content-Type': 'text/html; charset=utf-8',
+        'Transfer-Encoding': 'chunked',
+      })
+      response.write(
+        '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Nexis Streaming SSR</title></head><body><main><h1>Streaming SSR</h1>',
+      )
+      response.write(
+        '<p data-data-source="request-local">Data streamed from a request-local loader.</p></main></body></html>',
+      )
+      response.end()
+      return
+    }
+    const relativePath = pathname.replace(/^\/+/, '')
+    const file =
+      relativePath === 'examples/basic-app' || relativePath.startsWith('examples/basic-app/')
+        ? resolve(
+            join(root, relativePath.replace('examples/basic-app', 'examples/basic-app/public')),
+          )
+        : resolve(join(root, relativePath))
+    if (!file.startsWith(`${root}/`)) {
+      response.writeHead(404)
+      response.end('Not Found')
+      return
+    }
+    const servedFile = statSync(file).isDirectory() ? resolve(file, 'index.html') : file
+    if (!servedFile.startsWith(`${root}/`) || !statSync(servedFile).isFile()) {
       response.writeHead(404)
       response.end('Not Found')
       return
     }
     const contentType =
-      { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8' }[
-        extname(file)
-      ] ?? 'application/octet-stream'
+      {
+        '.css': 'text/css; charset=utf-8',
+        '.html': 'text/html; charset=utf-8',
+        '.js': 'text/javascript; charset=utf-8',
+        '.svg': 'image/svg+xml',
+      }[extname(servedFile)] ?? 'application/octet-stream'
     response.writeHead(200, { 'Cache-Control': 'no-store', 'Content-Type': contentType })
-    createReadStream(normalize(file)).pipe(response)
+    createReadStream(normalize(servedFile)).pipe(response)
   } catch {
     response.writeHead(404)
     response.end('Not Found')

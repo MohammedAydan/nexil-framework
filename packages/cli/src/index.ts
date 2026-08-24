@@ -1,7 +1,9 @@
-import { mkdir, readdir, stat, writeFile } from 'node:fs/promises'
+import { gzipSync } from 'node:zlib'
+import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join, relative, resolve } from 'node:path'
 import { build, createServer, preview } from 'vite'
-import nexis from '@nexis/vite-plugin'
+import { assertBudget, checkBudget } from '@nexis/compiler'
+import nexis, { transformNexisSource } from '@nexis/vite-plugin'
 
 export type NexisCommand = 'create' | 'dev' | 'build' | 'start' | 'check' | 'analyze' | 'routes'
 
@@ -53,6 +55,38 @@ function assertProjectName(name: string): void {
   }
 }
 
+interface BuildRouteRecord {
+  readonly route: string
+  readonly source: string
+  readonly interactive: boolean
+  readonly clientJsBytes: number
+  readonly clientJsGzipBytes: number
+  readonly bootstrapGzipBytes: number
+  readonly cssBytes: number
+}
+
+interface BuildManifest {
+  readonly version: 1
+  readonly routes: readonly BuildRouteRecord[]
+}
+
+const RESUMABILITY_BOOTSTRAP = `const elements = document.querySelectorAll('[data-nx-on-click]');
+for (const element of elements) {
+  const reference = element.dataset.nxOnClick;
+  if (!reference) continue;
+  const separator = reference.indexOf('#');
+  if (separator < 1) continue;
+  const chunk = reference.slice(0, separator);
+  const exportName = reference.slice(separator + 1);
+  element.addEventListener('click', async () => {
+    const module = await import('./chunks/' + chunk);
+    const handler = module[exportName];
+    if (typeof handler !== 'function') throw new TypeError('Missing resumable handler export: ' + exportName);
+    await handler({ element });
+  });
+}
+`
+
 async function discoverRoutes(directory: string, root: string): Promise<string[]> {
   const entries = await readdir(directory, { withFileTypes: true })
   const routes: string[] = []
@@ -63,6 +97,78 @@ async function discoverRoutes(directory: string, root: string): Promise<string[]
       routes.push(relative(root, file))
   }
   return routes.sort()
+}
+
+async function buildArtifacts(root: string): Promise<BuildManifest> {
+  const routeRoot = join(root, 'src', 'routes')
+  const routes = await discoverRoutes(routeRoot, routeRoot)
+  if (routes.length === 0) throw new Error(`No routes found in ${routeRoot}.`)
+  const outputRoot = join(root, 'dist')
+  await rm(outputRoot, { recursive: true, force: true })
+  const serverRoot = join(outputRoot, 'server', 'routes')
+  const chunkRoot = join(outputRoot, 'client', 'chunks')
+  const assetRoot = join(outputRoot, 'client', 'assets')
+  await mkdir(serverRoot, { recursive: true })
+  await mkdir(chunkRoot, { recursive: true })
+  await mkdir(assetRoot, { recursive: true })
+  const records: BuildRouteRecord[] = []
+  const cssAssets = new Set<string>()
+  const bootstrapGzipBytes = gzipSync(Buffer.from(RESUMABILITY_BOOTSTRAP)).byteLength
+  let hasInteractiveRoute = false
+  for (const route of routes) {
+    const sourcePath = join(routeRoot, route)
+    const source = await readFile(sourcePath, 'utf8')
+    const transformed = transformNexisSource(source, sourcePath)
+    const outputName = route.replace(/\\/g, '/').replace(/\.(tsx|jsx|ts|js)$/, '.js')
+    await mkdir(join(serverRoot, outputName, '..'), { recursive: true })
+    await writeFile(join(serverRoot, outputName), transformed.code, 'utf8')
+    let clientBytes = 0
+    for (const chunk of transformed.chunks) {
+      await writeFile(join(chunkRoot, chunk.fileName), chunk.source, 'utf8')
+      clientBytes += Buffer.byteLength(chunk.source)
+    }
+    for (const css of transformed.css) cssAssets.add(css)
+    const routeName = route
+      .replace(/\\/g, '/')
+      .replace(/\.(tsx|jsx|ts|js)$/, '')
+      .replace(/\/index$/, '')
+    const routePath = routeName === 'index' ? '/' : `/${routeName}`
+    const interactive = transformed.chunks.length > 0
+    hasInteractiveRoute ||= interactive
+    records.push({
+      route: routePath === '/' ? '/' : routePath,
+      source: route,
+      interactive,
+      clientJsBytes: clientBytes,
+      clientJsGzipBytes:
+        clientBytes === 0
+          ? 0
+          : gzipSync(Buffer.from([...transformed.chunks].map((chunk) => chunk.source).join('')))
+              .byteLength,
+      bootstrapGzipBytes: interactive ? bootstrapGzipBytes : 0,
+      cssBytes: Buffer.byteLength([...transformed.css].join('')),
+    })
+  }
+  if (cssAssets.size > 0)
+    await writeFile(join(assetRoot, 'nexis.css'), [...cssAssets].join(''), 'utf8')
+  if (hasInteractiveRoute)
+    await writeFile(join(outputRoot, 'client', 'bootstrap.js'), RESUMABILITY_BOOTSTRAP, 'utf8')
+  const manifest: BuildManifest = { version: 1, routes: records }
+  await writeFile(
+    join(outputRoot, 'nexis-manifest.json'),
+    `${JSON.stringify(manifest, null, 2)}\n`,
+    'utf8',
+  )
+  return manifest
+}
+
+async function readManifest(root: string): Promise<BuildManifest> {
+  const manifest = JSON.parse(
+    await readFile(join(root, 'dist', 'nexis-manifest.json'), 'utf8'),
+  ) as BuildManifest
+  if (manifest.version !== 1 || !Array.isArray(manifest.routes))
+    throw new Error('Invalid Nexis build manifest.')
+  return manifest
 }
 
 export async function runCli(argv: readonly string[], cwd = process.cwd()): Promise<string> {
@@ -80,20 +186,30 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
     return routes.join('\n')
   }
   if (parsed.command === 'analyze') {
-    const routes = await discoverRoutes(join(root, 'src', 'routes'), join(root, 'src', 'routes'))
-    return routes
-      .map(
+    const manifest = await readManifest(root)
+    return [
+      'Route                         JS gzip   CSS bytes   Mode',
+      ...manifest.routes.map(
         (route) =>
-          `Route: /${route
-            .replace(/\\/g, '/')
-            .replace(/\.(tsx|jsx|ts|js)$/, '')
-            .replace(/\/index$/, '')}`,
-      )
-      .join('\n')
+          `${route.route.padEnd(29)} ${String(route.clientJsGzipBytes).padStart(8)} ${String(route.cssBytes).padStart(10)}   ${route.interactive ? 'interactive' : 'static'}`,
+      ),
+    ].join('\n')
   }
-  if (parsed.command === 'check' || parsed.command === 'build') {
-    await build({ root, plugins: [nexis({ root })], logLevel: 'error', build: { ssr: false } })
-    return parsed.command === 'check' ? 'Nexis checks passed.' : 'Nexis build completed.'
+  if (parsed.command === 'build') {
+    await buildArtifacts(root)
+    return 'Nexis build completed.'
+  }
+  if (parsed.command === 'check') {
+    const manifest = await buildArtifacts(root)
+    for (const route of manifest.routes) {
+      assertBudget({
+        route: route.route,
+        interactive: route.interactive,
+        clientJsGzipBytes: route.clientJsGzipBytes,
+        bootstrapGzipBytes: route.bootstrapGzipBytes,
+      })
+    }
+    return 'Nexis checks passed.'
   }
   if (parsed.command === 'dev') {
     const server = await createServer({ root, plugins: [nexis({ root })] })

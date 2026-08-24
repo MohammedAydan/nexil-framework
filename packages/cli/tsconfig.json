@@ -8,5 +8,5 @@
     "rootDir": "src"
   },
   "include": ["src/**/*.ts"],
-  "references": [{ "path": "../vite-plugin" }]
+  "references": [{ "path": "../vite-plugin" }, { "path": "../compiler" }]
 }
