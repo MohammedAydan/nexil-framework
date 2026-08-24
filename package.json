@@ -1,0 +1,32 @@
+{
+  "name": "nexis",
+  "version": "0.1.0",
+  "private": true,
+  "description": "HTML-first, resumable TypeScript web framework",
+  "license": "MIT",
+  "packageManager": "pnpm@10.15.0",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
+  "scripts": {
+    "build": "pnpm -r build",
+    "check": "pnpm typecheck && pnpm lint && pnpm test",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "typecheck": "tsc -b",
+    "security": "pnpm audit --audit-level high",
+    "budget": "pnpm --filter @nexis/compiler test:budget"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.0.0"
+  }
+}
