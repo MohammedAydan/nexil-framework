@@ -1,5 +1,5 @@
 {
-  "name": "@nexis/compiler",
+  "name": "@mohammedaydan/compiler",
   "version": "0.1.0",
   "type": "module",
   "exports": {
@@ -12,5 +12,18 @@
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
     "test:budget": "vitest run src/budget.test.ts"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MohammedAydan/nexis-framework.git",
+    "directory": "packages/compiler"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
 }

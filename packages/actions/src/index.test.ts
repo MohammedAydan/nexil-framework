@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createDataContext } from '@nexis/server'
+import { createDataContext } from '@mohammedaydan/server'
 import { action, assertIdempotent, assertTrustedOrigin } from './index'
 
 describe('server actions', () => {

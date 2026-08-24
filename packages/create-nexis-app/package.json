@@ -1,5 +1,5 @@
 {
-  "name": "create-nexis-app",
+  "name": "@mohammedaydan/create-nexis-app",
   "version": "0.1.0",
   "description": "Create a Nexis application",
   "type": "module",
@@ -7,7 +7,13 @@
     "dist",
     "README.md"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MohammedAydan/nexis-framework.git",
+    "directory": "packages/create-nexis-app"
+  },
   "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
     "access": "public"
   },
   "bin": {

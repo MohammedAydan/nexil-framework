@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { element } from '@nexis/core'
+import { element } from '@mohammedaydan/core'
 import { renderToStream } from './stream'
 
 async function readText(stream: ReadableStream<Uint8Array>): Promise<string> {

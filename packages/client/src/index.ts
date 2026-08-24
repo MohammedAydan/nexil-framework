@@ -1,5 +1,5 @@
-import type { Serializable } from '@nexis/core'
-import { isSerializable } from '@nexis/core'
+import type { Serializable } from '@mohammedaydan/core'
+import { isSerializable } from '@mohammedaydan/core'
 
 export const RESUME_FORMAT_VERSION = 1 as const
 export const MAX_RESUME_DEPTH = 8

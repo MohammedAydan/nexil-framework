@@ -43,19 +43,19 @@ importers:
 
   examples/basic-app:
     dependencies:
-      '@nexis/media':
+      '@mohammedaydan/media':
         specifier: workspace:*
         version: link:../../packages/media
 
   examples/blog:
     dependencies:
-      '@nexis/core':
+      '@mohammedaydan/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@nexis/jsx-runtime':
+      '@mohammedaydan/jsx-runtime':
         specifier: workspace:*
         version: link:../../packages/jsx-runtime
-      '@nexis/seo':
+      '@mohammedaydan/seo':
         specifier: workspace:*
         version: link:../../packages/seo
       zod:
@@ -64,16 +64,16 @@ importers:
 
   examples/ecommerce:
     dependencies:
-      '@nexis/actions':
+      '@mohammedaydan/actions':
         specifier: workspace:*
         version: link:../../packages/actions
-      '@nexis/core':
+      '@mohammedaydan/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@nexis/jsx-runtime':
+      '@mohammedaydan/jsx-runtime':
         specifier: workspace:*
         version: link:../../packages/jsx-runtime
-      '@nexis/server':
+      '@mohammedaydan/server':
         specifier: workspace:*
         version: link:../../packages/server
       axios:
@@ -88,16 +88,18 @@ importers:
 
   examples/hello:
     dependencies:
-      '@nexis/core':
+      '@mohammedaydan/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@nexis/jsx-runtime':
+      '@mohammedaydan/jsx-runtime':
         specifier: workspace:*
         version: link:../../packages/jsx-runtime
 
+  examples/landing-page: {}
+
   packages/actions:
     dependencies:
-      '@nexis/server':
+      '@mohammedaydan/server':
         specifier: workspace:*
         version: link:../server
 
@@ -105,10 +107,10 @@ importers:
 
   packages/cli:
     dependencies:
-      '@nexis/compiler':
+      '@mohammedaydan/compiler':
         specifier: workspace:*
         version: link:../compiler
-      '@nexis/vite-plugin':
+      '@mohammedaydan/vite-plugin':
         specifier: workspace:*
         version: link:../vite-plugin
       vite:
@@ -117,7 +119,7 @@ importers:
 
   packages/client:
     dependencies:
-      '@nexis/core':
+      '@mohammedaydan/core':
         specifier: workspace:*
         version: link:../core
 
@@ -133,13 +135,13 @@ importers:
 
   packages/dev-server:
     dependencies:
-      '@nexis/adapters':
+      '@mohammedaydan/adapters':
         specifier: workspace:*
         version: link:../adapters
 
   packages/jsx-runtime:
     dependencies:
-      '@nexis/core':
+      '@mohammedaydan/core':
         specifier: workspace:*
         version: link:../core
 
@@ -153,7 +155,7 @@ importers:
 
   packages/renderer:
     dependencies:
-      '@nexis/core':
+      '@mohammedaydan/core':
         specifier: workspace:*
         version: link:../core
 
@@ -163,16 +165,16 @@ importers:
 
   packages/server:
     dependencies:
-      '@nexis/core':
+      '@mohammedaydan/core':
         specifier: workspace:*
         version: link:../core
 
   packages/state:
     dependencies:
-      '@nexis/core':
+      '@mohammedaydan/core':
         specifier: workspace:*
         version: link:../core
-      '@nexis/reactivity':
+      '@mohammedaydan/reactivity':
         specifier: workspace:*
         version: link:../reactivity
 
@@ -184,7 +186,7 @@ importers:
       '@babel/traverse':
         specifier: ^7.29.8
         version: 7.29.8
-      '@nexis/compiler':
+      '@mohammedaydan/compiler':
         specifier: workspace:*
         version: link:../compiler
       magic-string:

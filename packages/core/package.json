@@ -1,5 +1,5 @@
 {
-  "name": "@nexis/core",
+  "name": "@mohammedaydan/core",
   "version": "0.1.0",
   "type": "module",
   "exports": {
@@ -15,5 +15,18 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "vitest run"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MohammedAydan/nexis-framework.git",
+    "directory": "packages/core"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
 }

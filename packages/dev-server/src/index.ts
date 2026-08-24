@@ -1,4 +1,4 @@
-import type { NexisHandler } from '@nexis/adapters'
+import type { NexisHandler } from '@mohammedaydan/adapters'
 
 export interface DevServer {
   readonly handle: NexisHandler

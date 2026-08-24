@@ -1,9 +1,9 @@
 {
-  "name": "@nexis/jsx-runtime",
+  "name": "@mohammedaydan/jsx-runtime",
   "version": "0.1.0",
   "type": "module",
   "dependencies": {
-    "@nexis/core": "workspace:*"
+    "@mohammedaydan/core": "workspace:*"
   },
   "exports": {
     ".": {
@@ -17,5 +17,18 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MohammedAydan/nexis-framework.git",
+    "directory": "packages/jsx-runtime"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
 }

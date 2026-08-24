@@ -1,11 +1,11 @@
 {
-  "name": "@nexis/vite-plugin",
+  "name": "@mohammedaydan/vite-plugin",
   "version": "0.1.0",
   "type": "module",
   "dependencies": {
     "@babel/parser": "^7.29.8",
     "@babel/traverse": "^7.29.8",
-    "@nexis/compiler": "workspace:*",
+    "@mohammedaydan/compiler": "workspace:*",
     "magic-string": "^0.30.21",
     "vite": "^7.3.6"
   },
@@ -18,5 +18,18 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "vitest run"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MohammedAydan/nexis-framework.git",
+    "directory": "packages/vite-plugin"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
 }

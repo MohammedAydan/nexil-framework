@@ -1,5 +1,5 @@
 {
-  "name": "@nexis/media",
+  "name": "@mohammedaydan/media",
   "version": "0.1.0",
   "type": "module",
   "exports": {
@@ -14,5 +14,18 @@
   },
   "dependencies": {
     "sharp": "^0.35.3"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MohammedAydan/nexis-framework.git",
+    "directory": "packages/media"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
 }

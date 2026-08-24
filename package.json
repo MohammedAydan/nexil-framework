@@ -24,7 +24,9 @@
     "test:deno": "deno run --allow-read tests/parity/deno-smoke.ts",
     "typecheck": "tsc -b",
     "security": "pnpm audit --audit-level high",
-    "budget": "pnpm --filter @nexis/compiler test:budget"
+    "budget": "pnpm --filter @mohammedaydan/compiler test:budget",
+    "publish:github": "pnpm publish --recursive --filter ./packages/* --no-git-checks --access public",
+    "publish:github:dry": "pnpm publish --recursive --filter ./packages/* --no-git-checks --dry-run --access public"
   },
   "devDependencies": {
     "@babel/parser": "^7.29.8",

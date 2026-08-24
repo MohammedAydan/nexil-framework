@@ -1,4 +1,4 @@
-import type { DataContext } from '@nexis/server'
+import type { DataContext } from '@mohammedaydan/server'
 
 export interface ActionContext {
   readonly request: Request

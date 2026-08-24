@@ -25,10 +25,12 @@ const server = createServer((request, response) => {
       return
     }
     const relativePath = pathname.replace(/^\/+/, '')
-    const file =
-      relativePath === 'examples/basic-app' || relativePath.startsWith('examples/basic-app/')
-        ? resolve(join(root, relativePath.replace('examples/basic-app', 'examples/basic-app/dist')))
-        : resolve(join(root, relativePath))
+    const example = ['examples/basic-app', 'examples/landing-page'].find(
+      (candidate) => relativePath === candidate || relativePath.startsWith(`${candidate}/`),
+    )
+    const file = example
+      ? resolve(join(root, relativePath.replace(example, `${example}/dist`)))
+      : resolve(join(root, relativePath))
     if (!file.startsWith(`${root}/`)) {
       response.writeHead(404)
       response.end('Not Found')

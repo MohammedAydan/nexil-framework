@@ -1,16 +1,16 @@
 # create-nexis
 
-The official Nexis project initializer. After the package is published to npm, use:
+The official Nexis project initializer. After the package is published to GitHub Packages, configure the `@mohammedaydan` scope and use:
 
 ```bash
-pnpm create nexis my-nexis-app --yes --ts
+pnpm dlx @mohammedaydan/create-nexis my-nexis-app --yes --ts
 ```
 
-The initializer also supports `--js`, `--tailwind`, and `--no-tailwind`. It is intentionally self-contained and does not depend on private workspace packages at runtime.
+The initializer is published to GitHub Packages as `@mohammedaydan/create-nexis`. Configure `@mohammedaydan:registry=https://npm.pkg.github.com` and a classic token with `read:packages` before using it. It also supports `--js`, `--tailwind`, and `--no-tailwind`.
 
-For a repository checkout before npm publication, build the package and invoke its generated binary directly:
+For a repository checkout before GitHub Packages publication, build the package and invoke its generated binary directly:
 
 ```bash
-pnpm --filter create-nexis build
+pnpm --filter @mohammedaydan/create-nexis build
 node packages/create-nexis/dist/bin.js my-nexis-app --yes --ts
 ```

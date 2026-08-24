@@ -1,10 +1,10 @@
 {
-  "name": "@nexis/state",
+  "name": "@mohammedaydan/state",
   "version": "0.1.0",
   "type": "module",
   "dependencies": {
-    "@nexis/core": "workspace:*",
-    "@nexis/reactivity": "workspace:*"
+    "@mohammedaydan/core": "workspace:*",
+    "@mohammedaydan/reactivity": "workspace:*"
   },
   "exports": {
     ".": {
@@ -15,5 +15,18 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "vitest run"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MohammedAydan/nexis-framework.git",
+    "directory": "packages/state"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
 }

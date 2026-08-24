@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import { parse } from '@babel/parser'
 import MagicString from 'magic-string'
 import type { Plugin } from 'vite'
-import { findSecretExposure, validateImport } from '@nexis/compiler'
+import { findSecretExposure, validateImport } from '@mohammedaydan/compiler'
 
 interface AstNode {
   readonly type?: string

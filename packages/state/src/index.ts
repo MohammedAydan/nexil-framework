@@ -1,7 +1,7 @@
-import type { ReadableSignal, Signal, Unsubscribe } from '@nexis/reactivity'
-import { computed, state } from '@nexis/reactivity'
-import type { Serializable } from '@nexis/core'
-import { isSerializable } from '@nexis/core'
+import type { ReadableSignal, Signal, Unsubscribe } from '@mohammedaydan/reactivity'
+import { computed, state } from '@mohammedaydan/reactivity'
+import type { Serializable } from '@mohammedaydan/core'
+import { isSerializable } from '@mohammedaydan/core'
 
 export type StateScope = 'local' | 'shared' | 'route' | 'layout' | 'global'
 

@@ -22,11 +22,18 @@ For user-facing performance targets, the recommended production budgets are **LC
 
 ## Quickstart
 
-The recommended path is the standalone initializer. It supports both the `create-nexis` and `create-nexis-app` package names and accepts deterministic flags for automation. The npm commands below become available after the initializer packages are published to the public npm registry. A private GitHub repository alone does not make a package resolvable by `pnpm create`; package managers resolve that syntax through npm’s registry.
+The recommended path is the standalone initializer published to **GitHub Packages** under the `@mohammedaydan` scope. GitHub Packages requires scoped names and an authenticated package-manager configuration. The commands below are ready after the packages are published to the repository’s GitHub Packages registry.
+
+Before installing from GitHub Packages, create a classic GitHub token with `read:packages` and configure the scope. Do not commit the token or a user-specific `.npmrc` to the repository.
+
+```powershell
+npm config set @mohammedaydan:registry https://npm.pkg.github.com
+npm config set //npm.pkg.github.com/:_authToken $env:GITHUB_TOKEN
+```
 
 ```bash
 # pnpm
-pnpm create nexis my-nexis-app --yes --ts
+pnpm dlx @mohammedaydan/create-nexis my-nexis-app --yes --ts
 cd my-nexis-app
 pnpm install
 pnpm dev
@@ -34,7 +41,7 @@ pnpm dev
 
 ```bash
 # npm
-npx create-nexis-app my-nexis-app --yes --ts
+npx --yes @mohammedaydan/create-nexis-app my-nexis-app --yes --ts
 cd my-nexis-app
 npm install
 npm run dev
@@ -42,7 +49,7 @@ npm run dev
 
 ```bash
 # yarn
-yarn create nexis my-nexis-app --yes --ts
+yarn dlx @mohammedaydan/create-nexis my-nexis-app --yes --ts
 cd my-nexis-app
 yarn install
 yarn dev
@@ -56,18 +63,18 @@ Until `create-nexis` is published to npm, run the initializer directly from a cl
 
 ```powershell
 pnpm install --frozen-lockfile
-pnpm --filter create-nexis build
+pnpm --filter @mohammedaydan/create-nexis build
 node .\packages\create-nexis\dist\bin.js my-nexis-app --yes --ts
 ```
 
 The compatibility binary is also available locally:
 
 ```powershell
-pnpm --filter create-nexis-app build
+pnpm --filter @mohammedaydan/create-nexis-app build
 node .\packages\create-nexis-app\dist\bin.js my-nexis-app --yes --ts
 ```
 
-If the command reports `ERR_PNPM_FETCH_404`, it means npm has no published package named `create-nexis` yet; it is not a project-name or PowerShell syntax error.
+If the command reports `ERR_PNPM_FETCH_404`, check that the scoped package has been published to GitHub Packages and that the configured token has `read:packages`. The unscoped `pnpm create nexis` form targets npmjs and is not the GitHub Packages installation form.
 
 ## Generated project structure
 
@@ -98,7 +105,7 @@ The generated `tsconfig.json` uses the native TypeScript JSX transform and the N
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
-    "jsxImportSource": "@nexis/core",
+    "jsxImportSource": "@mohammedaydan/core",
     "strict": true,
     "skipLibCheck": true
   }
@@ -135,10 +142,10 @@ export default function Counter() {
 }
 ```
 
-For fine-grained state, use the signal API from `@nexis/reactivity`. Signals are callable readers with explicit setters and subscriptions; they are not a virtual DOM diffing layer.
+For fine-grained state, use the signal API from `@mohammedaydan/reactivity`. Signals are callable readers with explicit setters and subscriptions; they are not a virtual DOM diffing layer.
 
 ```tsx
-import { state } from '@nexis/reactivity'
+import { state } from '@mohammedaydan/reactivity'
 
 const count = state(0)
 count.set((previous) => previous + 1)
@@ -183,7 +190,7 @@ ISR requires an injected cache implementation. Nexis does not hide a process-glo
 The media package provides build-time image attributes and a Sharp-backed transformation pipeline. `imageAttributes` validates local absolute paths, dimensions, alternative text, responsive widths, lazy/eager loading, and `srcset` generation. `transformImage` emits WebP and AVIF variants without enlarging smaller source images.
 
 ```tsx
-import { imageAttributes } from '@nexis/media'
+import { imageAttributes } from '@mohammedaydan/media'
 
 const image = imageAttributes({
   src: '/images/hero.jpg',
@@ -199,7 +206,7 @@ The image contract requires explicit width, height, and non-empty alt text. Thes
 Fonts can be represented as local `@font-face` definitions or self-hosted during a build. The self-hosting helper validates HTTP(S), supports an origin allowlist, rejects redirects, checks content type and size limits, writes the font bytes locally, and returns preload metadata.
 
 ```ts
-import { fontFace } from '@nexis/media'
+import { fontFace } from '@mohammedaydan/media'
 
 const css = fontFace({
   family: 'Nexis Inter',
@@ -236,7 +243,7 @@ For a static route, `analyze` should report `0` JS gzip bytes. Interactive route
 
 ## Architecture
 
-The framework is split into small packages with explicit boundaries. `@nexis/core` owns render nodes and serializable values. `@nexis/reactivity` owns signals and computed state. `@nexis/renderer` owns HTML rendering and render modes. `@nexis/compiler` owns boundary, security, and budget contracts. `@nexis/vite-plugin` performs AST-aware extraction and emits lazy chunks and static CSS. `@nexis/client` owns resumability serialization and bootstrap behavior. `@nexis/media` owns image and font pipelines. `@nexis/seo` owns public metadata. `@nexis/adapters` exposes Web Standard handler contracts for Node, Cloudflare-style, and Deno-style runtimes.
+The framework is split into small packages with explicit boundaries. `@mohammedaydan/core` owns render nodes and serializable values. `@mohammedaydan/reactivity` owns signals and computed state. `@mohammedaydan/renderer` owns HTML rendering and render modes. `@mohammedaydan/compiler` owns boundary, security, and budget contracts. `@mohammedaydan/vite-plugin` performs AST-aware extraction and emits lazy chunks and static CSS. `@mohammedaydan/client` owns resumability serialization and bootstrap behavior. `@mohammedaydan/media` owns image and font pipelines. `@mohammedaydan/seo` owns public metadata. `@mohammedaydan/adapters` exposes Web Standard handler contracts for Node, Cloudflare-style, and Deno-style runtimes.
 
 The central data flow is:
 

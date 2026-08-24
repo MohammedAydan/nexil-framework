@@ -12,7 +12,8 @@ export default defineConfig({
     ...devices['Desktop Chrome'],
   },
   webServer: {
-    command: 'pnpm --filter @nexis/example-basic-app build && node tests/e2e/serve.mjs',
+    command:
+      'pnpm --filter @mohammedaydan/example-basic-app build && pnpm --filter @mohammedaydan/example-landing-page build && node tests/e2e/serve.mjs',
     url: 'http://127.0.0.1:4173/tests/e2e/fixtures/resumability/index.html',
     reuseExistingServer: !process.env.CI,
     timeout: 30_000,

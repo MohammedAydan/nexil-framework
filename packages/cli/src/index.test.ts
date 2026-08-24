@@ -16,9 +16,11 @@ describe('Nexis CLI', () => {
   it('creates a one-route project safely', async () => {
     const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-'))
     const directory = await createProject('demo-app', parent)
-    expect(await readFile(join(directory, 'src/routes/index.tsx'), 'utf8')).toContain('Hello Nexis')
+    expect(await readFile(join(directory, 'src/routes/index.tsx'), 'utf8')).toContain(
+      'Ship the page before the script',
+    )
     expect(await readFile(join(directory, 'index.html'), 'utf8')).toContain(
-      '<title>Hello Nexis</title>',
+      '<title>Nexis — HTML-first web apps</title>',
     )
     await expect(createProject('../escape', parent)).rejects.toThrow(/Project name/)
     await expect(runCli(['routes'], directory)).resolves.toContain('index.tsx')
@@ -33,14 +35,38 @@ describe('Nexis CLI', () => {
       const packageJson = JSON.parse(
         await readFile(join(result.directory, 'package.json'), 'utf8'),
       ) as {
-        dependencies: { '@nexis/cli': string }
+        dependencies: { '@mohammedaydan/cli': string }
       }
-      expect(packageJson.dependencies['@nexis/cli']).toBe('workspace:*')
+      expect(packageJson.dependencies['@mohammedaydan/cli']).toBe('workspace:*')
       expect(await readFile(join(result.directory, 'pnpm-workspace.yaml'), 'utf8')).toContain(
         'onlyBuiltDependencies:',
       )
       expect(await readFile(join(result.directory, 'index.html'), 'utf8')).toContain(
-        '<title>Hello Nexis</title>',
+        '<title>Nexis — HTML-first web apps</title>',
+      )
+    } finally {
+      await rm(parent, { recursive: true, force: true })
+    }
+  })
+
+  it('configures published scaffolds for GitHub Packages', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'nexis-github-scaffold-'))
+    try {
+      const result = await scaffoldProject('github-app', parent, { yes: true, language: 'ts' })
+      const packageJson = JSON.parse(
+        await readFile(join(result.directory, 'package.json'), 'utf8'),
+      ) as {
+        dependencies: { '@mohammedaydan/cli': string }
+        nexis: { source: string; registry: string }
+      }
+      expect(packageJson.dependencies['@mohammedaydan/cli']).toBe('^0.1.0')
+      expect(packageJson.nexis).toEqual({
+        routeExtension: 'tsx',
+        source: 'github-packages',
+        registry: 'https://npm.pkg.github.com',
+      })
+      expect(await readFile(join(result.directory, '.npmrc'), 'utf8')).toBe(
+        '@mohammedaydan:registry=https://npm.pkg.github.com\n',
       )
     } finally {
       await rm(parent, { recursive: true, force: true })
@@ -89,13 +115,13 @@ describe('Nexis CLI', () => {
       tailwind: true,
     })
     expect(await readFile(join(result.directory, 'src/routes/index.jsx'), 'utf8')).toContain(
-      'Hello Nexis',
+      'Ship the page before the script',
     )
     expect(await readFile(join(result.directory, 'src/routes/counter.jsx'), 'utf8')).toContain(
       'onClick$',
     )
     expect(await readFile(join(result.directory, 'tsconfig.json'), 'utf8')).toContain(
-      '"jsxImportSource": "@nexis/core"',
+      '"jsxImportSource": "@mohammedaydan/core"',
     )
     expect(await readFile(join(result.directory, 'tsconfig.json'), 'utf8')).toContain(
       '"allowJs": true',

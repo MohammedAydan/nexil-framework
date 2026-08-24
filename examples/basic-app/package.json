@@ -1,11 +1,11 @@
 {
-  "name": "@nexis/example-basic-app",
+  "name": "@mohammedaydan/example-basic-app",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm --filter @nexis/media build && node ../../tests/e2e/build-basic-app.mjs"
+    "build": "pnpm --filter @mohammedaydan/media build && node ../../tests/e2e/build-basic-app.mjs"
   },
   "dependencies": {
-    "@nexis/media": "workspace:*"
+    "@mohammedaydan/media": "workspace:*"
   }
 }

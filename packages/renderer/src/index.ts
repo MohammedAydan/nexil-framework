@@ -1,4 +1,4 @@
-import type { Child, ElementNode, RenderNode, TextNode } from '@nexis/core'
+import type { Child, ElementNode, RenderNode, TextNode } from '@mohammedaydan/core'
 
 const VOID_ELEMENTS = new Set([
   'area',

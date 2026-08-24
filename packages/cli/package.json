@@ -1,10 +1,10 @@
 {
-  "name": "@nexis/cli",
+  "name": "@mohammedaydan/cli",
   "version": "0.1.0",
   "type": "module",
   "dependencies": {
-    "@nexis/compiler": "workspace:*",
-    "@nexis/vite-plugin": "workspace:*",
+    "@mohammedaydan/compiler": "workspace:*",
+    "@mohammedaydan/vite-plugin": "workspace:*",
     "vite": "^7.3.6"
   },
   "bin": {
@@ -19,5 +19,18 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "vitest run"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MohammedAydan/nexis-framework.git",
+    "directory": "packages/cli"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
 }

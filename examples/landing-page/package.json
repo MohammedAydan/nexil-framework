@@ -1,0 +1,8 @@
+{
+  "name": "@mohammedaydan/example-landing-page",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node ../../tests/e2e/build-landing-page.mjs"
+  }
+}

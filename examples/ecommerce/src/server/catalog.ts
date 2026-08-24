@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { sql } from 'drizzle-orm'
 import { z } from 'zod'
-import { createDataContext, data } from '@nexis/server'
+import { createDataContext, data } from '@mohammedaydan/server'
 
 export const productSchema = z.object({
   id: z.string().min(1),
