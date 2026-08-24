@@ -1,8 +1,9 @@
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { fontFace, transformImage } from '../../packages/media/dist/index.js'
 import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const root = resolve(new URL('../../examples/basic-app', import.meta.url).pathname)
+const root = resolve(fileURLToPath(new URL('../../examples/basic-app', import.meta.url)))
 const publicRoot = resolve(root, 'public')
 const outputRoot = resolve(root, 'dist')
 const outputAssets = resolve(outputRoot, 'assets')

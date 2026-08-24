@@ -1,8 +1,18 @@
 import { createReadStream, statSync } from 'node:fs'
 import { createServer } from 'node:http'
-import { extname, join, normalize, resolve } from 'node:path'
+import { extname, isAbsolute, join, normalize, relative, resolve, sep } from 'node:path'
 
 const root = resolve(process.cwd())
+
+function isInsideRoot(candidate) {
+  const relation = relative(root, candidate)
+  return (
+    relation !== '' &&
+    relation !== '..' &&
+    !relation.startsWith(`..${sep}`) &&
+    !isAbsolute(relation)
+  )
+}
 const server = createServer((request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url ?? '/', 'http://localhost').pathname)
@@ -31,13 +41,13 @@ const server = createServer((request, response) => {
     const file = example
       ? resolve(join(root, relativePath.replace(example, `${example}/dist`)))
       : resolve(join(root, relativePath))
-    if (!file.startsWith(`${root}/`)) {
+    if (!isInsideRoot(file)) {
       response.writeHead(404)
       response.end('Not Found')
       return
     }
     const servedFile = statSync(file).isDirectory() ? resolve(file, 'index.html') : file
-    if (!servedFile.startsWith(`${root}/`) || !statSync(servedFile).isFile()) {
+    if (!isInsideRoot(servedFile) || !statSync(servedFile).isFile()) {
       response.writeHead(404)
       response.end('Not Found')
       return
