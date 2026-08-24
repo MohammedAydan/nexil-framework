@@ -11,6 +11,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
     ...devices['Desktop Chrome'],
   },
+  testIgnore: ['**/deno-runtime.spec.ts'],
   webServer: {
     command:
       'pnpm --filter @mohammedaydan/example-basic-app build && pnpm --filter @mohammedaydan/example-landing-page build && node tests/e2e/serve.mjs',

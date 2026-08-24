@@ -74,6 +74,9 @@ jobs:
       - name: Deno runtime smoke
         run: pnpm test:deno
 
+      - name: Deno runtime spec
+        run: pnpm test:deno:e2e
+
       - name: Dependency audit
         run: pnpm security
 
