@@ -6,7 +6,7 @@ HTML-first, resumable TypeScript web framework. Monorepo of scoped packages (`@m
 
 ## Current Status
 
-- Active feature: windows-build-publish (fix Windows build, publish to GitHub Packages, validate CLI end-to-end)
+- Active feature: windows-build-publish (complete — CI green on 0f4210e)
 - Overall health: green
 - Last updated: 2026-08-25
 
@@ -16,15 +16,17 @@ HTML-first, resumable TypeScript web framework. Monorepo of scoped packages (`@m
 - No tokens/credentials ever committed
 - Generated apps must consume published packages only (no workspace leaks)
 - Registry: `https://npm.pkg.github.com` for scope `@mohammedaydan`
+- Prettier format gate is enforced in CI; run `pnpm exec prettier --write .` before committing new files
 
 ## Active Features
 
-- windows-build-publish: in progress
+- windows-build-publish: complete
 
 ## Known Issues / Tech Debt
 
-- A GitHub PAT was exposed in a prior conversation; user must revoke it (documented in SECURITY.md)
-- `my-nexis-app/` and `REPORT.md` at repo root are stale artifacts from an older scaffold using the obsolete `@nexis/*` scope
+- A GitHub PAT was exposed in a prior conversation; user must revoke it (policy in SECURITY.md)
+- All 18 published packages are PRIVATE on GitHub Packages. Visibility flip is a manual UI-only action per package (no REST API for user-owned npm packages). Anonymous installs return 401 regardless — GitHub Packages npm always requires auth.
+- Deno smoke test cannot run locally (Deno not installed); it runs in CI via quality.yml
 
 ## Team / Ownership
 

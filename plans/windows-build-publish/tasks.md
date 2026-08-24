@@ -20,7 +20,7 @@
 - [x] Tag-driven publish workflow
 - [x] Update README/SECURITY docs (incl. revoke compromised token note)
 - [x] Prettier normalize repo (format gate was already failing pre-session)
-- [~] Final clean commit(s); tree clean
+- [x] Final clean commit(s); tree clean
 
 ## Post-publish discovery
 
