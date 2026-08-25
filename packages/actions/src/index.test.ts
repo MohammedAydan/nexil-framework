@@ -29,6 +29,18 @@ describe('server actions', () => {
     expect(order).toEqual(['validate', 'authorize', 'handle', 'validate'])
   })
 
+  it('supports the concise validate-handle-authorize form', async () => {
+    const context = {
+      request: new Request('https://example.test/'),
+      data: createDataContext(new Request('https://example.test/')),
+    }
+    const handler = action(
+      (input: unknown) => String(input).trim(),
+      (_context, input) => input.toUpperCase(),
+    )
+    await expect(handler.execute(context, ' nexis ')).resolves.toBe('NEXIS')
+  })
+
   it('requires trusted origin for cross-origin state changes', () => {
     const request = new Request('https://example.test/action', {
       headers: { origin: 'https://evil.test' },

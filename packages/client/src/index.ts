@@ -102,23 +102,30 @@ export function bootstrapResumability(
   load: ResumeImport,
 ): () => void {
   const listeners: Array<() => void> = []
-  const elements = root.querySelectorAll<HTMLElement>('[data-nx-on-click]')
+  const elements = new Set<HTMLElement>()
+  for (const element of root.querySelectorAll<HTMLElement>('[data-nx-on], [data-nx-on-click]'))
+    elements.add(element)
+
   for (const element of elements) {
-    const attribute = element.dataset.nxOnClick
+    const unified = element.getAttribute('data-nx-on')
+    const legacy = element.getAttribute('data-nx-on-click')
+    const separator = unified?.indexOf(':') ?? -1
+    const eventName = separator > 0 ? unified!.slice(0, separator) : 'click'
+    const attribute = separator > 0 ? unified!.slice(separator + 1) : legacy
     if (!attribute) continue
-    const separator = attribute.indexOf('#')
-    if (separator < 1) continue
-    const chunk = attribute.slice(0, separator)
-    const exportName = attribute.slice(separator + 1)
-    const onClick = async () => {
+    const hashSeparator = attribute.indexOf('#')
+    if (hashSeparator < 1) continue
+    const chunk = attribute.slice(0, hashSeparator)
+    const exportName = attribute.slice(hashSeparator + 1)
+    const listener = async (event: Event) => {
       const module = await load(chunk)
       const handler = module[exportName]
       if (typeof handler !== 'function')
         throw new TypeError(`Missing resumable handler export: ${exportName}`)
-      await handler({ element })
+      await handler({ element, event })
     }
-    element.addEventListener('click', onClick)
-    listeners.push(() => element.removeEventListener('click', onClick))
+    element.addEventListener(eventName, listener)
+    listeners.push(() => element.removeEventListener(eventName, listener))
   }
   return () => listeners.splice(0).forEach((dispose) => dispose())
 }

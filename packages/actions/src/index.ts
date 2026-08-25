@@ -15,9 +15,36 @@ export interface ServerAction<Input, Output> {
   execute(context: ActionContext, input: unknown): Promise<Output>
 }
 
+type Validator<Input> = (input: unknown) => Input | Promise<Input>
+type ActionHandler<Input, Output> = (
+  context: ActionContext,
+  input: Input,
+) => Output | Promise<Output>
+
 export function action<Input, Output>(
   options: ActionOptions<Input, Output>,
+): ServerAction<Input, Output>
+export function action<Input, Output>(
+  validate: Validator<Input>,
+  handle: ActionHandler<Input, Output>,
+  authorize?: ActionOptions<Input, Output>['authorize'],
+): ServerAction<Input, Output>
+export function action<Input, Output>(
+  optionsOrValidate: ActionOptions<Input, Output> | Validator<Input>,
+  shortHandle?: ActionHandler<Input, Output>,
+  shortAuthorize?: ActionOptions<Input, Output>['authorize'],
 ): ServerAction<Input, Output> {
+  const options: ActionOptions<Input, Output> =
+    typeof optionsOrValidate === 'function'
+      ? {
+          validate: optionsOrValidate,
+          handle: shortHandle as ActionHandler<Input, Output>,
+          ...(shortAuthorize ? { authorize: shortAuthorize } : {}),
+        }
+      : optionsOrValidate
+  if (typeof options.handle !== 'function')
+    throw new TypeError('A server action requires a handle function.')
+
   return {
     async execute(context, input) {
       const validated = await options.validate(input)

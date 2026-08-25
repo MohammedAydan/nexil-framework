@@ -7,10 +7,20 @@ describe('Nexis Vite transform', () => {
       "const handler = (event) => event.currentTarget.textContent = 'ok'\nconst view = <button onClick$={handler}>Click</button>",
       '/app/src/routes/index.tsx',
     )
+    expect(result.code).toContain('data-nx-on="click:chunk_')
     expect(result.code).toContain('data-nx-on-click="chunk_')
     expect(result.chunks).toHaveLength(1)
     expect(result.chunks[0]?.fileName).toMatch(/^chunk_[a-f0-9]{12}\.js$/)
     expect(result.chunks[0]?.source).toContain('handler_')
+  })
+
+  it('supports resumable non-click events with a normalized event name', async () => {
+    const result = await transformNexisSource(
+      `const view = <input onInput$={({ event }: { event: Event }) => { console.log(event.type) }} />`,
+      '/app/src/routes/form.tsx',
+    )
+    expect(result.code).toContain('data-nx-on="input:chunk_')
+    expect(result.code).toContain('data-nx-on-input="chunk_')
   })
 
   it('strips TypeScript annotations from emitted handler chunks', async () => {

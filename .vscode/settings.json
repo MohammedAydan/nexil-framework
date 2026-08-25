@@ -1,0 +1,9 @@
+{
+  "tailwindCSS.experimental.classRegex": [
+    ["\\b(?:cx|cn)\\(([^)]*)\\)", "(?:'|\\\"|`)([^'\\\"`]*)(?:'|\\\"|`)"]
+  ],
+  "tailwindCSS.includeLanguages": {
+    "typescriptreact": "html",
+    "javascriptreact": "html"
+  }
+}

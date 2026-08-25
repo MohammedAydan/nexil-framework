@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { computed, state } from './index'
+import { computed, state, useState } from './index'
 
 describe('state', () => {
   it('reads and updates values', () => {
@@ -14,6 +14,14 @@ describe('state', () => {
     count.subscribe(listener)
     count.set(0)
     expect(listener).not.toHaveBeenCalled()
+  })
+})
+
+describe('useState', () => {
+  it('returns a signal and a setter tuple', () => {
+    const [count, setCount] = useState(1)
+    setCount((value) => value + 2)
+    expect(count()).toBe(3)
   })
 })
 

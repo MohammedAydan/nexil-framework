@@ -59,7 +59,7 @@ describe('Nexis CLI', () => {
         dependencies: { '@mohammedaydan/cli': string }
         nexis: { source: string; registry: string }
       }
-      expect(packageJson.dependencies['@mohammedaydan/cli']).toBe('^2.1.0')
+      expect(packageJson.dependencies['@mohammedaydan/cli']).toBe('^1.0.0')
       expect(packageJson.nexis).toEqual({
         routeExtension: 'tsx',
         source: 'github-packages',
@@ -128,6 +128,15 @@ describe('Nexis CLI', () => {
     )
     expect(await readFile(join(result.directory, 'src/styles.css'), 'utf8')).toContain(
       'tailwindcss',
+    )
+    expect(await readFile(join(result.directory, 'vite.config.ts'), 'utf8')).toContain(
+      '@tailwindcss/vite',
+    )
+    expect(await readFile(join(result.directory, '.vscode/extensions.json'), 'utf8')).toContain(
+      'bradlc.vscode-tailwindcss',
+    )
+    expect(await readFile(join(result.directory, '.vscode/settings.json'), 'utf8')).toContain(
+      'tailwindCSS.experimental.classRegex',
     )
     await expect(scaffoldProject('js-app', parent, { yes: true })).rejects.toThrow(/not empty/)
   })

@@ -99,6 +99,26 @@ TypeScript is native by construction â€” `jsx: "react-jsx"` with `jsxImport
 
 JavaScript projects (`--js`) are first-class: routes become `.jsx`, `allowJs` flips on, and every template has a JS variant.
 
+### Tailwind CSS and VS Code
+
+Create a project with `nexis create my-app --yes --ts --tailwind`. The scaffold installs Tailwind CSS 4 and its Vite integration, creates `src/styles.css` with `@import "tailwindcss"`, links the processed stylesheet from the HTML shell, and emits a Vite config that runs the Tailwind plugin during development and production builds.
+
+The generated `.vscode/extensions.json` recommends **Tailwind CSS IntelliSense**. The accompanying workspace settings teach the extension to inspect classes inside Nexis's `cx(...)` helper as well as normal `className` strings. Use `className` on any intrinsic element; Nexis normalizes it to the HTML `class` attribute during SSR, so Tailwind utilities are applied to the actual DOM.
+
+```tsx
+import { cx } from '@mohammedaydan/css'
+
+export default function Card({ featured }: { featured: boolean }) {
+  return (
+    <article className={cx('rounded-xl border p-6', featured && 'border-indigo-500 bg-indigo-50')}>
+      Tailwind utilities are scanned from TSX and merged safely.
+    </article>
+  )
+}
+```
+
+The `cx` helper accepts strings, arrays, and conditional object entries, then resolves conflicting utilities using Tailwind-aware precedence rules. This keeps component APIs composable without forcing consumers to hand-edit long class strings.
+
 ---
 
 ## Authoring JSX and TSX
@@ -154,6 +174,48 @@ export default function CounterPage() {
 What this page costs before the first click: **0 bytes** of application JavaScript. After a click: exactly one small chunk, cached forever.
 
 For stateful logic inside handlers, import fine-grained signals from `@mohammedaydan/reactivity` (`state`, `computed`, `batch`) and synchronize the DOM explicitly â€” signals are plain primitives, not a reactivity-to-DOM binding layer.
+
+### Compact authoring helpers
+
+Nexis keeps the low-level primitives available, but common code can now be written with less ceremony. Use `cx` to combine conditional Tailwind classes while resolving conflicting utilities, and use `useState` when a tuple is more readable than accessing `.set` directly:
+
+```tsx
+import { useState } from '@mohammedaydan/core'
+import { cx } from '@mohammedaydan/css'
+
+export default function Panel() {
+  const [open, setOpen] = useState(false)
+  return (
+    <section className={cx('rounded-xl p-6', open() ? 'block' : 'hidden')}>
+      <button
+        className="rounded bg-indigo-600 px-3 py-2 text-white"
+        onClick$={({ event }) => {
+          event.preventDefault()
+          setOpen((value) => !value)
+        }}
+      >
+        Toggle panel
+      </button>
+    </section>
+  )
+}
+```
+
+Any `on<Event>$` prop becomes a lazy boundary, not only `onClick$`. For example, `onInput$`, `onChange$`, `onSubmit$`, and keyboard events receive the original DOM event through `{ event }` and the target element through `{ element }`.
+
+Server actions also support a concise form without sacrificing validation or authorization:
+
+```ts
+const saveProfile = action(
+  validateProfile,
+  async (_context, profile) => {
+    return persistProfile(profile)
+  },
+  authorizeProfile,
+)
+```
+
+The object form remains supported when named fields are clearer.
 
 ### Boundaries and guarantees
 
@@ -349,4 +411,4 @@ docs/         architecture notes and ADRs
 
 ## Status
 
-**v2.0.0 GA.** All governing invariants hold on every supported runtime. See `SECURITY.md` for reporting policy and credential handling.
+**v1.0.0.** Tailwind CSS, editor tooling, resumable events, and compact authoring helpers are supported alongside the existing runtime invariants. See `SECURITY.md` for reporting policy and credential handling.

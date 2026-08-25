@@ -1,6 +1,6 @@
 {
   "name": "@mohammedaydan/create-nexis",
-  "version": "2.1.0",
+  "version": "1.0.0",
   "description": "Create a Nexis application",
   "type": "module",
   "files": [
