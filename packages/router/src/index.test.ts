@@ -27,13 +27,32 @@ describe('routeFromFile and matching', () => {
     expect(resolveRoute([dynamicRoute, staticRoute], '/products/featured')?.route).toBe(staticRoute)
   })
 
+  it('keeps the root index ahead of an optional catch-all', () => {
+    const root = routeFromFile('src/routes/index.tsx')
+    const fallback = routeFromFile('src/routes/[[...slug]].tsx')
+    expect(resolveRoute([fallback, root], '/')?.route).toBe(root)
+  })
+
+  it('decodes encoded static segments and handles malformed escapes safely', () => {
+    const route = routeFromFile('src/routes/products/red-shoe.tsx')
+    expect(matchRoute(route, '/products/red-shoe')).toBeDefined()
+    expect(matchRoute(route, '/products/%E0%A4%A')).toBeUndefined()
+  })
+
+  it('supports a catch-all before a trailing static segment', () => {
+    const route = routeFromFile('src/routes/docs/[...path]/edit.tsx')
+    expect(matchRoute(route, '/docs/a/b/edit')?.params).toEqual({ path: ['a', 'b'] })
+  })
+
   it('normalizes Windows-style route file paths', () => {
     expect(routeFromFile('src\\routes\\docs\\index.tsx').pattern).toBe('/docs')
     expect(routeFromFile('src\\routes\\docs\\[slug].tsx').pattern).toBe('/docs/:slug')
   })
 
-  it('rejects traversal and malformed route files', () => {
+  it('rejects traversal, malformed route files, and declaration/test modules', () => {
     expect(() => routeFromFile('src/routes/../server.tsx')).toThrow(/Unsafe/)
     expect(() => routeFromFile('src/routes/[bad!.tsx')).toThrow(/Invalid route segment/)
+    expect(() => routeFromFile('src/routes/index.d.ts')).toThrow(/Declaration/)
+    expect(() => routeFromFile('src/routes/index.spec.ts')).toThrow(/Declaration/)
   })
 })

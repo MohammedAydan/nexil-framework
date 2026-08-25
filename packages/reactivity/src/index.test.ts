@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { computed, state, useState } from './index'
+import { batch, computed, state, useState } from './index'
 
 describe('state', () => {
   it('reads and updates values', () => {
@@ -14,6 +14,27 @@ describe('state', () => {
     count.subscribe(listener)
     count.set(0)
     expect(listener).not.toHaveBeenCalled()
+  })
+
+  it('batches multiple writes into one computed notification', () => {
+    const first = state(1)
+    const second = state(1)
+    const sum = computed(() => first() + second())
+    const listener = vi.fn()
+    sum.subscribe(listener)
+    batch(() => {
+      first.set(2)
+      second.set(2)
+    })
+    expect(sum.value).toBe(4)
+    expect(listener).toHaveBeenCalledTimes(1)
+  })
+
+  it('supports explicit function-valued assignment', () => {
+    const callback = state<() => string>(() => 'before')
+    const next = () => 'after'
+    callback.setValue(next)
+    expect(callback.value).toBe(next)
   })
 })
 
@@ -43,5 +64,15 @@ describe('computed', () => {
     first.set(2)
     second.set(0)
     expect(listener).toHaveBeenCalledTimes(2)
+  })
+
+  it('stops tracking dependencies after disposal', () => {
+    const source = state(1)
+    const derived = computed(() => source() * 2)
+    const listener = vi.fn()
+    derived.subscribe(listener)
+    derived.dispose()
+    source.set(2)
+    expect(listener).not.toHaveBeenCalled()
   })
 })

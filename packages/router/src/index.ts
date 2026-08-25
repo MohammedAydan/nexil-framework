@@ -25,9 +25,19 @@ function normalizeFile(file: string): string[] {
     .filter(Boolean)
 }
 
+function decodeSegment(value: string): string | undefined {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return undefined
+  }
+}
+
 export function routeFromFile(file: string): RouteRecord {
   let segments = normalizeFile(file)
-  const routesIndex = segments.lastIndexOf('routes')
+  if (/\.(?:d|spec|test)\.(?:tsx|ts|jsx|js)$/.test(segments.at(-1) ?? ''))
+    throw new TypeError('Declaration and test files cannot define routes.')
+  const routesIndex = segments.indexOf('routes')
   if (routesIndex >= 0) segments = segments.slice(routesIndex + 1)
   if (segments.length === 0) throw new TypeError('Route file cannot be empty.')
   const filename = segments.pop() as string
@@ -55,7 +65,7 @@ export function routeFromFile(file: string): RouteRecord {
     }
     if (segment.includes('[') || segment.includes(']'))
       throw new TypeError(`Invalid route segment: ${segment}`)
-    params.push({ name: segment, kind: 'static' })
+    params.push({ name: segment, kind: 'static', value: segment })
     return [segment]
   })
 
@@ -64,8 +74,16 @@ export function routeFromFile(file: string): RouteRecord {
     pattern: `/${patternParts.join('/')}` || '/',
     params,
     score: params.reduce(
-      (total, param) => total + (param.kind === 'static' ? 10 : param.kind === 'dynamic' ? 5 : 1),
-      0,
+      (total, param) =>
+        total +
+        (param.kind === 'static'
+          ? 20
+          : param.kind === 'dynamic'
+            ? 10
+            : param.kind === 'catch-all'
+              ? 2
+              : 1),
+      patternParts.length === 0 ? 100 : 0,
     ),
   }
 }
@@ -79,40 +97,58 @@ export function matchRoute(route: RouteRecord, pathname: string): RouteMatch | u
     .replace(/^\/+|\/+$/g, '')
     .split('/')
     .filter(Boolean)
-  const params: Record<string, string | string[]> = {}
-  let pathIndex = 0
 
-  for (let index = 0; index < routeSegments.length; index += 1) {
-    const segment = routeSegments[index]
-    if (!segment) continue
-    if (segment.endsWith('*?')) {
-      params[segment.slice(1, -2)] = pathSegments.slice(pathIndex)
-      pathIndex = pathSegments.length
-      continue
+  function matchAt(
+    routeIndex: number,
+    pathIndex: number,
+    params: Record<string, string | string[]>,
+  ): Record<string, string | string[]> | undefined {
+    if (routeIndex === routeSegments.length)
+      return pathIndex === pathSegments.length ? params : undefined
+    const segment = routeSegments[routeIndex]
+    if (!segment) return matchAt(routeIndex + 1, pathIndex, params)
+
+    if (segment.endsWith('*?') || segment.endsWith('*')) {
+      const name = segment.slice(1, segment.endsWith('*?') ? -2 : -1)
+      const minimum = segment.endsWith('*?') ? pathIndex : pathIndex + 1
+      for (let end = pathSegments.length; end >= minimum; end -= 1) {
+        const values = pathSegments.slice(pathIndex, end).map(decodeSegment)
+        if (values.some((value) => value === undefined)) continue
+        const next = { ...params, [name]: values as string[] }
+        const matched = matchAt(routeIndex + 1, end, next)
+        if (matched) return matched
+      }
+      return undefined
     }
-    if (segment.endsWith('*')) {
-      if (pathIndex === pathSegments.length) return undefined
-      params[segment.slice(1, -1)] = pathSegments.slice(pathIndex)
-      pathIndex = pathSegments.length
-      continue
-    }
+
     const value = pathSegments[pathIndex]
-    if (!value) return undefined
-    if (segment.startsWith(':')) params[segment.slice(1)] = decodeURIComponent(value)
-    else if (segment !== value) return undefined
-    pathIndex += 1
+    if (value === undefined) return undefined
+    const decoded = decodeSegment(value)
+    if (decoded === undefined) return undefined
+    if (segment.startsWith(':')) {
+      return matchAt(routeIndex + 1, pathIndex + 1, {
+        ...params,
+        [segment.slice(1)]: decoded,
+      })
+    }
+    if (segment !== decoded) return undefined
+    return matchAt(routeIndex + 1, pathIndex + 1, params)
   }
 
-  if (pathIndex !== pathSegments.length) return undefined
-  return { route, params }
+  const params = matchAt(0, 0, {})
+  return params ? { route, params } : undefined
 }
 
 export function resolveRoute(
   routes: readonly RouteRecord[],
   pathname: string,
 ): RouteMatch | undefined {
-  return [...routes]
-    .sort((left, right) => right.score - left.score || right.pattern.length - left.pattern.length)
-    .map((route) => matchRoute(route, pathname))
-    .find((match): match is RouteMatch => match !== undefined)
+  const sorted = [...routes].sort(
+    (left, right) => right.score - left.score || right.pattern.length - left.pattern.length,
+  )
+  for (const route of sorted) {
+    const match = matchRoute(route, pathname)
+    if (match) return match
+  }
+  return undefined
 }

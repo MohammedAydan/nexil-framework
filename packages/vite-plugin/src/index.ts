@@ -1,10 +1,14 @@
 import { createHash } from 'node:crypto'
 import { parse } from '@babel/parser'
+import traverseModule from '@babel/traverse'
 import MagicString from 'magic-string'
 import { transformWithEsbuild } from 'vite'
 import type { Plugin } from 'vite'
 import { findSecretExposure, validateImport } from '@mohammedaydan/compiler'
 import { RESUMABILITY_BOOTSTRAP } from './bootstrap.js'
+
+const traverse = ((traverseModule as unknown as { default?: typeof traverseModule }).default ??
+  traverseModule) as typeof traverseModule
 
 export { RESUMABILITY_BOOTSTRAP }
 
@@ -40,9 +44,62 @@ function normalizeIdForHash(id: string): string {
     .replace(/\\/g, '/')
     .replace(/^[A-Za-z]:/, '')
     .replace(/^\/+/, '')
-    .split('/')
-    .slice(-3)
-    .join('/')
+}
+
+const GLOBAL_IDENTIFIERS = new Set([
+  'Array',
+  'Boolean',
+  'Date',
+  'Error',
+  'JSON',
+  'Math',
+  'Number',
+  'Object',
+  'Promise',
+  'String',
+  'console',
+  'undefined',
+])
+
+function captureExpression(expressionSource: string): string {
+  const prefix = 'const __nexisHandler = '
+  const ast = parse(`${prefix}${expressionSource}`, {
+    sourceType: 'module',
+    plugins: ['typescript', 'jsx', 'topLevelAwait'],
+  })
+  const replacements: Array<{ start: number; end: number; name: string }> = []
+  traverse(ast, {
+    ReferencedIdentifier(path) {
+      const name = path.node.name
+      if (GLOBAL_IDENTIFIERS.has(name) || path.scope.hasBinding(name)) return
+      if (
+        path.parentPath.isObjectProperty() &&
+        path.parentKey === 'key' &&
+        !path.parentPath.node.computed
+      )
+        return
+      if (
+        path.node.start === null ||
+        path.node.start === undefined ||
+        path.node.end === null ||
+        path.node.end === undefined
+      )
+        return
+      const start = path.node.start
+      const end = path.node.end
+      replacements.push({
+        start: start - prefix.length,
+        end: end - prefix.length,
+        name,
+      })
+    },
+  })
+  const magic = new MagicString(expressionSource)
+  for (const replacement of replacements.sort((left, right) => right.start - left.start)) {
+    if (replacement.start >= 0)
+      magic.overwrite(replacement.start, replacement.end, `scope.${replacement.name}`)
+  }
+  return magic.toString()
 }
 
 function walk(node: unknown, visit: (node: AstNode) => void): void {
@@ -55,6 +112,24 @@ function walk(node: unknown, visit: (node: AstNode) => void): void {
   visit(record as AstNode)
   for (const child of Object.values(record)) walk(child, visit)
 }
+
+const STATIC_UNITLESS_PROPERTIES = new Set([
+  'zIndex',
+  'opacity',
+  'flex',
+  'flexGrow',
+  'flexShrink',
+  'fontWeight',
+  'lineHeight',
+  'order',
+  'orphans',
+  'widows',
+  'tabSize',
+  'columns',
+  'fillOpacity',
+  'strokeOpacity',
+  'animationIterationCount',
+])
 
 function extractStaticCss(source: string, id: string): string[] {
   const styles: string[] = []
@@ -69,16 +144,22 @@ function extractStaticCss(source: string, id: string): string[] {
       .map((entry) => {
         const separator = entry.indexOf(':')
         if (separator < 1) throw new Error(`[NEXIS_CSS] Invalid static style in ${id}.`)
-        const property = entry
-          .slice(0, separator)
-          .trim()
-          .replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
-        const value = entry
+        const rawProperty = entry.slice(0, separator).trim()
+        const property = rawProperty.startsWith('--')
+          ? rawProperty
+          : rawProperty.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
+        let value = entry
           .slice(separator + 1)
           .trim()
-          .replace(/^['\"`]|['\"`]$/g, '')
-        if (!/^[a-z-]+$/.test(property) || /[;{}]/.test(value))
+          .replace(/^['"`]|['"`]$/g, '')
+        if (!/^(?:--)?[a-zA-Z][a-zA-Z0-9-]*$/.test(property) || /[;{}<>]/.test(value))
           throw new Error(`[NEXIS_CSS] Unsafe static style in ${id}.`)
+        if (
+          /^-?\d+(?:\.\d+)?$/.test(value) &&
+          value !== '0' &&
+          !STATIC_UNITLESS_PROPERTIES.has(rawProperty)
+        )
+          value = `${value}px`
         return `${property}:${value};`
       })
       .sort()
@@ -86,6 +167,20 @@ function extractStaticCss(source: string, id: string): string[] {
     styles.push(`.nx-${hash(declarations)}{${declarations}}`)
   }
   return styles
+}
+
+function mergeEventAttributes(code: string): string {
+  let merged = code
+  let previous = ''
+  while (merged !== previous) {
+    previous = merged
+    merged = merged.replace(
+      /data-nx-on-([a-z][a-z0-9-]*)="([^"]+)"(\s+)data-nx-on-\1="([^"]+)"/g,
+      (_match, eventName: string, first: string, spacing: string, second: string) =>
+        `data-nx-on-${eventName}="${first};${second}"${spacing}`,
+    )
+  }
+  return merged
 }
 
 function parseSource(source: string, id: string): AstNode {
@@ -141,10 +236,7 @@ export async function transformNexisSource(
       const idHash = hash(`${normalizeIdForHash(id)}:${start}:${expressionSource}`)
       const exportName = `handler_${idHash}`
       const fileName = `chunk_${idHash}.js`
-      const eventName = node.name.name
-        .slice(2, -1)
-        .replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
-        .replace(/^-/, '')
+      const eventName = node.name.name.slice(2, -1).toLowerCase()
       if (!/^[a-z][a-z0-9-]*$/.test(eventName)) {
         moduleDiagnostics.push(
           `[NEXIS_LAZY_BOUNDARY] ${node.name.name} must use an event name such as onClick$ or onInput$.`,
@@ -153,11 +245,7 @@ export async function transformNexisSource(
       }
       chunkSpecs.push({ fileName, exportName, expressionSource })
       const reference = `${fileName}#${exportName}`
-      magic.overwrite(
-        start,
-        end,
-        `data-nx-on="${eventName}:${reference}" data-nx-on-${eventName}="${reference}"`,
-      )
+      magic.overwrite(start, end, `data-nx-on-${eventName}="${reference}"`)
     }
 
     if (node.type === 'CallExpression') {
@@ -195,7 +283,8 @@ export async function transformNexisSource(
   const isTypeScript = /\.tsx?$/.test(id)
   const chunks: LazyChunk[] = []
   for (const { fileName, exportName, expressionSource } of chunkSpecs) {
-    const raw = `export async function ${exportName}(event) { return (${expressionSource})(event) }\n`
+    const capturedExpression = captureExpression(expressionSource)
+    const raw = `export async function ${exportName}({ element, scope = {}, event }) { return (${capturedExpression})({ element, event, scope }) }\n`
     const source_ = isTypeScript
       ? (
           await transformWithEsbuild(raw, `${fileName}.ts`, {
@@ -207,7 +296,7 @@ export async function transformNexisSource(
   }
 
   return {
-    code: magic.toString(),
+    code: mergeEventAttributes(magic.toString()),
     map: magic.generateMap({ hires: true }),
     chunks,
     css: extractStaticCss(source, id),
@@ -257,6 +346,10 @@ export function nexis(options: { readonly root?: string } = {}): Plugin {
       for (const chunk of result.chunks) generatedChunks.set(chunk.fileName, chunk.source)
       for (const css of result.css) generatedCss.add(css)
       return { code: result.code, map: result.map }
+    },
+    handleHotUpdate() {
+      generatedChunks.clear()
+      generatedCss.clear()
     },
     generateBundle() {
       for (const [fileName, source] of generatedChunks) {

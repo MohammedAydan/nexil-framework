@@ -14,11 +14,15 @@ describe('core nodes', () => {
   it('rejects invalid element names', () => {
     expect(() => element('DIV!', {})).toThrow(/Invalid HTML element name/)
   })
+
+  it('accepts camelCase SVG element names', () => {
+    expect(element('foreignObject', {}).tag).toBe('foreignObject')
+  })
 })
 
 describe('serialization and request context', () => {
   it('accepts plain serializable data and rejects instances/functions', () => {
-    expect(isSerializable({ count: 1, items: ['a', null] })).toBe(true)
+    expect(isSerializable({ count: 1, optional: undefined, items: ['a', null] })).toBe(true)
     expect(isSerializable({ fn: () => undefined })).toBe(false)
     expect(isSerializable(new Date())).toBe(false)
   })
@@ -27,6 +31,8 @@ describe('serialization and request context', () => {
     const first = createRequestContext(new Request('https://example.test/one'), 'one')
     const second = createRequestContext(new Request('https://example.test/two'), 'two')
     first.values.set(Symbol('user'), 'first')
+    first.values.set('request-id', 'first')
+    expect(first.values.get('request-id')).toBe('first')
     expect(second.values.size).toBe(0)
     expect(first.id).not.toBe(second.id)
   })

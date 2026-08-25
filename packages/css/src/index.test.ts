@@ -23,7 +23,8 @@ describe('extractStyle', () => {
   })
 
   it('omits undefined values', () => {
-    expect(extractStyle({ color: undefined, marginTop: 4 }).cssText).toMatch(/margin-top:4;/)
+    expect(extractStyle({ color: undefined, marginTop: 4 }).cssText).toMatch(/margin-top:4px;/)
     expect(extractStyle({ color: undefined }).cssText).toMatch(/^\.nx-[\w]+\{\}$/)
+    expect(extractStyle({ '--primaryColor': 'red' }).cssText).toContain('--primaryColor:red;')
   })
 })

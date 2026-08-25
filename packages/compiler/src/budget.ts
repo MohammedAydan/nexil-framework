@@ -52,7 +52,7 @@ export function checkBudget(input: RouteBudgetInput, budget = DEFAULT_BUDGET): B
   }
 
   if (violations.length > 0 && input.overrideReason?.trim()) {
-    return { passed: true, violations: [] }
+    return { passed: true, violations }
   }
   return { passed: violations.length === 0, violations }
 }

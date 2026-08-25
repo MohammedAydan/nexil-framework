@@ -5,7 +5,7 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
-    "jsxImportSource": "@mohammedaydan/core",
+    "jsxImportSource": "@mohammedaydan/jsx-runtime",
     "strict": true,
     "skipLibCheck": true,
     "noEmit": false,
