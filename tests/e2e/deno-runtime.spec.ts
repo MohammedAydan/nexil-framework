@@ -110,7 +110,7 @@ await test('renderer escapes untrusted text', () => {
 await test('resumability bootstrap loads chunks from stable absolute URLs', () => {
   assert(RESUMABILITY_BOOTSTRAP.includes("import('/nexis-chunks/'"), 'chunk base URL drifted')
   assert(
-    RESUMABILITY_BOOTSTRAP.includes("querySelectorAll('[data-nx-on-click]')"),
+    RESUMABILITY_BOOTSTRAP.includes("querySelectorAll('[data-nx-on], [data-nx-on-click]')"),
     'bootstrap selector drifted',
   )
 })
