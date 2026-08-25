@@ -6,6 +6,7 @@
   "type": "module",
   "files": [
     "dist",
+    "!dist/**/*.test.*",
     "README.md"
   ],
   "repository": {

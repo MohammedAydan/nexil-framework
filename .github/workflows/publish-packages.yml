@@ -60,13 +60,21 @@ jobs:
       - name: Validate packed tarballs (dry run)
         run: |
           pnpm publish:github:dry > pack-report.log 2>&1 || { cat pack-report.log; exit 1; }
-          echo "Packages matched: $(grep -c 'npm notice package:' pack-report.log)"
+          sed -i 's/\x1b\[[0-9;]*m//g' pack-report.log
+          MATCHED=$(grep -cE '^\+ @mohammedaydan/' pack-report.log || true)
+          echo "Packages matched: $MATCHED"
+          if [ "$MATCHED" -lt 20 ]; then
+            echo '::error::Dry run matched fewer packages than expected — aborting release'
+            tail -n 40 pack-report.log
+            exit 1
+          fi
           if grep -q 'workspace:' pack-report.log; then
             echo '::error::Unresolved workspace dependency leaked into a tarball manifest'
             exit 1
           fi
           if grep -Eq 'notice .*(test\.js|test\.d\.ts)' pack-report.log; then
             echo '::error::Test artifacts leaked into a tarball'
+            grep -E 'notice .*(test\.js|test\.d\.ts)' pack-report.log
             exit 1
           fi
 
