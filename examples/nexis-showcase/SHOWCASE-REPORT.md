@@ -2,7 +2,7 @@
 
 **Generated:** 25 August 2026  
 **Application:** `examples/nexis-showcase`  
-**Framework branch:** `fix/production-audit-verification`
+**Framework branch:** `feat/nexis-showcase-benchmarks` (based on the merged production-audit fixes)
 
 ## Executive summary
 
@@ -120,7 +120,11 @@ The fifth gap is **media and observability completeness**. The media package has
 
 The sixth gap is **SEO endpoint and validation breadth**. Head tags are strong for the tested routes, but sitemap and robots helpers are not automatically exposed as standard endpoints, canonical metadata for dynamic parameters is not automatically route-derived, and the framework does not yet run a crawler-level validation pass for internal links, hreflang, pagination, duplicate content, or XML response headers. Structured-data validation is currently syntactic rather than schema-level.
 
-## 9. Final prioritization
+## 9. Visual QA
+
+The final screenshot pass covered the homepage, feature inventory, labs, and dynamic performance documentation routes at desktop and mobile viewports. The inspected desktop and mobile homepage captures showed the intended thesis-led hierarchy, responsive single-column collapse, readable code specimens, separated tap targets, visible interaction boundary, and no observed horizontal overflow or broken asset region. The complete screenshot set and review notes are retained under `benchmarks/screenshots/` and `benchmarks/visual-qa.md`.
+
+## 10. Final prioritization
 
 1. **Problem:** Captured resumability scope does not reconstruct runtime functions or signal capabilities in the browser.  
    **Fix:** Define and implement a safe scope ABI with serializable references, lifecycle cleanup, and explicit supported-capability rules.
@@ -140,3 +144,4 @@ The sixth gap is **SEO endpoint and validation breadth**. Head tags are strong f
 [2]: benchmarks/benchmark-results-production.json 'Production-preview benchmark results'
 [3]: ../../packages/seo/src/index.ts 'Nexis SEO helpers and validation'
 [4]: ../../packages/server/src/index.ts 'Nexis server security headers and cookie helpers'
+[5]: benchmarks/visual-qa.md 'Showcase screenshot visual-QA notes'
