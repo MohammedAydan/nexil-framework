@@ -7,9 +7,10 @@ import { build, createServer, preview, transformWithEsbuild } from 'vite'
 import { assertBudget } from '@mohammedaydan/compiler'
 import nexis, { RESUMABILITY_BOOTSTRAP, transformNexisSource } from '@mohammedaydan/vite-plugin'
 import { escapeHtml, renderToString } from '@mohammedaydan/renderer'
-import { renderHead } from '@mohammedaydan/seo'
+import { buildRobots, buildSitemap, renderHead, withCanonical } from '@mohammedaydan/seo'
 import { matchRoute, routeFromFile } from '@mohammedaydan/router'
 import { nexisSSRPlugin } from '@mohammedaydan/dev-server'
+import { createProductionServer } from '@mohammedaydan/serve'
 export { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 import { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 
@@ -40,7 +41,8 @@ function workspaceAliases(): readonly { readonly find: string; readonly replacem
 
 const VITE_WORKSPACE_CONFIG = { resolve: { alias: workspaceAliases() } }
 
-export type NexisCommand = 'create' | 'dev' | 'build' | 'start' | 'check' | 'analyze' | 'routes'
+export type NexisCommand =
+  'create' | 'dev' | 'build' | 'start' | 'serve' | 'check' | 'analyze' | 'routes'
 
 export interface ParsedCommand {
   readonly command: NexisCommand | 'help'
@@ -52,6 +54,7 @@ const commands = new Set<NexisCommand>([
   'dev',
   'build',
   'start',
+  'serve',
   'check',
   'analyze',
   'routes',
@@ -78,6 +81,7 @@ export function helpText(): string {
     '                 Env: NEXIS_HOST, NEXIS_PORT, NEXIS_ALLOW_ALL_HOSTS=1',
     '  build          Build SSG/ISR/SSR bundles',
     '  start          Start a production build',
+    '  serve          Serve dist/client with route-aware production semantics',
     '  check          Run type, route, SEO, and boundary checks',
     '  analyze        Report route output and client budgets',
     '  routes         List discovered routes',
@@ -172,6 +176,14 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   const routes = await discoverRoutes(routeRoot, routeRoot)
   if (routes.length === 0) throw new Error(`No routes found in ${routeRoot}.`)
   const outputRoot = join(root, 'dist')
+  const siteOrigin = process.env.NEXIS_SITE_ORIGIN ?? 'https://nexis-showcase.example'
+  const resolveSeo = (seo: unknown, pathname: string): any => {
+    if (!seo) return undefined
+    const metadata = typeof seo === 'function' ? seo({ pathname }) : seo
+    return metadata && typeof metadata === 'object'
+      ? withCanonical(metadata, pathname, siteOrigin)
+      : undefined
+  }
   await rm(outputRoot, { recursive: true, force: true })
   const serverRoot = join(outputRoot, 'server', 'routes')
   const serverModules = new Map<string, any>()
@@ -288,11 +300,12 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     let scriptsHtml = interactive ? `<script type="module" src="/${BOOTSTRAP_FILE}"></script>` : ''
     try {
       const mod: any = await loadServerModule(route)
-      if (mod.seo) {
+      const routeSeo = resolveSeo(mod.seo, routePath)
+      if (routeSeo) {
         try {
-          headHtml = renderHead(mod.seo)
+          headHtml = renderHead(routeSeo)
         } catch {
-          headHtml = mod.seo.title ? `<title>${escapeHtml(mod.seo.title)}</title>` : headHtml
+          headHtml = routeSeo?.title ? `<title>${escapeHtml(routeSeo.title)}</title>` : headHtml
         }
       }
       if (mod.render?.mode) {
@@ -357,7 +370,9 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
               ? await GeneratedComponent(generatedMatch?.params ?? {})
               : GeneratedComponent
           const generatedRenderedHtml = renderToString(generatedResult)
-          const generatedHead = staticModule.seo ? renderHead(staticModule.seo) : headHtml
+          const generatedHead = resolveSeo(staticModule.seo, generatedPath)
+            ? renderHead(resolveSeo(staticModule.seo, generatedPath))
+            : headHtml
           const generatedHtml = routeTemplate
             .replace('<!--nexis-head-outlet-->', generatedHead)
             .replace('<!--nexis-app-outlet-->', generatedRenderedHtml)
@@ -384,6 +399,18 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     await writeFile(join(outputRoot, BOOTSTRAP_FILE), minifiedBootstrap, 'utf8')
     await writeFile(join(clientRoot, BOOTSTRAP_FILE), minifiedBootstrap, 'utf8')
   }
+  const sitemap = buildSitemap(
+    records.map((record) => ({
+      url: `${siteOrigin.replace(/\/$/, '')}${record.route === '/' ? '/' : record.route}`,
+      changeFrequency: 'weekly' as const,
+    })),
+  )
+  await writeFile(join(clientRoot, 'sitemap.xml'), sitemap, 'utf8')
+  await writeFile(
+    join(clientRoot, 'robots.txt'),
+    buildRobots(`${siteOrigin.replace(/\/$/, '')}/sitemap.xml`),
+    'utf8',
+  )
   const manifest: BuildManifest = { version: 1, routes: records }
   await writeFile(
     join(outputRoot, 'nexis-manifest.json'),
@@ -464,6 +491,18 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
   if (parsed.command === 'start') {
     const server = await preview({ root, build: { outDir: 'dist/client' } })
     return `Nexis production server running at ${server.resolvedUrls?.local?.[0] ?? 'local URL'}`
+  }
+  if (parsed.command === 'serve') {
+    const production = createProductionServer(join(root, 'dist', 'client'), {
+      ...(process.env.NEXIS_HOST ? { host: process.env.NEXIS_HOST } : {}),
+      ...(process.env.NEXIS_PORT ? { port: Number(process.env.NEXIS_PORT) } : {}),
+      serverDir: join(root, 'dist', 'server', 'routes'),
+      ...(process.env.NEXIS_ACTION_ORIGINS
+        ? { actionOrigins: process.env.NEXIS_ACTION_ORIGINS.split(',').filter(Boolean) }
+        : {}),
+    })
+    await production.listen()
+    return `Nexis route-aware server running at http://${process.env.NEXIS_HOST ?? 'localhost'}:${process.env.NEXIS_PORT ?? '4173'}/`
   }
   // Keep the command exhaustive if a new command is added to NexisCommand.
   const unreachable: never = parsed.command

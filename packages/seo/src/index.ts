@@ -132,3 +132,60 @@ export function buildRobots(sitemapUrl: string, disallow: readonly string[] = []
   ]
   return `${lines.join('\n')}\n`
 }
+
+export function deriveCanonical(origin: string, pathname: string): string {
+  let base: URL
+  try {
+    base = new URL(origin)
+  } catch {
+    throw new TypeError('SEO site origin must be an absolute URL.')
+  }
+  if (!['http:', 'https:'].includes(base.protocol))
+    throw new TypeError('SEO site origin must use http(s).')
+  if (!pathname.startsWith('/') || pathname.startsWith('//'))
+    throw new TypeError('SEO pathname must be local.')
+  base.pathname = pathname || '/'
+  base.search = ''
+  base.hash = ''
+  return base.href
+}
+
+export function withCanonical(
+  metadata: SeoMetadata,
+  pathname: string,
+  origin: string,
+): SeoMetadata {
+  return metadata.canonical
+    ? metadata
+    : { ...metadata, canonical: deriveCanonical(origin, pathname) }
+}
+
+const SCHEMA_TYPES = new Set([
+  'Article',
+  'BlogPosting',
+  'BreadcrumbList',
+  'Product',
+  'TechArticle',
+  'WebPage',
+  'WebSite',
+])
+
+export interface JsonLdValidation {
+  readonly valid: boolean
+  readonly errors: readonly string[]
+}
+
+export function validateJsonLd(value: unknown): JsonLdValidation {
+  const errors: string[] = []
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return { valid: false, errors: ['JSON-LD must be an object.'] }
+  }
+  const data = value as Record<string, unknown>
+  if (data['@context'] !== 'https://schema.org' && data['@context'] !== 'http://schema.org')
+    errors.push('JSON-LD @context must be schema.org.')
+  if (typeof data['@type'] !== 'string' || !SCHEMA_TYPES.has(data['@type']))
+    errors.push('JSON-LD @type is not a supported schema.org type.')
+  if (typeof data.name !== 'string' || data.name.trim().length === 0)
+    errors.push('JSON-LD name is required.')
+  return { valid: errors.length === 0, errors }
+}

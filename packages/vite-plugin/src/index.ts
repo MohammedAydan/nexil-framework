@@ -28,11 +28,22 @@ export interface LazyChunk {
   readonly source: string
 }
 
+export type ScopeCaptureKind = 'value' | 'signal' | 'store' | 'action' | 'unsupported'
+
+export interface ScopeCapture {
+  readonly name: string
+  readonly kind: ScopeCaptureKind
+  readonly id?: string
+  readonly reason?: string
+}
+
 export interface NexisTransformResult {
   readonly code: string
   readonly map: ReturnType<MagicString['generateMap']>
   readonly chunks: readonly LazyChunk[]
   readonly css: readonly string[]
+  readonly scopeCaptures: readonly ScopeCapture[]
+  readonly warnings: readonly string[]
 }
 
 function hash(value: string): string {
@@ -58,10 +69,17 @@ const GLOBAL_IDENTIFIERS = new Set([
   'Promise',
   'String',
   'console',
+  'document',
+  'fetch',
+  'FormData',
+  'URLSearchParams',
   'undefined',
 ])
 
-function captureExpression(expressionSource: string): string {
+function captureExpression(expressionSource: string): {
+  readonly code: string
+  readonly names: readonly string[]
+} {
   const prefix = 'const __nexisHandler = '
   const ast = parse(`${prefix}${expressionSource}`, {
     sourceType: 'module',
@@ -99,8 +117,39 @@ function captureExpression(expressionSource: string): string {
     if (replacement.start >= 0)
       magic.overwrite(replacement.start, replacement.end, `scope.${replacement.name}`)
   }
-  return magic.toString()
+  return {
+    code: magic.toString(),
+    names: [...new Set(replacements.map((replacement) => replacement.name))],
+  }
 }
+
+function classifyScopeCaptures(source: string, names: readonly string[]): ScopeCapture[] {
+  const captures: ScopeCapture[] = []
+  const compactSource = source.replace(/\s+/g, ' ')
+  for (const name of names) {
+    const kind = (['state', 'computed', 'createStore', 'action'] as const).find((candidate) =>
+      new RegExp(`(?:const|let|var) ${name} = ${candidate}\\(`).test(compactSource),
+    )
+    if (kind === 'state' || kind === 'computed') {
+      captures.push({ name, kind: 'signal', id: `nx:signal:${hash(`${name}:${source}`)}` })
+    } else if (kind === 'createStore') {
+      captures.push({ name, kind: 'store', id: `nx:store:${hash(`${name}:${source}`)}` })
+    } else if (kind === 'action') {
+      captures.push({ name, kind: 'action', id: `nx:action:${hash(`${name}:${source}`)}` })
+    } else if (/^(?:true|false|null|undefined|NaN)$/.test(name)) {
+      captures.push({ name, kind: 'value' })
+    } else {
+      captures.push({
+        name,
+        kind: 'unsupported',
+        reason: `Capture "${name}" is not a serializable Nexis signal, store, action, or plain value.`,
+      })
+    }
+  }
+  return captures
+}
+
+export { classifyScopeCaptures }
 
 function walk(node: unknown, visit: (node: AstNode) => void): void {
   if (!node || typeof node !== 'object') return
@@ -205,6 +254,8 @@ export async function transformNexisSource(
   const moduleDiagnostics: string[] = []
   const chunkSpecs: Array<{ fileName: string; exportName: string; expressionSource: string }> = []
   const css: string[] = []
+  const scopeCaptures: ScopeCapture[] = []
+  const warnings: string[] = []
   const magic = new MagicString(source)
 
   walk(ast, (node) => {
@@ -284,7 +335,13 @@ export async function transformNexisSource(
   const chunks: LazyChunk[] = []
   for (const { fileName, exportName, expressionSource } of chunkSpecs) {
     const capturedExpression = captureExpression(expressionSource)
-    const raw = `export async function ${exportName}({ element, scope = {}, event }) { return (${capturedExpression})({ element, event, scope }) }\n`
+    const captures = classifyScopeCaptures(source, capturedExpression.names)
+    scopeCaptures.push(...captures)
+    for (const capture of captures) {
+      if (capture.kind === 'unsupported')
+        warnings.push(capture.reason ?? `Unsupported capture: ${capture.name}`)
+    }
+    const raw = `export async function ${exportName}({ element, scope = {}, event }) { return (${capturedExpression.code})({ element, event, scope }) }\n`
     const source_ = isTypeScript
       ? (
           await transformWithEsbuild(raw, `${fileName}.ts`, {
@@ -300,6 +357,8 @@ export async function transformNexisSource(
     map: magic.generateMap({ hires: true }),
     chunks,
     css: extractStaticCss(source, id),
+    scopeCaptures,
+    warnings,
   }
 }
 

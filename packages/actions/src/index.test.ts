@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createDataContext } from '@mohammedaydan/server'
-import { action, assertIdempotent, assertTrustedOrigin } from './index'
+import {
+  action,
+  assertIdempotent,
+  assertTrustedOrigin,
+  createMemoryIdempotencyStore,
+  handleActionRequest,
+} from './index'
 
 describe('server actions', () => {
   it('validates before authorizing and handling', async () => {
@@ -56,5 +62,96 @@ describe('server actions', () => {
     }
     await expect(assertIdempotent(store, 'abcdefgh')).resolves.toBeUndefined()
     await expect(assertIdempotent(store, 'abcdefgh')).rejects.toMatchObject({ status: 409 })
+  })
+})
+
+describe('action transport', () => {
+  it('handles JSON and form submissions with a typed envelope', async () => {
+    const submit = action({
+      validate: (input: unknown) => {
+        if (
+          !input ||
+          typeof input !== 'object' ||
+          typeof (input as { name?: unknown }).name !== 'string'
+        )
+          throw new TypeError('Name required')
+        return input as { name: string }
+      },
+      handle: (_context, input) => `queued:${input.name}`,
+    })
+    const json = await handleActionRequest(
+      new Request('https://example.test/__nexis/actions/labs/submit', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', origin: 'https://example.test' },
+        body: JSON.stringify({ name: 'Ada' }),
+      }),
+      submit,
+    )
+    expect(json.status).toBe(200)
+    await expect(json.json()).resolves.toEqual({ ok: true, data: 'queued:Ada' })
+
+    const form = new URLSearchParams({ name: 'Grace' })
+    const formResponse = await handleActionRequest(
+      new Request('https://example.test/action', {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: form,
+      }),
+      submit,
+    )
+    expect(formResponse.status).toBe(200)
+    await expect(formResponse.json()).resolves.toEqual({ ok: true, data: 'queued:Grace' })
+  })
+
+  it('rejects invalid input, untrusted origins, duplicate keys, and unsupported methods', async () => {
+    const store = createMemoryIdempotencyStore()
+    const submit = action({
+      validate: (input: unknown) => {
+        if (!input || typeof input !== 'object' || !('name' in input))
+          throw new TypeError('Name required')
+        return input as { name: string }
+      },
+      handle: (_context, input) => input.name,
+    })
+    const invalid = await handleActionRequest(
+      new Request('https://example.test/action', { method: 'POST', body: JSON.stringify({}) }),
+      submit,
+    )
+    expect(invalid.status).toBe(400)
+    expect(await invalid.json()).toEqual({ ok: false, errors: ['Name required'] })
+
+    const origin = await handleActionRequest(
+      new Request('https://example.test/action', {
+        method: 'POST',
+        headers: { origin: 'https://evil.test', 'content-type': 'application/json' },
+        body: JSON.stringify({ name: 'Ada' }),
+      }),
+      submit,
+    )
+    expect(origin.status).toBe(403)
+
+    const first = await handleActionRequest(
+      new Request('https://example.test/action', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'idempotency-key': 'abcdefgh' },
+        body: JSON.stringify({ name: 'Ada' }),
+      }),
+      submit,
+      { idempotency: store },
+    )
+    expect(first.status).toBe(200)
+    const replay = await handleActionRequest(
+      new Request('https://example.test/action', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'idempotency-key': 'abcdefgh' },
+        body: JSON.stringify({ name: 'Ada' }),
+      }),
+      submit,
+      { idempotency: store },
+    )
+    expect(replay.status).toBe(409)
+
+    const method = await handleActionRequest(new Request('https://example.test/action'), submit)
+    expect(method.status).toBe(405)
   })
 })

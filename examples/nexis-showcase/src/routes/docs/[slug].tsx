@@ -1,13 +1,13 @@
 import { component } from '@mohammedaydan/core'
 
 export const staticPaths = ['architecture', 'resumability', 'performance']
-export const seo = {
+export const seo = ({ pathname = '/docs/architecture' }: { pathname?: string } = {}) => ({
   title: 'Nexis Documentation — Architecture note',
   description: 'Static documentation generated from a dynamic Nexis route.',
-  canonical: 'https://nexis-showcase.example/showcase/docs',
   type: 'article' as const,
   jsonLd: { '@context': 'https://schema.org', '@type': 'TechArticle', name: 'Nexis Documentation' },
-}
+  pathname,
+})
 
 const notes: Record<string, { title: string; copy: string; signal: string }> = {
   architecture: {

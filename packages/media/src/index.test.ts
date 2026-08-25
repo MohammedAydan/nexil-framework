@@ -1,5 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
-import { fontFace, imageAttributes, selfHostFont, transformImage } from './index'
+import {
+  buildImageVariants,
+  clearImageTransformCache,
+  fontFace,
+  imageAttributes,
+  selfHostFont,
+  transformImage,
+} from './index'
 
 describe('imageAttributes', () => {
   it('creates responsive, lazy image attributes with stable dimensions', () => {
@@ -74,5 +81,41 @@ describe('fontFace', () => {
     expect(() => fontFace({ family: 'Inter', weight: [0], source: '/inter.woff2' })).toThrow(
       /weights/,
     )
+  })
+})
+
+describe('buildImageVariants', () => {
+  it('writes variants and reports a cache hit on the second build', async () => {
+    const { mkdtemp, readFile, rm, writeFile } = await import('node:fs/promises')
+    const { tmpdir } = await import('node:os')
+    const { join } = await import('node:path')
+    clearImageTransformCache()
+    const root = await mkdtemp(join(tmpdir(), 'nexis-media-'))
+    const source = join(root, 'fixture.svg')
+    const output = join(root, 'variants')
+    await writeFile(
+      source,
+      '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect width="20" height="20" fill="red"/></svg>',
+    )
+    try {
+      const first = await buildImageVariants({
+        sourcePath: source,
+        outputDir: output,
+        fileBase: 'fixture',
+        widths: [20],
+      })
+      const second = await buildImageVariants({
+        sourcePath: source,
+        outputDir: output,
+        fileBase: 'fixture',
+        widths: [20],
+      })
+      expect(first).toHaveLength(2)
+      expect(first.every((variant) => !variant.cacheHit)).toBe(true)
+      expect(second.every((variant) => variant.cacheHit)).toBe(true)
+      expect((await readFile(join(output, 'fixture-20.webp'))).byteLength).toBeGreaterThan(0)
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
   })
 })

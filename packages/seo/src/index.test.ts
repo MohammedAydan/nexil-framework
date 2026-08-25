@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { buildRobots, buildSitemap, normalizeSeo, renderHead } from './index'
+import {
+  buildRobots,
+  buildSitemap,
+  deriveCanonical,
+  normalizeSeo,
+  renderHead,
+  validateJsonLd,
+  withCanonical,
+} from './index'
 
 describe('SEO metadata', () => {
   it('requires a non-empty title', () => {
@@ -61,5 +69,32 @@ describe('SEO outputs', () => {
     expect(() => buildRobots('https://example.test/sitemap.xml', ['/admin\nAllow: /'])).toThrow(
       /newlines/,
     )
+  })
+})
+
+describe('SEO validation helpers', () => {
+  it('derives canonical URLs from the resolved route path and preserves overrides', () => {
+    expect(deriveCanonical('https://example.test', '/docs/architecture')).toBe(
+      'https://example.test/docs/architecture',
+    )
+    expect(
+      withCanonical({ title: 'Docs' }, '/docs/architecture', 'https://example.test').canonical,
+    ).toBe('https://example.test/docs/architecture')
+    expect(
+      withCanonical(
+        { title: 'Docs', canonical: 'https://override.test/docs' },
+        '/docs/architecture',
+        'https://example.test',
+      ).canonical,
+    ).toBe('https://override.test/docs')
+  })
+
+  it('validates supported schema.org JSON-LD types and rejects malformed documents', () => {
+    expect(
+      validateJsonLd({ '@context': 'https://schema.org', '@type': 'TechArticle', name: 'Docs' }),
+    ).toEqual({ valid: true, errors: [] })
+    expect(
+      validateJsonLd({ '@context': 'https://schema.org', '@type': 'Unknown', name: '' }),
+    ).toMatchObject({ valid: false })
   })
 })

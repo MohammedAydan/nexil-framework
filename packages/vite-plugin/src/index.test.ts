@@ -85,3 +85,24 @@ describe('Nexis Vite transform', () => {
     expect(result.css[0]).toContain('margin-top:4px;')
   })
 })
+
+it('classifies live signal captures and warns for unsupported closures', async () => {
+  const result = await transformNexisSource(
+    `import { state } from '@mohammedaydan/core'
+const count = state(0)
+const runtimeValue = new Date()
+const view = <button onClick$={({ element }) => { element.textContent = String(count()) + runtimeValue.toISOString() }}>+</button>`,
+    '/app/src/routes/scope.tsx',
+  )
+  expect(result.scopeCaptures).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        name: 'count',
+        kind: 'signal',
+        id: expect.stringMatching(/^nx:signal:/),
+      }),
+      expect.objectContaining({ name: 'runtimeValue', kind: 'unsupported' }),
+    ]),
+  )
+  expect(result.warnings.some((warning) => warning.includes('runtimeValue'))).toBe(true)
+})

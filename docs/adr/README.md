@@ -51,6 +51,10 @@ These decisions are binding for the v2 implementation unless superseded by a new
 **Rationale:** Dimensions, loading behavior, font delivery, and modern formats directly affect layout stability and loading performance.
 **Consequence:** Media fixtures and output validation are release gates; missing image dimensions are compiler errors.
 
+## ADR-016 — Phase 2 production parity contracts
+
+**Status:** Accepted. See [phase-2-production-parity.md](./phase-2-production-parity.md) for the ScopeRef, action transport, serve, streaming, media, telemetry, and SEO contracts.
+
 ## Governance
 
 Every new feature must document whether it affects serialization, caching, security boundaries, client bundle size, or the four core commitments. A feature that cannot preserve those commitments belongs behind an experimental flag or in a plugin.

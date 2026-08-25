@@ -1,20 +1,7 @@
 {
-  "name": "@mohammedaydan/cli",
+  "name": "@mohammedaydan/telemetry",
   "version": "1.0.0",
   "type": "module",
-  "dependencies": {
-    "@mohammedaydan/compiler": "workspace:*",
-    "@mohammedaydan/dev-server": "workspace:*",
-    "@mohammedaydan/renderer": "workspace:*",
-    "@mohammedaydan/serve": "workspace:*",
-    "@mohammedaydan/router": "workspace:*",
-    "@mohammedaydan/seo": "workspace:*",
-    "@mohammedaydan/vite-plugin": "workspace:*",
-    "vite": "^7.3.6"
-  },
-  "bin": {
-    "nexis": "dist/bin.js"
-  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -29,7 +16,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MohammedAydan/nexis-framework.git",
-    "directory": "packages/cli"
+    "directory": "packages/telemetry"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com",

@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-08-25T17:12:00.390Z",
-  "passed": 14,
-  "total": 14,
+  "generatedAt": "2026-08-25T18:40:35.149Z",
+  "passed": 20,
+  "total": 20,
   "passRate": 100,
   "checks": [
     {
@@ -17,7 +17,7 @@
     {
       "name": "SSR emits substantive HTML",
       "passed": true,
-      "detail": "/:7794B /features:5293B /labs:4530B /docs/architecture:2331B /docs/resumability:2357B /docs/performance:2325B /status:3203B"
+      "detail": "/:8204B /features:5365B /labs:5028B /docs/architecture:2411B /docs/resumability:2437B /docs/performance:2403B /status:3439B"
     },
     {
       "name": "Nested static paths render",
@@ -57,22 +57,52 @@
     {
       "name": "Bootstrap is below 2KB raw",
       "passed": true,
-      "detail": "1374B"
+      "detail": "1621B"
     },
     {
       "name": "Average interactive chunk is below 2KB raw",
       "passed": true,
-      "detail": "2 chunks"
+      "detail": "3 chunks"
     },
     {
       "name": "Median route latency is below 250ms",
       "passed": true,
-      "detail": "/:1.94ms /features:1.81ms /labs:0.92ms /docs/architecture:0.89ms /docs/resumability:0.79ms /docs/performance:0.81ms /status:0.8ms"
+      "detail": "/:1.86ms /features:1.54ms /labs:0.93ms /docs/architecture:0.81ms /docs/resumability:0.82ms /docs/performance:0.77ms /status:0.75ms"
     },
     {
       "name": "HTML responses include an explicit cache policy",
       "passed": true,
       "detail": "/:public, max-age=0, must-revalidate /features:public, max-age=0, must-revalidate /labs:public, max-age=0, must-revalidate /docs/architecture:public, max-age=0, must-revalidate /docs/resumability:public, max-age=0, must-revalidate /docs/performance:public, max-age=0, must-revalidate /status:public, max-age=0, must-revalidate"
+    },
+    {
+      "name": "Sitemap endpoint is crawlable and includes published routes",
+      "passed": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "Robots endpoint points to the sitemap",
+      "passed": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "Action endpoint returns a successful typed envelope",
+      "passed": true,
+      "detail": "{\"ok\":true,\"data\":\"queued:Ada\"}"
+    },
+    {
+      "name": "Crawler finds no broken internal links or duplicate metadata signatures",
+      "passed": true,
+      "detail": "{\"brokenLinks\":[],\"duplicateMetadata\":[]}"
+    },
+    {
+      "name": "Every measured page passes schema-level JSON-LD validation",
+      "passed": true,
+      "detail": "schema.org context/type/name"
+    },
+    {
+      "name": "Build-time image variants are present and non-empty",
+      "passed": true,
+      "detail": "4 variants"
     }
   ]
 }

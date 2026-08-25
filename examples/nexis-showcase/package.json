@@ -6,7 +6,7 @@
   "packageManager": "pnpm@10.15.0",
   "scripts": {
     "dev": "node ../../packages/cli/dist/bin.js dev",
-    "build": "node ../../packages/cli/dist/bin.js build",
+    "build": "node ../../packages/cli/dist/bin.js build && node ./benchmarks/build-media.mjs",
     "check": "node ../../packages/cli/dist/bin.js check --budget",
     "bench": "node ./benchmarks/run-benchmarks.mjs",
     "evaluate": "node ./benchmarks/evaluate.mjs"
@@ -23,7 +23,9 @@
     "@mohammedaydan/reactivity": "workspace:*",
     "@mohammedaydan/seo": "workspace:*",
     "@mohammedaydan/server": "workspace:*",
-    "@mohammedaydan/state": "workspace:*"
+    "@mohammedaydan/serve": "workspace:*",
+    "@mohammedaydan/state": "workspace:*",
+    "@mohammedaydan/telemetry": "workspace:*"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

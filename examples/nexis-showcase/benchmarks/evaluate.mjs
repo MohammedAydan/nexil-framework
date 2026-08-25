@@ -88,6 +88,40 @@ check(
   ),
   results.routes.measured.map((route) => `${route.path}:${route.cacheControl}`).join(' '),
 )
+check(
+  'Sitemap endpoint is crawlable and includes published routes',
+  results.endpoints['/sitemap.xml']?.status === 200 &&
+    results.routes.measured.every((route) =>
+      results.endpoints['/sitemap.xml'].body.includes(route.path),
+    ),
+  `status=${results.endpoints['/sitemap.xml']?.status}`,
+)
+check(
+  'Robots endpoint points to the sitemap',
+  results.endpoints['/robots.txt']?.status === 200 &&
+    results.endpoints['/robots.txt'].body.includes('Sitemap:'),
+  `status=${results.endpoints['/robots.txt']?.status}`,
+)
+check(
+  'Action endpoint returns a successful typed envelope',
+  results.action.status === 200 && results.action.body?.ok === true,
+  JSON.stringify(results.action.body),
+)
+check(
+  'Crawler finds no broken internal links or duplicate metadata signatures',
+  results.crawler.brokenLinks.length === 0 && results.crawler.duplicateMetadata.length === 0,
+  JSON.stringify(results.crawler),
+)
+check(
+  'Every measured page passes schema-level JSON-LD validation',
+  results.routes.measured.every((route) => route.seo.jsonLdSchema),
+  'schema.org context/type/name',
+)
+check(
+  'Build-time image variants are present and non-empty',
+  results.media.variants.length >= 2 && results.media.smallerOrEqual === true,
+  `${results.media.variants.length} variants`,
+)
 
 const passed = checks.filter((check) => check.passed).length
 const evaluation = {

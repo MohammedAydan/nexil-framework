@@ -1,4 +1,7 @@
 import { isIP } from 'node:net'
+import { createHash } from 'node:crypto'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 
 export interface ImageProps {
   readonly src: string
@@ -202,4 +205,64 @@ export function fontFace(props: FontProps): string {
         `@font-face{font-family:"${props.family}";font-style:normal;font-weight:${weight};font-display:${display};src:url("${props.source}") format("woff2");}`,
     )
     .join('')
+}
+
+export interface BuildImageOptions {
+  readonly sourcePath: string
+  readonly outputDir: string
+  readonly fileBase: string
+  readonly widths?: readonly number[]
+}
+
+export interface BuiltImageVariant {
+  readonly format: 'webp' | 'avif'
+  readonly width: number
+  readonly fileName: string
+  readonly bytes: number
+  readonly cacheHit: boolean
+}
+
+const imageBuildCache = new Map<string, readonly ImageVariant[]>()
+let imageFallbackWarningShown = false
+
+export async function buildImageVariants(
+  options: BuildImageOptions,
+): Promise<readonly BuiltImageVariant[]> {
+  if (!/^[a-zA-Z0-9_-]+$/.test(options.fileBase)) throw new TypeError('Invalid image file base.')
+  const widths = [...(options.widths ?? [320, 640, 960])]
+  const source = new Uint8Array(await readFile(options.sourcePath))
+  const key = createHash('sha256').update(source).update(JSON.stringify(widths)).digest('hex')
+  let variants = imageBuildCache.get(key)
+  const cacheHit = variants !== undefined
+  if (!variants) {
+    try {
+      variants = await transformImage(source, options.fileBase, widths)
+      imageBuildCache.set(key, variants)
+    } catch (error) {
+      if (!imageFallbackWarningShown) {
+        console.warn(
+          `[nexis/media] Image transform unavailable; keeping original asset. ${error instanceof Error ? error.message : String(error)}`,
+        )
+        imageFallbackWarningShown = true
+      }
+      return []
+    }
+  }
+  await mkdir(options.outputDir, { recursive: true })
+  const result: BuiltImageVariant[] = []
+  for (const variant of variants) {
+    await writeFile(join(options.outputDir, variant.fileName), variant.bytes)
+    result.push({
+      format: variant.format,
+      width: variant.width,
+      fileName: variant.fileName,
+      bytes: variant.bytes.byteLength,
+      cacheHit,
+    })
+  }
+  return result
+}
+
+export function clearImageTransformCache(): void {
+  imageBuildCache.clear()
 }

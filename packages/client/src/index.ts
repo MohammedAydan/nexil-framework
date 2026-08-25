@@ -129,3 +129,293 @@ export function bootstrapResumability(
   }
   return () => listeners.splice(0).forEach((dispose) => dispose())
 }
+
+export type ScopeRefKind = 'value' | 'signal' | 'store' | 'action' | 'unsupported'
+
+export interface ScopeRefValue {
+  readonly kind: 'value'
+  readonly data: Serializable
+}
+
+export interface ScopeRefSignal {
+  readonly kind: 'signal'
+  readonly id: string
+  readonly initial: Serializable
+}
+
+export interface ScopeRefStore {
+  readonly kind: 'store'
+  readonly id: string
+  readonly initial: Serializable
+}
+
+export interface ScopeRefAction {
+  readonly kind: 'action'
+  readonly id: string
+  readonly endpoint: string
+}
+
+export interface ScopeRefUnsupported {
+  readonly kind: 'unsupported'
+  readonly reason: string
+}
+
+export type ScopeRef =
+  ScopeRefValue | ScopeRefSignal | ScopeRefStore | ScopeRefAction | ScopeRefUnsupported
+
+export interface ScopeSignal<T extends Serializable = Serializable> {
+  (): T
+  readonly value: T
+  set(next: T | ((previous: T) => T)): void
+  subscribe(listener: () => void): () => void
+  dispose(): void
+}
+
+export interface ScopeStore<T extends Serializable = Serializable> {
+  readonly value: ScopeSignal<T>
+  snapshot(): T
+  set(next: T | ((previous: T) => T)): void
+  dispose(): void
+}
+
+export interface ScopeRegistry {
+  register(id: string, value: unknown, kind?: Exclude<ScopeRefKind, 'unsupported' | 'value'>): void
+  resolve<T = unknown>(id: string): T | undefined
+  dispose(id: string): boolean
+  disposeAll(): void
+  inspectScope(): ReadonlyArray<{ readonly id: string; readonly kind: ScopeRefKind }>
+}
+
+function assertScopeId(id: string): void {
+  if (!/^[a-zA-Z0-9:_-]{1,160}$/.test(id)) throw new TypeError('Invalid Nexis scope ID.')
+}
+
+function stableHash(value: string): string {
+  let hash = 2166136261
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index)
+    hash = Math.imul(hash, 16777619)
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0')
+}
+
+export function createScopeId(kind: ScopeRefKind, source: string): string {
+  if (!/^[a-zA-Z0-9:_-]+$/.test(kind)) throw new TypeError('Invalid scope kind.')
+  if (!source || source.length > 512) throw new TypeError('Invalid scope source.')
+  return `nx:${kind}:${stableHash(source)}`
+}
+
+function assertSupportedScopeValue(value: unknown): asserts value is Serializable {
+  if (!isSerializable(value) || !isResumableValue(value)) {
+    throw new TypeError(
+      'Nexis scope capture supports only serializable plain values, signals, stores, and actions.',
+    )
+  }
+}
+
+function createSignal<T extends Serializable>(initial: T): ScopeSignal<T> {
+  let current = initial
+  let disposed = false
+  const listeners = new Set<() => void>()
+  const signal = (() => {
+    if (disposed) throw new Error('Nexis scope signal has been disposed.')
+    return current
+  }) as ScopeSignal<T>
+  Object.defineProperty(signal, 'value', { enumerable: true, get: () => signal() })
+  signal.set = (next) => {
+    if (disposed) throw new Error('Nexis scope signal has been disposed.')
+    const resolved = typeof next === 'function' ? (next as (previous: T) => T)(current) : next
+    assertSupportedScopeValue(resolved)
+    if (Object.is(current, resolved)) return
+    current = resolved
+    for (const listener of [...listeners]) listener()
+  }
+  signal.subscribe = (listener) => {
+    if (disposed) return () => undefined
+    listeners.add(listener)
+    return () => listeners.delete(listener)
+  }
+  signal.dispose = () => {
+    disposed = true
+    listeners.clear()
+  }
+  return signal
+}
+
+export function createScopeRegistry(): ScopeRegistry {
+  const entries = new Map<string, { readonly kind: ScopeRefKind; readonly value: unknown }>()
+  return {
+    register(id, value, kind = 'signal') {
+      assertScopeId(id)
+      if (
+        kind === 'signal' &&
+        (typeof value !== 'function' || typeof (value as { set?: unknown }).set !== 'function')
+      )
+        throw new TypeError('Nexis signal scope values must be callable signals.')
+      if (
+        kind === 'store' &&
+        (!value ||
+          typeof value !== 'object' ||
+          typeof (value as { value?: unknown }).value !== 'function')
+      )
+        throw new TypeError('Nexis store scope values must expose a signal value.')
+      if (kind === 'action' && typeof value !== 'function')
+        throw new TypeError('Nexis action scope values must be callable.')
+      entries.set(id, { kind, value })
+    },
+    resolve(id) {
+      assertScopeId(id)
+      return entries.get(id)?.value as unknown as any
+    },
+    dispose(id) {
+      assertScopeId(id)
+      const entry = entries.get(id)
+      if (!entry) return false
+      if (typeof (entry.value as { dispose?: unknown }).dispose === 'function') {
+        ;(entry.value as { dispose: () => void }).dispose()
+      }
+      entries.delete(id)
+      return true
+    },
+    disposeAll() {
+      for (const id of entries.keys()) this.dispose(id)
+    },
+    inspectScope() {
+      return [...entries].map(([id, entry]) => ({ id, kind: entry.kind }))
+    },
+  }
+}
+
+const globalScopeRegistry = createScopeRegistry()
+
+export function getScopeRegistry(): ScopeRegistry {
+  return globalScopeRegistry
+}
+
+export function registerScopeSignal<T extends Serializable>(
+  id: string,
+  initial: T,
+): ScopeSignal<T> {
+  const signal = createSignal(initial)
+  globalScopeRegistry.register(id, signal, 'signal')
+  return signal
+}
+
+export function registerScopeStore<T extends Serializable>(id: string, initial: T): ScopeStore<T> {
+  const store: ScopeStore<T> = {
+    value: createSignal(initial),
+    snapshot: () => JSON.parse(JSON.stringify(store.value())) as T,
+    set: (next) => store.value.set(next),
+    dispose: () => store.value.dispose(),
+  }
+  globalScopeRegistry.register(id, store, 'store')
+  return store
+}
+
+export function registerScopeAction<Input, Output>(
+  id: string,
+  actionRef: (input: Input) => Promise<Output>,
+): void {
+  globalScopeRegistry.register(id, actionRef, 'action')
+}
+
+export function disposeScope(id: string): boolean {
+  return globalScopeRegistry.dispose(id)
+}
+
+export function inspectScope(): ReadonlyArray<{
+  readonly id: string
+  readonly kind: ScopeRefKind
+}> {
+  return globalScopeRegistry.inspectScope()
+}
+
+export function serializeScopeRefs(refs: Readonly<Record<string, ScopeRef>>): string {
+  for (const ref of Object.values(refs)) {
+    if (ref.kind === 'value') assertSupportedScopeValue(ref.data)
+    if (ref.kind === 'unsupported' && !ref.reason.trim())
+      throw new TypeError('Unsupported Nexis scope captures require a reason.')
+  }
+  return JSON.stringify(refs)
+}
+
+export function deserializeScopeRefs(serialized: string): Readonly<Record<string, ScopeRef>> {
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(serialized)
+  } catch {
+    throw new TypeError('Invalid Nexis scope reference payload: expected JSON.')
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed))
+    throw new TypeError('Invalid Nexis scope reference payload.')
+  for (const ref of Object.values(parsed as Record<string, ScopeRef>)) {
+    if (
+      !ref ||
+      typeof ref !== 'object' ||
+      !['value', 'signal', 'store', 'action', 'unsupported'].includes(ref.kind)
+    )
+      throw new TypeError('Invalid Nexis scope reference kind.')
+  }
+  return parsed as Readonly<Record<string, ScopeRef>>
+}
+
+export function resolveScopeRefs(
+  refs: Readonly<Record<string, ScopeRef>>,
+): Record<string, unknown> {
+  const scope: Record<string, unknown> = {}
+  for (const [name, ref] of Object.entries(refs)) {
+    if (ref.kind === 'value') {
+      assertSupportedScopeValue(ref.data)
+      scope[name] = ref.data
+      continue
+    }
+    if (ref.kind === 'unsupported') {
+      if ((globalThis as { __NEXIS_DEV__?: boolean }).__NEXIS_DEV__ === true)
+        throw new Error(`Unsupported Nexis scope capture: ${ref.reason}`)
+      console.warn(`[nexis] Unsupported scope capture ignored: ${ref.reason}`)
+      continue
+    }
+    scope[name] = globalScopeRegistry.resolve(ref.id)
+  }
+  return scope
+}
+
+export interface ActionCallError {
+  readonly ok: false
+  readonly errors: readonly string[]
+}
+
+export interface ActionCallSuccess<Output> {
+  readonly ok: true
+  readonly data: Output
+}
+
+export type ActionCallResult<Output> = ActionCallSuccess<Output> | ActionCallError
+
+export async function callAction<Input, Output>(
+  actionRef: { readonly endpoint: string } | string,
+  input: Input,
+  options: { readonly fetch?: typeof fetch; readonly idempotencyKey?: string } = {},
+): Promise<ActionCallResult<Output>> {
+  const endpoint = typeof actionRef === 'string' ? actionRef : actionRef.endpoint
+  if (!endpoint.startsWith('/') || endpoint.startsWith('//'))
+    throw new TypeError('Action endpoint must be local.')
+  const request = options.fetch ?? fetch
+  const response = await request(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.idempotencyKey ? { 'Idempotency-Key': options.idempotencyKey } : {}),
+    },
+    body: JSON.stringify(input),
+  })
+  let payload: unknown
+  try {
+    payload = await response.json()
+  } catch {
+    return { ok: false, errors: [`Action endpoint returned HTTP ${response.status}.`] }
+  }
+  if (!response.ok || !payload || typeof payload !== 'object')
+    return { ok: false, errors: [`Action endpoint returned HTTP ${response.status}.`] }
+  return payload as ActionCallResult<Output>
+}

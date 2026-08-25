@@ -45,3 +45,11 @@ test.describe('Nexis showcase', () => {
     await expect(page.locator('body')).toContainText('Not Found')
   })
 })
+
+test('posts the progressive action form through the Nexis endpoint', async ({ page }) => {
+  await page.goto(`${live}/labs`, { waitUntil: 'networkidle' })
+  await expect(page.locator('#action-form')).toHaveAttribute('data-nx-on-submit', /chunk_/)
+  await page.locator('#action-name').fill('Ada')
+  await page.locator('#action-form button[type="submit"]').click()
+  await expect(page.locator('#action-output')).toHaveText('Action result: queued:Ada')
+})

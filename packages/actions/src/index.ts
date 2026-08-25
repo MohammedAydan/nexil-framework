@@ -81,3 +81,87 @@ export async function assertIdempotent(store: IdempotencyStore, key: string): Pr
   if (await store.has(key)) throw new Response('Duplicate action', { status: 409 })
   await store.put(key)
 }
+
+export interface ActionResponseSuccess<Output> {
+  readonly ok: true
+  readonly data: Output
+}
+
+export interface ActionResponseError {
+  readonly ok: false
+  readonly errors: readonly string[]
+}
+
+export type ActionResponse<Output> = ActionResponseSuccess<Output> | ActionResponseError
+
+export interface ActionEndpointOptions {
+  readonly allowedOrigins?: readonly string[]
+  readonly idempotency?: IdempotencyStore
+  readonly data?: DataContext
+}
+
+export function createMemoryIdempotencyStore(): IdempotencyStore {
+  const keys = new Set<string>()
+  return {
+    has: async (key) => keys.has(key),
+    put: async (key) => {
+      keys.add(key)
+    },
+  }
+}
+
+async function readActionInput(request: Request): Promise<unknown> {
+  const contentType = request.headers.get('content-type') ?? ''
+  if (contentType.includes('application/x-www-form-urlencoded')) {
+    const form = await request.formData()
+    return Object.fromEntries(form.entries())
+  }
+  if (contentType.includes('multipart/form-data')) {
+    const form = await request.formData()
+    return Object.fromEntries(form.entries())
+  }
+  try {
+    return await request.json()
+  } catch {
+    return undefined
+  }
+}
+
+export async function handleActionRequest<Input, Output>(
+  request: Request,
+  serverAction: ServerAction<Input, Output>,
+  options: ActionEndpointOptions = {},
+): Promise<Response> {
+  if (request.method !== 'POST')
+    return Response.json(
+      { ok: false, errors: ['Method Not Allowed'] },
+      { status: 405, headers: { Allow: 'POST' } },
+    )
+  try {
+    assertTrustedOrigin(request, options.allowedOrigins ?? [])
+    const input = await readActionInput(request)
+    const idempotencyKey = request.headers.get('idempotency-key')
+    if (idempotencyKey)
+      await assertIdempotent(options.idempotency ?? createMemoryIdempotencyStore(), idempotencyKey)
+    const data = await serverAction.execute(
+      {
+        request,
+        data: options.data ?? (await import('@mohammedaydan/server')).createDataContext(request),
+      },
+      input,
+    )
+    return Response.json({ ok: true, data }, { status: 200 })
+  } catch (error) {
+    if (error instanceof Response) {
+      let message = 'Action request rejected.'
+      try {
+        message = await error.text()
+      } catch {
+        // Keep the safe generic message.
+      }
+      return Response.json({ ok: false, errors: [message] }, { status: error.status })
+    }
+    const message = error instanceof Error ? error.message : 'Action validation failed.'
+    return Response.json({ ok: false, errors: [message] }, { status: 400 })
+  }
+}

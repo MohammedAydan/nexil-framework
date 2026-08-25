@@ -19,6 +19,8 @@
     { "path": "./packages/create-nexis" },
     { "path": "./packages/create-nexis-app" },
     { "path": "./packages/dev-server" },
+    { "path": "./packages/serve" },
+    { "path": "./packages/telemetry" },
     { "path": "./packages/vite-plugin" },
     { "path": "./examples/hello" },
     { "path": "./examples/blog" },

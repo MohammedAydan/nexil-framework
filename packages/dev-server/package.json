@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
+    "@mohammedaydan/actions": "workspace:*",
     "@mohammedaydan/adapters": "workspace:*",
     "@mohammedaydan/renderer": "workspace:*",
     "@mohammedaydan/router": "workspace:*",

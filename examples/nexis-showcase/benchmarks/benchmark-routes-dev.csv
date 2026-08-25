@@ -1,0 +1,9 @@
+path,status,bytes,gzipBytes,medianMs,interactive,seoPassCount
+/,200,8018,2793,3.04,true,8
+/features,200,5419,2020,2.81,false,8
+/labs,200,5082,1927,2.32,true,8
+/docs/architecture,200,2465,974,1.87,false,8
+/docs/resumability,200,2491,1007,1.68,false,8
+/docs/performance,200,2457,994,1.89,false,8
+/status,200,3493,1333,1.88,false,8
+/missing-benchmark-route,404,9,29,0.69,false,1
