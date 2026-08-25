@@ -122,3 +122,18 @@ For a release: bump package versions, tag `v<version>`, push tag.
 ### State at end of session
 
 - main HEAD = SSR remediation commit; tag v2.1.0 -> publish workflow in flight
+
+## Session: 2026-08-26 - v1.0.0 republish cycles (user-directed resets)
+
+- Cycle A: purged 2.x packages + tags, republished all-at-1.0.0 (18 pkgs) via tag pipeline. Success.
+- Cycle B: user re-requested purge/republish after merging PRs #6/#7 (phase-3 GA surface: serve,
+  serve-cloudflare, serve-deno, telemetry, og-image packages + showcase example + delegated-events
+  bootstrap). Publish FAILED at pack-validation gate: new packages lacked !dist/**/_.test._
+  exclusion (gate worked as designed). Fixed 4 manifests; hardened gate (ANSI strip, append-only
+  package count >= 20, failure diagnostics); also fixed reintroduced D:\D:\ pathname bug in 8
+  showcase benchmark scripts. Re-cut tag at 40d91fb: publish SUCCESS, registry 23 pkgs
+  EXACT-1.0.0-ONLY 23/23. Fresh dlx consumer verified (install/build/dev 200 + resume attrs).
+- Operational learnings recorded: GitHub Packages allows republishing a deleted version number;
+  pnpm local metadata cache can falsely report deleted versions as existing (CI cold runners are
+  authoritative); Windows pathname bug keeps resurfacing via Linux-authored scripts - watch for it
+  in future PRs touching *.mjs build tooling.
