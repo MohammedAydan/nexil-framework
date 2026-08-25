@@ -4,6 +4,7 @@ import {
   clearImageTransformCache,
   fontFace,
   imageAttributes,
+  pictureMarkup,
   selfHostFont,
   transformImage,
 } from './index'
@@ -35,6 +36,22 @@ describe('imageAttributes', () => {
 })
 
 describe('image pipeline', () => {
+  it('renders AVIF/WebP sources with an accessible fallback image', () => {
+    const picture = pictureMarkup({
+      src: '/hero.jpg',
+      width: 1200,
+      height: 630,
+      alt: 'Hero',
+      sizes: '100vw',
+      widths: [640],
+    })
+    expect(picture.sources.map((source) => source.type)).toEqual(['image/avif', 'image/webp'])
+    expect(picture.html).toContain('<picture>')
+    expect(picture.html).toContain('type="image/avif"')
+    expect(picture.html).toContain('alt="Hero"')
+    expect(picture.html).toContain('sizes="100vw"')
+  })
+
   it('generates WebP and AVIF variants at requested widths', async () => {
     const svg = new TextEncoder().encode(
       '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect width="20" height="20" fill="red"/></svg>',
@@ -93,6 +110,8 @@ describe('buildImageVariants', () => {
     const root = await mkdtemp(join(tmpdir(), 'nexis-media-'))
     const source = join(root, 'fixture.svg')
     const output = join(root, 'variants')
+    const cache = join(root, 'cache')
+
     await writeFile(
       source,
       '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect width="20" height="20" fill="red"/></svg>',
@@ -103,12 +122,15 @@ describe('buildImageVariants', () => {
         outputDir: output,
         fileBase: 'fixture',
         widths: [20],
+        cacheDir: cache,
       })
+      clearImageTransformCache()
       const second = await buildImageVariants({
         sourcePath: source,
         outputDir: output,
         fileBase: 'fixture',
         widths: [20],
+        cacheDir: cache,
       })
       expect(first).toHaveLength(2)
       expect(first.every((variant) => !variant.cacheHit)).toBe(true)

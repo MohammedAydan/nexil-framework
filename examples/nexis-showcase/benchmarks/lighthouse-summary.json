@@ -1,0 +1,117 @@
+{
+  "generatedAt": "2026-08-25T20:32:40.076Z",
+  "origin": "http://127.0.0.1:4175",
+  "thresholds": {
+    "seo": 1,
+    "performance": 0.95,
+    "accessibility": 0.95
+  },
+  "passed": true,
+  "results": [
+    {
+      "route": "/",
+      "url": "http://127.0.0.1:4175/",
+      "generatedAt": "2026-08-25T20:32:03.385Z",
+      "scores": {
+        "seo": 1,
+        "performance": 1,
+        "accessibility": 1
+      },
+      "gates": {
+        "seo": true,
+        "performance": true,
+        "accessibility": true
+      }
+    },
+    {
+      "route": "/features",
+      "url": "http://127.0.0.1:4175/features",
+      "generatedAt": "2026-08-25T20:32:09.663Z",
+      "scores": {
+        "seo": 1,
+        "performance": 1,
+        "accessibility": 1
+      },
+      "gates": {
+        "seo": true,
+        "performance": true,
+        "accessibility": true
+      }
+    },
+    {
+      "route": "/labs",
+      "url": "http://127.0.0.1:4175/labs",
+      "generatedAt": "2026-08-25T20:32:15.841Z",
+      "scores": {
+        "seo": 1,
+        "performance": 1,
+        "accessibility": 1
+      },
+      "gates": {
+        "seo": true,
+        "performance": true,
+        "accessibility": true
+      }
+    },
+    {
+      "route": "/docs/architecture",
+      "url": "http://127.0.0.1:4175/docs/architecture",
+      "generatedAt": "2026-08-25T20:32:21.908Z",
+      "scores": {
+        "seo": 1,
+        "performance": 1,
+        "accessibility": 1
+      },
+      "gates": {
+        "seo": true,
+        "performance": true,
+        "accessibility": true
+      }
+    },
+    {
+      "route": "/docs/resumability",
+      "url": "http://127.0.0.1:4175/docs/resumability",
+      "generatedAt": "2026-08-25T20:32:27.918Z",
+      "scores": {
+        "seo": 1,
+        "performance": 1,
+        "accessibility": 1
+      },
+      "gates": {
+        "seo": true,
+        "performance": true,
+        "accessibility": true
+      }
+    },
+    {
+      "route": "/docs/performance",
+      "url": "http://127.0.0.1:4175/docs/performance",
+      "generatedAt": "2026-08-25T20:32:33.959Z",
+      "scores": {
+        "seo": 1,
+        "performance": 1,
+        "accessibility": 1
+      },
+      "gates": {
+        "seo": true,
+        "performance": true,
+        "accessibility": true
+      }
+    },
+    {
+      "route": "/status",
+      "url": "http://127.0.0.1:4175/status",
+      "generatedAt": "2026-08-25T20:32:40.057Z",
+      "scores": {
+        "seo": 1,
+        "performance": 1,
+        "accessibility": 1
+      },
+      "gates": {
+        "seo": true,
+        "performance": true,
+        "accessibility": true
+      }
+    }
+  ]
+}

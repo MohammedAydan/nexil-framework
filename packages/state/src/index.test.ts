@@ -31,4 +31,12 @@ describe('stores', () => {
     registry.dispose()
     expect(() => first.snapshot()).toThrow(/disposed/)
   })
+
+  it('disposes selectors and the underlying signal together', () => {
+    const store = createStore({ value: 1 })
+    const selected = store.select((value) => value.value)
+    store.dispose()
+    expect(() => selected()).toThrow(/disposed/)
+    expect(() => store.value()).toThrow(/disposed/)
+  })
 })

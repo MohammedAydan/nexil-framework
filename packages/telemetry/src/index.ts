@@ -1,5 +1,9 @@
 export type TelemetryEventName =
-  'navigation' | 'route-transition-error' | 'chunk-load-failure' | 'resumability-activation'
+  | 'navigation'
+  | 'route-transition-error'
+  | 'chunk-load-failure'
+  | 'resumability-activation'
+  | 'web-vital'
 
 export interface TelemetryEvent {
   readonly name: TelemetryEventName
@@ -15,6 +19,26 @@ export interface TelemetryOptions {
   readonly route?: string
 }
 
+export type WebVitalName = 'LCP' | 'CLS' | 'INP'
+
+export interface WebVitalMetric {
+  readonly name: WebVitalName
+  readonly value: number
+}
+
+export interface WebVitalsObserverOptions {
+  readonly onMetric: (metric: WebVitalMetric) => void
+  readonly PerformanceObserver?: typeof PerformanceObserver
+}
+
+type VitalEntryList = { readonly getEntries: () => PerformanceEntry[] }
+type VitalObserver = {
+  new (callback: (list: VitalEntryList) => void): {
+    observe: (options: PerformanceObserverInit & { readonly durationThreshold?: number }) => void
+    disconnect: () => void
+  }
+}
+
 export interface TelemetryClient {
   readonly enabled: boolean
   readonly send: (
@@ -24,6 +48,12 @@ export interface TelemetryClient {
   readonly routeError: (detail: string) => boolean
   readonly chunkFailure: (detail: string) => boolean
   readonly resumability: (duration: number) => boolean
+  readonly vital: (name: WebVitalName, value: number) => boolean
+  readonly observeWebVitals: (
+    options: Omit<WebVitalsObserverOptions, 'onMetric'> & {
+      readonly onMetric?: (metric: WebVitalMetric) => void
+    },
+  ) => () => void
 }
 
 function assertEndpoint(endpoint: string): void {
@@ -54,18 +84,85 @@ export function createTelemetry(options: TelemetryOptions): TelemetryClient {
     routeError: (detail) => send({ name: 'route-transition-error', detail }),
     chunkFailure: (detail) => send({ name: 'chunk-load-failure', detail }),
     resumability: (duration) => send({ name: 'resumability-activation', value: duration }),
+    vital: (name, value) => send({ name: 'web-vital', value, detail: name }),
+    observeWebVitals: (observerOptions) => {
+      if (!enabled) return () => undefined
+      return observeWebVitals({
+        ...observerOptions,
+        onMetric:
+          observerOptions.onMetric ??
+          ((metric) => send({ name: 'web-vital', value: metric.value, detail: metric.name })),
+      })
+    },
   }
+}
+
+export function observeWebVitals(options: WebVitalsObserverOptions): () => void {
+  const Observer = (options.PerformanceObserver ??
+    (typeof PerformanceObserver === 'undefined' ? undefined : PerformanceObserver)) as
+    VitalObserver | undefined
+
+  if (!Observer) return () => undefined
+  const observers: Array<{ disconnect: () => void }> = []
+  let cls = 0
+  const add = (
+    type: string,
+    callback: (entries: VitalEntryList) => void,
+    extra: PerformanceObserverInit & { readonly durationThreshold?: number } = {},
+  ) => {
+    try {
+      const observer = new Observer((list) => callback(list))
+      observer.observe({ type, buffered: true, ...extra })
+      observers.push(observer)
+    } catch {
+      // Unsupported entry types are ignored, preserving optional telemetry.
+    }
+  }
+  add('largest-contentful-paint', (list) => {
+    const last = list.getEntries().at(-1)
+    if (last) options.onMetric({ name: 'LCP', value: last.startTime })
+  })
+  add('layout-shift', (list) => {
+    for (const entry of list.getEntries() as (PerformanceEntry & {
+      value?: number
+      hadRecentInput?: boolean
+    })[]) {
+      if (!entry.hadRecentInput) cls += entry.value ?? 0
+    }
+    options.onMetric({ name: 'CLS', value: cls })
+  })
+  add(
+    'event',
+    (list) => {
+      let inp = 0
+      for (const entry of list.getEntries() as (PerformanceEntry & {
+        processingStart?: number
+      })[]) {
+        const processingStart = entry.processingStart ?? entry.startTime
+        inp = Math.max(inp, processingStart + entry.duration - entry.startTime)
+      }
+      if (inp > 0) options.onMetric({ name: 'INP', value: inp })
+    },
+    { durationThreshold: 16 },
+  )
+  return () => observers.forEach((observer) => observer.disconnect())
 }
 
 export function renderTelemetryScript(options: TelemetryOptions): string {
   if (options.enabled !== true) return ''
   assertEndpoint(options.endpoint)
   const endpoint = JSON.stringify(options.endpoint)
-  return `<script>addEventListener('nexis:resumed',e=>navigator.sendBeacon(${endpoint},JSON.stringify({name:'resumability-activation',timestamp:Date.now(),route:location.pathname,value:e.detail?.duration??0})))</script>`
+  return `<script>addEventListener('nexis:resumed',e=>navigator.sendBeacon(${endpoint},JSON.stringify({name:'resumability-activation',timestamp:Date.now(),route:location.pathname,value:e.detail?.duration??0})));(()=>{let c=0;try{new PerformanceObserver(l=>{let e=l.getEntries().at(-1);if(e)navigator.sendBeacon(${endpoint},JSON.stringify({name:'web-vital',detail:'LCP',timestamp:Date.now(),route:location.pathname,value:e.startTime}))}).observe({type:'largest-contentful-paint',buffered:true});new PerformanceObserver(l=>{for(const e of l.getEntries())if(!e.hadRecentInput)c+=e.value;navigator.sendBeacon(${endpoint},JSON.stringify({name:'web-vital',detail:'CLS',timestamp:Date.now(),route:location.pathname,value:c}))}).observe({type:'layout-shift',buffered:true})}catch{}})()</script>`
 }
 
 export const telemetryEventSchema = {
-  name: ['navigation', 'route-transition-error', 'chunk-load-failure', 'resumability-activation'],
+  name: [
+    'navigation',
+    'route-transition-error',
+    'chunk-load-failure',
+    'resumability-activation',
+    'web-vital',
+  ],
   timestamp: 'unix-ms',
   route: 'pathname',
   value: 'optional-number',

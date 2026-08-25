@@ -31,6 +31,46 @@ describe('telemetry', () => {
       'nexis:resumed',
     )
     expect(telemetryEventSchema.name).toContain('chunk-load-failure')
+    expect(client.vital('LCP', 123)).toBe(true)
     vi.unstubAllGlobals()
+  })
+
+  it('observes supported metrics and disconnects cleanly', () => {
+    const callbacks: Array<(list: { getEntries: () => PerformanceEntry[] }) => void> = []
+    const disconnected: boolean[] = []
+    class FakeObserver {
+      constructor(callback: (list: { getEntries: () => PerformanceEntry[] }) => void) {
+        callbacks.push(callback)
+      }
+      observe() {}
+      disconnect() {
+        disconnected.push(true)
+      }
+    }
+    const metrics: string[] = []
+    const stop = createTelemetry({ enabled: true, endpoint: '/telemetry' }).observeWebVitals({
+      PerformanceObserver: FakeObserver as never,
+      onMetric: (metric) => metrics.push(metric.name),
+    })
+    callbacks[0]?.({ getEntries: () => [{ startTime: 42 } as PerformanceEntry] })
+    callbacks[1]?.({
+      getEntries: () => [{ duration: 1, startTime: 1, value: 0.1 } as unknown as PerformanceEntry],
+    })
+    stop()
+    expect(metrics).toContain('LCP')
+    expect(metrics).toContain('CLS')
+    expect(disconnected.length).toBeGreaterThan(0)
+  })
+
+  it('keeps the observer inert when telemetry is disabled', () => {
+    const client = createTelemetry({ endpoint: '/telemetry' })
+    let called = false
+    const stop = client.observeWebVitals({
+      onMetric: () => {
+        called = true
+      },
+    })
+    stop()
+    expect(called).toBe(false)
   })
 })

@@ -142,11 +142,17 @@ async function crawl(routes) {
 const server =
   process.env.BENCH_USE_EXISTING === '1'
     ? null
-    : spawn('node', ['../../packages/cli/dist/bin.js', 'dev'], {
-        cwd: root,
-        env: { ...process.env, NEXIS_HOST: '127.0.0.1', NEXIS_PORT: String(port) },
-        stdio: ['ignore', 'pipe', 'pipe'],
-      })
+    : spawn(
+        'node',
+        process.env.BENCH_SERVER === 'dev'
+          ? ['../../packages/cli/dist/bin.js', 'dev']
+          : ['benchmarks/serve-production.mjs'],
+        {
+          cwd: root,
+          env: { ...process.env, NEXIS_HOST: '127.0.0.1', NEXIS_PORT: String(port) },
+          stdio: ['ignore', 'pipe', 'pipe'],
+        },
+      )
 try {
   if (server) await waitForServer(server)
   const manifest = JSON.parse(await readFile(join(dist, 'nexis-manifest.json'), 'utf8'))
@@ -154,8 +160,8 @@ try {
   for (const path of routePaths) measured.push(await measureRoute(path))
   const missing = await measureRoute('/missing-benchmark-route')
   const endpointChecks = {}
-  for (const path of ['/sitemap.xml', '/robots.txt']) {
-    const response = await fetch(`${base}${path}`)
+  for (const path of ['/sitemap.xml', '/robots.txt', '/feed.xml', '/atom.xml', '/docs']) {
+    const response = await fetch(`${base}${path}`, path === '/docs' ? { redirect: 'manual' } : {})
     endpointChecks[path] = {
       status: response.status,
       contentType: response.headers.get('content-type'),
@@ -180,6 +186,9 @@ try {
   const assets = []
   for (const asset of await walkFiles(join(dist, 'assets')))
     assets.push({ name: asset.name, ...(await fileMetrics(asset.file)) })
+  const ogCards = []
+  for (const asset of await walkFiles(join(dist, 'og')))
+    ogCards.push({ name: asset.name, ...(await fileMetrics(asset.file)) })
   let media = { variants: [], smallerOrEqual: true }
   try {
     const manifestPath = join(dist, 'media-manifest.json')
@@ -201,7 +210,7 @@ try {
     action,
     crawler: crawlResult,
     media,
-    assets: { bootstrap, chunks, assets },
+    assets: { bootstrap, chunks, assets, ogCards },
     totals: {
       routeCount: manifest.routes.length,
       interactiveRoutes: manifest.routes.filter((route) => route.interactive).length,

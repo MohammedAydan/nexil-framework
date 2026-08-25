@@ -11,11 +11,24 @@ export interface ProductionServerOptions {
   readonly notFoundFile?: string
   readonly serverDir?: string
   readonly actionOrigins?: readonly string[]
+  readonly redirects?: readonly RedirectRule[]
+  readonly telemetry?: TelemetryReceiverOptions
   readonly idempotency?: IdempotencyStore
   readonly cacheControl?: {
     readonly html?: string
     readonly assets?: string
   }
+}
+
+export interface RedirectRule {
+  readonly from: string
+  readonly to: string
+  readonly status: 301 | 308
+}
+
+export interface TelemetryReceiverOptions {
+  readonly endpoint?: string
+  readonly onEvent?: (event: unknown) => void
 }
 
 export interface ProductionRequestHandler {
@@ -133,12 +146,49 @@ export function createProductionMiddleware(
   options: ProductionServerOptions = {},
 ): ProductionRequestHandler {
   const root = resolve(distDir)
+  for (const redirect of options.redirects ?? []) {
+    if (!/^\/(?:[^?#]*)$/.test(redirect.from) || !/^\/(?:[^?#]*)$/.test(redirect.to))
+      throw new TypeError('Redirect paths must be local absolute paths.')
+    if (redirect.status !== 301 && redirect.status !== 308)
+      throw new TypeError('Redirect status must be 301 or 308.')
+  }
   const idempotency = options.idempotency ?? createMemoryIdempotencyStore()
   const htmlCache = options.cacheControl?.html ?? 'public, max-age=0, must-revalidate'
   const assetCache = options.cacheControl?.assets ?? 'public, max-age=31536000, immutable'
   return async (request, response, next) => {
     const pathname = pathnameFromRequest(request)
     const method = request.method ?? 'GET'
+    const telemetryEndpoint = options.telemetry?.endpoint ?? '/__nexis/telemetry'
+    if (method === 'POST' && pathname === telemetryEndpoint) {
+      try {
+        const requestBody = await requestFromNode(request)
+        const event = await requestBody.json()
+        if (!event || typeof event !== 'object' || Array.isArray(event))
+          throw new TypeError('Telemetry event must be an object.')
+        options.telemetry?.onEvent?.(event)
+        response.statusCode = 202
+        setCommonHeaders(response, 'application/json; charset=utf-8', 'no-store')
+        response.end(JSON.stringify({ ok: true }))
+      } catch (error) {
+        response.statusCode = 400
+        setCommonHeaders(response, 'application/json; charset=utf-8', 'no-store')
+        response.end(
+          JSON.stringify({
+            ok: false,
+            errors: [error instanceof Error ? error.message : 'Invalid telemetry event.'],
+          }),
+        )
+      }
+      return
+    }
+    const redirect = (options.redirects ?? []).find((candidate) => candidate.from === pathname)
+    if (redirect) {
+      response.statusCode = redirect.status
+      response.setHeader('Location', redirect.to)
+      setCommonHeaders(response, 'text/plain; charset=utf-8', 'no-store')
+      response.end(method === 'HEAD' ? undefined : `Redirecting to ${redirect.to}`)
+      return
+    }
     const actionMatch = /^\/__nexis\/actions\/(.+)\/([^/]+)$/.exec(pathname)
     if (actionMatch) {
       const actionRoute = actionMatch[1]

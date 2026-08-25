@@ -7,10 +7,20 @@ import { build, createServer, preview, transformWithEsbuild } from 'vite'
 import { assertBudget } from '@mohammedaydan/compiler'
 import nexis, { RESUMABILITY_BOOTSTRAP, transformNexisSource } from '@mohammedaydan/vite-plugin'
 import { escapeHtml, renderToString } from '@mohammedaydan/renderer'
-import { buildRobots, buildSitemap, renderHead, withCanonical } from '@mohammedaydan/seo'
+import { generateOgImage } from '@mohammedaydan/og-image'
+import {
+  buildRobots,
+  buildSitemap,
+  deriveBreadcrumbList,
+  generateAtomFeed,
+  generateFeed,
+  renderHead,
+  withCanonical,
+} from '@mohammedaydan/seo'
 import { matchRoute, routeFromFile } from '@mohammedaydan/router'
 import { nexisSSRPlugin } from '@mohammedaydan/dev-server'
 import { createProductionServer } from '@mohammedaydan/serve'
+import type { RedirectRule } from '@mohammedaydan/serve'
 export { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 import { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 
@@ -103,6 +113,45 @@ interface BuildManifest {
   readonly routes: readonly BuildRouteRecord[]
 }
 
+interface NexisBuildConfig {
+  readonly redirects?: readonly RedirectRule[]
+  readonly feed?: {
+    readonly title?: string
+    readonly description?: string
+    readonly language?: string
+  }
+}
+
+async function readNexisConfig(root: string): Promise<NexisBuildConfig> {
+  try {
+    const parsed = JSON.parse(await readFile(join(root, 'nexis.config.json'), 'utf8')) as unknown
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed))
+      throw new TypeError('Invalid nexis.config.json.')
+    return parsed as NexisBuildConfig
+  } catch (error) {
+    if (error instanceof SyntaxError) throw new TypeError('Invalid nexis.config.json.')
+    if (error instanceof TypeError) throw error
+    if ((error as { readonly code?: string }).code !== 'ENOENT') throw error
+  }
+  for (const fileName of ['nexis.config.mjs', 'nexis.config.js', 'nexis.config.ts']) {
+    const file = join(root, fileName)
+    if (!existsSync(file)) continue
+    const source = await readFile(file, 'utf8')
+    const code = fileName.endsWith('.ts')
+      ? (await transformWithEsbuild(source, fileName, { loader: 'ts', format: 'esm' })).code
+      : source
+    const temporary = join(root, 'dist', `.nexis-config-${Date.now()}.mjs`)
+    await mkdir(join(root, 'dist'), { recursive: true })
+    await writeFile(temporary, code, 'utf8')
+    const module = await import(`${pathToFileURL(temporary).href}?nexis-config=${Date.now()}`)
+    const config = module.default ?? module.config ?? module
+    if (!config || typeof config !== 'object' || Array.isArray(config))
+      throw new TypeError(`Invalid ${fileName}.`)
+    return config as NexisBuildConfig
+  }
+  return {}
+}
+
 async function discoverRoutes(directory: string, root: string): Promise<string[]> {
   const entries = await readdir(directory, { withFileTypes: true })
   const routes: string[] = []
@@ -177,6 +226,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   if (routes.length === 0) throw new Error(`No routes found in ${routeRoot}.`)
   const outputRoot = join(root, 'dist')
   const siteOrigin = process.env.NEXIS_SITE_ORIGIN ?? 'https://nexis-showcase.example'
+  const config = await readNexisConfig(root)
   const resolveSeo = (seo: unknown, pathname: string): any => {
     if (!seo) return undefined
     const metadata = typeof seo === 'function' ? seo({ pathname }) : seo
@@ -190,9 +240,11 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   const chunkRoot = join(outputRoot, CHUNK_DIRECTORY)
   const clientRoot = join(outputRoot, 'client')
   const assetRoot = join(clientRoot, 'assets')
+  const ogRoot = join(clientRoot, 'og')
   await mkdir(serverRoot, { recursive: true })
   await mkdir(chunkRoot, { recursive: true })
   await mkdir(assetRoot, { recursive: true })
+  await mkdir(ogRoot, { recursive: true })
   await mkdir(clientRoot, { recursive: true })
 
   let template: string
@@ -259,6 +311,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   }
 
   const records: BuildRouteRecord[] = []
+  const feedItems: Array<{ title: string; link: string; description?: string }> = []
   const cssAssets = new Set<string>()
   let hasInteractiveRoute = false
   const minifiedBootstrap = (
@@ -302,6 +355,25 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
       const mod: any = await loadServerModule(route)
       const routeSeo = resolveSeo(mod.seo, routePath)
       if (routeSeo) {
+        if (routePath !== '/') {
+          routeSeo.jsonLd ??= deriveBreadcrumbList(routePath, siteOrigin)
+        }
+        if (!routeSeo.image) {
+          const og = await generateOgImage(
+            {
+              title: String(routeSeo.title),
+              description: String(routeSeo.description ?? '') || 'Nexis application route.',
+            },
+            ogRoot,
+          )
+          routeSeo.image = `/og/${og.fileName}`
+        }
+        if (!routePath.includes('['))
+          feedItems.push({
+            title: String(routeSeo.title),
+            link: `${siteOrigin.replace(/\/$/, '')}${routePath === '/' ? '/' : routePath}`,
+            ...(routeSeo.description ? { description: String(routeSeo.description) } : {}),
+          })
         try {
           headHtml = renderHead(routeSeo)
         } catch {
@@ -370,8 +442,32 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
               ? await GeneratedComponent(generatedMatch?.params ?? {})
               : GeneratedComponent
           const generatedRenderedHtml = renderToString(generatedResult)
-          const generatedHead = resolveSeo(staticModule.seo, generatedPath)
-            ? renderHead(resolveSeo(staticModule.seo, generatedPath))
+          const generatedSeo = resolveSeo(staticModule.seo, generatedPath)
+          if (generatedSeo && !generatedSeo.image) {
+            const og = await generateOgImage(
+              {
+                title: String(generatedSeo.title),
+                description: String(generatedSeo.description ?? '') || 'Nexis application route.',
+              },
+              ogRoot,
+            )
+            generatedSeo.image = `/og/${og.fileName}`
+          }
+          if (generatedSeo)
+            feedItems.push({
+              title: String(generatedSeo.title),
+              link: `${siteOrigin.replace(/\/$/, '')}${generatedPath === '/' ? '/' : generatedPath}`,
+              ...(generatedSeo.description
+                ? { description: String(generatedSeo.description) }
+                : {}),
+            })
+          const generatedHead = generatedSeo
+            ? renderHead({
+                ...generatedSeo,
+                ...(generatedPath !== '/' && !generatedSeo.jsonLd
+                  ? { jsonLd: deriveBreadcrumbList(generatedPath, siteOrigin) }
+                  : {}),
+              })
             : headHtml
           const generatedHtml = routeTemplate
             .replace('<!--nexis-head-outlet-->', generatedHead)
@@ -406,6 +502,27 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     })),
   )
   await writeFile(join(clientRoot, 'sitemap.xml'), sitemap, 'utf8')
+  const feed = generateFeed(feedItems, {
+    title: config.feed?.title ?? 'Nexis Updates',
+    link: `${siteOrigin.replace(/\/$/, '')}/`,
+    description: config.feed?.description ?? 'Nexis application routes and updates.',
+    ...(config.feed?.language ? { language: config.feed.language } : {}),
+    feedUrl: `${siteOrigin.replace(/\/$/, '')}/feed.xml`,
+  })
+  await writeFile(join(clientRoot, 'feed.xml'), feed, 'utf8')
+  const atom = generateAtomFeed(feedItems, {
+    title: config.feed?.title ?? 'Nexis Updates',
+    link: `${siteOrigin.replace(/\/$/, '')}/`,
+    description: config.feed?.description ?? 'Nexis application routes and updates.',
+    ...(config.feed?.language ? { language: config.feed.language } : {}),
+    feedUrl: `${siteOrigin.replace(/\/$/, '')}/atom.xml`,
+  })
+  await writeFile(join(clientRoot, 'atom.xml'), atom, 'utf8')
+  await writeFile(
+    join(outputRoot, 'nexis-redirects.json'),
+    `${JSON.stringify(config.redirects ?? [], null, 2)}\n`,
+    'utf8',
+  )
   await writeFile(
     join(clientRoot, 'robots.txt'),
     buildRobots(`${siteOrigin.replace(/\/$/, '')}/sitemap.xml`),
@@ -493,7 +610,9 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
     return `Nexis production server running at ${server.resolvedUrls?.local?.[0] ?? 'local URL'}`
   }
   if (parsed.command === 'serve') {
+    const config = await readNexisConfig(root)
     const production = createProductionServer(join(root, 'dist', 'client'), {
+      ...(config.redirects ? { redirects: config.redirects } : {}),
       ...(process.env.NEXIS_HOST ? { host: process.env.NEXIS_HOST } : {}),
       ...(process.env.NEXIS_PORT ? { port: Number(process.env.NEXIS_PORT) } : {}),
       serverDir: join(root, 'dist', 'server', 'routes'),

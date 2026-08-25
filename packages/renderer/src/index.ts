@@ -141,13 +141,25 @@ function renderText(node: TextNode): string {
   return escapeHtml(node.value)
 }
 
-function renderElement(node: ElementNode): string {
+export function renderElementOpening(node: ElementNode): string {
   const attributes = Object.entries(node.props)
     .map(([name, value]) => renderAttribute(name, value))
     .join('')
-  const opening = `<${node.tag}${attributes}>`
-  if (VOID_ELEMENTS.has(node.tag)) return opening
-  return `${opening}${node.children.map(renderChild).join('')}</${node.tag}>`
+  return `<${node.tag}${attributes}>`
+}
+
+export function renderElementClosing(node: ElementNode): string {
+  return `</${node.tag}>`
+}
+
+export function isVoidElement(node: ElementNode): boolean {
+  return VOID_ELEMENTS.has(node.tag)
+}
+
+function renderElement(node: ElementNode): string {
+  const opening = renderElementOpening(node)
+  if (isVoidElement(node)) return opening
+  return `${opening}${node.children.map(renderChild).join('')}${renderElementClosing(node)}`
 }
 
 function renderNode(node: RenderNode): string {

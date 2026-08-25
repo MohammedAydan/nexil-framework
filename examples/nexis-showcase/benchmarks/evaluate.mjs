@@ -122,6 +122,62 @@ check(
   results.media.variants.length >= 2 && results.media.smallerOrEqual === true,
   `${results.media.variants.length} variants`,
 )
+check(
+  'Static routes ship zero client JavaScript',
+  results.routes.manifest
+    .filter((route) => !route.interactive)
+    .every((route) => route.clientJsBytes === 0),
+  'static route client-byte floor',
+)
+check(
+  'RSS feed is valid and includes expanded routes',
+  results.endpoints['/feed.xml']?.status === 200 &&
+    results.endpoints['/feed.xml'].contentType?.includes('xml') &&
+    results.endpoints['/feed.xml'].body.includes('<rss') &&
+    results.endpoints['/feed.xml'].body.includes('/docs/architecture'),
+  `status=${results.endpoints['/feed.xml']?.status}`,
+)
+check(
+  'Atom feed is valid and includes expanded routes',
+  results.endpoints['/atom.xml']?.status === 200 &&
+    results.endpoints['/atom.xml'].contentType?.includes('xml') &&
+    results.endpoints['/atom.xml'].body.includes('<feed') &&
+    results.endpoints['/atom.xml'].body.includes('/docs/architecture'),
+  `status=${results.endpoints['/atom.xml']?.status}`,
+)
+check(
+  'Declarative docs redirect returns 308',
+  results.endpoints['/docs']?.status === 308,
+  `status=${results.endpoints['/docs']?.status}`,
+)
+check(
+  'Build-time OG cards are emitted',
+  (results.assets.ogCards ?? []).length >= 1 &&
+    (results.assets.ogCards ?? []).every((asset) => asset.bytes > 0),
+  `${(results.assets.ogCards ?? []).length} cards`,
+)
+let astroComparison
+try {
+  astroComparison = JSON.parse(
+    await readFile(join(root, 'benchmarks', 'benchmark-comparison-astro.json'), 'utf8'),
+  )
+} catch {}
+check(
+  'Nexis client JavaScript is no larger than the comparison baseline',
+  astroComparison?.clientJsBytes?.gatePassed === true,
+  JSON.stringify(astroComparison?.clientJsBytes ?? null),
+)
+let lighthouseSummary
+try {
+  lighthouseSummary = JSON.parse(
+    await readFile(join(root, 'benchmarks', 'lighthouse-summary.json'), 'utf8'),
+  )
+} catch {}
+check(
+  'Lighthouse SEO/performance/accessibility gates pass on all routes',
+  lighthouseSummary?.passed === true && lighthouseSummary.results?.length === 7,
+  JSON.stringify(lighthouseSummary?.thresholds ?? null),
+)
 
 const passed = checks.filter((check) => check.passed).length
 const evaluation = {

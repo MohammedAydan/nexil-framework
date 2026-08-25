@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-08-25T18:40:35.149Z",
-  "passed": 20,
-  "total": 20,
+  "generatedAt": "2026-08-25T20:42:22.569Z",
+  "passed": 27,
+  "total": 27,
   "passRate": 100,
   "checks": [
     {
@@ -17,7 +17,7 @@
     {
       "name": "SSR emits substantive HTML",
       "passed": true,
-      "detail": "/:8204B /features:5365B /labs:5028B /docs/architecture:2411B /docs/resumability:2437B /docs/performance:2403B /status:3439B"
+      "detail": "/:8204B /features:5516B /labs:5179B /docs/architecture:2562B /docs/resumability:2588B /docs/performance:2554B /status:3590B"
     },
     {
       "name": "Nested static paths render",
@@ -67,7 +67,7 @@
     {
       "name": "Median route latency is below 250ms",
       "passed": true,
-      "detail": "/:1.86ms /features:1.54ms /labs:0.93ms /docs/architecture:0.81ms /docs/resumability:0.82ms /docs/performance:0.77ms /status:0.75ms"
+      "detail": "/:2.2ms /features:2.18ms /labs:0.86ms /docs/architecture:0.79ms /docs/resumability:0.75ms /docs/performance:0.74ms /status:0.79ms"
     },
     {
       "name": "HTML responses include an explicit cache policy",
@@ -103,6 +103,41 @@
       "name": "Build-time image variants are present and non-empty",
       "passed": true,
       "detail": "4 variants"
+    },
+    {
+      "name": "Static routes ship zero client JavaScript",
+      "passed": true,
+      "detail": "static route client-byte floor"
+    },
+    {
+      "name": "RSS feed is valid and includes expanded routes",
+      "passed": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "Atom feed is valid and includes expanded routes",
+      "passed": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "Declarative docs redirect returns 308",
+      "passed": true,
+      "detail": "status=308"
+    },
+    {
+      "name": "Build-time OG cards are emitted",
+      "passed": true,
+      "detail": "4 cards"
+    },
+    {
+      "name": "Nexis client JavaScript is no larger than the comparison baseline",
+      "passed": true,
+      "detail": "{\"nexis\":1940,\"astro\":2272,\"nexisFiles\":[\"nexis-bootstrap.js\",\"nexis-chunks/chunk_535ea9ea9b73.js\"],\"astroFiles\":[\"astro-island.js\"],\"gatePassed\":true}"
+    },
+    {
+      "name": "Lighthouse SEO/performance/accessibility gates pass on all routes",
+      "passed": true,
+      "detail": "{\"seo\":1,\"performance\":0.95,\"accessibility\":0.95}"
     }
   ]
 }

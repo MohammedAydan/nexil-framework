@@ -299,14 +299,8 @@ export async function transformNexisSource(
       magic.overwrite(start, end, `data-nx-on-${eventName}="${reference}"`)
     }
 
-    if (node.type === 'CallExpression') {
-      const callee = node as AstNode & { readonly callee?: AstNode }
-      if (callee.callee?.type === 'Identifier' && callee.callee.name?.name === 'component$') {
-        moduleDiagnostics.push(
-          '[NEXIS_COMPONENT_BOUNDARY] component$ extraction requires an explicit serializable boundary in this baseline.',
-        )
-      }
-    }
+    // component$ bodies use the same capture classifier as route components;
+    // state/store declarations are serialized when a nested lazy handler closes over them.
 
     if (
       node.type === 'ObjectProperty' &&

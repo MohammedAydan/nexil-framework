@@ -1,0 +1,34 @@
+{
+  "name": "@mohammedaydan/og-image",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "sharp": "^0.35.3"
+  },
+  "devDependencies": {
+    "vitest": "^3.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MohammedAydan/nexis-framework.git",
+    "directory": "packages/og-image"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
+}

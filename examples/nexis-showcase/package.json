@@ -9,7 +9,8 @@
     "build": "node ../../packages/cli/dist/bin.js build && node ./benchmarks/build-media.mjs",
     "check": "node ../../packages/cli/dist/bin.js check --budget",
     "bench": "node ./benchmarks/run-benchmarks.mjs",
-    "evaluate": "node ./benchmarks/evaluate.mjs"
+    "evaluate": "node ./benchmarks/evaluate.mjs",
+    "bench:lighthouse": "node ./benchmarks/run-lighthouse.mjs"
   },
   "dependencies": {
     "@mohammedaydan/actions": "workspace:*",

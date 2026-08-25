@@ -91,12 +91,19 @@ export function renderHead(metadata: SeoMetadata): string {
   return tags.join('')
 }
 
+export interface SitemapAlternate {
+  readonly hrefLang: string
+  readonly href: string
+}
+
 export interface SitemapEntry {
   readonly url: string
   readonly lastModified?: string
   readonly changeFrequency?:
     'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never'
   readonly priority?: number
+  readonly alternates?: readonly SitemapAlternate[]
+  readonly images?: readonly string[]
 }
 
 export function buildSitemap(entries: readonly SitemapEntry[]): string {
@@ -114,10 +121,22 @@ export function buildSitemap(entries: readonly SitemapEntry[]): string {
       if (entry.changeFrequency) fields.push(`<changefreq>${entry.changeFrequency}</changefreq>`)
       if (entry.priority !== undefined)
         fields.push(`<priority>${entry.priority.toFixed(1)}</priority>`)
+      for (const alternate of entry.alternates ?? []) {
+        if (!/^[a-zA-Z]{2,3}(?:-[a-zA-Z]{2,4})?$/.test(alternate.hrefLang))
+          throw new TypeError('Sitemap hreflang values must be BCP-47-like language tags.')
+        assertUrl(alternate.href, 'sitemap alternate URL')
+        fields.push(
+          `<xhtml:link rel="alternate" hreflang="${escapeHtml(alternate.hrefLang)}" href="${escapeHtml(alternate.href)}"/>`,
+        )
+      }
+      for (const image of entry.images ?? []) {
+        assertUrl(image, 'sitemap image URL', true)
+        fields.push(`<image:image><image:loc>${escapeHtml(image)}</image:loc></image:image>`)
+      }
       return `<url>${fields.join('')}</url>`
     })
     .join('')
-  return `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`
+  return `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">${urls}</urlset>`
 }
 
 export function buildRobots(sitemapUrl: string, disallow: readonly string[] = []): string {
@@ -175,6 +194,94 @@ export interface JsonLdValidation {
   readonly errors: readonly string[]
 }
 
+export interface FeedItem {
+  readonly title: string
+  readonly link: string
+  readonly description?: string
+  readonly pubDate?: string | Date
+  readonly guid?: string
+}
+
+export interface FeedOptions {
+  readonly title: string
+  readonly link: string
+  readonly description: string
+  readonly feedUrl?: string
+  readonly language?: string
+  readonly updated?: string | Date
+}
+
+function feedDate(value: string | Date | undefined): string | undefined {
+  if (value === undefined) return undefined
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) throw new TypeError('Feed dates must be valid dates.')
+  return date.toUTCString()
+}
+
+export function generateFeed(items: readonly FeedItem[], options: FeedOptions): string {
+  assertUrl(options.link, 'feed link')
+  if (options.feedUrl !== undefined) assertUrl(options.feedUrl, 'feed URL')
+  if (!options.title.trim() || !options.description.trim())
+    throw new TypeError('Feed title and description are required.')
+  const channel = [
+    `<title>${escapeHtml(options.title)}</title>`,
+    `<link>${escapeHtml(options.link)}</link>`,
+    `<description>${escapeHtml(options.description)}</description>`,
+    options.language ? `<language>${escapeHtml(options.language)}</language>` : '',
+    options.feedUrl
+      ? `<atom:link href="${escapeHtml(options.feedUrl)}" rel="self" type="application/rss+xml"/>`
+      : '',
+    feedDate(options.updated)
+      ? `<lastBuildDate>${escapeHtml(feedDate(options.updated)!)}</lastBuildDate>`
+      : '',
+  ].join('')
+  const entries = items
+    .map((item) => {
+      if (!item.title.trim()) throw new TypeError('Feed item titles are required.')
+      assertUrl(item.link, 'feed item link')
+      const date = feedDate(item.pubDate)
+      const guid = item.guid ?? item.link
+      return `<item><title>${escapeHtml(item.title)}</title><link>${escapeHtml(item.link)}</link><guid isPermaLink="${guid === item.link ? 'true' : 'false'}">${escapeHtml(guid)}</guid>${item.description ? `<description>${escapeHtml(item.description)}</description>` : ''}${date ? `<pubDate>${escapeHtml(date)}</pubDate>` : ''}</item>`
+    })
+    .join('')
+  return `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel>${channel}${entries}</channel></rss>`
+}
+
+export function generateAtomFeed(items: readonly FeedItem[], options: FeedOptions): string {
+  assertUrl(options.link, 'feed link')
+  const updated = feedDate(options.updated ?? items[0]?.pubDate) ?? new Date(0).toISOString()
+  const entries = items
+    .map((item) => {
+      assertUrl(item.link, 'feed item link')
+      const itemUpdated = feedDate(item.pubDate) ?? updated
+      return `<entry><title>${escapeHtml(item.title)}</title><id>${escapeHtml(item.guid ?? item.link)}</id><link href="${escapeHtml(item.link)}"/><updated>${escapeHtml(new Date(itemUpdated).toISOString())}</updated>${item.description ? `<summary>${escapeHtml(item.description)}</summary>` : ''}</entry>`
+    })
+    .join('')
+  return `<?xml version="1.0" encoding="UTF-8"?><feed xmlns="http://www.w3.org/2005/Atom"><title>${escapeHtml(options.title)}</title><id>${escapeHtml(options.link)}</id><link href="${escapeHtml(options.link)}"/><updated>${escapeHtml(new Date(updated).toISOString())}</updated>${entries}</feed>`
+}
+
+export function deriveBreadcrumbList(pathname: string, origin: string): Record<string, unknown> {
+  if (!pathname.startsWith('/') || pathname.startsWith('//'))
+    throw new TypeError('Breadcrumb pathname must be local.')
+  const segments = pathname.split('/').filter(Boolean)
+  const items = [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: deriveCanonical(origin, '/') },
+  ]
+  segments.forEach((segment, index) => {
+    const path = `/${segments.slice(0, index + 1).join('/')}`
+    const name = decodeURIComponent(segment)
+      .replace(/[-_]+/g, ' ')
+      .replace(/\b\w/g, (letter) => letter.toUpperCase())
+    items.push({
+      '@type': 'ListItem',
+      position: index + 2,
+      name,
+      item: deriveCanonical(origin, path),
+    })
+  })
+  return { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: items }
+}
+
 export function validateJsonLd(value: unknown): JsonLdValidation {
   const errors: string[] = []
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -185,7 +292,18 @@ export function validateJsonLd(value: unknown): JsonLdValidation {
     errors.push('JSON-LD @context must be schema.org.')
   if (typeof data['@type'] !== 'string' || !SCHEMA_TYPES.has(data['@type']))
     errors.push('JSON-LD @type is not a supported schema.org type.')
-  if (typeof data.name !== 'string' || data.name.trim().length === 0)
+  if (
+    data['@type'] !== 'BreadcrumbList' &&
+    (typeof data.name !== 'string' || data.name.trim().length === 0)
+  )
     errors.push('JSON-LD name is required.')
+  if (data['@type'] === 'BreadcrumbList' && !Array.isArray(data.itemListElement))
+    errors.push('BreadcrumbList itemListElement is required.')
+  if (data['@type'] === 'Article' || data['@type'] === 'BlogPosting') {
+    if (typeof data.headline !== 'string' || data.headline.trim().length === 0)
+      errors.push(`${data['@type']} headline is required.`)
+    if (typeof data.datePublished !== 'string' || data.datePublished.trim().length === 0)
+      errors.push(`${data['@type']} datePublished is required.`)
+  }
   return { valid: errors.length === 0, errors }
 }

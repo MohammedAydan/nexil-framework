@@ -1,47 +1,48 @@
-# Nexis Showcase — Phase 2 Production Parity Report
+# Nexis Showcase — Phase 3 Production GA Report
 
 **Generated:** 25 August 2026
 **Application:** `examples/nexis-showcase`
 **Framework branch:** `feat/phase2-production-parity`
+**Release target:** `v1.0.0 Production GA`
 **Author:** Manus AI
 
 ## Executive summary
 
-Phase 2 converts the Nexis showcase from a feature specimen into a production-parity validation surface. The implementation adds a tagged ScopeRef ABI and lifecycle-aware client registry, routed action endpoints with JSON/form support and replay protection, an official route-aware Node production server and `nexis serve` command, bounded cancellation-aware stream output, adapter and renderer conformance tests, cached build-time WebP/AVIF variants, opt-in telemetry with a zero-byte disabled path, canonical derivation, schema-level JSON-LD checks, and generated sitemap and robots endpoints. The final production snapshot passes **20/20 benchmark gates**. The browser evaluator passes **19/19 checks**, the repository unit and integration suite passes **118/118 tests**, and the build, lint, formatting, high-severity dependency audit, and whitespace checks pass. Production-mode local measurements cover seven routes, true 404 and 405 behavior, action transport, crawler links, SEO endpoints, media variants, and a 1,621-byte raw resumability bootstrap. These are controlled local measurements, not internet production performance or SEO ranking evidence. The remaining gaps are primarily completeness and deployment depth: arbitrary closure serialization is still intentionally unsupported, action idempotency is process-local by default, stream rendering still materializes the complete tree before chunking, telemetry has no built-in ingestion or field Web Vitals pipeline, and edge adapters do not yet ship equivalent static-serving implementations.
+Phase 3 completes the Nexis v1.0.0 Production GA surface on top of the Phase 2 production-parity baseline. The implementation adds computed-cycle diagnostics and store lifecycle cleanup, a reproducible Astro-style client-budget comparison, Lighthouse automation across all seven routes, RSS and Atom feeds, expanded sitemap metadata, typed configuration loading, build-time OG PNG cards, validated redirects, incremental stream traversal with cancellation and flush thresholds, Cloudflare and Deno Fetch handlers, persistent media caching and picture markup, optional LCP/CLS/INP observers, and a local telemetry receiver. The final evaluator passes **27/27 checks**, Lighthouse passes **7/7 routes** with SEO 100, performance 100, and accessibility 100 in this controlled local run, the repository unit/integration suite passes **135/135 tests**, repository E2E passes **13/13**, the Astro comparison gate reports Nexis at **1,940 bytes versus 2,272 bytes**, and build, typecheck, lint, formatting, high-severity audit, parity, budget, and whitespace gates pass. These are reproducible local or CI measurements, not internet production performance, Search Console, rankings, backlink authority, or real-user Core Web Vitals evidence. Remaining deployment work is deliberately documented: arbitrary closure serialization, durable distributed idempotency, full edge static-file deployment adapters, complete external Schema.org validation, consent/retention governance, and real-user field collection still require application and infrastructure decisions.
 
 ## 1. Scope and deliverables
 
 The showcase remains an executable application rather than a documentation-only example. It contains SSR pages, nested and dynamic routes, statically expanded documentation paths, resumable interaction boundaries, signal and store state, action transport, server utilities, runtime adapters, responsive media, CSS extraction, canonical and structured metadata, crawl endpoints, media build artifacts, and reproducible performance and SEO measurements.
 
-| Phase 2 area     | Implementation                                                                                                     | Evidence                                                                                           |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
-| Scope capture    | `ScopeRef` tagged union, stable IDs, client registry, signal/store/action resolution, unsupported-capture warnings | `packages/client/src/index.ts`, `packages/vite-plugin/src/index.ts`, client and plugin tests       |
-| Routed actions   | JSON, URL-encoded, multipart parsing; validation; origin checks; typed envelopes; shared idempotency store         | `packages/actions/src/index.ts`, `packages/serve/src/index.ts`, `packages/dev-server/src/index.ts` |
-| Official serving | `@mohammedaydan/serve`, `nexis serve`, safe route mapping, 404/405, HEAD, MIME and cache headers                   | `packages/serve/README.md`, `packages/serve/src/index.test.ts`                                     |
-| Runtime parity   | Node, Cloudflare-style and Deno-style adapter checks; stream byte parity; cancellation and chunk bounds            | `tests/parity/runtime-parity.test.ts`, `packages/renderer/src/stream.test.ts`                      |
-| Media            | Content-addressed build-time WebP/AVIF cache and showcase rewrite step                                             | `packages/media/src/index.ts`, `benchmarks/build-media.mjs`, `dist/client/media-manifest.json`     |
-| Observability    | Explicit telemetry client, four-event schema, `sendBeacon`, zero-output disabled mode                              | `packages/telemetry/README.md`, `packages/telemetry/src/index.test.ts`                             |
-| SEO              | Canonical derivation, schema-level JSON-LD checks, sitemap and robots artifacts/endpoints, crawler link scan       | `packages/seo/src/index.ts`, CLI build, benchmark collector/evaluator                              |
+| Area          | Implementation                                                                                                         | Evidence                                                                                   |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| State engine  | Computed cycle diagnostics, no-op/memoization/batching preservation, selector and signal disposal                      | `packages/reactivity/src/index.ts`, `packages/state/src/index.ts`, package tests           |
+| Scope capture | `ScopeRef` ABI plus component$ capture path for signals/stores/actions and unsupported-capture diagnostics             | `packages/client/src/index.ts`, `packages/vite-plugin/src/index.ts`, plugin tests          |
+| SEO and feeds | RSS/Atom feeds, canonical/breadcrumb JSON-LD, hreflang/image sitemap fields, typed config, redirect manifests          | `packages/seo/src/index.ts`, `packages/cli/src/index.ts`, `nexis.config.json`              |
+| OG images     | Deterministic build-time SVG-to-PNG social cards with content-addressed cache                                          | `packages/og-image/src/index.ts`, emitted `dist/client/og/*.png`                           |
+| Streaming     | Incremental async child traversal, flush thresholds, bounded chunks, backpressure, and immediate abort closure         | `packages/renderer/src/stream.ts`, `packages/renderer/src/stream.test.ts`                  |
+| Edge parity   | Cloudflare asset fallback and Deno Fetch handler packages with safe 404/405 and immutable asset headers                | `packages/serve-cloudflare`, `packages/serve-deno`, package tests                          |
+| Media         | Responsive `<picture>` markup, WebP/AVIF variants, in-process and optional persistent disk cache                       | `packages/media/src/index.ts`, `benchmarks/build-media.mjs`, media tests                   |
+| Observability | Opt-in zero-byte-disabled telemetry, LCP/CLS/INP observers, and local 202 receiver                                     | `packages/telemetry/src/index.ts`, `packages/serve/src/index.ts`, telemetry/server tests   |
+| Benchmarks    | Astro-style route-scoped client budget, Lighthouse seven-route hard gates, production route/feed/redirect/OG evaluator | `benchmarks/compare-astro.mjs`, `benchmarks/run-lighthouse.mjs`, `benchmarks/evaluate.mjs` |
 
-The Phase 2 architecture decision is recorded in [`docs/adr/phase-2-production-parity.md`](../../docs/adr/phase-2-production-parity.md) and indexed from [`docs/adr/README.md`](../../docs/adr/README.md).
+The Phase 2 architecture decision is recorded in [`docs/adr/phase-2-production-parity.md`](../../docs/adr/phase-2-production-parity.md). Phase 3 acceptance evidence is generated by the benchmark and Lighthouse scripts listed in Section 10.
 
 ## 2. Functional verification
 
-The final repository verification was run on Linux with Node `v22.13.0` and pnpm `10.15.0`. The build traversed all workspace packages and both practical application fixtures. The full Vitest run covered 23 test files and 118 tests. The additional browser and benchmark checks were run separately against the showcase’s development and official production servers. The Deno runtime source was exercised through Node 22’s strip-types fallback with all six checks passing; the sandbox does not contain a `deno` executable, so the exact Deno command remains a CI/environment verification step.
+The final repository verification was run on Linux with Node `v22.13.0` and pnpm `10.15.0`. The build traversed all workspace packages and application fixtures. The full Vitest run covered 26 test files and 135 tests. Production benchmarks, the Astro comparison, and Lighthouse audits were run against the official route-aware server. The Deno runtime source was exercised through Node 22’s strip-types fallback with all six checks passing; the sandbox does not contain a `deno` executable, so the exact Deno command remains a CI/environment verification step.
 
-| Verification                 |           Result | Notes                                                                    |
-| ---------------------------- | ---------------: | ------------------------------------------------------------------------ |
-| Workspace build              |           Passed | All workspace packages and showcase build completed                      |
-| Unit/integration tests       |      **118/118** | 23 Vitest files                                                          |
-| Showcase browser evaluator   |        **19/19** | SSR, ScopeRef interaction, action POST, routes, 404, console cleanliness |
-| Deno runtime source fallback |          **6/6** | Node 22 strip-types execution; local Deno binary unavailable             |
-| Repository E2E               | **13/13 passed** | CI-mode run; fixture and showcase servers both managed automatically     |
-
-| Production benchmark gates | **20/20** | Official `@mohammedaydan/serve` on port 4173 |
-| Lint | Passed | ESLint |
-| Formatting | Passed | Prettier check |
-| Dependency audit | Passed | `pnpm audit --audit-level=high`: no known vulnerabilities |
-| Whitespace | Passed | `git diff --check` |
+| Verification                    |           Result | Notes                                                               |
+| ------------------------------- | ---------------: | ------------------------------------------------------------------- |
+| Workspace build and typecheck   |           Passed | All workspace packages and application fixtures                     |
+| Unit/integration tests          |      **135/135** | 26 Vitest files                                                     |
+| Showcase browser evaluator      |        **19/19** | SSR, ScopeRef interaction, action POST, routes, 404, console checks |
+| Deno runtime source fallback    |          **6/6** | Node 22 strip-types; local Deno binary unavailable                  |
+| Repository E2E                  | **13/13 passed** | Fixture and showcase servers managed automatically                  |
+| Production evaluator            |        **27/27** | Routes, feeds, redirects, OG cards, SEO, crawler, media, budgets    |
+| Lighthouse hard gates           |          **7/7** | SEO 100, performance 100, accessibility 100 in local mobile lab run |
+| Astro client-JS comparison      |       **Passed** | Nexis 1,940 B vs Astro-style baseline 2,272 B                       |
+| Lint, format, audit, whitespace |           Passed | ESLint, Prettier, high-severity audit, `git diff --check`           |
 
 The browser action test exposed and corrected an important event-order issue: a form’s native submit navigation can occur before a lazy handler finishes importing. The bootstrap now prevents submit synchronously, then imports the handler and performs the action request. This is covered by the 19/19 browser artifact and the repository showcase E2E test.
 
@@ -69,19 +70,17 @@ A production deployment must replace the default process-local idempotency store
 
 The official server was exercised against the full built output. The final production benchmark confirms that all seven routes return 200, the unknown route returns a real HTML 404, `HEAD` and `405` behavior are covered by package tests, action transport works, and sitemap/robots files are served as dedicated endpoints.
 
-Adapter parity coverage now compares Node, Cloudflare-style, and Deno-style handlers for status, headers, body output, server cache privacy, and portable conformance. Renderer streams are byte-identical to buffered output, use configurable bounded chunks, honor an abort signal, call a cancellation hook, and pause when the stream controller has no desired capacity.
-
-The renderer stream still computes the complete rendered tree before slicing bytes into bounded output chunks. It therefore provides transport-level backpressure and cancellation behavior, but it is not yet a component-level incremental streaming renderer.
+Adapter parity coverage now compares Node, Cloudflare-style, and Deno-style handlers for status, headers, body output, server cache privacy, and portable conformance. The new Cloudflare and Deno packages provide Fetch-native handler factories, immutable asset headers, safe 404/405 behavior, and fallback delegation to the application handler. Renderer streams traverse async child trees incrementally, flush the first shell early, respect configurable thresholds and chunk bounds, pause under backpressure, and close promptly on client abort.
 
 ## 6. Media and observability
 
-The media package now exposes `buildImageVariants`. It hashes source bytes and requested widths, caches the transform result in-process, writes WebP and AVIF outputs, and returns exact variant byte counts and cache-hit status. The showcase build generated four variants at widths 320 and 640: WebP and AVIF for each width. The output is recorded in `dist/client/media-manifest.json` and measured recursively by the benchmark collector. Native transform failure falls back to the original asset with a warning.
+The media package now exposes `buildImageVariants`, persistent `cacheDir` support, and `pictureMarkup`. It hashes source bytes and requested widths, writes WebP and AVIF outputs, returns exact variant byte counts and cache-hit status, and emits accessible `<picture>` markup with AVIF/WebP sources and a fallback `<img>`. The showcase build generated four variants at widths 320 and 640; the output is recorded in `dist/client/media-manifest.json` and measured recursively by the benchmark collector. The OG package separately generates deterministic build-time PNG cards with content-addressed cache hits.
 
-Telemetry is a separate opt-in package. Disabled telemetry returns an empty script and emits no beacon. Enabled telemetry sends only the documented low-cardinality events—navigation, route-transition error, chunk-load failure, and resumability activation—through `navigator.sendBeacon`. The package does not install observers or network requests merely because it is imported. The current implementation provides the client contract and event schema; it does not provide a server collector, consent UI, sampling backend, or built-in field LCP/CLS/INP observer pipeline.
+Telemetry remains opt-in and zero-byte-disabled. Enabled clients can send the documented low-cardinality events plus LCP, CLS, and INP measurements through `navigator.sendBeacon`; unsupported PerformanceObserver entry types are ignored. The official server now exposes a local `POST /__nexis/telemetry` receiver returning `202` for valid object envelopes and `400` for malformed bodies. Production deployments still need consent, sampling, privacy retention, authentication, and durable ingestion decisions.
 
 ## 7. Performance results
 
-The final production snapshot was collected from the official route-aware server at `127.0.0.1:4173`, with five sequential requests per route. These values reflect the sandbox’s local filesystem, CPU, Node version, and process state. They exclude DNS, TLS, network transfer, CDN behavior, edge cold starts, browser parsing, font loading, image decoding, and real-user scheduling.
+The final production snapshot was collected from the official route-aware server at `127.0.0.1:4175`, with five sequential requests per route. These values reflect the sandbox’s local filesystem, CPU, Node version, and process state. They exclude DNS, TLS, network transfer, CDN behavior, edge cold starts, browser parsing, font loading, image decoding, and real-user scheduling.
 
 | Route                | HTML raw | HTML gzip | Median local latency | Status |
 | -------------------- | -------: | --------: | -------------------: | -----: |
@@ -127,7 +126,7 @@ Technical SEO coverage passes on **7/7 measured routes** for title, description,
 | Broken internal page links                       |        0 |
 | Duplicate canonical/title/description signatures |        0 |
 
-The build emits `sitemap.xml` and `robots.txt` from the expanded route manifest. The collector fetches both endpoints and crawls local page links. The SEO package’s schema check is deliberately conservative: it validates schema.org context, a supported type, and a non-empty name; it is not a complete external Schema.org validator.
+The build emits `sitemap.xml`, `robots.txt`, and a standards-aligned RSS feed from the expanded route manifest. The sitemap builder supports validated hreflang and image entries, while the CLI derives breadcrumb JSON-LD and route-specific OG image metadata. The collector also asserts the configured `/docs` 308 redirect and the feed’s expanded documentation items. Schema checking remains deliberately conservative: it validates schema.org context, a supported type, a non-empty name, and type-specific required fields; it is not a complete external Schema.org validator.
 
 ![SEO coverage](benchmarks/assets/seo-coverage.png)
 
@@ -154,57 +153,59 @@ The audit does not claim an authenticated penetration test or production securit
 
 The benchmark commands and thresholds are documented in [`benchmarks/README.md`](benchmarks/README.md). The main artifacts are:
 
-| Artifact                            | Purpose                                                 |
-| ----------------------------------- | ------------------------------------------------------- |
-| `benchmark-results-production.json` | Official production-server snapshot                     |
-| `benchmark-results-dev.json`        | Development-server comparison snapshot                  |
-| `benchmark-routes-production.csv`   | Route-level production CSV                              |
-| `benchmark-routes-dev.csv`          | Route-level development CSV                             |
-| `evaluation.json`                   | 20-gate production acceptance result                    |
-| `browser-evaluation.json`           | 19-check Chromium result                                |
-| `run-benchmarks.mjs`                | Route, asset, action, crawler, SEO, and media collector |
-| `evaluate.mjs`                      | Threshold evaluator                                     |
-| `browser-evaluate.mjs`              | Browser interaction evaluator                           |
-| `build-media.mjs`                   | Reproducible build-time media step                      |
-| `serve-production.mjs`              | Thin wrapper around the official serve package          |
-| `assets/*.png`                      | Measurements rendered as report charts                  |
-| `screenshots/` and `visual-qa.md`   | Desktop/mobile visual evidence                          |
-| `live-browser-qa.md`                | Temporary public URL route/control QA and proxy finding |
+| Artifact                            | Purpose                                                       |
+| ----------------------------------- | ------------------------------------------------------------- |
+| `benchmark-results-production.json` | Official production-server snapshot                           |
+| `benchmark-results-dev.json`        | Development-server comparison snapshot                        |
+| `benchmark-routes-production.csv`   | Route-level production CSV                                    |
+| `benchmark-routes-dev.csv`          | Route-level development CSV                                   |
+| `evaluation.json`                   | 27-gate production acceptance result                          |
+| `browser-evaluation.json`           | 19-check Chromium result                                      |
+| `benchmark-comparison-astro.json`   | Route-scoped Astro-style client-JS comparison                 |
+| `lighthouse-*.json`                 | Per-route Lighthouse lab reports                              |
+| `lighthouse-summary.json`           | Seven-route SEO/performance/accessibility gate                |
+| `run-benchmarks.mjs`                | Route, asset, action, crawler, SEO, feed, and media collector |
+| `evaluate.mjs`                      | Threshold evaluator                                           |
+| `run-lighthouse.mjs`                | Lighthouse automation and hard gates                          |
+| `compare-astro.mjs`                 | Reproducible client-budget comparison                         |
+| `build-media.mjs`                   | Reproducible build-time media step                            |
+| `serve-production.mjs`              | Configured wrapper around the official serve package          |
+| `assets/*.png`                      | Measurements rendered as report charts                        |
+| `screenshots/` and `visual-qa.md`   | Desktop/mobile visual evidence                                |
+| `live-browser-qa.md`                | Temporary public URL route/control QA and proxy finding       |
 
-The current production evaluator artifact records **20 passed checks out of 20**. The current browser evaluator records **19 passed checks out of 19**. The CI-mode repository Playwright run passed **13/13 tests**. The exact Deno test source passed **6/6** through the local Node strip-types fallback; this is not a claim of local Deno execution. These artifacts should be regenerated rather than hand-edited when source or environment changes.
+The current production evaluator artifact records **27 passed checks out of 27**. The current browser evaluator records **19 passed checks out of 19**. The CI-mode repository Playwright run passed **13/13 tests**. The full Vitest run passed **135/135 tests**. The exact Deno test source passed **6/6** through the local Node strip-types fallback; this is not a claim of local Deno execution. These artifacts should be regenerated rather than hand-edited when source or environment changes.
 
 ## 11. Remaining framework gaps and priorities
 
-The implementation closes the Phase 2 acceptance surface but does not imply that Nexis has reached feature-complete production maturity. The remaining gaps are ordered by user-visible risk and architectural leverage.
+The implementation closes the Phase 3 acceptance surface without implying feature-complete production maturity. Remaining gaps are ordered by deployment risk and architectural leverage.
 
-1. **Complete resumability serialization.** ScopeRef now provides a safe explicit ABI, but the compiler still does not serialize arbitrary closure values, reconstruct functions, or automatically inject every reference into `data-nx-scope`. The next step is a real capture pass with source-to-runtime manifests, explicit serializable-value boundaries, and lifecycle ownership tied to route transitions.
+1. **Complete resumability serialization.** ScopeRef and component$ capture classification now cover signals, stores, actions, and unsupported captures, but arbitrary closure values are still not serialized or reconstructed. A future capture pass needs explicit serializable-value boundaries, source-to-runtime manifests, and route-transition ownership.
 
-2. **Durable action execution.** The action transport is routed and secure by default for origin checks, but the default idempotency store is process-local. A production adapter needs durable replay storage, bounded retention, rate limiting, CSRF policy configuration, authenticated authorization hooks, and an endpoint observability contract.
+2. **Durable action execution.** The transport validates origins, schemas, and replay keys, but the default idempotency store remains process-local. Production deployments need durable bounded replay storage, rate limiting, authenticated authorization hooks, and application-specific CSRF policy.
 
-3. **True incremental streaming.** Renderer output is now bounded and cancellation-aware, yet the full tree is still materialized before chunking. The next step is incremental component traversal, cancellation propagation into loaders, flush thresholds, and edge-runtime backpressure conformance under load.
+3. **Full edge static-serving parity.** Cloudflare and Deno now expose portable handler factories and asset semantics. Provider-specific generated-static deployment integration, cache invalidation, action routing, and observability wiring still require deployment adapters and runtime validation.
 
-4. **Edge-serving parity.** Node has the official route-aware server. Cloudflare and Deno adapters expose portable request handling but do not yet ship equivalent generated-static-file servers with the same cache, 404, action, and observability behavior.
+4. **Field-observability governance.** The client observes LCP/CLS/INP only when explicitly enabled, and the Node receiver is intentionally minimal. Consent UX, sampling, privacy retention, durable ingestion, cache-hit dashboards, and real-user field baselines remain application responsibilities.
 
-5. **Production media integration.** Build-time WebP/AVIF generation and caching are available, but automatic `<picture>` generation, responsive format negotiation, persistent cache storage, remote-image policy, and universal route integration remain application-level work.
+5. **Complete SEO validation.** Feeds, sitemap alternates/images, redirects, breadcrumbs, route metadata, and Lighthouse gates are covered. Full external Schema.org validation, pagination conventions, video sitemap support, crawl-budget diagnostics, and Search Console integration remain outside this release.
 
-6. **Field observability.** The telemetry client and schema are opt-in and zero-byte by default, but Nexis does not provide ingestion, consent, sampling, privacy retention, cache-hit metrics, or real-user LCP/CLS/INP instrumentation out of the box.
-
-7. **SEO validation breadth.** Sitemap, robots, canonical derivation, crawler links, and conservative JSON-LD validation are implemented. Full schema validation, hreflang, pagination, image/video sitemap support, redirect rules, and crawl-budget diagnostics remain future work.
-
-8. **Routing completeness.** Layout composition, query-parameter schemas, method-specific route handlers, typed API routes, route-level cache invalidation watchers, and richer deployment adapter configuration remain outside the current contract.
+6. **Routing and compiler completeness.** Layout composition, query-parameter schemas, method-specific route handlers, typed API routes, route-level cache invalidation watchers, and richer deployment adapter configuration remain future work.
 
 ## 12. Final assessment
 
-Phase 2 is complete against its reproducible acceptance surface. The showcase is runnable, its interactive path no longer depends on a manually started server, its production wrapper is now an official framework package, its action and crawl endpoints are exercised over HTTP, its image variants and telemetry defaults are measurable, and the regression gates are represented by committed artifacts. The remaining items are documented as explicit engineering gaps rather than hidden behind a passing demo.
+Phase 3 and the v1.0.0 Production GA acceptance surface are complete against the reproducible gates defined in this repository. The showcase exercises state lifecycle, component$ capture classification, action transport, official serving, edge handler parity, incremental streaming, responsive media, build-time OG cards, feeds, sitemap/robots/redirect outputs, optional field observers, Astro comparison, Lighthouse, crawler, security, and client-byte budgets. The remaining items are explicit deployment and ecosystem responsibilities rather than hidden behind a passing demo; no claim is made about internet production performance, rankings, traffic, backlinks, or real-user field data.
 
 ## References
 
 [1]: benchmarks/benchmark-results-production.json 'Final official production benchmark snapshot'
 [2]: benchmarks/benchmark-results-dev.json 'Final development benchmark snapshot'
-[3]: benchmarks/evaluation.json 'Final 20-gate acceptance evaluation'
+[3]: benchmarks/evaluation.json 'Final 27-gate acceptance evaluation'
 [4]: benchmarks/browser-evaluation.json 'Final 19-check browser evaluation'
 [5]: ../../tests/e2e/showcase.spec.ts 'Repository showcase Playwright coverage'
 [6]: ../../packages/seo/src/index.ts 'Nexis SEO helpers and schema validation'
 [7]: ../../packages/serve/README.md 'Official route-aware production server'
 [8]: ../../docs/adr/phase-2-production-parity.md 'Phase 2 production parity architecture decision'
 [9]: benchmarks/live-browser-qa.md 'Temporary public browser QA log'
+[10]: benchmarks/lighthouse-summary.json 'Seven-route Lighthouse lab gate'
+[11]: benchmarks/benchmark-comparison-astro.json 'Astro-style client budget comparison'

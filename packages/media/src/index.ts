@@ -12,6 +12,49 @@ export interface ImageProps {
   readonly sizes?: string
 }
 
+export interface PictureProps extends ImageProps {
+  readonly widths?: readonly number[]
+  readonly formats?: readonly ('avif' | 'webp')[]
+}
+
+export interface PictureMarkup {
+  readonly html: string
+  readonly sources: readonly { readonly type: string; readonly srcset: string }[]
+  readonly fallback: ImageAttributes
+}
+
+function escapeAttribute(value: string): string {
+  return value.replace(
+    /[&<>"']/g,
+    (character) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character] ??
+      character,
+  )
+}
+
+export function pictureMarkup(props: PictureProps): PictureMarkup {
+  const widths = [...(props.widths ?? [320, 640, 960, 1280])]
+  const formats = [...(props.formats ?? ['avif', 'webp'])]
+  const fallback = imageAttributes(props, widths)
+  const sources = formats.map((format) => ({
+    type: `image/${format}`,
+    srcset: widths
+      .map(
+        (width) =>
+          `${props.src}${props.src.includes('?') ? '&' : '?'}format=${format}&w=${width} ${width}w`,
+      )
+      .join(', '),
+  }))
+  const sourceMarkup = sources
+    .map(
+      (source) =>
+        `<source type="${source.type}" srcset="${escapeAttribute(source.srcset)}"${props.sizes ? ` sizes="${escapeAttribute(props.sizes)}"` : ''}>`,
+    )
+    .join('')
+  const imageMarkup = `<img src="${escapeAttribute(fallback.src)}" srcset="${escapeAttribute(fallback.srcset)}" width="${fallback.width}" height="${fallback.height}" alt="${escapeAttribute(fallback.alt)}" loading="${fallback.loading}" decoding="async"${fallback.fetchpriority ? ' fetchpriority="high"' : ''}${fallback.sizes ? ` sizes="${escapeAttribute(fallback.sizes)}"` : ''}>`
+  return { html: `<picture>${sourceMarkup}${imageMarkup}</picture>`, sources, fallback }
+}
+
 export interface ImageAttributes {
   readonly src: string
   readonly srcset: string
@@ -212,6 +255,7 @@ export interface BuildImageOptions {
   readonly outputDir: string
   readonly fileBase: string
   readonly widths?: readonly number[]
+  readonly cacheDir?: string
 }
 
 export interface BuiltImageVariant {
@@ -232,12 +276,48 @@ export async function buildImageVariants(
   const widths = [...(options.widths ?? [320, 640, 960])]
   const source = new Uint8Array(await readFile(options.sourcePath))
   const key = createHash('sha256').update(source).update(JSON.stringify(widths)).digest('hex')
+  const diskCacheDir = options.cacheDir
+  const diskManifest = diskCacheDir ? join(diskCacheDir, `${key}.json`) : undefined
   let variants = imageBuildCache.get(key)
-  const cacheHit = variants !== undefined
+  let cacheHit = variants !== undefined
+  if (!variants && diskManifest) {
+    try {
+      const cached = JSON.parse(await readFile(diskManifest, 'utf8')) as readonly {
+        format: 'webp' | 'avif'
+        width: number
+        fileName: string
+      }[]
+      const cacheRoot = diskCacheDir
+      if (!cacheRoot) throw new Error('Missing media cache directory.')
+      const loaded = await Promise.all(
+        cached.map(async (entry) => ({
+          ...entry,
+          bytes: new Uint8Array(await readFile(join(cacheRoot, entry.fileName))),
+        })),
+      )
+      variants = loaded
+      imageBuildCache.set(key, variants)
+      cacheHit = true
+    } catch {
+      // A partial cache is discarded and rebuilt below.
+    }
+  }
   if (!variants) {
     try {
       variants = await transformImage(source, options.fileBase, widths)
       imageBuildCache.set(key, variants)
+      if (diskCacheDir) {
+        await mkdir(diskCacheDir, { recursive: true })
+        await Promise.all(
+          variants.map((variant) => writeFile(join(diskCacheDir, variant.fileName), variant.bytes)),
+        )
+        await writeFile(
+          diskManifest!,
+          JSON.stringify(
+            variants.map(({ format, width, fileName }) => ({ format, width, fileName })),
+          ),
+        )
+      }
     } catch (error) {
       if (!imageFallbackWarningShown) {
         console.warn(

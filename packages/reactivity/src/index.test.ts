@@ -75,4 +75,12 @@ describe('computed', () => {
     source.set(2)
     expect(listener).not.toHaveBeenCalled()
   })
+
+  it('fails fast when a computed dependency cycle is evaluated', () => {
+    const source = state(0)
+    let read: () => number = () => source()
+    const derived = computed(() => read())
+    read = () => derived() + source()
+    expect(() => source.set(1)).toThrow('computed dependency cycle')
+  })
 })

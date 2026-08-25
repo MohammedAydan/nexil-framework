@@ -24,6 +24,7 @@ let activeScope: Set<() => void> | undefined
 let batchDepth = 0
 const pendingNotifications = new Set<Listener>()
 let flushing = false
+const evaluatingComputeds = new Set<() => unknown>()
 
 function notify(listener: Listener): void {
   if (batchDepth > 0 || flushing) {
@@ -62,11 +63,13 @@ export function state<T>(initial: T): Signal<T> {
   const listeners = new Set<Listener>()
 
   const read = (() => {
+    if (disposed) throw new Error('Nexis signal has been disposed.')
     track(read)
     return value
   }) as Signal<T>
 
   read.get = () => {
+    if (disposed) throw new Error('Nexis signal has been disposed.')
     track(read)
     return value
   }
@@ -108,6 +111,7 @@ export function computed<T>(derive: () => T): ReadableSignal<T> {
   let initialized = false
   let current!: T
   let disposed = false
+  let evaluating = false
   let scheduled = false
   let cleanups = new Set<Unsubscribe>()
 
@@ -118,7 +122,14 @@ export function computed<T>(derive: () => T): ReadableSignal<T> {
     const previousCollector = activeCollector
     activeCollector = { notify: () => schedule(), cleanups: nextCleanups }
     try {
+      if (evaluatingComputeds.has(derive))
+        throw new Error(
+          'Nexis computed dependency cycle detected while evaluating a derived signal.',
+        )
+      evaluatingComputeds.add(derive)
+      evaluating = true
       const next = derive()
+      evaluatingComputeds.delete(derive)
       for (const cleanup of cleanups) cleanup()
       cleanups = nextCleanups
       if (!initialized || !Object.is(current, next)) {
@@ -127,6 +138,8 @@ export function computed<T>(derive: () => T): ReadableSignal<T> {
         result.setValue(next)
       }
     } finally {
+      evaluating = false
+      evaluatingComputeds.delete(derive)
       activeCollector = previousCollector
       if (activeCollector) {
         for (const cleanup of nextCleanups) activeCollector.cleanups.add(cleanup)
@@ -143,8 +156,12 @@ export function computed<T>(derive: () => T): ReadableSignal<T> {
 
   recompute()
 
-  const read = (() => result.get() as T) as ReadableSignal<T>
-  read.get = () => result.get() as T
+  const read = (() => {
+    if (evaluating)
+      throw new Error('Nexis computed dependency cycle detected while reading a derived signal.')
+    return result.get() as T
+  }) as ReadableSignal<T>
+  read.get = () => read()
   Object.defineProperty(read, 'value', {
     enumerable: true,
     get: () => read.get(),
