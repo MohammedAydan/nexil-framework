@@ -20,7 +20,7 @@ function injectStylesheetLink(template: string, href: string): string {
   return `${link}${template}`
 }
 
-async function nodeRequest(request: IncomingMessage): Promise<Request> {
+export async function nodeRequest(request: IncomingMessage): Promise<Request> {
   const chunks: Buffer[] = []
   for await (const chunk of request) chunks.push(Buffer.from(chunk))
   const headers = new Headers()
@@ -30,7 +30,18 @@ async function nodeRequest(request: IncomingMessage): Promise<Request> {
   const method = request.method ?? 'GET'
   const init: RequestInit = { method, headers }
   if (method !== 'GET' && method !== 'HEAD') init.body = Buffer.concat(chunks)
-  return new Request(`http://${request.headers.host ?? 'localhost'}${request.url ?? '/'}`, init)
+  const forwardedProto =
+    process.env.NEXIS_TRUST_PROXY === '1' ? request.headers['x-forwarded-proto'] : undefined
+  const forwardedHost =
+    process.env.NEXIS_TRUST_PROXY === '1' ? request.headers['x-forwarded-host'] : undefined
+  const proto =
+    (Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto)?.split(',')[0]?.trim() ||
+    'http'
+  const host =
+    (Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost)?.split(',')[0]?.trim() ||
+    request.headers.host ||
+    'localhost'
+  return new Request(`${proto}://${host}${request.url ?? '/'}`, init)
 }
 
 async function handleDevAction(

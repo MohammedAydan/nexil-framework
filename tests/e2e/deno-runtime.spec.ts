@@ -107,11 +107,14 @@ await test('renderer escapes untrusted text', () => {
   assert(!html.includes('<img'), 'raw markup must not pass through text rendering')
 })
 
-await test('resumability bootstrap loads chunks from stable absolute URLs', () => {
-  assert(RESUMABILITY_BOOTSTRAP.includes("import('/nexis-chunks/'"), 'chunk base URL drifted')
+await test('resumability bootstrap resolves script-relative chunks and delegates events', () => {
   assert(
-    RESUMABILITY_BOOTSTRAP.includes("querySelectorAll('[data-nx-on], [data-nx-on-click]')"),
-    'bootstrap selector drifted',
+    RESUMABILITY_BOOTSTRAP.includes("new URL('../nexis-chunks/',s.src)"),
+    'script-relative chunk base missing',
+  )
+  assert(
+    RESUMABILITY_BOOTSTRAP.includes("getAttribute('data-nx-on-'+"),
+    'bootstrap event delegation drifted',
   )
 })
 

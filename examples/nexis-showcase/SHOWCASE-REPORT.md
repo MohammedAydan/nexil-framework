@@ -2,12 +2,12 @@
 
 **Generated:** 25 August 2026
 **Application:** `examples/nexis-showcase`
-**Framework branch:** `feat/nexis-showcase-benchmarks`
+**Framework branch:** `feat/phase2-production-parity`
 **Author:** Manus AI
 
 ## Executive summary
 
-Phase 2 converts the Nexis showcase from a feature specimen into a production-parity validation surface. The implementation adds a tagged ScopeRef ABI and lifecycle-aware client registry, routed action endpoints with JSON/form support and replay protection, an official route-aware Node production server and `nexis serve` command, bounded cancellation-aware stream output, adapter and renderer conformance tests, cached build-time WebP/AVIF variants, opt-in telemetry with a zero-byte disabled path, canonical derivation, schema-level JSON-LD checks, and generated sitemap and robots endpoints. The final production snapshot passes **20/20 benchmark gates**. The browser evaluator passes **19/19 checks**, the repository unit and integration suite passes **117/117 tests**, and the build, lint, formatting, high-severity dependency audit, and whitespace checks pass. Production-mode local measurements cover seven routes, true 404 and 405 behavior, action transport, crawler links, SEO endpoints, media variants, and a 1,621-byte raw resumability bootstrap. These are controlled local measurements, not internet production performance or SEO ranking evidence. The remaining gaps are primarily completeness and deployment depth: arbitrary closure serialization is still intentionally unsupported, action idempotency is process-local by default, stream rendering still materializes the complete tree before chunking, telemetry has no built-in ingestion or field Web Vitals pipeline, and edge adapters do not yet ship equivalent static-serving implementations.
+Phase 2 converts the Nexis showcase from a feature specimen into a production-parity validation surface. The implementation adds a tagged ScopeRef ABI and lifecycle-aware client registry, routed action endpoints with JSON/form support and replay protection, an official route-aware Node production server and `nexis serve` command, bounded cancellation-aware stream output, adapter and renderer conformance tests, cached build-time WebP/AVIF variants, opt-in telemetry with a zero-byte disabled path, canonical derivation, schema-level JSON-LD checks, and generated sitemap and robots endpoints. The final production snapshot passes **20/20 benchmark gates**. The browser evaluator passes **19/19 checks**, the repository unit and integration suite passes **118/118 tests**, and the build, lint, formatting, high-severity dependency audit, and whitespace checks pass. Production-mode local measurements cover seven routes, true 404 and 405 behavior, action transport, crawler links, SEO endpoints, media variants, and a 1,621-byte raw resumability bootstrap. These are controlled local measurements, not internet production performance or SEO ranking evidence. The remaining gaps are primarily completeness and deployment depth: arbitrary closure serialization is still intentionally unsupported, action idempotency is process-local by default, stream rendering still materializes the complete tree before chunking, telemetry has no built-in ingestion or field Web Vitals pipeline, and edge adapters do not yet ship equivalent static-serving implementations.
 
 ## 1. Scope and deliverables
 
@@ -27,14 +27,15 @@ The Phase 2 architecture decision is recorded in [`docs/adr/phase-2-production-p
 
 ## 2. Functional verification
 
-The final repository verification was run on Linux with Node `v22.13.0` and pnpm `10.15.0`. The build traversed all workspace packages and both practical application fixtures. The full Vitest run covered 23 test files and 117 tests. The additional browser and benchmark checks were run separately against the showcase’s development and official production servers.
+The final repository verification was run on Linux with Node `v22.13.0` and pnpm `10.15.0`. The build traversed all workspace packages and both practical application fixtures. The full Vitest run covered 23 test files and 118 tests. The additional browser and benchmark checks were run separately against the showcase’s development and official production servers. The Deno runtime source was exercised through Node 22’s strip-types fallback with all six checks passing; the sandbox does not contain a `deno` executable, so the exact Deno command remains a CI/environment verification step.
 
-| Verification               |           Result | Notes                                                                    |
-| -------------------------- | ---------------: | ------------------------------------------------------------------------ |
-| Workspace build            |           Passed | All workspace packages and showcase build completed                      |
-| Unit/integration tests     |      **117/117** | 23 Vitest files                                                          |
-| Showcase browser evaluator |        **19/19** | SSR, ScopeRef interaction, action POST, routes, 404, console cleanliness |
-| Repository E2E             | **13/13 passed** | CI-mode run; fixture and showcase servers both managed automatically     |
+| Verification                 |           Result | Notes                                                                    |
+| ---------------------------- | ---------------: | ------------------------------------------------------------------------ |
+| Workspace build              |           Passed | All workspace packages and showcase build completed                      |
+| Unit/integration tests       |      **118/118** | 23 Vitest files                                                          |
+| Showcase browser evaluator   |        **19/19** | SSR, ScopeRef interaction, action POST, routes, 404, console cleanliness |
+| Deno runtime source fallback |          **6/6** | Node 22 strip-types execution; local Deno binary unavailable             |
+| Repository E2E               | **13/13 passed** | CI-mode run; fixture and showcase servers both managed automatically     |
 
 | Production benchmark gates | **20/20** | Official `@mohammedaydan/serve` on port 4173 |
 | Lint | Passed | ESLint |
@@ -57,6 +58,8 @@ The raw production bootstrap is **1,621 bytes** and **930 bytes gzip**. The clie
 Actions are available at `POST /__nexis/actions/<route>/<name>`. The transport accepts JSON, URL-encoded forms, and multipart forms, runs validation before authorization and handling, checks trusted origins, applies a shared idempotency store when an `Idempotency-Key` is supplied, and returns either `{ ok: true, data }` or `{ ok: false, errors }`. The development server and official production server use the same action pipeline. The labs route exports `submit`, and its browser form performs a real POST round-trip returning `Action result: queued:Ada`.
 
 The transport is progressive-enhancement friendly because the form has a normal `action` and `method="post"`. The resumable enhancement adds JSON conversion and synchronous submit prevention only when the client boundary is activated. Unit coverage includes invalid input, rejected origins, duplicate keys, JSON, form data, method rejection, and success envelopes.
+
+The public temporary HTTPS preview required the development server to reconstruct the request origin from trusted `x-forwarded-proto` and `x-forwarded-host` headers. This behavior is opt-in through `NEXIS_TRUST_PROXY=1`; it must only be enabled behind a proxy that sanitizes and sets those headers. Without that deployment setting, the public browser action correctly fails closed with `Forbidden origin` rather than accepting an untrusted origin.
 
 A production deployment must replace the default process-local idempotency store with a durable, bounded store shared by all instances. Origin policy must also be configured to the deployment’s actual site origins; the showcase’s demonstration action is not a substitute for an application-specific CSRF and authorization policy.
 
@@ -166,8 +169,9 @@ The benchmark commands and thresholds are documented in [`benchmarks/README.md`]
 | `serve-production.mjs`              | Thin wrapper around the official serve package          |
 | `assets/*.png`                      | Measurements rendered as report charts                  |
 | `screenshots/` and `visual-qa.md`   | Desktop/mobile visual evidence                          |
+| `live-browser-qa.md`                | Temporary public URL route/control QA and proxy finding |
 
-The current production evaluator artifact records **20 passed checks out of 20**. The current browser evaluator records **19 passed checks out of 19**. The CI-mode repository Playwright run passed **13/13 tests**. These artifacts should be regenerated rather than hand-edited when source or environment changes.
+The current production evaluator artifact records **20 passed checks out of 20**. The current browser evaluator records **19 passed checks out of 19**. The CI-mode repository Playwright run passed **13/13 tests**. The exact Deno test source passed **6/6** through the local Node strip-types fallback; this is not a claim of local Deno execution. These artifacts should be regenerated rather than hand-edited when source or environment changes.
 
 ## 11. Remaining framework gaps and priorities
 
@@ -203,3 +207,4 @@ Phase 2 is complete against its reproducible acceptance surface. The showcase is
 [6]: ../../packages/seo/src/index.ts 'Nexis SEO helpers and schema validation'
 [7]: ../../packages/serve/README.md 'Official route-aware production server'
 [8]: ../../docs/adr/phase-2-production-parity.md 'Phase 2 production parity architecture decision'
+[9]: benchmarks/live-browser-qa.md 'Temporary public browser QA log'
