@@ -1,12 +1,13 @@
+import { fileURLToPath } from 'node:url'
 import { readFile } from 'node:fs/promises'
 import { createProductionServer } from '@mohammedaydan/serve'
 
-const root = new URL('../dist/client', import.meta.url).pathname
+const root = fileURLToPath(new URL('../dist/client', import.meta.url))
 const config = JSON.parse(await readFile(new URL('../nexis.config.json', import.meta.url), 'utf8'))
 const server = createProductionServer(root, {
   host: '0.0.0.0',
   port: Number(process.env.PORT ?? process.env.NEXIS_PORT ?? 4173),
-  serverDir: new URL('../dist/server/routes', import.meta.url).pathname,
+  serverDir: fileURLToPath(new URL('../dist/server/routes', import.meta.url)),
   ...(config.redirects ? { redirects: config.redirects } : {}),
   telemetry: { onEvent: () => undefined },
 })

@@ -1,10 +1,11 @@
+import { fileURLToPath } from 'node:url'
 import { createServer } from 'node:http'
 import { readFile, stat } from 'node:fs/promises'
 import { extname, join, resolve } from 'node:path'
 import { chromium } from '@playwright/test'
 
-const root = resolve(new URL('..', import.meta.url).pathname, '..', '..')
-const showcaseRoot = resolve(new URL('.', import.meta.url).pathname, '..')
+const root = resolve(fileURLToPath(new URL('..', import.meta.url)), '..', '..')
+const showcaseRoot = resolve(fileURLToPath(new URL('.', import.meta.url)), '..')
 const baselineRoot = join(showcaseRoot, 'benchmarks', 'comparison', 'astro-baseline')
 const nexOrigin = process.env.NEXIS_COMPARE_ORIGIN ?? 'http://127.0.0.1:4173'
 const baselinePort = Number(process.env.ASTRO_COMPARE_PORT ?? 4174)

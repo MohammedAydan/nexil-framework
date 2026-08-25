@@ -1,10 +1,11 @@
+import { fileURLToPath } from 'node:url'
 import { gzipSync } from 'node:zlib'
 import { readFile, readdir, stat, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { performance } from 'node:perf_hooks'
 import { spawn } from 'node:child_process'
 
-const root = resolve(new URL('..', import.meta.url).pathname)
+const root = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const dist = join(root, 'dist', 'client')
 const outputDir = join(root, 'benchmarks')
 const port = Number(process.env.BENCH_PORT ?? 5173)

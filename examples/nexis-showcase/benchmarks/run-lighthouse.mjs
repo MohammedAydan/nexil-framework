@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 import { existsSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { spawn } from 'node:child_process'
@@ -5,7 +6,7 @@ import { join, resolve } from 'node:path'
 import lighthouse from 'lighthouse'
 import * as chromeLauncher from 'chrome-launcher'
 
-const showcaseRoot = resolve(new URL('.', import.meta.url).pathname, '..')
+const showcaseRoot = resolve(fileURLToPath(new URL('.', import.meta.url)), '..')
 const outputDir = join(showcaseRoot, 'benchmarks')
 const origin = process.env.LIGHTHOUSE_ORIGIN ?? 'http://127.0.0.1:4173'
 const routes = [

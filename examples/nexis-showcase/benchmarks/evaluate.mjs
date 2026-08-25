@@ -1,7 +1,8 @@
+import { fileURLToPath } from 'node:url'
 import { readFile, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 
-const root = resolve(new URL('..', import.meta.url).pathname)
+const root = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const results = JSON.parse(
   await readFile(join(root, 'benchmarks', 'benchmark-results.json'), 'utf8'),
 )

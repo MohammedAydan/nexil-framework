@@ -1,8 +1,9 @@
+import { fileURLToPath } from 'node:url'
 import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { buildImageVariants } from '@mohammedaydan/media'
 
-const root = resolve(new URL('..', import.meta.url).pathname)
+const root = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const source = join(root, 'public', 'nexis-showcase.svg')
 const client = join(root, 'dist', 'client')
 const output = join(client, 'assets', 'images')

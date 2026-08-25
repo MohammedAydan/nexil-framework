@@ -1,8 +1,9 @@
+import { fileURLToPath } from 'node:url'
 import { chromium } from '@playwright/test'
 import { mkdir } from 'node:fs/promises'
 
 const baseUrl = process.env.BASE_URL ?? 'http://127.0.0.1:5173'
-const outputDir = new URL('./screenshots/', import.meta.url).pathname
+const outputDir = fileURLToPath(new URL('./screenshots/', import.meta.url))
 const routes = ['/', '/features', '/labs', '/docs/performance']
 
 await mkdir(outputDir, { recursive: true })

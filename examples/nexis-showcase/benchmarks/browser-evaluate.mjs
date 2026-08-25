@@ -1,8 +1,9 @@
+import { fileURLToPath } from 'node:url'
 import { chromium } from '@playwright/test'
 import { writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 
-const root = resolve(new URL('..', import.meta.url).pathname)
+const root = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const browser = await chromium.launch({ headless: true })
 const page = await browser.newPage()
 const consoleErrors = []
