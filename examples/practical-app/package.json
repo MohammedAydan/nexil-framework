@@ -5,8 +5,8 @@
   "type": "module",
   "packageManager": "pnpm@10.15.0",
   "scripts": {
-    "build": "nexis build",
-    "check": "nexis check --budget"
+    "build": "node ../../packages/cli/dist/bin.js build",
+    "check": "node ../../packages/cli/dist/bin.js check --budget"
   },
   "dependencies": {
     "@mohammedaydan/actions": "workspace:*",
