@@ -57,10 +57,23 @@ export function renderHead(metadata: SeoMetadata): string {
     tags.push(`<meta name="description" content="${escapeHtml(normalized.description)}">`)
   if (normalized.canonical)
     tags.push(`<link rel="canonical" href="${escapeHtml(normalized.canonical)}">`)
+
+  tags.push(`<meta property="og:title" content="${escapeHtml(normalized.title)}">`)
+  if (normalized.description)
+    tags.push(`<meta property="og:description" content="${escapeHtml(normalized.description)}">`)
   if (normalized.image)
     tags.push(`<meta property="og:image" content="${escapeHtml(normalized.image)}">`)
   if (normalized.ogType)
     tags.push(`<meta property="og:type" content="${escapeHtml(normalized.ogType)}">`)
+
+  tags.push(
+    `<meta name="twitter:card" content="${normalized.image ? 'summary_large_image' : 'summary'}">`,
+  )
+  tags.push(`<meta name="twitter:title" content="${escapeHtml(normalized.title)}">`)
+  if (normalized.description)
+    tags.push(`<meta name="twitter:description" content="${escapeHtml(normalized.description)}">`)
+  if (normalized.image)
+    tags.push(`<meta name="twitter:image" content="${escapeHtml(normalized.image)}">`)
   if (normalized.noindex) tags.push('<meta name="robots" content="noindex">')
   if (normalized.jsonLd)
     tags.push(`<script type="application/ld+json">${safeJson(normalized.jsonLd)}</script>`)

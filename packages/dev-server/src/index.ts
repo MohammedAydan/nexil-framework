@@ -6,6 +6,13 @@ import { renderHead } from '@mohammedaydan/seo'
 import { routeFromFile, resolveRoute, matchRoute } from '@mohammedaydan/router'
 import type { NexisHandler } from '@mohammedaydan/adapters'
 
+function injectStylesheetLink(template: string, href: string): string {
+  const link = `<link rel="stylesheet" href="${href}">`
+  if (template.includes(`href="${href}"`) || template.includes(`href='${href}'`)) return template
+  if (template.includes('</head>')) return template.replace('</head>', `  ${link}\n</head>`)
+  return `${link}${template}`
+}
+
 export interface DevServer {
   readonly handle: NexisHandler
   readonly revision: () => number
@@ -49,7 +56,7 @@ async function discoverRouteRecords(root: string) {
     return files
       .map((file) => {
         try {
-          return routeFromFile(`src/routes/${file}`)
+          return routeFromFile(`src/routes/${file.replace(/\\/g, '/')}`)
         } catch {
           return null
         }
@@ -117,7 +124,8 @@ export function nexisSSRPlugin(root: string): Plugin {
             renderedHtml = renderToString(Component)
           }
 
-          const hasInteractive = renderedHtml.includes('data-nx-on-click')
+          const hasInteractive =
+            renderedHtml.includes('data-nx-on') || renderedHtml.includes('data-nx-on-click')
           const scripts = hasInteractive
             ? '<script type="module" src="/nexis-bootstrap.js"></script>'
             : ''
@@ -130,6 +138,12 @@ export function nexisSSRPlugin(root: string): Plugin {
           }
 
           template = await server.transformIndexHtml(url, template)
+          try {
+            await readFile(join(root, 'src', 'styles.css'), 'utf8')
+            template = injectStylesheetLink(template, '/src/styles.css')
+          } catch {
+            // Applications without a source stylesheet remain CSS-free by design.
+          }
 
           const html = template
             .replace('<!--nexis-head-outlet-->', head)

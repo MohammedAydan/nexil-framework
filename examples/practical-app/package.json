@@ -1,0 +1,24 @@
+{
+  "name": "@mohammedaydan/example-practical-app",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.15.0",
+  "scripts": {
+    "build": "nexis build",
+    "check": "nexis check --budget"
+  },
+  "dependencies": {
+    "@mohammedaydan/actions": "workspace:*",
+    "@mohammedaydan/cli": "workspace:*",
+    "@mohammedaydan/core": "workspace:*",
+    "@mohammedaydan/css": "workspace:*",
+    "@mohammedaydan/reactivity": "workspace:*",
+    "@mohammedaydan/seo": "workspace:*"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.0",
+    "tailwindcss": "^4.1.0",
+    "vite": "^6.2.0"
+  }
+}

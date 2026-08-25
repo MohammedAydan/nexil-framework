@@ -13,7 +13,18 @@ describe('SEO metadata', () => {
       jsonLd: { '@type': 'Product', name: '</script><script>alert(1)</script>' },
     })
     expect(head).toContain('&lt;Product&gt;')
+    expect(head).toContain('<meta property="og:title" content="&lt;Product&gt;">')
+    expect(head).toContain('<meta property="og:description" content="A &quot;safe&quot; product">')
+    expect(head).toContain('<meta name="twitter:card" content="summary">')
+    expect(head).toContain('<meta name="twitter:title" content="&lt;Product&gt;">')
+    expect(head).toContain('<meta name="twitter:description" content="A &quot;safe&quot; product">')
     expect(head).not.toContain('</script><script>alert(1)</script>')
+  })
+
+  it('emits a large Twitter card when an image is present', () => {
+    const head = renderHead({ title: 'Home', image: '/social.png' })
+    expect(head).toContain('<meta name="twitter:card" content="summary_large_image">')
+    expect(head).toContain('<meta name="twitter:image" content="/social.png">')
   })
 
   it('accepts relative or HTTPS canonical URLs and rejects unsafe protocols', () => {

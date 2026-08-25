@@ -141,6 +141,24 @@ describe('Nexis CLI', () => {
     await expect(scaffoldProject('js-app', parent, { yes: true })).rejects.toThrow(/not empty/)
   })
 
+  it('builds the practical Tailwind and dynamic SSG fixture end to end', async () => {
+    const directory = join(process.cwd(), 'examples/practical-app')
+    await expect(runCli(['build'], directory)).resolves.toContain('build completed')
+    const stylesheet = await readFile(join(directory, 'dist/client/assets/styles.css'), 'utf8')
+    const html = await readFile(join(directory, 'dist/client/index.html'), 'utf8')
+    const manifest = JSON.parse(
+      await readFile(join(directory, 'dist/client/nexis-manifest.json'), 'utf8'),
+    ) as { routes: Array<{ route: string }> }
+    expect(stylesheet).toContain('.bg-slate-950')
+    expect(html.match(/href="\/assets\/styles\.css"/g)).toHaveLength(1)
+    expect(
+      await readFile(join(directory, 'dist/client/docs/quickstart/index.html'), 'utf8'),
+    ).toContain('quickstart')
+    expect(manifest.routes.map((route) => route.route)).toEqual(
+      expect.arrayContaining(['/docs/quickstart', '/docs/routing', '/docs/styling']),
+    )
+  })
+
   it('emits and measures bootstrap for an interactive route', async () => {
     const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-interactive-'))
     const directory = await createProject('interactive-app', parent)

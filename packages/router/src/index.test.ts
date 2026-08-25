@@ -27,6 +27,11 @@ describe('routeFromFile and matching', () => {
     expect(resolveRoute([dynamicRoute, staticRoute], '/products/featured')?.route).toBe(staticRoute)
   })
 
+  it('normalizes Windows-style route file paths', () => {
+    expect(routeFromFile('src\\routes\\docs\\index.tsx').pattern).toBe('/docs')
+    expect(routeFromFile('src\\routes\\docs\\[slug].tsx').pattern).toBe('/docs/:slug')
+  })
+
   it('rejects traversal and malformed route files', () => {
     expect(() => routeFromFile('src/routes/../server.tsx')).toThrow(/Unsafe/)
     expect(() => routeFromFile('src/routes/[bad!.tsx')).toThrow(/Invalid route segment/)

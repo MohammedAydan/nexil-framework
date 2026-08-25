@@ -17,9 +17,9 @@ export interface RouteMatch {
 }
 
 function normalizeFile(file: string): string[] {
-  if (file.includes('\\') || file.split('/').includes('..'))
-    throw new TypeError('Unsafe route file path.')
-  return file
+  const normalized = file.replace(/\\/g, '/')
+  if (normalized.split('/').includes('..')) throw new TypeError('Unsafe route file path.')
+  return normalized
     .replace(/^\.?\//, '')
     .split('/')
     .filter(Boolean)
