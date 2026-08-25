@@ -36,11 +36,9 @@ test.beforeAll(async () => {
 
   // Verify build output contains SSR proof before starting server
   const html = await readFile(join(appDir, 'dist', 'client', 'index.html'), 'utf8')
-  const htmlRoot = await readFile(join(appDir, 'dist', 'index.html'), 'utf8')
   console.log(
     `[engine-proof] dist/client/index.html chunk: ${html.match(/chunk_[a-f0-9]+\.js/)?.[0]}`,
   )
-  console.log(`[engine-proof] dist/index.html chunk: ${htmlRoot.match(/chunk_[a-f0-9]+\.js/)?.[0]}`)
   if (!html.includes('Rendered via Nexis SSR Engine')) {
     throw new Error('Build output missing engine-stamp - SSR pipeline bypassed')
   }
@@ -49,13 +47,17 @@ test.beforeAll(async () => {
   }
 
   // Start preview server for E2E browser testing
-  const vitePreview = await preview({ root: appDir, preview: { port: 4317, host: '127.0.0.1' } })
+  const vitePreview = await preview({
+    root: appDir,
+    build: { outDir: 'dist/client' },
+    preview: { port: 4317, host: '127.0.0.1' },
+  })
   server = vitePreview
   // Wait for server to be ready and verify chunk serving
   await new Promise((resolve) => setTimeout(resolve, 2000))
   // Verify preview serves the chunk correctly before running tests
   const chunkFiles = await import('node:fs/promises').then((m) =>
-    m.readdir(join(appDir, 'dist', 'nexis-chunks')).catch(() => []),
+    m.readdir(join(appDir, 'dist', 'client', 'nexis-chunks')).catch(() => []),
   )
   console.log(`[engine-proof] dist/nexis-chunks files: ${chunkFiles.join(', ')}`)
   const previewHtml = await fetch('http://127.0.0.1:4317/')

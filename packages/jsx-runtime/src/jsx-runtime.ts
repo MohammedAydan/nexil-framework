@@ -1,4 +1,4 @@
-export { Fragment, jsx, jsxs } from './index.js'
+export { Fragment, jsx, jsxDEV, jsxs, jsxsDEV } from './index.js'
 
 export namespace JSX {
   export type Element = import('@mohammedaydan/core').Child

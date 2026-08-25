@@ -13,6 +13,7 @@
     "@mohammedaydan/cli": "workspace:*",
     "@mohammedaydan/core": "workspace:*",
     "@mohammedaydan/css": "workspace:*",
+    "@mohammedaydan/jsx-runtime": "workspace:*",
     "@mohammedaydan/reactivity": "workspace:*",
     "@mohammedaydan/seo": "workspace:*"
   },

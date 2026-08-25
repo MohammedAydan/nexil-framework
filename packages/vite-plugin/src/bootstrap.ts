@@ -38,10 +38,11 @@ export const RESUMABILITY_BOOTSTRAP = `(() => {
             const chunk = reference.slice(0, separator);
             const exportName = reference.slice(separator + 1);
             if (!chunkPattern.test(chunk) || !exportPattern.test(exportName)) continue;
+            const currentElement = element;
             import(baseUrl + chunk).then((module) => {
               const handler = module[exportName];
               if (typeof handler === 'function') {
-                return handler({ element, event, scope: readScope(element) });
+                return handler({ element: currentElement, event, scope: readScope(currentElement) });
               }
               return undefined;
             });
@@ -58,10 +59,11 @@ export const RESUMABILITY_BOOTSTRAP = `(() => {
             const chunk = reference.slice(0, hash);
             const exportName = reference.slice(hash + 1);
             if (!chunkPattern.test(chunk) || !exportPattern.test(exportName)) continue;
+            const currentElement = element;
             import(baseUrl + chunk).then((module) => {
               const handler = module[exportName];
               if (typeof handler === 'function') {
-                return handler({ element, event, scope: readScope(element) });
+                return handler({ element: currentElement, event, scope: readScope(currentElement) });
               }
               return undefined;
             });

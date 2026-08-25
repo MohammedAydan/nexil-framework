@@ -11,6 +11,7 @@ describe('Nexis Vite transform', () => {
     expect(result.chunks).toHaveLength(1)
     expect(result.chunks[0]?.fileName).toMatch(/^chunk_[a-f0-9]{12}\.js$/)
     expect(result.chunks[0]?.source).toContain('handler_')
+    expect(result.chunks[0]?.source).toContain('({ element, event, scope })')
   })
 
   it('supports resumable non-click events with a normalized event name', async () => {

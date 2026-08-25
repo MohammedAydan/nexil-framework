@@ -1,5 +1,11 @@
 export type Serializable =
-  string | number | boolean | null | Serializable[] | { readonly [key: string]: Serializable }
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | Serializable[]
+  | { readonly [key: string]: Serializable }
 
 export type Child = RenderNode | string | number | boolean | null | undefined | Child[]
 

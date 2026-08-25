@@ -119,6 +119,9 @@ importers:
       '@mohammedaydan/css':
         specifier: workspace:*
         version: link:../../packages/css
+      '@mohammedaydan/jsx-runtime':
+        specifier: workspace:*
+        version: link:../../packages/jsx-runtime
       '@mohammedaydan/reactivity':
         specifier: workspace:*
         version: link:../../packages/reactivity

@@ -1,15 +1,44 @@
 import { gzipSync } from 'node:zlib'
+import { existsSync } from 'node:fs'
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
-import { join, relative, resolve } from 'node:path'
+import { dirname, join, relative, resolve } from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { build, createServer, preview } from 'vite'
-import { assertBudget, checkBudget } from '@mohammedaydan/compiler'
+import { assertBudget } from '@mohammedaydan/compiler'
 import nexis, { RESUMABILITY_BOOTSTRAP, transformNexisSource } from '@mohammedaydan/vite-plugin'
-import { renderToString } from '@mohammedaydan/renderer'
+import { escapeHtml, renderToString } from '@mohammedaydan/renderer'
 import { renderHead } from '@mohammedaydan/seo'
 import { matchRoute, routeFromFile } from '@mohammedaydan/router'
 import { nexisSSRPlugin } from '@mohammedaydan/dev-server'
 export { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 import { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
+
+const FRAMEWORK_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..')
+
+function workspaceAliases(): readonly { readonly find: string; readonly replacement: string }[] {
+  if (!existsSync(join(FRAMEWORK_ROOT, 'pnpm-workspace.yaml'))) return []
+  const packages = ['core', 'jsx-runtime', 'reactivity']
+  return packages.flatMap((name) => {
+    const source = join(FRAMEWORK_ROOT, 'packages', name, 'src', 'index.ts')
+    if (!existsSync(source)) return []
+    if (name === 'jsx-runtime') {
+      return [
+        {
+          find: '@mohammedaydan/jsx-runtime/jsx-dev-runtime',
+          replacement: join(FRAMEWORK_ROOT, 'packages/jsx-runtime/src/jsx-runtime.ts'),
+        },
+        {
+          find: '@mohammedaydan/jsx-runtime/jsx-runtime',
+          replacement: join(FRAMEWORK_ROOT, 'packages/jsx-runtime/src/jsx-runtime.ts'),
+        },
+        { find: '@mohammedaydan/jsx-runtime', replacement: source },
+      ]
+    }
+    return [{ find: `@mohammedaydan/${name}`, replacement: source }]
+  })
+}
+
+const VITE_WORKSPACE_CONFIG = { resolve: { alias: workspaceAliases() } }
 
 export type NexisCommand = 'create' | 'dev' | 'build' | 'start' | 'check' | 'analyze' | 'routes'
 
@@ -52,14 +81,6 @@ export function helpText(): string {
     '  analyze        Report route output and client budgets',
     '  routes         List discovered routes',
   ].join('\n')
-}
-
-function assertProjectName(name: string): void {
-  if (!/^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/.test(name) || name === 'node_modules') {
-    throw new TypeError(
-      'Project name must be 1–64 characters, start with a letter, and contain no path separators.',
-    )
-  }
 }
 
 interface BuildRouteRecord {
@@ -152,6 +173,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   const outputRoot = join(root, 'dist')
   await rm(outputRoot, { recursive: true, force: true })
   const serverRoot = join(outputRoot, 'server', 'routes')
+  const serverModules = new Map<string, any>()
   const chunkRoot = join(outputRoot, CHUNK_DIRECTORY)
   const clientRoot = join(outputRoot, 'client')
   const assetRoot = join(clientRoot, 'assets')
@@ -167,19 +189,11 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     template = `<!DOCTYPE html><html lang="en"><head><!--nexis-head-outlet--></head><body><div id="app"><!--nexis-app-outlet--></div><!--nexis-scripts-outlet--></body></html>`
   }
 
-  const vite = await createServer({
-    root,
-    plugins: [nexis({ root })],
-    server: { middlewareMode: true },
-    appType: 'custom',
-    logLevel: 'silent',
-  })
-  await vite.pluginContainer.buildStart({} as any)
-
   try {
     await readFile(join(root, 'src', 'styles.css'), 'utf8')
     const clientBuild = await build({
       root,
+      ...VITE_WORKSPACE_CONFIG,
       plugins: [nexis({ root })],
       build: {
         write: false,
@@ -200,6 +214,35 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     }
   } catch {
     // Tailwind is opt-in; applications without src/styles.css need no CSS transform.
+  }
+
+  const loadServerModule = async (route: string): Promise<any> => {
+    const cached = serverModules.get(route)
+    if (cached) return cached
+    const sourcePath = join(routeRoot, route)
+    const result = await build({
+      root,
+      ...VITE_WORKSPACE_CONFIG,
+      plugins: [nexis({ root })],
+      build: {
+        write: false,
+        ssr: sourcePath,
+        rollupOptions: { input: sourcePath },
+      },
+      logLevel: 'silent',
+    })
+    const outputs = Array.isArray(result) ? result : [result]
+    const entry = outputs
+      .flatMap((output: any) => output.output ?? [])
+      .find((chunk: any) => chunk.type === 'chunk' && chunk.isEntry)
+    if (!entry?.code) throw new Error(`Vite SSR build produced no entry for ${route}.`)
+    const outputName = route.replace(/\\/g, '/').replace(/\.(tsx|jsx|ts|js)$/, '.js')
+    const serverModulePath = join(serverRoot, outputName)
+    await mkdir(join(serverModulePath, '..'), { recursive: true })
+    await writeFile(serverModulePath, entry.code, 'utf8')
+    const module = await import(`${pathToFileURL(serverModulePath).href}?nexis=${Date.now()}`)
+    serverModules.set(route, module)
+    return module
   }
 
   const records: BuildRouteRecord[] = []
@@ -223,7 +266,8 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
       await writeFile(chunkClientPath, chunk.source, 'utf8')
     }
     for (const css of transformed.css) cssAssets.add(css)
-    if (transformed.css.length > 0) template = injectStylesheetLink(template, '/assets/nexis.css')
+    const routeTemplate =
+      transformed.css.length > 0 ? injectStylesheetLink(template, '/assets/nexis.css') : template
     const routeName = route
       .replace(/\\/g, '/')
       .replace(/\.(tsx|jsx|ts|js)$/, '')
@@ -236,13 +280,12 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     let headHtml = '<title>Nexis App</title>'
     let scriptsHtml = interactive ? `<script type="module" src="/${BOOTSTRAP_FILE}"></script>` : ''
     try {
-      const modulePath = `/src/routes/${route.replace(/\\/g, '/')}`
-      const mod: any = await vite.ssrLoadModule(modulePath)
+      const mod: any = await loadServerModule(route)
       if (mod.seo) {
         try {
           headHtml = renderHead(mod.seo)
         } catch {
-          headHtml = mod.seo.title ? `<title>${mod.seo.title}</title>` : headHtml
+          headHtml = mod.seo.title ? `<title>${escapeHtml(mod.seo.title)}</title>` : headHtml
         }
       }
       if (mod.render?.mode) {
@@ -258,13 +301,11 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
         renderedHtml = renderToString(transformed.code as any)
       }
     } catch (err) {
-      try {
-        renderedHtml = `<div data-nexis-fallback>Static fallback for ${routePath}</div>`
-        console.warn(`SSR failed for ${routePath}:`, (err as Error).message)
-      } catch {}
+      const message = err instanceof Error ? err.message : String(err)
+      throw new Error(`SSR failed for ${routePath}: ${message}`, { cause: err })
     }
 
-    const html = template
+    const html = routeTemplate
       .replace('<!--nexis-head-outlet-->', headHtml)
       .replace('<!--nexis-app-outlet-->', renderedHtml)
       .replace('<!--nexis-scripts-outlet-->', scriptsHtml)
@@ -272,10 +313,6 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     const outDir = routePath === '/' ? clientRoot : join(clientRoot, routePath.slice(1))
     await mkdir(outDir, { recursive: true })
     await writeFile(join(outDir, 'index.html'), html, 'utf8')
-
-    const previewDir = routePath === '/' ? outputRoot : join(outputRoot, routePath.slice(1))
-    await mkdir(previewDir, { recursive: true })
-    await writeFile(join(previewDir, 'index.html'), html, 'utf8')
 
     const routeRecord = routeFromFile(`src/routes/${route.replace(/\\/g, '/')}`)
     const routeMetrics = {
@@ -297,13 +334,10 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
 
     if (routePath.includes('[')) {
       try {
-        const staticModule: any = await vite.ssrLoadModule(
-          `/src/routes/${route.replace(/\\/g, '/')}`,
-        )
+        const staticModule: any = await loadServerModule(route)
         const staticPaths = await resolveStaticPaths(routeRecord.pattern, routePath, staticModule)
         if (staticPaths.some((generatedPath) => generatedPath !== routePath)) {
           await rm(join(clientRoot, routePath.slice(1)), { recursive: true, force: true })
-          await rm(join(outputRoot, routePath.slice(1)), { recursive: true, force: true })
           const placeholderIndex = records.findIndex((record) => record.route === routePath)
           if (placeholderIndex >= 0) records.splice(placeholderIndex, 1)
         }
@@ -317,30 +351,27 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
               : GeneratedComponent
           const generatedRenderedHtml = renderToString(generatedResult)
           const generatedHead = staticModule.seo ? renderHead(staticModule.seo) : headHtml
-          const generatedHtml = template
+          const generatedHtml = routeTemplate
             .replace('<!--nexis-head-outlet-->', generatedHead)
             .replace('<!--nexis-app-outlet-->', generatedRenderedHtml)
             .replace('<!--nexis-scripts-outlet-->', scriptsHtml)
           const generatedDirectory = join(clientRoot, generatedPath.slice(1))
           await mkdir(generatedDirectory, { recursive: true })
           await writeFile(join(generatedDirectory, 'index.html'), generatedHtml, 'utf8')
-          const generatedPreviewDirectory = join(outputRoot, generatedPath.slice(1))
-          await mkdir(generatedPreviewDirectory, { recursive: true })
-          await writeFile(join(generatedPreviewDirectory, 'index.html'), generatedHtml, 'utf8')
           records.push({ route: generatedPath, ...routeMetrics })
         }
       } catch (error) {
-        console.warn(`Static path generation failed for ${routePath}:`, (error as Error).message)
+        const message = error instanceof Error ? error.message : String(error)
+        throw new Error(`Static path generation failed for ${routePath}: ${message}`, {
+          cause: error,
+        })
       }
     }
   }
 
-  await vite.close()
-
   if (cssAssets.size > 0) {
     const cssContent = [...cssAssets].join('')
     await writeFile(join(assetRoot, 'nexis.css'), cssContent, 'utf8')
-    template = injectStylesheetLink(template, '/assets/nexis.css')
   }
   if (hasInteractiveRoute) {
     await writeFile(join(outputRoot, BOOTSTRAP_FILE), RESUMABILITY_BOOTSTRAP, 'utf8')
@@ -410,12 +441,16 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
     return 'Nexis checks passed.'
   }
   if (parsed.command === 'dev') {
-    const server = await createServer({ root, plugins: [nexis({ root }), nexisSSRPlugin(root)] })
+    const server = await createServer({
+      root,
+      ...VITE_WORKSPACE_CONFIG,
+      plugins: [nexis({ root }), nexisSSRPlugin(root)],
+    })
     await server.listen()
     return `Nexis dev server running at ${server.resolvedUrls?.local?.[0] ?? 'local URL'}`
   }
   if (parsed.command === 'start') {
-    const server = await preview({ root })
+    const server = await preview({ root, build: { outDir: 'dist/client' } })
     return `Nexis production server running at ${server.resolvedUrls?.local?.[0] ?? 'local URL'}`
   }
   // Keep the command exhaustive if a new command is added to NexisCommand.

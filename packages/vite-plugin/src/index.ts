@@ -284,7 +284,7 @@ export async function transformNexisSource(
   const chunks: LazyChunk[] = []
   for (const { fileName, exportName, expressionSource } of chunkSpecs) {
     const capturedExpression = captureExpression(expressionSource)
-    const raw = `export async function ${exportName}({ scope = {}, event }) { return (${capturedExpression})(event) }\n`
+    const raw = `export async function ${exportName}({ element, scope = {}, event }) { return (${capturedExpression})({ element, event, scope }) }\n`
     const source_ = isTypeScript
       ? (
           await transformWithEsbuild(raw, `${fileName}.ts`, {

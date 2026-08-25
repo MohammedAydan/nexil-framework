@@ -121,7 +121,7 @@ describe('Nexis CLI', () => {
       'onClick$',
     )
     expect(await readFile(join(result.directory, 'tsconfig.json'), 'utf8')).toContain(
-      '"jsxImportSource": "@mohammedaydan/core"',
+      '"jsxImportSource": "@mohammedaydan/jsx-runtime"',
     )
     expect(await readFile(join(result.directory, 'tsconfig.json'), 'utf8')).toContain(
       '"allowJs": true',
