@@ -35,6 +35,16 @@ function hash(value: string): string {
   return createHash('sha256').update(value).digest('hex').slice(0, 12)
 }
 
+function normalizeIdForHash(id: string): string {
+  return id
+    .replace(/\\/g, '/')
+    .replace(/^[A-Za-z]:/, '')
+    .replace(/^\/+/, '')
+    .split('/')
+    .slice(-3)
+    .join('/')
+}
+
 function walk(node: unknown, visit: (node: AstNode) => void): void {
   if (!node || typeof node !== 'object') return
   if (Array.isArray(node)) {
@@ -128,7 +138,7 @@ export async function transformNexisSource(
         return
       }
       const expressionSource = source.slice(expression.start, expression.end)
-      const idHash = hash(`${id}:${start}:${expressionSource}`)
+      const idHash = hash(`${normalizeIdForHash(id)}:${start}:${expressionSource}`)
       const exportName = `handler_${idHash}`
       const fileName = `chunk_${idHash}.js`
       chunkSpecs.push({ fileName, exportName, expressionSource })

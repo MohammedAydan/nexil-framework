@@ -1,6 +1,6 @@
 {
   "name": "@mohammedaydan/create-nexis",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Create a Nexis application",
   "type": "module",
   "files": [
@@ -22,6 +22,7 @@
     "create-nexis-app": "dist/bin.js"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "clean": "node -e \"const fs=require('fs');for(const f of ['dist','tsconfig.tsbuildinfo']){try{fs.rmSync(f,{recursive:true,force:true})}catch(e){}}\""
   }
 }

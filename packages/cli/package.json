@@ -1,9 +1,13 @@
 {
   "name": "@mohammedaydan/cli",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "type": "module",
   "dependencies": {
     "@mohammedaydan/compiler": "workspace:*",
+    "@mohammedaydan/dev-server": "workspace:*",
+    "@mohammedaydan/renderer": "workspace:*",
+    "@mohammedaydan/router": "workspace:*",
+    "@mohammedaydan/seo": "workspace:*",
     "@mohammedaydan/vite-plugin": "workspace:*",
     "vite": "^7.3.6"
   },
@@ -18,7 +22,8 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "clean": "node -e \"const fs=require('fs');for(const f of ['dist','tsconfig.tsbuildinfo']){try{fs.rmSync(f,{recursive:true,force:true})}catch(e){}}\""
   },
   "repository": {
     "type": "git",

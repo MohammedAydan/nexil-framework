@@ -4,6 +4,9 @@ import { join, relative, resolve } from 'node:path'
 import { build, createServer, preview } from 'vite'
 import { assertBudget, checkBudget } from '@mohammedaydan/compiler'
 import nexis, { RESUMABILITY_BOOTSTRAP, transformNexisSource } from '@mohammedaydan/vite-plugin'
+import { renderToString } from '@mohammedaydan/renderer'
+import { renderHead } from '@mohammedaydan/seo'
+import { nexisSSRPlugin } from '@mohammedaydan/dev-server'
 export { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 import { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 
@@ -96,23 +99,34 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   await rm(outputRoot, { recursive: true, force: true })
   const serverRoot = join(outputRoot, 'server', 'routes')
   const chunkRoot = join(outputRoot, CHUNK_DIRECTORY)
-  const assetRoot = join(outputRoot, 'client', 'assets')
+  const clientRoot = join(outputRoot, 'client')
+  const assetRoot = join(clientRoot, 'assets')
   await mkdir(serverRoot, { recursive: true })
   await mkdir(chunkRoot, { recursive: true })
   await mkdir(assetRoot, { recursive: true })
+  await mkdir(clientRoot, { recursive: true })
+
+  let template: string
   try {
-    await writeFile(
-      join(outputRoot, 'index.html'),
-      await readFile(join(root, 'index.html'), 'utf8'),
-      'utf8',
-    )
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+    template = await readFile(join(root, 'index.html'), 'utf8')
+  } catch {
+    template = `<!DOCTYPE html><html lang="en"><head><!--nexis-head-outlet--></head><body><div id="app"><!--nexis-app-outlet--></div><!--nexis-scripts-outlet--></body></html>`
   }
+
+  const vite = await createServer({
+    root,
+    plugins: [nexis({ root })],
+    server: { middlewareMode: true },
+    appType: 'custom',
+    logLevel: 'silent',
+  })
+  await vite.pluginContainer.buildStart({} as any)
+
   const records: BuildRouteRecord[] = []
   const cssAssets = new Set<string>()
   let hasInteractiveRoute = false
   const bootstrapGzipBytes = gzipSync(Buffer.from(RESUMABILITY_BOOTSTRAP)).byteLength
+
   for (const route of routes) {
     const sourcePath = join(routeRoot, route)
     const source = await readFile(sourcePath, 'utf8')
@@ -124,6 +138,9 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     for (const chunk of transformed.chunks) {
       await writeFile(join(chunkRoot, chunk.fileName), chunk.source, 'utf8')
       clientBytes += Buffer.byteLength(chunk.source)
+      const chunkClientPath = join(clientRoot, CHUNK_DIRECTORY, chunk.fileName)
+      await mkdir(join(clientRoot, CHUNK_DIRECTORY), { recursive: true })
+      await writeFile(chunkClientPath, chunk.source, 'utf8')
     }
     for (const css of transformed.css) cssAssets.add(css)
     const routeName = route
@@ -133,6 +150,52 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     const routePath = routeName === 'index' ? '/' : `/${routeName}`
     const interactive = transformed.chunks.length > 0
     hasInteractiveRoute ||= interactive
+
+    let renderedHtml = ''
+    let headHtml = '<title>Nexis App</title>'
+    let scriptsHtml = interactive ? `<script type="module" src="/${BOOTSTRAP_FILE}"></script>` : ''
+    try {
+      const modulePath = `/src/routes/${route.replace(/\\/g, '/')}`
+      const mod: any = await vite.ssrLoadModule(modulePath)
+      if (mod.seo) {
+        try {
+          headHtml = renderHead(mod.seo)
+        } catch {
+          headHtml = mod.seo.title ? `<title>${mod.seo.title}</title>` : headHtml
+        }
+      }
+      if (mod.render?.mode) {
+        // Support render mode export for future use
+      }
+      const Component = mod.default
+      if (typeof Component === 'function') {
+        const result = await Component({})
+        renderedHtml = renderToString(result)
+      } else if (Component) {
+        renderedHtml = renderToString(Component)
+      } else {
+        renderedHtml = renderToString(transformed.code as any)
+      }
+    } catch (err) {
+      try {
+        renderedHtml = `<div data-nexis-fallback>Static fallback for ${routePath}</div>`
+        console.warn(`SSR failed for ${routePath}:`, (err as Error).message)
+      } catch {}
+    }
+
+    const html = template
+      .replace('<!--nexis-head-outlet-->', headHtml)
+      .replace('<!--nexis-app-outlet-->', renderedHtml)
+      .replace('<!--nexis-scripts-outlet-->', scriptsHtml)
+
+    const outDir = routePath === '/' ? clientRoot : join(clientRoot, routePath.slice(1))
+    await mkdir(outDir, { recursive: true })
+    await writeFile(join(outDir, 'index.html'), html, 'utf8')
+
+    const previewDir = routePath === '/' ? outputRoot : join(outputRoot, routePath.slice(1))
+    await mkdir(previewDir, { recursive: true })
+    await writeFile(join(previewDir, 'index.html'), html, 'utf8')
+
     records.push({
       route: routePath === '/' ? '/' : routePath,
       source: route,
@@ -147,12 +210,27 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
       cssBytes: Buffer.byteLength([...transformed.css].join('')),
     })
   }
-  if (cssAssets.size > 0)
-    await writeFile(join(assetRoot, 'nexis.css'), [...cssAssets].join(''), 'utf8')
-  if (hasInteractiveRoute) await writeFile(join(outputRoot, BOOTSTRAP_FILE), RESUMABILITY_BOOTSTRAP)
+
+  await vite.close()
+
+  if (cssAssets.size > 0) {
+    const cssContent = [...cssAssets].join('')
+    await writeFile(join(assetRoot, 'nexis.css'), cssContent, 'utf8')
+    const linkTag = `<link rel="stylesheet" href="/client/assets/nexis.css">`
+    // Inject CSS link into already emitted HTML files if needed (optional)
+  }
+  if (hasInteractiveRoute) {
+    await writeFile(join(outputRoot, BOOTSTRAP_FILE), RESUMABILITY_BOOTSTRAP, 'utf8')
+    await writeFile(join(clientRoot, BOOTSTRAP_FILE), RESUMABILITY_BOOTSTRAP, 'utf8')
+  }
   const manifest: BuildManifest = { version: 1, routes: records }
   await writeFile(
     join(outputRoot, 'nexis-manifest.json'),
+    `${JSON.stringify(manifest, null, 2)}\n`,
+    'utf8',
+  )
+  await writeFile(
+    join(clientRoot, 'nexis-manifest.json'),
     `${JSON.stringify(manifest, null, 2)}\n`,
     'utf8',
   )
@@ -209,7 +287,7 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
     return 'Nexis checks passed.'
   }
   if (parsed.command === 'dev') {
-    const server = await createServer({ root, plugins: [nexis({ root })] })
+    const server = await createServer({ root, plugins: [nexis({ root }), nexisSSRPlugin(root)] })
     await server.listen()
     return `Nexis dev server running at ${server.resolvedUrls?.local?.[0] ?? 'local URL'}`
   }

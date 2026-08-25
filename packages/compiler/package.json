@@ -1,6 +1,6 @@
 {
   "name": "@mohammedaydan/compiler",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "type": "module",
   "exports": {
     ".": {
@@ -11,7 +11,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "test:budget": "vitest run src/budget.test.ts"
+    "test:budget": "vitest run src/budget.test.ts",
+    "clean": "node -e \"const fs=require('fs');for(const f of ['dist','tsconfig.tsbuildinfo']){try{fs.rmSync(f,{recursive:true,force:true})}catch(e){}}\""
   },
   "repository": {
     "type": "git",

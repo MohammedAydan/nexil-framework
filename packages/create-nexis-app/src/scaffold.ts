@@ -137,15 +137,17 @@ function packageJson(
       scripts: {
         dev: 'nexis dev',
         build: 'nexis build',
+        start: 'nexis start',
         check: 'nexis check --budget',
         'check:budget': 'nexis check --budget',
         analyze: 'nexis analyze',
       },
       dependencies: {
-        '@mohammedaydan/cli': dependency('cli', '^0.1.0'),
-        '@mohammedaydan/core': dependency('core', '^0.1.0'),
-        '@mohammedaydan/media': dependency('media', '^0.1.0'),
-        '@mohammedaydan/seo': dependency('seo', '^0.1.0'),
+        '@mohammedaydan/cli': dependency('cli', '^2.1.0'),
+        '@mohammedaydan/core': dependency('core', '^2.1.0'),
+        '@mohammedaydan/media': dependency('media', '^2.1.0'),
+        '@mohammedaydan/reactivity': dependency('reactivity', '^2.1.0'),
+        '@mohammedaydan/seo': dependency('seo', '^2.1.0'),
       },
       devDependencies,
       nexis: {
@@ -153,6 +155,13 @@ function packageJson(
         source: frameworkRoot ? 'workspace' : 'github-packages',
         registry: 'https://npm.pkg.github.com',
       },
+      ...(frameworkRoot
+        ? {}
+        : {
+            pnpm: {
+              onlyBuiltDependencies: ['esbuild', 'sharp'],
+            },
+          }),
     },
     null,
     2,
@@ -163,6 +172,7 @@ function tsconfig(resolved: ResolvedScaffoldOptions): string {
   const config = {
     compilerOptions: {
       target: 'ES2022',
+      lib: ['ES2022', 'DOM', 'DOM.Iterable'],
       module: 'ESNext',
       moduleResolution: 'Bundler',
       jsx: 'react-jsx',
@@ -179,43 +189,17 @@ function tsconfig(resolved: ResolvedScaffoldOptions): string {
   return `${JSON.stringify(config, null, 2)}\n`
 }
 
-const LANDING_HTML = `<!doctype html>
+const LANDING_HTML = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Build fast, resilient interfaces with Nexis." />
-    <title>Nexis — HTML-first web apps</title>
+    <!--nexis-head-outlet-->
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <div class="route-trace" aria-hidden="true"><span>route /</span><span>mode static</span><span>client 0b</span></div>
-    <header class="site-header">
-      <a class="wordmark" href="/" aria-label="Nexis home"><span class="wordmark-mark">N</span><span>Nexis</span></a>
-      <nav aria-label="Main navigation"><a href="#principles">Principles</a><a href="#modes">Modes</a><a href="#start">Start building</a></nav>
-      <a class="header-link" href="https://github.com/MohammedAydan/nexis-framework">GitHub ↗</a>
-    </header>
-    <main>
-      <section class="hero shell">
-        <div class="hero-copy">
-          <p class="eyebrow"><span class="pulse"></span> Framework / v2.0</p>
-          <h1>Ship the <em>page</em> before the script.</h1>
-          <p class="hero-lede">Nexis is an HTML-first TypeScript framework for interfaces that arrive useful, stay fast, and wake up only where a person touches them.</p>
-          <div class="hero-actions"><a class="button button-primary" href="#start">Build your first route <span>→</span></a><a class="text-link" href="https://github.com/MohammedAydan/nexis-framework">Read the source ↗</a></div>
-          <div class="promise-row"><span>0 JS on static routes</span><span>≤15 KB interactive</span><span>&lt;1 KB bootstrap</span></div>
-        </div>
-        <div class="hero-console" aria-label="Nexis route output preview">
-          <div class="console-bar"><span class="console-dot coral"></span><span class="console-dot blue"></span><span class="console-dot green"></span><span class="console-title">route-output</span><span class="console-status">verified</span></div>
-          <div class="console-body"><div class="console-line muted">01 <span>export const render = { mode: 'static' }</span></div><div class="console-line">02 <span class="syntax-blue">&lt;main&gt;</span></div><div class="console-line indent">03 <span class="syntax-ice">&lt;h1&gt;</span>Useful HTML first<span class="syntax-ice">&lt;/h1&gt;</span></div><div class="console-line">04 <span class="syntax-blue">&lt;/main&gt;</span></div><div class="console-line gap">05</div><div class="console-line result">06 <strong>✓ emitted</strong> server/index.html</div><div class="console-line result">07 <strong>✓ omitted</strong> client JavaScript</div><div class="console-line result">08 <strong>✓ ready</strong> for progressive enhancement</div></div>
-          <div class="console-footer"><span>render/static</span><span>cache: public, immutable</span></div>
-        </div>
-      </section>
-      <section class="signal-band shell" aria-label="Nexis performance signals"><span class="signal-label">The signal</span><span class="signal-value">HTML at the edge</span><span class="signal-rule"></span><span class="signal-note">Useful before hydration. Interactive after intent.</span></section>
-      <section class="principles shell" id="principles"><div class="section-intro"><p class="eyebrow">A different default</p><h2>Quiet HTML.<br /><span>Loud performance.</span></h2></div><div class="principle-grid"><article><span class="index-mark">A</span><h3>Server-shaped</h3><p>Routes render to real HTML. There is no client-side tree to reconcile before someone can read the page.</p></article><article><span class="index-mark">B</span><h3>Intent-loaded</h3><p>Mark an interaction with <code>onClick$</code>. Nexis extracts its handler and waits until the interaction is real.</p></article><article><span class="index-mark">C</span><h3>Edge-ready</h3><p>Request and response boundaries use Web Standard primitives, from Node to workerd and Deno.</p></article></div></section>
-      <section class="modes shell" id="modes"><div class="mode-heading"><p class="eyebrow">One route, four tempos</p><h2>Choose the cache<br /><span>your content deserves.</span></h2></div><div class="mode-list"><div><span>01</span><strong>SSG</strong><p>Immutable HTML for content that does not need a request.</p><b>public, immutable</b></div><div><span>02</span><strong>ISR</strong><p>Freshness with a bounded regeneration window.</p><b>s-maxage / revalidate</b></div><div><span>03</span><strong>SSR</strong><p>Request-time output for private or personal data.</p><b>private, no-store</b></div><div><span>04</span><strong>PPR</strong><p>A public shell with partial output where it matters.</p><b>public, max-age=0</b></div></div></section>
-      <section class="start shell" id="start"><div><p class="eyebrow">Start with the real thing</p><h2>A small route tree.<br /><span>A serious baseline.</span></h2><p>Scaffold a landing page, inspect the output, then add interaction one boundary at a time.</p></div><div class="install-card"><div class="install-label">terminal / first light</div><code><span class="prompt">$</span> pnpm dlx @mohammedaydan/create-nexis my-app --yes</code><code><span class="prompt">$</span> cd my-app && pnpm dev</code><a class="button button-primary" href="https://github.com/MohammedAydan/nexis-framework">Open Nexis on GitHub <span>↗</span></a></div></section>
-    </main>
-    <footer class="site-footer shell"><span>© Nexis framework</span><span>HTML-first by design.</span><span>Built for the next request.</span></footer>
+    <div id="app"><!--nexis-app-outlet--></div>
+    <!--nexis-scripts-outlet-->
   </body>
 </html>
 `
@@ -225,13 +209,33 @@ const LANDING_CSS = `:root{--ink:#0b1020;--ink-soft:#536078;--paper:#f5f7fb;--bl
 
 function routeFiles(resolved: ResolvedScaffoldOptions): Record<string, string> {
   const extension = resolved.language === 'ts' ? 'tsx' : 'jsx'
+  const typedHandler = `({ element }: { element: HTMLElement }) => {
+        const current = Number(element.dataset.nxState || '0')
+        const next = current + 1
+        element.textContent = \`Count: \${next}\`
+        element.dataset.nxState = String(next)
+      }`
+  const untypedHandler = `({ element }) => {
+        const current = Number(element.dataset.nxState || '0')
+        const next = current + 1
+        element.textContent = \`Count: \${next}\`
+        element.dataset.nxState = String(next)
+      }`
+  const counterHandler = resolved.language === 'ts' ? typedHandler : untypedHandler
+  const indexContent =
+    resolved.language === 'ts'
+      ? `import { component, state } from '@mohammedaydan/core'\n\nexport const seo = { title: 'Dynamic Nexis App', description: 'Rendered via Nexis SSR Engine' }\n\nexport default component(() => {\n  const count = state(0)\n  return (\n    <main>\n      <h1 id="engine-stamp">Rendered via Nexis SSR Engine</h1>\n      <button id="counter-btn" data-nx-state="0" onClick$={${typedHandler}}>\n        Count: {count()}\n      </button>\n    </main>\n  )\n})\n`
+      : `import { component, state } from '@mohammedaydan/core'\n\nexport const seo = { title: 'Dynamic Nexis App', description: 'Rendered via Nexis SSR Engine' }\n\nexport default component(() => {\n  const count = state(0)\n  return (\n    <main>\n      <h1 id="engine-stamp">Rendered via Nexis SSR Engine</h1>\n      <button id="counter-btn" data-nx-state="0" onClick$={${untypedHandler}}>\n        Count: {count()}\n      </button>\n    </main>\n  )\n})\n`
   return {
     [`src/routes/layout.${extension}`]:
       resolved.language === 'ts'
         ? `export default function Layout({ children }: { children?: unknown }) {\n  return <>{children}</>\n}\n`
         : `export default function Layout({ children }) {\n  return <>{children}</>\n}\n`,
-    [`src/routes/index.${extension}`]: `export const seo = { title: 'Nexis — HTML-first web apps', description: 'Build fast, resilient interfaces with Nexis.' }\n\nexport default function HomePage() {\n  return <main><p>Framework / v2.0</p><h1>Ship the page before the script.</h1><p>Nexis is an HTML-first TypeScript framework for interfaces that arrive useful, stay fast, and wake up only where a person touches them.</p><a href="#start">Build your first route</a></main>\n}\n`,
-    [`src/routes/counter.${extension}`]: `export default function Counter() {\n  return <button onClick$={() => undefined}>Clicks: 0</button>\n}\n`,
+    [`src/routes/index.${extension}`]: indexContent,
+    [`src/routes/counter.${extension}`]:
+      resolved.language === 'ts'
+        ? `// Interactive route: the onClick$ expression is extracted into a lazily\n// loaded chunk. The page ships zero application JavaScript until first click.\nexport default function CounterPage() {\n  return (\n    <main>\n      <h1>Resumable counter</h1>\n      <button data-nx-state="0" onClick$={${counterHandler}}>\n        0\n      </button>\n    </main>\n  )\n}\n`
+        : `// Interactive route: the onClick$ expression is extracted into a lazily\n// loaded chunk. The page ships zero application JavaScript until first click.\nexport default function CounterPage() {\n  return (\n    <main>\n      <h1>Resumable counter</h1>\n      <button data-nx-state="0" onClick$={${counterHandler}}>\n        0\n      </button>\n    </main>\n  )\n}\n`,
     'src/shared/types.ts': `export interface AppMetadata {\n  readonly title: string\n  readonly description?: string\n}\n`,
   }
 }

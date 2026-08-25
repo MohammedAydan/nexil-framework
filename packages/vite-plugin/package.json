@@ -1,6 +1,6 @@
 {
   "name": "@mohammedaydan/vite-plugin",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "type": "module",
   "dependencies": {
     "@babel/parser": "^7.29.8",
@@ -17,7 +17,8 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "clean": "node -e \"const fs=require('fs');for(const f of ['dist','tsconfig.tsbuildinfo']){try{fs.rmSync(f,{recursive:true,force:true})}catch(e){}}\""
   },
   "repository": {
     "type": "git",

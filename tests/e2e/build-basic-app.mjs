@@ -13,9 +13,21 @@ await mkdir(outputAssets, { recursive: true })
 await cp(publicRoot, outputRoot, { recursive: true })
 
 const hero = await readFile(resolve(publicRoot, 'assets/hero.svg'))
-const variants = await transformImage(hero, 'hero', [320, 640])
-for (const variant of variants) {
-  await writeFile(resolve(outputAssets, variant.fileName), variant.bytes)
+let variants = []
+try {
+  variants = await transformImage(hero, 'hero', [320, 640])
+  for (const variant of variants) {
+    await writeFile(resolve(outputAssets, variant.fileName), variant.bytes)
+  }
+} catch (err) {
+  console.warn(
+    `[build-basic-app] transformImage failed (sharp not available), using fallback: ${err.message}`,
+  )
+  variants = []
+  // Ensure fallback hero.svg is still available
+  try {
+    await writeFile(resolve(outputAssets, 'hero.svg'), hero)
+  } catch {}
 }
 
 const fontCss = fontFace({

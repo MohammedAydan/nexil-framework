@@ -1,8 +1,8 @@
-# Nexis
+﻿# Nexis
 
 **Nexis is an HTML-first, resumable TypeScript web framework.** Applications render useful HTML immediately and ship client JavaScript only when an interaction genuinely requires it. The framework is built on progressive enhancement, fine-grained reactivity, static CSS extraction, and Web Standard request/response contracts that run unchanged on Node.js and edge runtimes such as Cloudflare workerd and Deno.
 
-> **HTML First → Progressive Enhancement → Resumable Fine-Grained Reactivity → Client JS Only When Needed**
+> **HTML First â†’ Progressive Enhancement â†’ Resumable Fine-Grained Reactivity â†’ Client JS Only When Needed**
 
 ---
 
@@ -68,20 +68,20 @@ Initializer flags: `--yes` (non-interactive), `--ts` / `--js`, `--tailwind` / `-
 
 ```text
 my-nexis-app/
-├── src/
-│   ├── routes/
-│   │   ├── layout.tsx         # Root layout shell
-│   │   ├── index.tsx          # Static home page — 0 KB client JS
-│   │   └── counter.tsx        # Resumable interactive counter (onClick$)
-│   └── shared/types.ts
-├── public/                    # Static assets served as-is
-├── index.html                 # Application shell
-├── package.json
-├── tsconfig.json
-└── README.md
+â”œâ”€â”€ src/
+â”‚   â”œâ”€â”€ routes/
+â”‚   â”‚   â”œâ”€â”€ layout.tsx         # Root layout shell
+â”‚   â”‚   â”œâ”€â”€ index.tsx          # Static home page â€” 0 KB client JS
+â”‚   â”‚   â””â”€â”€ counter.tsx        # Resumable interactive counter (onClick$)
+â”‚   â””â”€â”€ shared/types.ts
+â”œâ”€â”€ public/                    # Static assets served as-is
+â”œâ”€â”€ index.html                 # Application shell
+â”œâ”€â”€ package.json
+â”œâ”€â”€ tsconfig.json
+â””â”€â”€ README.md
 ```
 
-TypeScript is native by construction — `jsx: "react-jsx"` with `jsxImportSource: "@mohammedaydan/core"`, strict mode, ES2022 targets:
+TypeScript is native by construction â€” `jsx: "react-jsx"` with `jsxImportSource: "@mohammedaydan/core"`, strict mode, ES2022 targets:
 
 ```json
 {
@@ -125,7 +125,7 @@ export default async function HomePage() {
 }
 ```
 
-Async components are supported at the route boundary — data fetching can `await` directly inside the component body while the server renders.
+Async components are supported at the route boundary â€” data fetching can `await` directly inside the component body while the server renders.
 
 ### Resumable interactive components (`onClick$`)
 
@@ -153,12 +153,12 @@ export default function CounterPage() {
 
 What this page costs before the first click: **0 bytes** of application JavaScript. After a click: exactly one small chunk, cached forever.
 
-For stateful logic inside handlers, import fine-grained signals from `@mohammedaydan/reactivity` (`state`, `computed`, `batch`) and synchronize the DOM explicitly — signals are plain primitives, not a reactivity-to-DOM binding layer.
+For stateful logic inside handlers, import fine-grained signals from `@mohammedaydan/reactivity` (`state`, `computed`, `batch`) and synchronize the DOM explicitly â€” signals are plain primitives, not a reactivity-to-DOM binding layer.
 
 ### Boundaries and guarantees
 
 - Handler expressions must be serializable (arrow functions closing over DOM-free values).
-- Server-only imports cannot leak into client modules — the compiler rejects them (`NEXIS_SERVER_IMPORT_IN_CLIENT`).
+- Server-only imports cannot leak into client modules â€” the compiler rejects them (`NEXIS_SERVER_IMPORT_IN_CLIENT`).
 - Secret-like environment access in shipped code is a hard error (`NEXIS_SECRET_EXPOSURE`).
 - Inline static style objects (`style={{ color: 'red' }}`) compile to hash-scoped CSS classes; dynamic styles do not exist by design.
 
@@ -190,7 +190,7 @@ output.stale // true when stale-while-revalidate regenerated it
 | **SSR** | `{ mode: 'server' }`                   | `private, no-store`   | Personal or request-time data                  |
 | **PPR** | `{ mode: 'partial' }`                  | `public, max-age=0`   | A public shell with per-request partials       |
 
-ISR validates `revalidate` (1 second – 365 days) and regenerates lazily: requests inside the window serve cached HTML instantly; the first request after expiry triggers regeneration and reports `stale: true`.
+ISR validates `revalidate` (1 second â€“ 365 days) and regenerates lazily: requests inside the window serve cached HTML instantly; the first request after expiry triggers regeneration and reports `stale: true`.
 
 ---
 
@@ -204,7 +204,7 @@ ISR validates `revalidate` (1 second – 365 days) and regenerates lazily: reque
 import { transformImage, imageAttributes } from '@mohammedaydan/media'
 
 const variants = await transformImage(sourceSvgOrBitmap, 'hero', [320, 640])
-// → [{ format: 'webp' | 'avif', width, fileName, bytes }, ...]
+// â†’ [{ format: 'webp' | 'avif', width, fileName, bytes }, ...]
 ```
 
 Because each variant carries explicit intrinsic dimensions, CLS from late-loading media is prevented by construction rather than patched afterward.
@@ -215,7 +215,7 @@ Because each variant carries explicit intrinsic dimensions, CLS from late-loadin
 import { fontFace } from '@mohammedaydan/media'
 
 fontFace({ family: 'Inter', weight: [400], source: '/assets/inter.woff2' })
-// → @font-face rule with font-display: swap, self-hosted — no third-party requests
+// â†’ @font-face rule with font-display: swap, self-hosted â€” no third-party requests
 ```
 
 `selfHostFont(url)` / `downloadFont(url)` fetch and materialize remote fonts into your asset tree; `imageAttributes()` produces sanitized attribute records for template use.
@@ -227,11 +227,11 @@ import { renderHead, buildSitemap, buildRobots } from '@mohammedaydan/seo'
 
 renderHead({
   title: 'Home | Nexis App',
-  description: '…',
+  description: 'â€¦',
   canonical: 'https://example.com/',
   jsonLd: { '@type': 'Organization', name: 'Example' },
 })
-// → <title>, meta description, canonical link, og tags, JSON-LD script (injection-safe)
+// â†’ <title>, meta description, canonical link, og tags, JSON-LD script (injection-safe)
 
 buildSitemap([{ url: 'https://example.com/', priority: 1 }])
 buildRobots('https://example.com/sitemap.xml', ['/admin'])
@@ -245,43 +245,43 @@ JSON-LD is escaped against `</script>` injection; URLs are validated to http(s);
 
 Every project ships the `nexis` binary:
 
-| Command                | Purpose                                                                                                                                        |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `nexis dev`            | Start the development server (instant, HMR-capable)                                                                                            |
-| `nexis build`          | Produce SSG/ISR/SSR bundles: server route modules, hashed handler chunks, the resumability bootstrap, extracted CSS, and `nexis-manifest.json` |
-| `nexis start`          | Serve a production build locally                                                                                                               |
-| `nexis check --budget` | Build, then enforce the three byte budgets per route; fails loudly with violation messages                                                     |
-| `nexis analyze`        | Report per-route output: client JS (gzipped), CSS bytes, interactive/static mode                                                               |
-| `nexis routes`         | List discovered routes from `src/routes`                                                                                                       |
-| `nexis create <name>`  | Scaffold a new project (same engine as this initializer)                                                                                       |
+| Command                | Purpose                                                                                                                                                                                                                                       |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nexis dev`            | Dev SSR middleware compiles `src/routes/*` per request through `renderToString`, injecting route HTML, SEO head, and the resumability bootstrap into the shell outlets (HMR-capable)                                                          |     |
+| `nexis build`          | Execute the SSR engine at build time: prerender per-route HTML to `dist/client/<route>/index.html`, emit server modules to `dist/server/routes/`, hashed handler chunks, the resumability bootstrap, extracted CSS, and `nexis-manifest.json` |
+| `nexis start`          | Serve a production build locally                                                                                                                                                                                                              |
+| `nexis check --budget` | Build, then enforce the three byte budgets per route; fails loudly with violation messages                                                                                                                                                    |
+| `nexis analyze`        | Report per-route output: client JS (gzipped), CSS bytes, interactive/static mode                                                                                                                                                              |
+| `nexis routes`         | List discovered routes from `src/routes`                                                                                                                                                                                                      |
+| `nexis create <name>`  | Scaffold a new project (same engine as this initializer)                                                                                                                                                                                      |
 
-Route discovery walks `src/routes/**/*.{tsx,jsx,ts,js}`; `layout.*` files are excluded from route emission.
+Route discovery walks `src/routes/**/*.{tsx,jsx,ts,js}`; `layout.*` files are excluded from route emission. The application `index.html` is a pure shell: it must contain the `<!--nexis-head-outlet-->`, `<!--nexis-app-outlet-->`, and `<!--nexis-scripts-outlet-->` markers and no pre-baked body content - anything rendered there bypasses the engine.
 
 ---
 
 ## Architecture
 
 ```text
-┌────────────────────────────────────────────────────────────┐
-│                      your application                       │
-│            src/routes/*.tsx  ·  public assets               │
-└───────────────┬────────────────────────────┬───────────────┘
-                │ nexis dev / build          │
-┌───────────────▼─────────────┐  ┌───────────▼───────────────┐
-│  @mohammedaydan/cli         │  │  @mohammedaydan/compiler   │
-│  (vite orchestration)       │  │  boundaries · budgets      │
-└───────┬─────────────┬───────┘  └────────────────────────────┘
-        │             │
-┌───────▼──────┐ ┌────▼───────────────────────┐
-│ vite-plugin  │ │ dist/server/routes (ESM)   │
-│ onClick$ →   │ │ dist/nexis-chunks/*.js     │
-│ lazy chunks  │ │ dist/nexis-bootstrap.js    │
-└──────────────┘ └────────────────────────────┘
-        │
-┌───────▼──────────────────────────────────────────────────┐
-│ core (JSX primitives) · renderer (modes/streams) ·       │
-│ reactivity (signals) · seo · media · server · adapters   │
-└──────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                      your application                       â”‚
+â”‚            src/routes/*.tsx  Â·  public assets               â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                â”‚ nexis dev / build          â”‚
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â–¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â–¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚  @mohammedaydan/cli         â”‚  â”‚  @mohammedaydan/compiler   â”‚
+â”‚  (vite orchestration)       â”‚  â”‚  boundaries Â· budgets      â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+        â”‚             â”‚
+â”Œâ”€â”€â”€â”€â”€â”€â”€â–¼â”€â”€â”€â”€â”€â”€â” â”Œâ”€â”€â”€â”€â–¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ vite-plugin  â”‚ â”‚ dist/server/routes (ESM)   â”‚
+â”‚ onClick$ â†’   â”‚ â”‚ dist/nexis-chunks/*.js     â”‚
+â”‚ lazy chunks  â”‚ â”‚ dist/nexis-bootstrap.js    â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜ â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+        â”‚
+â”Œâ”€â”€â”€â”€â”€â”€â”€â–¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ core (JSX primitives) Â· renderer (modes/streams) Â·       â”‚
+â”‚ reactivity (signals) Â· seo Â· media Â· server Â· adapters   â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 **Package map**
@@ -344,7 +344,7 @@ tests/
   parity/     cross-runtime smoke scripts (Node, workerd, Deno)
   integration/security-isolation.test.ts
 docs/         architecture notes and ADRs
-.github/      quality.yml (per-push) · publish-packages.yml (tag-driven)
+.github/      quality.yml (per-push) Â· publish-packages.yml (tag-driven)
 ```
 
 ## Status

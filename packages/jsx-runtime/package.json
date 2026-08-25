@@ -1,6 +1,6 @@
 {
   "name": "@mohammedaydan/jsx-runtime",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "type": "module",
   "dependencies": {
     "@mohammedaydan/core": "workspace:*"
@@ -13,10 +13,15 @@
     "./jsx-runtime": {
       "types": "./dist/jsx-runtime.d.ts",
       "default": "./dist/jsx-runtime.js"
+    },
+    "./jsx-dev-runtime": {
+      "types": "./dist/jsx-runtime.d.ts",
+      "default": "./dist/jsx-runtime.js"
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "clean": "node -e \"const fs=require('fs');for(const f of ['dist','tsconfig.tsbuildinfo']){try{fs.rmSync(f,{recursive:true,force:true})}catch(e){}}\""
   },
   "repository": {
     "type": "git",

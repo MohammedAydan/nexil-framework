@@ -74,3 +74,12 @@ export function createRequestContext(
 ): RequestContext {
   return { request, id, values: new Map() }
 }
+
+export function component<Props extends Record<string, unknown>>(
+  fn: Component<Props>,
+): Component<Props> {
+  return fn
+}
+
+export { state, computed, batch } from '@mohammedaydan/reactivity'
+export type { Signal, ReadableSignal } from '@mohammedaydan/reactivity'

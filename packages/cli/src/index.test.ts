@@ -17,15 +17,15 @@ describe('Nexis CLI', () => {
     const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-'))
     const directory = await createProject('demo-app', parent)
     expect(await readFile(join(directory, 'src/routes/index.tsx'), 'utf8')).toContain(
-      'Ship the page before the script',
+      'Rendered via Nexis SSR Engine',
     )
     expect(await readFile(join(directory, 'index.html'), 'utf8')).toContain(
-      '<title>Nexis — HTML-first web apps</title>',
+      '<!--nexis-app-outlet-->',
     )
     await expect(createProject('../escape', parent)).rejects.toThrow(/Project name/)
     await expect(runCli(['routes'], directory)).resolves.toContain('index.tsx')
     await expect(runCli(['build'], directory)).resolves.toContain('build completed')
-    await expect(runCli(['analyze'], directory)).resolves.toMatch(/\/\s+\d+\s+\d+\s+static/)
+    await expect(runCli(['analyze'], directory)).resolves.toMatch(/\/\s+\d+\s+\d+\s+interactive/)
   })
 
   it('uses local workspace dependencies when scaffolded inside the repository', async () => {
@@ -42,7 +42,7 @@ describe('Nexis CLI', () => {
         'onlyBuiltDependencies:',
       )
       expect(await readFile(join(result.directory, 'index.html'), 'utf8')).toContain(
-        '<title>Nexis — HTML-first web apps</title>',
+        '<!--nexis-app-outlet-->',
       )
     } finally {
       await rm(parent, { recursive: true, force: true })
@@ -59,7 +59,7 @@ describe('Nexis CLI', () => {
         dependencies: { '@mohammedaydan/cli': string }
         nexis: { source: string; registry: string }
       }
-      expect(packageJson.dependencies['@mohammedaydan/cli']).toBe('^2.0.0')
+      expect(packageJson.dependencies['@mohammedaydan/cli']).toBe('^2.1.0')
       expect(packageJson.nexis).toEqual({
         routeExtension: 'tsx',
         source: 'github-packages',
@@ -115,7 +115,7 @@ describe('Nexis CLI', () => {
       tailwind: true,
     })
     expect(await readFile(join(result.directory, 'src/routes/index.jsx'), 'utf8')).toContain(
-      'Ship the page before the script',
+      'Rendered via Nexis SSR Engine',
     )
     expect(await readFile(join(result.directory, 'src/routes/counter.jsx'), 'utf8')).toContain(
       'onClick$',

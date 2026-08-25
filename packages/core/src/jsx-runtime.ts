@@ -12,6 +12,16 @@ export function jsx(
 }
 
 export const jsxs = jsx
+
+export function jsxDEV(
+  tag: string | ((props: Record<string, unknown>) => Child),
+  props: Record<string, unknown> | null,
+): Child {
+  return jsx(tag, props)
+}
+
+export const jsxsDEV = jsxDEV
+
 export const Fragment = ({ children }: { children?: Child }): Child =>
   Array.isArray(children) ? children : (children ?? null)
 
