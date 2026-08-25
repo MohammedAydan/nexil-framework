@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-const live = 'http://localhost:5173'
+const live = process.env.SHOWCASE_BASE_URL ?? 'http://127.0.0.1:5173'
 
 test.describe('Nexis showcase', () => {
   test('renders SSR content and resumes interaction on demand', async ({ page }) => {
