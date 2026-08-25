@@ -1,0 +1,78 @@
+{
+  "generatedAt": "2026-08-25T17:12:00.390Z",
+  "passed": 14,
+  "total": 14,
+  "passRate": 100,
+  "checks": [
+    {
+      "name": "All published routes return 200",
+      "passed": true,
+      "detail": "/:200 /features:200 /labs:200 /docs/architecture:200 /docs/resumability:200 /docs/performance:200 /status:200"
+    },
+    {
+      "name": "Missing route returns 404",
+      "passed": true,
+      "detail": "status=404"
+    },
+    {
+      "name": "SSR emits substantive HTML",
+      "passed": true,
+      "detail": "/:7794B /features:5293B /labs:4530B /docs/architecture:2331B /docs/resumability:2357B /docs/performance:2325B /status:3203B"
+    },
+    {
+      "name": "Nested static paths render",
+      "passed": true,
+      "detail": "dynamic route expansion"
+    },
+    {
+      "name": "Interactive route emits resumability boundary",
+      "passed": true,
+      "detail": "home and labs"
+    },
+    {
+      "name": "Static feature page is non-interactive",
+      "passed": true,
+      "detail": "interactive=false"
+    },
+    {
+      "name": "SEO title exists on every measured page",
+      "passed": true,
+      "detail": "title tags"
+    },
+    {
+      "name": "SEO description exists on every measured page",
+      "passed": true,
+      "detail": "description tags"
+    },
+    {
+      "name": "Canonical and OpenGraph URL exist",
+      "passed": true,
+      "detail": "canonical + og:url"
+    },
+    {
+      "name": "No dangerous URL protocols emitted",
+      "passed": true,
+      "detail": "javascript/vbscript/data protocol scan"
+    },
+    {
+      "name": "Bootstrap is below 2KB raw",
+      "passed": true,
+      "detail": "1374B"
+    },
+    {
+      "name": "Average interactive chunk is below 2KB raw",
+      "passed": true,
+      "detail": "2 chunks"
+    },
+    {
+      "name": "Median route latency is below 250ms",
+      "passed": true,
+      "detail": "/:1.94ms /features:1.81ms /labs:0.92ms /docs/architecture:0.89ms /docs/resumability:0.79ms /docs/performance:0.81ms /status:0.8ms"
+    },
+    {
+      "name": "HTML responses include an explicit cache policy",
+      "passed": true,
+      "detail": "/:public, max-age=0, must-revalidate /features:public, max-age=0, must-revalidate /labs:public, max-age=0, must-revalidate /docs/architecture:public, max-age=0, must-revalidate /docs/resumability:public, max-age=0, must-revalidate /docs/performance:public, max-age=0, must-revalidate /status:public, max-age=0, must-revalidate"
+    }
+  ]
+}

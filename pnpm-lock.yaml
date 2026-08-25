@@ -105,6 +105,58 @@ importers:
 
   examples/landing-page: {}
 
+  examples/nexis-showcase:
+    dependencies:
+      '@mohammedaydan/actions':
+        specifier: workspace:*
+        version: link:../../packages/actions
+      '@mohammedaydan/adapters':
+        specifier: workspace:*
+        version: link:../../packages/adapters
+      '@mohammedaydan/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
+      '@mohammedaydan/client':
+        specifier: workspace:*
+        version: link:../../packages/client
+      '@mohammedaydan/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@mohammedaydan/css':
+        specifier: workspace:*
+        version: link:../../packages/css
+      '@mohammedaydan/jsx-runtime':
+        specifier: workspace:*
+        version: link:../../packages/jsx-runtime
+      '@mohammedaydan/media':
+        specifier: workspace:*
+        version: link:../../packages/media
+      '@mohammedaydan/reactivity':
+        specifier: workspace:*
+        version: link:../../packages/reactivity
+      '@mohammedaydan/seo':
+        specifier: workspace:*
+        version: link:../../packages/seo
+      '@mohammedaydan/server':
+        specifier: workspace:*
+        version: link:../../packages/server
+      '@mohammedaydan/state':
+        specifier: workspace:*
+        version: link:../../packages/state
+    devDependencies:
+      '@playwright/test':
+        specifier: ^1.62.1
+        version: 1.62.1
+      '@tailwindcss/vite':
+        specifier: ^4.1.0
+        version: 4.3.3(vite@7.3.6(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0))
+      tailwindcss:
+        specifier: ^4.1.0
+        version: 4.3.3
+      vite:
+        specifier: ^7.3.6
+        version: 7.3.6(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0)
+
   examples/practical-app:
     dependencies:
       '@mohammedaydan/actions':
@@ -2921,6 +2973,13 @@ snapshots:
       '@tailwindcss/oxide': 4.3.3
       tailwindcss: 4.3.3
       vite: 6.4.3(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0)
+
+  '@tailwindcss/vite@4.3.3(vite@7.3.6(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0))':
+    dependencies:
+      '@tailwindcss/node': 4.3.3
+      '@tailwindcss/oxide': 4.3.3
+      tailwindcss: 4.3.3
+      vite: 7.3.6(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0)
 
   '@types/babel__traverse@7.28.0':
     dependencies:
