@@ -75,6 +75,7 @@ export function helpText(): string {
     '  create <name>  Create a zero-config Nexis application',
     '                 Flags: --yes --ts --js --tailwind',
     '  dev            Start the development server',
+    '                 Env: NEXIS_HOST, NEXIS_PORT, NEXIS_ALLOW_ALL_HOSTS=1',
     '  build          Build SSG/ISR/SSR bundles',
     '  start          Start a production build',
     '  check          Run type, route, SEO, and boundary checks',
@@ -449,6 +450,11 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
   if (parsed.command === 'dev') {
     const server = await createServer({
       root,
+      server: {
+        ...(process.env.NEXIS_HOST ? { host: process.env.NEXIS_HOST } : {}),
+        ...(process.env.NEXIS_PORT ? { port: Number(process.env.NEXIS_PORT) } : {}),
+        ...(process.env.NEXIS_ALLOW_ALL_HOSTS === '1' ? { allowedHosts: true } : {}),
+      },
       ...VITE_WORKSPACE_CONFIG,
       plugins: [nexis({ root }), nexisSSRPlugin(root)],
     })
