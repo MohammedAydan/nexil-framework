@@ -6,6 +6,7 @@ import { assertBudget, checkBudget } from '@mohammedaydan/compiler'
 import nexis, { RESUMABILITY_BOOTSTRAP, transformNexisSource } from '@mohammedaydan/vite-plugin'
 import { renderToString } from '@mohammedaydan/renderer'
 import { renderHead } from '@mohammedaydan/seo'
+import { matchRoute, routeFromFile } from '@mohammedaydan/router'
 import { nexisSSRPlugin } from '@mohammedaydan/dev-server'
 export { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 import { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
@@ -91,6 +92,59 @@ async function discoverRoutes(directory: string, root: string): Promise<string[]
 const BOOTSTRAP_FILE = 'nexis-bootstrap.js'
 const CHUNK_DIRECTORY = 'nexis-chunks'
 
+function injectStylesheetLink(template: string, href: string): string {
+  const link = `<link rel="stylesheet" href="${href}">`
+  if (template.includes(`href="${href}"`) || template.includes(`href='${href}'`)) return template
+  if (template.includes('</head>')) return template.replace('</head>', `  ${link}\n</head>`)
+  return `${link}${template}`
+}
+
+type StaticPathValue =
+  | string
+  | Readonly<Record<string, string | string[]>>
+  | { readonly params: Readonly<Record<string, string | string[]>> }
+
+function staticPathToRoute(pattern: string, value: StaticPathValue): string {
+  if (typeof value === 'string') {
+    if (value.startsWith('/')) return value
+    const parent = pattern.split('/').slice(0, -1).join('/')
+    return `${parent}/${value}`.replace(/\/+/g, '/')
+  }
+  const candidate: unknown = value
+  const params: Readonly<Record<string, string | string[]>> =
+    typeof candidate === 'object' &&
+    candidate !== null &&
+    !Array.isArray(candidate) &&
+    'params' in candidate &&
+    typeof candidate.params === 'object' &&
+    candidate.params !== null
+      ? (candidate.params as Readonly<Record<string, string | string[]>>)
+      : (candidate as Readonly<Record<string, string | string[]>>)
+
+  const segments = pattern
+    .split('/')
+    .filter(Boolean)
+    .flatMap((segment) => {
+      if (!segment.startsWith(':')) return [segment]
+      const name = segment.slice(1).replace(/\*?\??$/, '')
+      const param = params[name]
+      if (param === undefined) return []
+      return Array.isArray(param) ? param : [param]
+    })
+  return `/${segments.map((segment) => encodeURIComponent(segment)).join('/')}` || '/'
+}
+
+async function resolveStaticPaths(
+  pattern: string,
+  routePath: string,
+  module: any,
+): Promise<readonly string[]> {
+  const exported =
+    typeof module.getStaticPaths === 'function' ? await module.getStaticPaths() : module.staticPaths
+  if (!Array.isArray(exported) || exported.length === 0) return [routePath]
+  return exported.map((value: StaticPathValue) => staticPathToRoute(pattern, value))
+}
+
 async function buildArtifacts(root: string): Promise<BuildManifest> {
   const routeRoot = join(root, 'src', 'routes')
   const routes = await discoverRoutes(routeRoot, routeRoot)
@@ -129,6 +183,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     if (processedAppCss) {
       await writeFile(join(assetRoot, 'styles.css'), processedAppCss, 'utf8')
       template = template.replaceAll('/src/styles.css', '/assets/styles.css')
+      template = injectStylesheetLink(template, '/assets/styles.css')
     }
   } catch {
     // Tailwind is opt-in; applications without src/styles.css need no CSS transform.
@@ -155,6 +210,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
       await writeFile(chunkClientPath, chunk.source, 'utf8')
     }
     for (const css of transformed.css) cssAssets.add(css)
+    if (transformed.css.length > 0) template = injectStylesheetLink(template, '/assets/nexis.css')
     const routeName = route
       .replace(/\\/g, '/')
       .replace(/\.(tsx|jsx|ts|js)$/, '')
@@ -208,8 +264,8 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     await mkdir(previewDir, { recursive: true })
     await writeFile(join(previewDir, 'index.html'), html, 'utf8')
 
-    records.push({
-      route: routePath === '/' ? '/' : routePath,
+    const routeRecord = routeFromFile(`src/routes/${route.replace(/\\/g, '/')}`)
+    const routeMetrics = {
       source: route,
       interactive,
       clientJsBytes: clientBytes,
@@ -220,7 +276,50 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
               .byteLength,
       bootstrapGzipBytes: interactive ? bootstrapGzipBytes : 0,
       cssBytes: Buffer.byteLength([...transformed.css].join('')),
+    }
+    records.push({
+      route: routePath === '/' ? '/' : routePath,
+      ...routeMetrics,
     })
+
+    if (routePath.includes('[')) {
+      try {
+        const staticModule: any = await vite.ssrLoadModule(
+          `/src/routes/${route.replace(/\\/g, '/')}`,
+        )
+        const staticPaths = await resolveStaticPaths(routeRecord.pattern, routePath, staticModule)
+        if (staticPaths.some((generatedPath) => generatedPath !== routePath)) {
+          await rm(join(clientRoot, routePath.slice(1)), { recursive: true, force: true })
+          await rm(join(outputRoot, routePath.slice(1)), { recursive: true, force: true })
+          const placeholderIndex = records.findIndex((record) => record.route === routePath)
+          if (placeholderIndex >= 0) records.splice(placeholderIndex, 1)
+        }
+        for (const generatedPath of staticPaths) {
+          if (generatedPath === routePath) continue
+          const generatedMatch = matchRoute(routeRecord, generatedPath)
+          const GeneratedComponent = staticModule.default
+          const generatedResult =
+            typeof GeneratedComponent === 'function'
+              ? await GeneratedComponent(generatedMatch?.params ?? {})
+              : GeneratedComponent
+          const generatedRenderedHtml = renderToString(generatedResult)
+          const generatedHead = staticModule.seo ? renderHead(staticModule.seo) : headHtml
+          const generatedHtml = template
+            .replace('<!--nexis-head-outlet-->', generatedHead)
+            .replace('<!--nexis-app-outlet-->', generatedRenderedHtml)
+            .replace('<!--nexis-scripts-outlet-->', scriptsHtml)
+          const generatedDirectory = join(clientRoot, generatedPath.slice(1))
+          await mkdir(generatedDirectory, { recursive: true })
+          await writeFile(join(generatedDirectory, 'index.html'), generatedHtml, 'utf8')
+          const generatedPreviewDirectory = join(outputRoot, generatedPath.slice(1))
+          await mkdir(generatedPreviewDirectory, { recursive: true })
+          await writeFile(join(generatedPreviewDirectory, 'index.html'), generatedHtml, 'utf8')
+          records.push({ route: generatedPath, ...routeMetrics })
+        }
+      } catch (error) {
+        console.warn(`Static path generation failed for ${routePath}:`, (error as Error).message)
+      }
+    }
   }
 
   await vite.close()
@@ -228,8 +327,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   if (cssAssets.size > 0) {
     const cssContent = [...cssAssets].join('')
     await writeFile(join(assetRoot, 'nexis.css'), cssContent, 'utf8')
-    const linkTag = `<link rel="stylesheet" href="/client/assets/nexis.css">`
-    // Inject CSS link into already emitted HTML files if needed (optional)
+    template = injectStylesheetLink(template, '/assets/nexis.css')
   }
   if (hasInteractiveRoute) {
     await writeFile(join(outputRoot, BOOTSTRAP_FILE), RESUMABILITY_BOOTSTRAP, 'utf8')
