@@ -7,7 +7,6 @@ describe('Nexis Vite transform', () => {
       "const handler = (event) => event.currentTarget.textContent = 'ok'\nconst view = <button onClick$={handler}>Click</button>",
       '/app/src/routes/index.tsx',
     )
-    expect(result.code).toContain('data-nx-on="click:chunk_')
     expect(result.code).toContain('data-nx-on-click="chunk_')
     expect(result.chunks).toHaveLength(1)
     expect(result.chunks[0]?.fileName).toMatch(/^chunk_[a-f0-9]{12}\.js$/)
@@ -19,7 +18,6 @@ describe('Nexis Vite transform', () => {
       `const view = <input onInput$={({ event }: { event: Event }) => { console.log(event.type) }} />`,
       '/app/src/routes/form.tsx',
     )
-    expect(result.code).toContain('data-nx-on="input:chunk_')
     expect(result.code).toContain('data-nx-on-input="chunk_')
   })
 
@@ -30,7 +28,32 @@ describe('Nexis Vite transform', () => {
     )
     const source = result.chunks[0]?.source ?? ''
     expect(source).not.toContain(': { element: HTMLElement }')
-    expect(source).toContain('(event)')
+    expect(source).toContain('scope = {}')
+  })
+
+  it('normalizes camel-case DOM events without inserting hyphens', async () => {
+    const result = await transformNexisSource(
+      'const view = <button onKeyDown$={(event) => event.preventDefault()}>Key</button>',
+      '/app/src/routes/keyboard.tsx',
+    )
+    expect(result.code).toContain('data-nx-on-keydown=')
+  })
+
+  it('rewrites free variables through the resumability scope object', async () => {
+    const result = await transformNexisSource(
+      'const view = <button onClick$={() => setCount(count + 1)}>+</button>',
+      '/app1/src/routes/index.tsx',
+    )
+    expect(result.chunks[0]?.source).toContain('scope.setCount(scope.count + 1)')
+  })
+
+  it('merges multiple handlers for the same event on one element', async () => {
+    const result = await transformNexisSource(
+      'const view = <button onClick$={() => first()} onClick$={() => second()}>Run</button>',
+      '/app/src/routes/multiple.tsx',
+    )
+    expect(result.code.match(/data-nx-on-click=/g)).toHaveLength(1)
+    expect(result.code).toContain(';')
   })
 
   it('rejects server imports in client modules', async () => {
@@ -58,6 +81,6 @@ describe('Nexis Vite transform', () => {
     )
     expect(result.css).toHaveLength(1)
     expect(result.css[0]).toContain('color:red;')
-    expect(result.css[0]).toContain('margin-top:4;')
+    expect(result.css[0]).toContain('margin-top:4px;')
   })
 })

@@ -175,7 +175,7 @@ describe('Nexis CLI', () => {
     expect(manifest.routes[0]?.interactive).toBe(true)
     expect(manifest.routes[0]?.bootstrapGzipBytes).toBeGreaterThan(0)
     expect(await readFile(join(directory, 'dist/nexis-bootstrap.js'), 'utf8')).toContain(
-      'querySelectorAll',
+      'document.addEventListener',
     )
   })
 })

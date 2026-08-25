@@ -1,3 +1,5 @@
+import { isIP } from 'node:net'
+
 export interface ImageProps {
   readonly src: string
   readonly width: number
@@ -23,7 +25,7 @@ export function imageAttributes(
   props: ImageProps,
   widths = [320, 640, 960, 1280, 1920],
 ): ImageAttributes {
-  if (!props.src.startsWith('/'))
+  if (!props.src.startsWith('/') || props.src.startsWith('//'))
     throw new TypeError('Nexis Image src must be a local absolute path.')
   if (
     !Number.isInteger(props.width) ||
@@ -33,14 +35,15 @@ export function imageAttributes(
   ) {
     throw new TypeError('Nexis Image requires positive integer width and height.')
   }
-  if (!props.alt.trim()) throw new TypeError('Nexis Image requires a non-empty alt value.')
+  if (typeof props.alt !== 'string') throw new TypeError('Nexis Image requires an alt value.')
   const validWidths = widths.filter((width) => Number.isInteger(width) && width > 0)
   if (validWidths.length === 0)
     throw new TypeError('Nexis Image requires at least one valid responsive width.')
 
+  const separator = props.src.includes('?') ? '&' : '?'
   const attributes: ImageAttributes = {
     src: props.src,
-    srcset: validWidths.map((width) => `${props.src}?w=${width} ${width}w`).join(', '),
+    srcset: validWidths.map((width) => `${props.src}${separator}w=${width} ${width}w`).join(', '),
     width: props.width,
     height: props.height,
     alt: props.alt,
@@ -73,7 +76,9 @@ export async function transformImage(
   widths = [320, 640, 960, 1280, 1920],
 ): Promise<readonly ImageVariant[]> {
   if (source.byteLength === 0) throw new TypeError('Nexis image source cannot be empty.')
+  if (!/^[a-zA-Z0-9_-]+$/.test(fileBase)) throw new TypeError('Invalid image file base.')
   const sharpModule = await import('sharp')
+  const sharp = (sharpModule.default ?? sharpModule) as typeof sharpModule.default
   const variants: ImageVariant[] = []
   for (const width of widths) {
     if (!Number.isInteger(width) || width < 1)
@@ -81,16 +86,8 @@ export async function transformImage(
     for (const format of ['webp', 'avif'] as const) {
       const bytes =
         format === 'webp'
-          ? await sharpModule
-              .default(source)
-              .resize({ width, withoutEnlargement: true })
-              .webp()
-              .toBuffer()
-          : await sharpModule
-              .default(source)
-              .resize({ width, withoutEnlargement: true })
-              .avif()
-              .toBuffer()
+          ? await sharp(source).resize({ width, withoutEnlargement: true }).webp().toBuffer()
+          : await sharp(source).resize({ width, withoutEnlargement: true }).avif().toBuffer()
       variants.push({ format, width, fileName: `${fileBase}-${width}.${format}`, bytes })
     }
   }
@@ -103,6 +100,27 @@ export interface DownloadedFont {
   readonly contentType: string
 }
 
+function isPrivateHost(hostname: string): boolean {
+  const host = hostname.replace(/^\[|\]$/g, '').toLowerCase()
+  if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local')) return true
+  const version = isIP(host)
+  if (version === 4) {
+    const [first, second] = host.split('.').map(Number)
+    return (
+      first === 10 ||
+      first === 127 ||
+      (first === 172 && second !== undefined && second >= 16 && second <= 31) ||
+      (first === 192 && second === 168) ||
+      first === 0 ||
+      (first === 169 && second === 254)
+    )
+  }
+  return (
+    version === 6 &&
+    (host === '::1' || host.startsWith('fc') || host.startsWith('fd') || host.startsWith('fe8'))
+  )
+}
+
 export async function downloadFont(
   url: string,
   allowedOrigins: readonly string[] = [],
@@ -110,10 +128,13 @@ export async function downloadFont(
   const parsed = new URL(url)
   if (!['https:', 'http:'].includes(parsed.protocol))
     throw new TypeError('Font URL must use HTTP(S).')
-  if (allowedOrigins.length > 0 && !allowedOrigins.includes(parsed.origin)) {
+  if (allowedOrigins.length === 0) throw new Error('Font URL requires at least one allowed origin.')
+  if (!allowedOrigins.includes(parsed.origin)) {
     throw new Error(`Font origin is not allowlisted: ${parsed.origin}`)
   }
-  const response = await fetch(parsed, { redirect: 'error' })
+  if (isPrivateHost(parsed.hostname))
+    throw new Error('Font URL cannot target a private network host.')
+  const response = await fetch(parsed, { redirect: 'error', signal: AbortSignal.timeout(15_000) })
   if (!response.ok) throw new Error(`Font download failed with HTTP ${response.status}.`)
   const contentType = response.headers.get('content-type') ?? 'application/octet-stream'
   if (!/(font|woff|octet-stream)/i.test(contentType))
@@ -121,10 +142,13 @@ export async function downloadFont(
   const bytes = new Uint8Array(await response.arrayBuffer())
   if (bytes.byteLength === 0 || bytes.byteLength > 5 * 1024 * 1024)
     throw new RangeError('Font must be between 1 byte and 5MB.')
-  const fileName = decodeURIComponent(parsed.pathname.split('/').pop() || 'font.woff2').replace(
-    /[^a-zA-Z0-9._-]/g,
-    '_',
-  )
+  let fileName = parsed.pathname.split('/').pop() || 'font.woff2'
+  try {
+    fileName = decodeURIComponent(fileName)
+  } catch {
+    throw new TypeError('Font URL contains an invalid encoded filename.')
+  }
+  fileName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_')
   return { fileName, bytes, contentType }
 }
 
@@ -163,7 +187,7 @@ export async function selfHostFont(
 
 export function fontFace(props: FontProps): string {
   if (!/^[a-zA-Z0-9 _-]+$/.test(props.family)) throw new TypeError('Invalid font family name.')
-  if (!props.source.startsWith('/'))
+  if (!props.source.startsWith('/') || props.source.startsWith('//'))
     throw new TypeError('Nexis Font source must be a local absolute path.')
   if (
     props.weight.length === 0 ||
@@ -172,5 +196,10 @@ export function fontFace(props: FontProps): string {
     throw new TypeError('Font weights must be integers between 1 and 1000.')
   }
   const display = props.display ?? 'swap'
-  return `@font-face{font-family:"${props.family}";font-style:normal;font-weight:${props.weight.join(' ')};font-display:${display};src:url("${props.source}") format("woff2");}`
+  return props.weight
+    .map(
+      (weight) =>
+        `@font-face{font-family:"${props.family}";font-style:normal;font-weight:${weight};font-display:${display};src:url("${props.source}") format("woff2");}`,
+    )
+    .join('')
 }

@@ -33,9 +33,14 @@ function safeJson(value: unknown): string {
   return serialized.replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026')
 }
 
-function assertUrl(value: string, field: string): void {
-  if (value.startsWith('/')) return
-  const url = new URL(value)
+function assertUrl(value: string, field: string, allowRelative = false): void {
+  if (allowRelative && value.startsWith('/') && !value.startsWith('//')) return
+  let url: URL
+  try {
+    url = new URL(value)
+  } catch {
+    throw new TypeError(`${field} must be an absolute http(s) URL.`)
+  }
   if (!['http:', 'https:'].includes(url.protocol)) throw new TypeError(`${field} must use http(s).`)
 }
 
@@ -46,17 +51,23 @@ export function normalizeSeo(metadata: SeoMetadata): SeoMetadata {
     throw new TypeError('SEO description cannot be empty when provided.')
   }
   if (metadata.canonical !== undefined) assertUrl(metadata.canonical, 'canonical')
-  if (metadata.image !== undefined) assertUrl(metadata.image, 'image')
+  if (metadata.image !== undefined) assertUrl(metadata.image, 'image', true)
   return { ...metadata, title }
 }
 
 export function renderHead(metadata: SeoMetadata): string {
   const normalized = normalizeSeo(metadata)
-  const tags = [`<title>${escapeHtml(normalized.title)}</title>`]
+  const tags = [
+    '<meta charset="utf-8">',
+    '<meta name="viewport" content="width=device-width, initial-scale=1">',
+    `<title>${escapeHtml(normalized.title)}</title>`,
+  ]
   if (normalized.description)
     tags.push(`<meta name="description" content="${escapeHtml(normalized.description)}">`)
-  if (normalized.canonical)
+  if (normalized.canonical) {
     tags.push(`<link rel="canonical" href="${escapeHtml(normalized.canonical)}">`)
+    tags.push(`<meta property="og:url" content="${escapeHtml(normalized.canonical)}">`)
+  }
 
   tags.push(`<meta property="og:title" content="${escapeHtml(normalized.title)}">`)
   if (normalized.description)
@@ -92,7 +103,10 @@ export function buildSitemap(entries: readonly SitemapEntry[]): string {
   const urls = entries
     .map((entry) => {
       assertUrl(entry.url, 'sitemap URL')
-      if (entry.priority !== undefined && (entry.priority < 0 || entry.priority > 1)) {
+      if (
+        entry.priority !== undefined &&
+        (!Number.isFinite(entry.priority) || entry.priority < 0 || entry.priority > 1)
+      ) {
         throw new RangeError('Sitemap priority must be between 0 and 1.')
       }
       const fields = [`<loc>${escapeHtml(entry.url)}</loc>`]
@@ -110,7 +124,10 @@ export function buildRobots(sitemapUrl: string, disallow: readonly string[] = []
   assertUrl(sitemapUrl, 'sitemap URL')
   const lines = [
     'User-agent: *',
-    ...disallow.map((path) => `Disallow: ${path}`),
+    ...disallow.map((path) => {
+      if (/[\r\n]/.test(path)) throw new TypeError('Robots directives cannot contain newlines.')
+      return `Disallow: ${path}`
+    }),
     `Sitemap: ${sitemapUrl}`,
   ]
   return `${lines.join('\n')}\n`

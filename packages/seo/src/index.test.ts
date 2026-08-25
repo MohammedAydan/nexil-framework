@@ -27,12 +27,16 @@ describe('SEO metadata', () => {
     expect(head).toContain('<meta name="twitter:image" content="/social.png">')
   })
 
-  it('accepts relative or HTTPS canonical URLs and rejects unsafe protocols', () => {
-    expect(normalizeSeo({ title: 'Home', canonical: '/home' }).canonical).toBe('/home')
+  it('requires absolute HTTPS canonical URLs and emits og:url', () => {
+    expect(() => normalizeSeo({ title: 'Home', canonical: '/home' })).toThrow(/absolute/)
+    expect(() => normalizeSeo({ title: 'Home', canonical: '//evil.test/home' })).toThrow(/absolute/)
     expect(
       normalizeSeo({ title: 'Home', canonical: 'https://example.test/home' }).canonical,
     ).toContain('https://')
     expect(() => normalizeSeo({ title: 'Home', canonical: 'javascript:alert(1)' })).toThrow(/http/)
+    expect(renderHead({ title: 'Home', canonical: 'https://example.test/home' })).toContain(
+      'property="og:url"',
+    )
   })
 })
 
@@ -44,11 +48,18 @@ describe('SEO outputs', () => {
     expect(() => buildSitemap([{ url: 'https://example.test/', priority: 2 }])).toThrow(
       /between 0 and 1/,
     )
+    expect(() => buildSitemap([{ url: '/relative', priority: 0.5 }])).toThrow(/absolute/)
+    expect(() => buildSitemap([{ url: 'https://example.test/', priority: Number.NaN }])).toThrow(
+      /between 0 and 1/,
+    )
   })
 
   it('builds robots output with sitemap and disallow rules', () => {
     expect(buildRobots('https://example.test/sitemap.xml', ['/admin'])).toBe(
       'User-agent: *\nDisallow: /admin\nSitemap: https://example.test/sitemap.xml\n',
+    )
+    expect(() => buildRobots('https://example.test/sitemap.xml', ['/admin\nAllow: /'])).toThrow(
+      /newlines/,
     )
   })
 })

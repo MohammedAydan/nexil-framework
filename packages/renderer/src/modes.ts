@@ -1,5 +1,5 @@
 import type { Child } from '@mohammedaydan/core'
-import { renderToString } from './index.js'
+import { renderToStringAsync } from './index.js'
 
 export type RenderMode =
   | { readonly mode: 'static' }
@@ -50,17 +50,30 @@ export async function renderRoute(input: RouteRenderInput): Promise<RenderOutput
       }
     }
 
-    const html = renderToString(await input.render())
+    if (cached) {
+      void (async () => {
+        const html = await renderToStringAsync(await input.render())
+        await input.cache!.set(input.key, { html, expiresAt: now() + mode.revalidate * 1000 })
+      })()
+      return {
+        html: cached.html,
+        mode: 'isr',
+        cacheControl: `s-maxage=${mode.revalidate}, stale-while-revalidate=${mode.revalidate}`,
+        stale: true,
+      }
+    }
+
+    const html = await renderToStringAsync(await input.render())
     await input.cache.set(input.key, { html, expiresAt: now() + mode.revalidate * 1000 })
     return {
       html,
       mode: 'isr',
-      cacheControl: `s-maxage=${mode.revalidate}`,
-      stale: Boolean(cached),
+      cacheControl: `s-maxage=${mode.revalidate}, stale-while-revalidate=${mode.revalidate}`,
+      stale: false,
     }
   }
 
-  const html = renderToString(await input.render())
+  const html = await renderToStringAsync(await input.render())
   if (mode.mode === 'static')
     return { html, mode: 'static', cacheControl: 'public, immutable', stale: false }
   if (mode.mode === 'partial')

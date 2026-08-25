@@ -18,17 +18,53 @@ const VOID_ELEMENTS = new Set([
 ])
 
 const SAFE_ATTRIBUTE = /^[a-zA-Z_:][a-zA-Z0-9:._-]*$/
-const EVENT_ATTRIBUTE = /^(?:on|on[a-z])/i
+const EVENT_ATTRIBUTE = /^on[A-Z]/
+const UNITLESS_PROPERTIES = new Set([
+  'zIndex',
+  'opacity',
+  'flex',
+  'flexGrow',
+  'flexShrink',
+  'fontWeight',
+  'lineHeight',
+  'order',
+  'orphans',
+  'widows',
+  'tabSize',
+  'columns',
+  'fillOpacity',
+  'strokeOpacity',
+  'animationIterationCount',
+])
+const ATTRIBUTE_ALIASES: Readonly<Record<string, string>> = {
+  className: 'class',
+  htmlFor: 'for',
+  tabIndex: 'tabindex',
+  readOnly: 'readonly',
+  srcSet: 'srcset',
+  colSpan: 'colspan',
+  rowSpan: 'rowspan',
+  autoComplete: 'autocomplete',
+  autoFocus: 'autofocus',
+  contentEditable: 'contenteditable',
+  spellCheck: 'spellcheck',
+}
 
 function kebabCase(property: string): string {
-  return property.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
+  return property.startsWith('--')
+    ? property
+    : property.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
+}
+
+function formatStyleValue(property: string, value: unknown): string {
+  if (typeof value === 'number' && value !== 0 && !UNITLESS_PROPERTIES.has(property))
+    return `${value}px`
+  return String(value)
 }
 
 function normalizeAttributeName(name: string): string {
-  if (name === 'className') return 'class'
-  if (name === 'htmlFor') return 'for'
   if (name.startsWith('aria-') || name.startsWith('data-')) return name
-  return name
+  return ATTRIBUTE_ALIASES[name] ?? name
 }
 
 function renderStyle(value: unknown): string | undefined {
@@ -39,7 +75,12 @@ function renderStyle(value: unknown): string | undefined {
       ([, declaration]) =>
         declaration !== undefined && declaration !== null && declaration !== false,
     )
-    .map(([property, declaration]) => `${kebabCase(property)}:${String(declaration)};`)
+    .map(([property, declaration]) => {
+      const cssProperty = kebabCase(property)
+      const cssValue = formatStyleValue(property, declaration)
+      if (/[;{}<>]/.test(cssValue)) return ''
+      return `${cssProperty}:${cssValue};`
+    })
     .join('')
   return declarations || undefined
 }
@@ -63,6 +104,24 @@ export function escapeHtml(value: string): string {
   })
 }
 
+function isSafeUrl(value: string): boolean {
+  const trimmed = value.trim()
+  if (/^(?:javascript|vbscript|data):/i.test(trimmed)) return false
+  if (trimmed.startsWith('//')) return false
+  if (
+    trimmed.startsWith('/') ||
+    trimmed.startsWith('#') ||
+    trimmed.startsWith('./') ||
+    trimmed.startsWith('../')
+  )
+    return true
+  try {
+    return ['http:', 'https:', 'mailto:', 'tel:'].includes(new URL(trimmed).protocol)
+  } catch {
+    return false
+  }
+}
+
 function renderAttribute(rawName: string, value: unknown): string {
   const name = normalizeAttributeName(rawName)
   if (!SAFE_ATTRIBUTE.test(name) || EVENT_ATTRIBUTE.test(name)) return ''
@@ -70,6 +129,9 @@ function renderAttribute(rawName: string, value: unknown): string {
   if (name === 'style') {
     const style = renderStyle(value)
     return style === undefined ? '' : ` style="${escapeHtml(style)}"`
+  }
+  if (['href', 'src', 'action', 'formaction', 'poster', 'cite'].includes(name)) {
+    if (!isSafeUrl(String(value))) return ''
   }
   if (value === true) return ` ${name}`
   return ` ${name}="${escapeHtml(String(value))}"`
@@ -89,18 +151,34 @@ function renderElement(node: ElementNode): string {
 }
 
 function renderNode(node: RenderNode): string {
-  return node.kind === 'text' ? renderText(node) : renderElement(node)
+  if (node.kind === 'text') return renderText(node)
+  if (node.kind === 'element') return renderElement(node)
+  throw new TypeError('Unsupported render node.')
 }
 
 export function renderChild(child: Child): string {
   if (child === null || child === undefined || typeof child === 'boolean') return ''
   if (Array.isArray(child)) return child.map(renderChild).join('')
   if (typeof child === 'string' || typeof child === 'number') return escapeHtml(String(child))
+  if (typeof (child as unknown as { then?: unknown }).then === 'function')
+    throw new TypeError('Async child received by renderToString; use renderToStringAsync.')
   return renderNode(child)
+}
+
+export async function renderChildAsync(child: Child | Promise<Child>): Promise<string> {
+  const resolved = await child
+  if (Array.isArray(resolved)) return (await Promise.all(resolved.map(renderChildAsync))).join('')
+  if (resolved && typeof resolved === 'object' && 'then' in resolved)
+    return renderChildAsync(resolved as unknown as Promise<Child>)
+  return renderChild(resolved)
 }
 
 export function renderToString(root: Child): string {
   return renderChild(root)
+}
+
+export async function renderToStringAsync(root: Child | Promise<Child>): Promise<string> {
+  return renderChildAsync(root)
 }
 
 export type { RenderCache, RenderMode, RenderOutput, RouteRenderInput } from './modes.js'

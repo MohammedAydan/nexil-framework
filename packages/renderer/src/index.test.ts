@@ -19,7 +19,7 @@ describe('renderToString', () => {
       'Email',
     )
     expect(renderToString(tree)).toBe(
-      '<label class="font-semibold text-blue-600" for="email" style="margin-top:4;color:red;">Email</label>',
+      '<label class="font-semibold text-blue-600" for="email" style="margin-top:4px;color:red;">Email</label>',
     )
   })
 

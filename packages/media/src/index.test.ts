@@ -16,14 +16,14 @@ describe('imageAttributes', () => {
     })
   })
 
-  it('requires local source, dimensions, and alt text', () => {
+  it('requires local source and dimensions while allowing decorative empty alt text', () => {
     expect(() =>
       imageAttributes({ src: 'https://cdn.test/a.jpg', width: 1, height: 1, alt: 'A' }),
     ).toThrow(/local/)
     expect(() => imageAttributes({ src: '/a.jpg', width: 0, height: 1, alt: 'A' })).toThrow(
       /positive/,
     )
-    expect(() => imageAttributes({ src: '/a.jpg', width: 1, height: 1, alt: ' ' })).toThrow(/alt/)
+    expect(imageAttributes({ src: '/a.jpg', width: 1, height: 1, alt: '' }).alt).toBe('')
   })
 })
 

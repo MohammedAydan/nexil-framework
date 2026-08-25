@@ -176,12 +176,25 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   })
   await vite.pluginContainer.buildStart({} as any)
 
-  let processedAppCss: string | undefined
   try {
     await readFile(join(root, 'src', 'styles.css'), 'utf8')
-    processedAppCss = (await vite.transformRequest('/src/styles.css'))?.code
-    if (processedAppCss) {
-      await writeFile(join(assetRoot, 'styles.css'), processedAppCss, 'utf8')
+    const clientBuild = await build({
+      root,
+      plugins: [nexis({ root })],
+      build: {
+        write: false,
+        outDir: join(outputRoot, 'client'),
+        cssCodeSplit: true,
+        rollupOptions: { input: join(root, 'src', 'styles.css') },
+      },
+      logLevel: 'silent',
+    })
+    const outputs = Array.isArray(clientBuild) ? clientBuild : [clientBuild]
+    const stylesheet = outputs
+      .flatMap((output: any) => output.output ?? [])
+      .find((entry: any) => entry.type === 'asset' && entry.fileName.endsWith('.css'))
+    if (stylesheet?.source !== undefined) {
+      await writeFile(join(assetRoot, 'styles.css'), String(stylesheet.source), 'utf8')
       template = template.replaceAll('/src/styles.css', '/assets/styles.css')
       template = injectStylesheetLink(template, '/assets/styles.css')
     }

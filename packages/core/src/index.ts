@@ -35,7 +35,7 @@ export function element(
   props: Readonly<Record<string, unknown>> = {},
   ...children: Child[]
 ): ElementNode {
-  if (!/^[a-z][a-z0-9-]*$/.test(tag)) {
+  if (!/^[a-zA-Z][a-zA-Z0-9-]*$/.test(tag)) {
     throw new TypeError(`Invalid HTML element name: ${tag}`)
   }
 
@@ -56,7 +56,9 @@ export function isSerializable(
   const valid = Array.isArray(value)
     ? value.every((item) => isSerializable(item, seen))
     : prototype === Object.prototype || prototype === null
-      ? Object.values(value as Record<string, unknown>).every((item) => isSerializable(item, seen))
+      ? Object.values(value as Record<string, unknown>).every(
+          (item) => item === undefined || isSerializable(item, seen),
+        )
       : false
   seen.delete(value)
   return valid
@@ -65,19 +67,19 @@ export function isSerializable(
 export interface RequestContext {
   readonly request: Request
   readonly id: string
-  readonly values: Map<symbol, unknown>
+  readonly values: Map<PropertyKey, unknown>
 }
 
 export function createRequestContext(
   request: Request,
-  id: string = crypto.randomUUID(),
+  id: string = typeof globalThis.crypto?.randomUUID === 'function'
+    ? globalThis.crypto.randomUUID()
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`,
 ): RequestContext {
   return { request, id, values: new Map() }
 }
 
-export function component<Props extends Record<string, unknown>>(
-  fn: Component<Props>,
-): Component<Props> {
+export function component<Props>(fn: Component<Props>): Component<Props> {
   return fn
 }
 

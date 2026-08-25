@@ -7,6 +7,7 @@
     "@mohammedaydan/renderer": "workspace:*",
     "@mohammedaydan/router": "workspace:*",
     "@mohammedaydan/seo": "workspace:*",
+    "@mohammedaydan/vite-plugin": "workspace:*",
     "vite": "^7.3.6"
   },
   "exports": {

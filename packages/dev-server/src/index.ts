@@ -1,10 +1,13 @@
 import { readFile, readdir } from 'node:fs/promises'
 import { join, relative } from 'node:path'
 import type { Plugin } from 'vite'
-import { renderToString } from '@mohammedaydan/renderer'
+import { escapeHtml, renderToString } from '@mohammedaydan/renderer'
 import { renderHead } from '@mohammedaydan/seo'
 import { routeFromFile, resolveRoute, matchRoute } from '@mohammedaydan/router'
 import type { NexisHandler } from '@mohammedaydan/adapters'
+import nexis from '@mohammedaydan/vite-plugin'
+
+const routeCache = new Map<string, ReturnType<typeof routeFromFile>[]>()
 
 function injectStylesheetLink(template: string, href: string): string {
   const link = `<link rel="stylesheet" href="${href}">`
@@ -32,6 +35,8 @@ export function createDevServer(handler: NexisHandler): DevServer {
 }
 
 async function discoverRouteRecords(root: string) {
+  const cached = routeCache.get(root)
+  if (cached) return cached
   const routeRoot = join(root, 'src', 'routes')
   async function walk(dir: string, base: string): Promise<string[]> {
     let entries
@@ -45,7 +50,11 @@ async function discoverRouteRecords(root: string) {
       const full = join(dir, entry.name)
       if (entry.isDirectory()) {
         files.push(...(await walk(full, base)))
-      } else if (/\.(tsx|jsx|ts|js)$/.test(entry.name) && !entry.name.startsWith('layout.')) {
+      } else if (
+        /\.(tsx|jsx|ts|js)$/.test(entry.name) &&
+        !/\.(?:d|spec|test)\.(?:tsx|jsx|ts|js)$/.test(entry.name) &&
+        !entry.name.startsWith('layout.')
+      ) {
         files.push(relative(base, full))
       }
     }
@@ -53,7 +62,7 @@ async function discoverRouteRecords(root: string) {
   }
   try {
     const files = await walk(routeRoot, routeRoot)
-    return files
+    const routes = files
       .map((file) => {
         try {
           return routeFromFile(`src/routes/${file.replace(/\\/g, '/')}`)
@@ -62,6 +71,8 @@ async function discoverRouteRecords(root: string) {
         }
       })
       .filter(Boolean) as ReturnType<typeof routeFromFile>[]
+    routeCache.set(root, routes)
+    return routes
   } catch {
     return []
   }
@@ -73,6 +84,7 @@ export function nexisSSRPlugin(root: string): Plugin {
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         try {
+          if (req.method !== 'GET' && req.method !== 'HEAD') return next()
           const url = req.url || '/'
           const pathname = new URL(url, 'http://localhost').pathname
           const accept = req.headers.accept || ''
@@ -87,14 +99,29 @@ export function nexisSSRPlugin(root: string): Plugin {
             pathname.startsWith('/node_modules')
           )
             return next()
-          if (/\.(js|css|json|png|jpg|svg|webp|avif|woff|woff2|ico)$/.test(pathname)) return next()
+          if (
+            /\.(?:js|mjs|cjs|css|json|map|png|jpg|jpeg|svg|webp|avif|gif|mp4|webm|woff|woff2|ttf|eot|otf|ico|webmanifest|wasm)$/.test(
+              pathname,
+            )
+          )
+            return next()
 
           const routes = await discoverRouteRecords(root)
-          if (routes.length === 0) return next()
+          if (routes.length === 0) {
+            res.statusCode = 404
+            res.end('Not Found')
+            return
+          }
 
           const sorted = [...routes].sort((a, b) => b.score - a.score)
           const matched = resolveRoute(sorted, pathname)
-          if (!matched) return next()
+          if (!matched) {
+            res.statusCode = 404
+            res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+            res.setHeader('Cache-Control', 'no-store')
+            res.end('Not Found')
+            return
+          }
 
           const filePath = matched.route.file
           const modulePath = `/${filePath}`
@@ -102,16 +129,20 @@ export function nexisSSRPlugin(root: string): Plugin {
           let routeModule: any
           try {
             routeModule = await server.ssrLoadModule(modulePath)
-          } catch {
-            return next()
+          } catch (err) {
+            server.ssrFixStacktrace(err as Error)
+            console.error(`[nexis] SSR load error for ${modulePath}:`, (err as Error).message)
+            return next(err)
           }
 
           const seo = routeModule.seo as { title?: string; description?: string } | undefined
           const head = (() => {
             try {
               if (seo?.title) return renderHead(seo as any)
-            } catch {}
-            if (seo?.title) return `<title>${seo.title}</title>`
+            } catch {
+              // Fall through to the escaped title fallback.
+            }
+            if (seo?.title) return `<title>${escapeHtml(seo.title)}</title>`
             return '<title>Nexis App</title>'
           })()
 
@@ -152,6 +183,7 @@ export function nexisSSRPlugin(root: string): Plugin {
 
           res.statusCode = 200
           res.setHeader('Content-Type', 'text/html; charset=utf-8')
+          res.setHeader('Cache-Control', 'no-store')
           res.end(html)
         } catch (err) {
           server.ssrFixStacktrace(err as Error)
@@ -166,13 +198,9 @@ export async function createNexisDevMiddleware(root: string) {
   const { createServer } = await import('vite')
   const vite = await createServer({
     root,
+    plugins: [nexis({ root }), nexisSSRPlugin(root)],
     server: { middlewareMode: true },
     appType: 'custom',
   })
-  const plugin = nexisSSRPlugin(root)
-  if (plugin.configureServer) {
-    // @ts-ignore
-    await (plugin.configureServer as any)(vite)
-  }
   return vite.middlewares
 }

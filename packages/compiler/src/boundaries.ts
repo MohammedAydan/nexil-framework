@@ -9,8 +9,9 @@ export interface BoundaryDiagnostic {
 }
 
 export function classifyModule(moduleId: string): ModuleBoundary {
-  if (/(^|\/)server(\/|$)/.test(moduleId)) return 'server'
-  if (/(^|\/)client(\/|$)/.test(moduleId)) return 'client'
+  const normalized = moduleId.replace(/\\/g, '/')
+  if (/(^|\/)server(\/|$)/.test(normalized)) return 'server'
+  if (/(^|\/)client(\/|$)/.test(normalized)) return 'client'
   return 'shared'
 }
 
@@ -42,8 +43,10 @@ export function findSecretExposure(
 ): BoundaryDiagnostic | undefined {
   if (classifyModule(moduleId) !== 'client') return undefined
   const secretPattern =
-    /(?:process\.env|import\.meta\.env)\.[A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|PRIVATE|KEY)\b/
-  if (!secretPattern.test(source)) return undefined
+    /(?:process\.env|import\.meta\.env)(?:\s*\.\s*[A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|PRIVATE|KEY)\b|\s*\[\s*["'`][A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|PRIVATE|KEY)["'`]\s*\]|\s*\[\s*[A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|PRIVATE|KEY)\s*\])/i
+  const destructuredSecretPattern =
+    /(?:const|let|var)\s*\{[^}]*\b[A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|PRIVATE|KEY)\b[^}]*\}\s*=\s*(?:process\.env|import\.meta\.env)/i
+  if (!secretPattern.test(source) && !destructuredSecretPattern.test(source)) return undefined
   return {
     code: 'NEXIS_SECRET_EXPOSURE',
     importer: moduleId,
