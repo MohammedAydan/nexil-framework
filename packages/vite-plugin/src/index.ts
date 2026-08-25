@@ -348,7 +348,8 @@ export function nexis(options: { readonly root?: string } = {}): Plugin {
       return { code: result.code, map: result.map }
     },
     handleHotUpdate() {
-      generatedChunks.clear()
+      // Keep previously emitted chunks available while Vite invalidates modules.
+      // The content-addressed filenames prevent stale handlers from colliding with new ones.
       generatedCss.clear()
     },
     generateBundle() {

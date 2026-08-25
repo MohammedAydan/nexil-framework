@@ -1,0 +1,34 @@
+{
+  "name": "@mohammedaydan/example-nexis-showcase",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.15.0",
+  "scripts": {
+    "dev": "node ../../packages/cli/dist/bin.js dev",
+    "build": "node ../../packages/cli/dist/bin.js build",
+    "check": "node ../../packages/cli/dist/bin.js check --budget",
+    "bench": "node ./benchmarks/run-benchmarks.mjs",
+    "evaluate": "node ./benchmarks/evaluate.mjs"
+  },
+  "dependencies": {
+    "@mohammedaydan/actions": "workspace:*",
+    "@mohammedaydan/adapters": "workspace:*",
+    "@mohammedaydan/client": "workspace:*",
+    "@mohammedaydan/cli": "workspace:*",
+    "@mohammedaydan/core": "workspace:*",
+    "@mohammedaydan/css": "workspace:*",
+    "@mohammedaydan/jsx-runtime": "workspace:*",
+    "@mohammedaydan/media": "workspace:*",
+    "@mohammedaydan/reactivity": "workspace:*",
+    "@mohammedaydan/seo": "workspace:*",
+    "@mohammedaydan/server": "workspace:*",
+    "@mohammedaydan/state": "workspace:*"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@tailwindcss/vite": "^4.1.0",
+    "tailwindcss": "^4.1.0",
+    "vite": "^7.3.6"
+  }
+}

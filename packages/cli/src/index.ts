@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs'
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { build, createServer, preview } from 'vite'
+import { build, createServer, preview, transformWithEsbuild } from 'vite'
 import { assertBudget } from '@mohammedaydan/compiler'
 import nexis, { RESUMABILITY_BOOTSTRAP, transformNexisSource } from '@mohammedaydan/vite-plugin'
 import { escapeHtml, renderToString } from '@mohammedaydan/renderer'
@@ -248,7 +248,13 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   const records: BuildRouteRecord[] = []
   const cssAssets = new Set<string>()
   let hasInteractiveRoute = false
-  const bootstrapGzipBytes = gzipSync(Buffer.from(RESUMABILITY_BOOTSTRAP)).byteLength
+  const minifiedBootstrap = (
+    await transformWithEsbuild(RESUMABILITY_BOOTSTRAP, BOOTSTRAP_FILE, {
+      loader: 'js',
+      minify: true,
+    })
+  ).code
+  const bootstrapGzipBytes = gzipSync(Buffer.from(minifiedBootstrap)).byteLength
 
   for (const route of routes) {
     const sourcePath = join(routeRoot, route)
@@ -374,8 +380,8 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     await writeFile(join(assetRoot, 'nexis.css'), cssContent, 'utf8')
   }
   if (hasInteractiveRoute) {
-    await writeFile(join(outputRoot, BOOTSTRAP_FILE), RESUMABILITY_BOOTSTRAP, 'utf8')
-    await writeFile(join(clientRoot, BOOTSTRAP_FILE), RESUMABILITY_BOOTSTRAP, 'utf8')
+    await writeFile(join(outputRoot, BOOTSTRAP_FILE), minifiedBootstrap, 'utf8')
+    await writeFile(join(clientRoot, BOOTSTRAP_FILE), minifiedBootstrap, 'utf8')
   }
   const manifest: BuildManifest = { version: 1, routes: records }
   await writeFile(

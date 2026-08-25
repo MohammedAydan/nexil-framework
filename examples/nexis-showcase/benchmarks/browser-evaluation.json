@@ -1,0 +1,80 @@
+{
+  "generatedAt": "2026-08-25T17:12:05.956Z",
+  "passed": 18,
+  "total": 18,
+  "results": [
+    {
+      "name": "Home SSR stamp is visible",
+      "passed": true
+    },
+    {
+      "name": "Home exposes a resumability boundary",
+      "passed": true
+    },
+    {
+      "name": "Home exposes no hydration root script",
+      "passed": true
+    },
+    {
+      "name": "Signal interaction updates without hydration",
+      "passed": true
+    },
+    {
+      "name": "/features has a document title",
+      "passed": true
+    },
+    {
+      "name": "/features has a main landmark",
+      "passed": true
+    },
+    {
+      "name": "/labs has a document title",
+      "passed": true
+    },
+    {
+      "name": "/labs has a main landmark",
+      "passed": true
+    },
+    {
+      "name": "/docs/architecture has a document title",
+      "passed": true
+    },
+    {
+      "name": "/docs/architecture has a main landmark",
+      "passed": true
+    },
+    {
+      "name": "/docs/resumability has a document title",
+      "passed": true
+    },
+    {
+      "name": "/docs/resumability has a main landmark",
+      "passed": true
+    },
+    {
+      "name": "/docs/performance has a document title",
+      "passed": true
+    },
+    {
+      "name": "/docs/performance has a main landmark",
+      "passed": true
+    },
+    {
+      "name": "/status has a document title",
+      "passed": true
+    },
+    {
+      "name": "/status has a main landmark",
+      "passed": true
+    },
+    {
+      "name": "Missing route returns a visible 404 response",
+      "passed": true
+    },
+    {
+      "name": "No browser console errors",
+      "passed": true,
+      "detail": []
+    }
+  ]
+}
