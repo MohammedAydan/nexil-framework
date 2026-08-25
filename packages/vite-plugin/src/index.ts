@@ -141,8 +141,23 @@ export async function transformNexisSource(
       const idHash = hash(`${normalizeIdForHash(id)}:${start}:${expressionSource}`)
       const exportName = `handler_${idHash}`
       const fileName = `chunk_${idHash}.js`
+      const eventName = node.name.name
+        .slice(2, -1)
+        .replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
+        .replace(/^-/, '')
+      if (!/^[a-z][a-z0-9-]*$/.test(eventName)) {
+        moduleDiagnostics.push(
+          `[NEXIS_LAZY_BOUNDARY] ${node.name.name} must use an event name such as onClick$ or onInput$.`,
+        )
+        return
+      }
       chunkSpecs.push({ fileName, exportName, expressionSource })
-      magic.overwrite(start, end, `data-nx-on-click="${fileName}#${exportName}"`)
+      const reference = `${fileName}#${exportName}`
+      magic.overwrite(
+        start,
+        end,
+        `data-nx-on="${eventName}:${reference}" data-nx-on-${eventName}="${reference}"`,
+      )
     }
 
     if (node.type === 'CallExpression') {

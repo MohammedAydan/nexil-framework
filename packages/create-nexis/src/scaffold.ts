@@ -124,8 +124,11 @@ function packageJson(
   frameworkRoot?: string,
 ): string {
   const extension = resolved.language === 'ts' ? 'tsx' : 'jsx'
-  const devDependencies: Record<string, string> = { typescript: '^5.8.0' }
-  if (resolved.tailwind) devDependencies.tailwindcss = '^4.1.0'
+  const devDependencies: Record<string, string> = { typescript: '^5.8.0', vite: '^7.3.6' }
+  if (resolved.tailwind) {
+    devDependencies.tailwindcss = '^4.1.0'
+    devDependencies['@tailwindcss/vite'] = '^4.1.0'
+  }
   const dependency = (packageDirectory: string, publishedVersion: string): string =>
     frameworkRoot ? 'workspace:*' : publishedVersion
   return `${JSON.stringify(
@@ -143,11 +146,12 @@ function packageJson(
         analyze: 'nexis analyze',
       },
       dependencies: {
-        '@mohammedaydan/cli': dependency('cli', '^2.1.0'),
-        '@mohammedaydan/core': dependency('core', '^2.1.0'),
-        '@mohammedaydan/media': dependency('media', '^2.1.0'),
-        '@mohammedaydan/reactivity': dependency('reactivity', '^2.1.0'),
-        '@mohammedaydan/seo': dependency('seo', '^2.1.0'),
+        '@mohammedaydan/cli': dependency('cli', '^1.0.0'),
+        '@mohammedaydan/core': dependency('core', '^1.0.0'),
+        '@mohammedaydan/css': dependency('css', '^1.0.0'),
+        '@mohammedaydan/media': dependency('media', '^1.0.0'),
+        '@mohammedaydan/reactivity': dependency('reactivity', '^1.0.0'),
+        '@mohammedaydan/seo': dependency('seo', '^1.0.0'),
       },
       devDependencies,
       nexis: {
@@ -224,8 +228,8 @@ function routeFiles(resolved: ResolvedScaffoldOptions): Record<string, string> {
   const counterHandler = resolved.language === 'ts' ? typedHandler : untypedHandler
   const indexContent =
     resolved.language === 'ts'
-      ? `import { component, state } from '@mohammedaydan/core'\n\nexport const seo = { title: 'Dynamic Nexis App', description: 'Rendered via Nexis SSR Engine' }\n\nexport default component(() => {\n  const count = state(0)\n  return (\n    <main>\n      <h1 id="engine-stamp">Rendered via Nexis SSR Engine</h1>\n      <button id="counter-btn" data-nx-state="0" onClick$={${typedHandler}}>\n        Count: {count()}\n      </button>\n    </main>\n  )\n})\n`
-      : `import { component, state } from '@mohammedaydan/core'\n\nexport const seo = { title: 'Dynamic Nexis App', description: 'Rendered via Nexis SSR Engine' }\n\nexport default component(() => {\n  const count = state(0)\n  return (\n    <main>\n      <h1 id="engine-stamp">Rendered via Nexis SSR Engine</h1>\n      <button id="counter-btn" data-nx-state="0" onClick$={${untypedHandler}}>\n        Count: {count()}\n      </button>\n    </main>\n  )\n})\n`
+      ? `import { component, state } from '@mohammedaydan/core'\n\nexport const seo = { title: 'Dynamic Nexis App', description: 'Rendered via Nexis SSR Engine' }\n\nexport default component(() => {\n  const count = state(0)\n  return (\n    <main className="min-h-screen bg-slate-950 px-6 py-16 text-slate-100">\n      <h1 id="engine-stamp" className="text-4xl font-bold tracking-tight">Rendered via Nexis SSR Engine</h1>\n      <button id="counter-btn" className="mt-6 rounded-lg bg-indigo-500 px-4 py-2 font-medium transition hover:bg-indigo-400 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-300" data-nx-state="0" onClick$={${typedHandler}}>\n        Count: {count()}\n      </button>\n    </main>\n  )\n})\n`
+      : `import { component, state } from '@mohammedaydan/core'\n\nexport const seo = { title: 'Dynamic Nexis App', description: 'Rendered via Nexis SSR Engine' }\n\nexport default component(() => {\n  const count = state(0)\n  return (\n    <main className="min-h-screen bg-slate-950 px-6 py-16 text-slate-100">\n      <h1 id="engine-stamp" className="text-4xl font-bold tracking-tight">Rendered via Nexis SSR Engine</h1>\n      <button id="counter-btn" className="mt-6 rounded-lg bg-indigo-500 px-4 py-2 font-medium transition hover:bg-indigo-400 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-300" data-nx-state="0" onClick$={${untypedHandler}}>\n        Count: {count()}\n      </button>\n    </main>\n  )\n})\n`
   return {
     [`src/routes/layout.${extension}`]:
       resolved.language === 'ts'
@@ -234,8 +238,8 @@ function routeFiles(resolved: ResolvedScaffoldOptions): Record<string, string> {
     [`src/routes/index.${extension}`]: indexContent,
     [`src/routes/counter.${extension}`]:
       resolved.language === 'ts'
-        ? `// Interactive route: the onClick$ expression is extracted into a lazily\n// loaded chunk. The page ships zero application JavaScript until first click.\nexport default function CounterPage() {\n  return (\n    <main>\n      <h1>Resumable counter</h1>\n      <button data-nx-state="0" onClick$={${counterHandler}}>\n        0\n      </button>\n    </main>\n  )\n}\n`
-        : `// Interactive route: the onClick$ expression is extracted into a lazily\n// loaded chunk. The page ships zero application JavaScript until first click.\nexport default function CounterPage() {\n  return (\n    <main>\n      <h1>Resumable counter</h1>\n      <button data-nx-state="0" onClick$={${counterHandler}}>\n        0\n      </button>\n    </main>\n  )\n}\n`,
+        ? `// Interactive route: the onClick$ expression is extracted into a lazily\n// loaded chunk. The page ships zero application JavaScript until first click.\nexport default function CounterPage() {\n  return (\n    <main className="min-h-screen bg-slate-950 px-6 py-16 text-slate-100">\n      <h1 className="text-4xl font-bold tracking-tight">Resumable counter</h1>\n      <button className="mt-6 rounded-lg bg-indigo-500 px-4 py-2 font-medium transition hover:bg-indigo-400 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-300" data-nx-state="0" onClick$={${counterHandler}}>\n        0\n      </button>\n    </main>\n  )\n}\n`
+        : `// Interactive route: the onClick$ expression is extracted into a lazily\n// loaded chunk. The page ships zero application JavaScript until first click.\nexport default function CounterPage() {\n  return (\n    <main className="min-h-screen bg-slate-950 px-6 py-16 text-slate-100">\n      <h1 className="text-4xl font-bold tracking-tight">Resumable counter</h1>\n      <button className="mt-6 rounded-lg bg-indigo-500 px-4 py-2 font-medium transition hover:bg-indigo-400 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-300" data-nx-state="0" onClick$={${counterHandler}}>\n        0\n      </button>\n    </main>\n  )\n}\n`,
     'src/shared/types.ts': `export interface AppMetadata {\n  readonly title: string\n  readonly description?: string\n}\n`,
   }
 }
@@ -263,7 +267,9 @@ export async function scaffoldProject(
   const frameworkRoot = await findFrameworkRoot(parent)
   const files: Record<string, string> = {
     'package.json': packageJson(name, resolved, directory, frameworkRoot),
-    'index.html': LANDING_HTML,
+    'index.html': resolved.tailwind
+      ? LANDING_HTML.replace('href="/styles.css"', 'href="/src/styles.css"')
+      : LANDING_HTML,
     'tsconfig.json': tsconfig(resolved),
     'README.md': frameworkRoot
       ? `# ${name}\n\nCreated from a local Nexis workspace. Run \`pnpm install\`, then \`pnpm dev\`.\n`
@@ -284,8 +290,24 @@ export async function scaffoldProject(
       `packages:\n  - "."\n  - "${packagesDirectory}/*"\ndisableSelfInstall: true\nstrictPeerDependencies: true\nonlyBuiltDependencies:\n  - esbuild\n  - sharp\nallowBuilds:\n  esbuild: true\n  sharp: true\n`
   }
   if (resolved.tailwind) {
-    files['src/styles.css'] = '@import "tailwindcss";\n'
-    files['tailwind.config.js'] = 'export default { content: ["./src/**/*.{ts,tsx,js,jsx}"] }\n'
+    files['src/styles.css'] =
+      '@import "tailwindcss";\n\n@theme {\n  --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;\n}\n'
+    files['tailwind.config.js'] =
+      `/** @type {import('tailwindcss').Config} */\nexport default {\n  content: ['./src/**/*.{ts,tsx,js,jsx}'],\n}\n`
+    files['vite.config.ts'] =
+      `import tailwindcss from '@tailwindcss/vite'\nimport { defineConfig } from 'vite'\n\nexport default defineConfig({\n  plugins: [tailwindcss()],\n})\n`
+    files['.vscode/extensions.json'] =
+      `${JSON.stringify({ recommendations: ['bradlc.vscode-tailwindcss'] }, null, 2)}\n`
+    files['.vscode/settings.json'] = `${JSON.stringify(
+      {
+        'tailwindCSS.experimental.classRegex': [
+          ['\\b(?:cx|cn)\\(([^)]*)\\)', '(?:\'|\\\"|`)([^\'\\\"`]*)(?:\'|\\\"|`)'],
+        ],
+        'tailwindCSS.includeLanguages': { typescriptreact: 'html', javascriptreact: 'html' },
+      },
+      null,
+      2,
+    )}\n`
   }
   await mkdir(directory, { recursive: true })
   for (const [file, content] of Object.entries(files)) {

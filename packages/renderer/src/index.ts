@@ -18,6 +18,31 @@ const VOID_ELEMENTS = new Set([
 ])
 
 const SAFE_ATTRIBUTE = /^[a-zA-Z_:][a-zA-Z0-9:._-]*$/
+const EVENT_ATTRIBUTE = /^(?:on|on[a-z])/i
+
+function kebabCase(property: string): string {
+  return property.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
+}
+
+function normalizeAttributeName(name: string): string {
+  if (name === 'className') return 'class'
+  if (name === 'htmlFor') return 'for'
+  if (name.startsWith('aria-') || name.startsWith('data-')) return name
+  return name
+}
+
+function renderStyle(value: unknown): string | undefined {
+  if (typeof value === 'string') return value
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined
+  const declarations = Object.entries(value as Record<string, unknown>)
+    .filter(
+      ([, declaration]) =>
+        declaration !== undefined && declaration !== null && declaration !== false,
+    )
+    .map(([property, declaration]) => `${kebabCase(property)}:${String(declaration)};`)
+    .join('')
+  return declarations || undefined
+}
 
 export function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (character) => {
@@ -38,9 +63,14 @@ export function escapeHtml(value: string): string {
   })
 }
 
-function renderAttribute(name: string, value: unknown): string {
-  if (!SAFE_ATTRIBUTE.test(name) || name.toLowerCase().startsWith('on')) return ''
+function renderAttribute(rawName: string, value: unknown): string {
+  const name = normalizeAttributeName(rawName)
+  if (!SAFE_ATTRIBUTE.test(name) || EVENT_ATTRIBUTE.test(name)) return ''
   if (value === false || value === null || value === undefined) return ''
+  if (name === 'style') {
+    const style = renderStyle(value)
+    return style === undefined ? '' : ` style="${escapeHtml(style)}"`
+  }
   if (value === true) return ` ${name}`
   return ` ${name}="${escapeHtml(String(value))}"`
 }

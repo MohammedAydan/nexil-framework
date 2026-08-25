@@ -8,6 +8,21 @@ describe('renderToString', () => {
     expect(renderToString(tree)).toBe('<p title="a&quot;b" data-id="&lt;x&gt;">&lt;safe&gt;</p>')
   })
 
+  it('normalizes JSX styling props for SSR output', () => {
+    const tree = element(
+      'label',
+      {
+        className: 'font-semibold text-blue-600',
+        htmlFor: 'email',
+        style: { marginTop: 4, color: 'red' },
+      },
+      'Email',
+    )
+    expect(renderToString(tree)).toBe(
+      '<label class="font-semibold text-blue-600" for="email" style="margin-top:4;color:red;">Email</label>',
+    )
+  })
+
   it('omits event-handler attributes from SSR output', () => {
     const tree = element('button', { onClick: 'alert(1)', disabled: true }, 'Open')
     expect(renderToString(tree)).toBe('<button disabled>Open</button>')

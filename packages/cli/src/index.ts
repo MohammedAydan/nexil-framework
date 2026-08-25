@@ -122,6 +122,18 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   })
   await vite.pluginContainer.buildStart({} as any)
 
+  let processedAppCss: string | undefined
+  try {
+    await readFile(join(root, 'src', 'styles.css'), 'utf8')
+    processedAppCss = (await vite.transformRequest('/src/styles.css'))?.code
+    if (processedAppCss) {
+      await writeFile(join(assetRoot, 'styles.css'), processedAppCss, 'utf8')
+      template = template.replaceAll('/src/styles.css', '/assets/styles.css')
+    }
+  } catch {
+    // Tailwind is opt-in; applications without src/styles.css need no CSS transform.
+  }
+
   const records: BuildRouteRecord[] = []
   const cssAssets = new Set<string>()
   let hasInteractiveRoute = false

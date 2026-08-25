@@ -1,5 +1,32 @@
+import { twMerge } from 'tailwind-merge'
+
 export type StyleValue = string | number
 export type StyleDeclaration = Readonly<Record<string, StyleValue | undefined>>
+
+export type ClassValue =
+  | string
+  | false
+  | null
+  | undefined
+  | Readonly<Record<string, boolean | null | undefined>>
+  | readonly ClassValue[]
+
+function flattenClasses(value: ClassValue): string[] {
+  if (typeof value === 'string') return value.trim() ? [value.trim()] : []
+  if (Array.isArray(value)) return value.flatMap(flattenClasses)
+  if (!value || typeof value !== 'object') return []
+  return Object.entries(value)
+    .filter(([, enabled]) => Boolean(enabled))
+    .map(([name]) => name)
+}
+
+/** Merge conditional Tailwind classes while preserving the last intentional utility. */
+export function cx(...values: ClassValue[]): string {
+  return twMerge(flattenClasses(values))
+}
+
+/** Familiar alias for teams that use the cn naming convention. */
+export const cn = cx
 
 function kebabCase(property: string): string {
   return property.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)

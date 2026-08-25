@@ -1,6 +1,6 @@
 {
   "name": "@mohammedaydan/cli",
-  "version": "2.1.0",
+  "version": "1.0.0",
   "type": "module",
   "dependencies": {
     "@mohammedaydan/compiler": "workspace:*",

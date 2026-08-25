@@ -1,5 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { extractStyle } from './index'
+import { cn, cx, extractStyle } from './index'
+
+describe('cx', () => {
+  it('exposes cn as a familiar alias', () => {
+    expect(cn('px-2', 'px-4')).toBe('px-4')
+  })
+
+  it('merges conditional utilities and resolves conflicting Tailwind classes', () => {
+    expect(cx('px-2 text-sm', { 'text-lg': true, hidden: false }, ['text-red-500', 'px-4'])).toBe(
+      'text-lg text-red-500 px-4',
+    )
+  })
+})
 
 describe('extractStyle', () => {
   it('produces deterministic class names independent of property order', () => {

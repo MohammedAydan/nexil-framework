@@ -81,5 +81,5 @@ export function component<Props extends Record<string, unknown>>(
   return fn
 }
 
-export { state, computed, batch } from '@mohammedaydan/reactivity'
+export { state, useState, computed, batch } from '@mohammedaydan/reactivity'
 export type { Signal, ReadableSignal } from '@mohammedaydan/reactivity'

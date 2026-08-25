@@ -51,6 +51,12 @@ export function state<T>(initial: T): Signal<T> {
   return read
 }
 
+/** Compact state form for components that prefer a value/setter tuple. */
+export function useState<T>(initial: T): readonly [Signal<T>, Signal<T>['set']] {
+  const value = state(initial)
+  return [value, value.set] as const
+}
+
 export function computed<T>(derive: () => T): ReadableSignal<T> {
   const result = state<T | undefined>(undefined)
   let initialized = false
