@@ -88,6 +88,96 @@ check(
   ),
   results.routes.measured.map((route) => `${route.path}:${route.cacheControl}`).join(' '),
 )
+check(
+  'Sitemap endpoint is crawlable and includes published routes',
+  results.endpoints['/sitemap.xml']?.status === 200 &&
+    results.routes.measured.every((route) =>
+      results.endpoints['/sitemap.xml'].body.includes(route.path),
+    ),
+  `status=${results.endpoints['/sitemap.xml']?.status}`,
+)
+check(
+  'Robots endpoint points to the sitemap',
+  results.endpoints['/robots.txt']?.status === 200 &&
+    results.endpoints['/robots.txt'].body.includes('Sitemap:'),
+  `status=${results.endpoints['/robots.txt']?.status}`,
+)
+check(
+  'Action endpoint returns a successful typed envelope',
+  results.action.status === 200 && results.action.body?.ok === true,
+  JSON.stringify(results.action.body),
+)
+check(
+  'Crawler finds no broken internal links or duplicate metadata signatures',
+  results.crawler.brokenLinks.length === 0 && results.crawler.duplicateMetadata.length === 0,
+  JSON.stringify(results.crawler),
+)
+check(
+  'Every measured page passes schema-level JSON-LD validation',
+  results.routes.measured.every((route) => route.seo.jsonLdSchema),
+  'schema.org context/type/name',
+)
+check(
+  'Build-time image variants are present and non-empty',
+  results.media.variants.length >= 2 && results.media.smallerOrEqual === true,
+  `${results.media.variants.length} variants`,
+)
+check(
+  'Static routes ship zero client JavaScript',
+  results.routes.manifest
+    .filter((route) => !route.interactive)
+    .every((route) => route.clientJsBytes === 0),
+  'static route client-byte floor',
+)
+check(
+  'RSS feed is valid and includes expanded routes',
+  results.endpoints['/feed.xml']?.status === 200 &&
+    results.endpoints['/feed.xml'].contentType?.includes('xml') &&
+    results.endpoints['/feed.xml'].body.includes('<rss') &&
+    results.endpoints['/feed.xml'].body.includes('/docs/architecture'),
+  `status=${results.endpoints['/feed.xml']?.status}`,
+)
+check(
+  'Atom feed is valid and includes expanded routes',
+  results.endpoints['/atom.xml']?.status === 200 &&
+    results.endpoints['/atom.xml'].contentType?.includes('xml') &&
+    results.endpoints['/atom.xml'].body.includes('<feed') &&
+    results.endpoints['/atom.xml'].body.includes('/docs/architecture'),
+  `status=${results.endpoints['/atom.xml']?.status}`,
+)
+check(
+  'Declarative docs redirect returns 308',
+  results.endpoints['/docs']?.status === 308,
+  `status=${results.endpoints['/docs']?.status}`,
+)
+check(
+  'Build-time OG cards are emitted',
+  (results.assets.ogCards ?? []).length >= 1 &&
+    (results.assets.ogCards ?? []).every((asset) => asset.bytes > 0),
+  `${(results.assets.ogCards ?? []).length} cards`,
+)
+let astroComparison
+try {
+  astroComparison = JSON.parse(
+    await readFile(join(root, 'benchmarks', 'benchmark-comparison-astro.json'), 'utf8'),
+  )
+} catch {}
+check(
+  'Nexis client JavaScript is no larger than the comparison baseline',
+  astroComparison?.clientJsBytes?.gatePassed === true,
+  JSON.stringify(astroComparison?.clientJsBytes ?? null),
+)
+let lighthouseSummary
+try {
+  lighthouseSummary = JSON.parse(
+    await readFile(join(root, 'benchmarks', 'lighthouse-summary.json'), 'utf8'),
+  )
+} catch {}
+check(
+  'Lighthouse SEO/performance/accessibility gates pass on all routes',
+  lighthouseSummary?.passed === true && lighthouseSummary.results?.length === 7,
+  JSON.stringify(lighthouseSummary?.thresholds ?? null),
+)
 
 const passed = checks.filter((check) => check.passed).length
 const evaluation = {

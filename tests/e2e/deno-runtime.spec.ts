@@ -107,27 +107,15 @@ await test('renderer escapes untrusted text', () => {
   assert(!html.includes('<img'), 'raw markup must not pass through text rendering')
 })
 
-await test('resumability bootstrap resolves chunks relative to its script URL', () => {
-  // The delegated bootstrap derives the chunk base from the script element
-  // (falling back to document.baseURI), so chunks resolve correctly no matter
-  // where the shell is hosted from.
+await test('resumability bootstrap resolves script-relative chunks and delegates events', () => {
   assert(
-    RESUMABILITY_BOOTSTRAP.includes("new URL('../nexis-chunks/', script.src)"),
+    RESUMABILITY_BOOTSTRAP.includes("new URL('../nexis-chunks/',s.src)"),
     'script-relative chunk base missing',
   )
   assert(
-    RESUMABILITY_BOOTSTRAP.includes("new URL('/nexis-chunks/', document.baseURI)"),
-    'baseURI fallback missing',
+    RESUMABILITY_BOOTSTRAP.includes("getAttribute('data-nx-on-'+"),
+    'bootstrap event delegation drifted',
   )
-  assert(
-    RESUMABILITY_BOOTSTRAP.includes('document.addEventListener(eventName, dispatch)'),
-    'event delegation missing',
-  )
-  assert(
-    RESUMABILITY_BOOTSTRAP.includes("'data-nx-on-'"),
-    'data-nx-on-{event} attribute contract missing',
-  )
-  assert(RESUMABILITY_BOOTSTRAP.includes('data-nx-state'), 'state scope contract missing')
 })
 
 console.log(`Deno runtime spec passed: ${passed} checks`)

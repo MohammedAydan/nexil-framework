@@ -1,4 +1,4 @@
-import { action, assertIdempotent, assertTrustedOrigin } from '@mohammedaydan/actions'
+import { action, assertTrustedOrigin } from '@mohammedaydan/actions'
 import { adapterCapabilities } from '@mohammedaydan/adapters'
 import {
   createHandlerReference,
@@ -34,13 +34,6 @@ const resumeReference = createHandlerReference('chunk_labs.js', 'runLab')
 const resumeAttribute = createResumeAttribute('labs', resumeReference)
 const headers = createSecurityHeaders()
 const cookie = serializeCookie('lab_session', 'evaluation', { maxAge: 900 })
-const idempotency = new Map<string, boolean>()
-const idempotencyStore = {
-  has: async (key: string) => idempotency.has(key),
-  put: async (key: string) => {
-    idempotency.set(key, true)
-  },
-}
 const evaluationAction = action({
   validate: (input: unknown) => {
     if (!input || typeof input !== 'object' || !('name' in input))
@@ -49,10 +42,11 @@ const evaluationAction = action({
   },
   authorize: async (context) => {
     assertTrustedOrigin(context.request, ['https://nexis-showcase.example'])
-    await assertIdempotent(idempotencyStore, 'lab-evaluation-01')
   },
   handle: (_context, input) => `queued:${input.name}`,
 })
+
+export const actions = { submit: evaluationAction }
 
 export default component(() => {
   void evaluationAction
@@ -97,6 +91,43 @@ export default component(() => {
                 Read the model
               </a>
             </div>
+            <form
+              id="action-form"
+              className="button-row"
+              action="/__nexis/actions/labs/submit"
+              method="post"
+              onSubmit$={({ element, event }) => {
+                event.preventDefault()
+                const form = new FormData(element as HTMLFormElement)
+                fetch(element.action, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Idempotency-Key': `lab-${Date.now()}`,
+                  },
+                  body: JSON.stringify({ name: form.get('name') }),
+                })
+                  .then((response) => response.json())
+                  .then((result) => {
+                    const output = document.querySelector('#action-output')
+                    if (output)
+                      output.textContent = result.ok
+                        ? `Action result: ${result.data}`
+                        : result.errors.join(', ')
+                  })
+              }}
+            >
+              <label className="small" htmlFor="action-name">
+                Action name
+              </label>
+              <input id="action-name" name="name" defaultValue="Ada" />
+              <button className="button secondary" type="submit">
+                Call the action
+              </button>
+            </form>
+            <p id="action-output" className="small" aria-live="polite">
+              No action call yet.
+            </p>
           </div>
           <aside className="hero-aside">
             <p className="aside-label">Live lab values</p>

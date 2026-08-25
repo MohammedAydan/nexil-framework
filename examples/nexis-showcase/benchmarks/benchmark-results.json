@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-08-25T17:06:13.618Z",
+  "generatedAt": "2026-08-25T20:42:12.593Z",
   "environment": {
     "node": "v22.13.0",
     "platform": "linux",
-    "port": 4173
+    "port": 4176
   },
   "routes": {
     "manifest": [
@@ -47,18 +47,18 @@
         "route": "/",
         "source": "index.tsx",
         "interactive": true,
-        "clientJsBytes": 318,
-        "clientJsGzipBytes": 222,
-        "bootstrapGzipBytes": 651,
+        "clientJsBytes": 319,
+        "clientJsGzipBytes": 219,
+        "bootstrapGzipBytes": 930,
         "cssBytes": 52
       },
       {
         "route": "/labs",
         "source": "labs.tsx",
         "interactive": true,
-        "clientJsBytes": 312,
-        "clientJsGzipBytes": 216,
-        "bootstrapGzipBytes": 651,
+        "clientJsBytes": 1023,
+        "clientJsGzipBytes": 509,
+        "bootstrapGzipBytes": 930,
         "cssBytes": 0
       },
       {
@@ -75,12 +75,12 @@
       {
         "path": "/",
         "status": 200,
-        "bytes": 7794,
-        "gzipBytes": 2714,
+        "bytes": 8204,
+        "gzipBytes": 2790,
         "latencyMs": {
-          "min": 1.54,
-          "median": 1.94,
-          "max": 72.14
+          "min": 1.67,
+          "median": 2.2,
+          "max": 4.21
         },
         "cacheControl": "public, max-age=0, must-revalidate",
         "contentType": "text/html; charset=utf-8",
@@ -92,18 +92,19 @@
           "openGraph": true,
           "twitter": true,
           "jsonLd": true,
+          "jsonLdSchema": true,
           "noDangerousUrl": true
         }
       },
       {
         "path": "/features",
         "status": 200,
-        "bytes": 5293,
-        "gzipBytes": 1970,
+        "bytes": 5516,
+        "gzipBytes": 2042,
         "latencyMs": {
-          "min": 1.39,
-          "median": 1.81,
-          "max": 2.97
+          "min": 1.07,
+          "median": 2.18,
+          "max": 2.45
         },
         "cacheControl": "public, max-age=0, must-revalidate",
         "contentType": "text/html; charset=utf-8",
@@ -115,18 +116,19 @@
           "openGraph": true,
           "twitter": true,
           "jsonLd": true,
+          "jsonLdSchema": true,
           "noDangerousUrl": true
         }
       },
       {
         "path": "/labs",
         "status": 200,
-        "bytes": 4530,
-        "gzipBytes": 1730,
+        "bytes": 5179,
+        "gzipBytes": 1959,
         "latencyMs": {
-          "min": 0.84,
-          "median": 0.92,
-          "max": 1.19
+          "min": 0.78,
+          "median": 0.86,
+          "max": 0.97
         },
         "cacheControl": "public, max-age=0, must-revalidate",
         "contentType": "text/html; charset=utf-8",
@@ -138,18 +140,19 @@
           "openGraph": true,
           "twitter": true,
           "jsonLd": true,
+          "jsonLdSchema": true,
           "noDangerousUrl": true
         }
       },
       {
         "path": "/docs/architecture",
         "status": 200,
-        "bytes": 2331,
-        "gzipBytes": 926,
+        "bytes": 2562,
+        "gzipBytes": 999,
         "latencyMs": {
-          "min": 0.76,
-          "median": 0.89,
-          "max": 1.3
+          "min": 0.75,
+          "median": 0.79,
+          "max": 1.44
         },
         "cacheControl": "public, max-age=0, must-revalidate",
         "contentType": "text/html; charset=utf-8",
@@ -161,18 +164,19 @@
           "openGraph": true,
           "twitter": true,
           "jsonLd": true,
+          "jsonLdSchema": true,
           "noDangerousUrl": true
         }
       },
       {
         "path": "/docs/resumability",
         "status": 200,
-        "bytes": 2357,
-        "gzipBytes": 957,
+        "bytes": 2588,
+        "gzipBytes": 1033,
         "latencyMs": {
-          "min": 0.76,
-          "median": 0.79,
-          "max": 0.85
+          "min": 0.71,
+          "median": 0.75,
+          "max": 0.78
         },
         "cacheControl": "public, max-age=0, must-revalidate",
         "contentType": "text/html; charset=utf-8",
@@ -184,18 +188,19 @@
           "openGraph": true,
           "twitter": true,
           "jsonLd": true,
+          "jsonLdSchema": true,
           "noDangerousUrl": true
         }
       },
       {
         "path": "/docs/performance",
         "status": 200,
-        "bytes": 2325,
-        "gzipBytes": 944,
+        "bytes": 2554,
+        "gzipBytes": 1018,
         "latencyMs": {
-          "min": 0.78,
-          "median": 0.81,
-          "max": 0.82
+          "min": 0.74,
+          "median": 0.74,
+          "max": 0.77
         },
         "cacheControl": "public, max-age=0, must-revalidate",
         "contentType": "text/html; charset=utf-8",
@@ -207,18 +212,19 @@
           "openGraph": true,
           "twitter": true,
           "jsonLd": true,
+          "jsonLdSchema": true,
           "noDangerousUrl": true
         }
       },
       {
         "path": "/status",
         "status": 200,
-        "bytes": 3203,
-        "gzipBytes": 1231,
+        "bytes": 3590,
+        "gzipBytes": 1357,
         "latencyMs": {
-          "min": 0.78,
-          "median": 0.8,
-          "max": 0.83
+          "min": 0.76,
+          "median": 0.79,
+          "max": 1.36
         },
         "cacheControl": "public, max-age=0, must-revalidate",
         "contentType": "text/html; charset=utf-8",
@@ -230,6 +236,7 @@
           "openGraph": true,
           "twitter": true,
           "jsonLd": true,
+          "jsonLdSchema": true,
           "noDangerousUrl": true
         }
       }
@@ -237,45 +244,143 @@
     "missingRoute": {
       "path": "/missing-benchmark-route",
       "status": 404,
-      "bytes": 9,
-      "gzipBytes": 29,
+      "bytes": 128,
+      "gzipBytes": 116,
       "latencyMs": {
-        "min": 0.74,
-        "median": 0.79,
-        "max": 1.19
+        "min": 0.72,
+        "median": 0.77,
+        "max": 1
       },
       "cacheControl": "no-store",
-      "contentType": "text/plain; charset=utf-8",
+      "contentType": "text/html; charset=utf-8",
       "interactive": false,
       "seo": {
-        "title": false,
+        "title": true,
         "description": false,
         "canonical": false,
         "openGraph": false,
         "twitter": false,
         "jsonLd": false,
+        "jsonLdSchema": false,
         "noDangerousUrl": true
-      }
+      },
+      "body": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>Not Found</title></head><body><h1>Not Found</h1></body></html>"
     }
+  },
+  "endpoints": {
+    "/sitemap.xml": {
+      "status": 200,
+      "contentType": "application/xml; charset=utf-8",
+      "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\" xmlns:xhtml=\"http://www.w3.org/1999/xhtml\" xmlns:image=\"http://www.google.com/schemas/sitemap-image/1.1\"><url><loc>https://nexis-showcase.example/docs/architecture</loc><changefreq>weekly</changefreq></url><url><loc>https://nexis-showcase.example/docs/resumability</loc><changefreq>weekly</changefreq></url><url><loc>https://nexis-showcase.example/docs/performance</loc><changefreq>weekly</changefreq></url><url><loc>https://nexis-showcase.example/features</loc><changefreq>weekly</changefreq></url><url><loc>https://nexis-showcase.example/</loc><changefreq>weekly</changefreq></url><url><loc>https://nexis-showcase.example/labs</loc><changefreq>weekly</changefreq></url><url><loc>https://nexis-showcase.example/status</loc><changefreq>weekly</changefreq></url></urlset>"
+    },
+    "/robots.txt": {
+      "status": 200,
+      "contentType": "text/plain; charset=utf-8",
+      "body": "User-agent: *\nSitemap: https://nexis-showcase.example/sitemap.xml\n"
+    },
+    "/feed.xml": {
+      "status": 200,
+      "contentType": "application/xml; charset=utf-8",
+      "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\"><channel><title>Nexis Showcase Updates</title><link>https://nexis-showcase.example/</link><description>Nexis HTML-first framework routes, runtime notes, and benchmark updates.</description><language>en-US</language><atom:link href=\"https://nexis-showcase.example/feed.xml\" rel=\"self\" type=\"application/rss+xml\"/><item><title>Nexis Documentation — Architecture note</title><link>https://nexis-showcase.example/docs/architecture</link><guid isPermaLink=\"true\">https://nexis-showcase.example/docs/architecture</guid><description>Static documentation generated from a dynamic Nexis route.</description></item><item><title>Nexis Documentation — Architecture note</title><link>https://nexis-showcase.example/docs/resumability</link><guid isPermaLink=\"true\">https://nexis-showcase.example/docs/resumability</guid><description>Static documentation generated from a dynamic Nexis route.</description></item><item><title>Nexis Documentation — Architecture note</title><link>https://nexis-showcase.example/docs/performance</link><guid isPermaLink=\"true\">https://nexis-showcase.example/docs/performance</guid><description>Static documentation generated from a dynamic Nexis route.</description></item><item><title>Nexis Features — Runtime surface area</title><link>https://nexis-showcase.example/features</link><guid isPermaLink=\"true\">https://nexis-showcase.example/features</guid><description>A route-by-route inventory of the Nexis framework features exercised by the showcase.</description></item><item><title>Nexis Showcase — HTML-first, resumable applications</title><link>https://nexis-showcase.example/</link><guid isPermaLink=\"true\">https://nexis-showcase.example/</guid><description>A complete, runnable feature showcase for the Nexis HTML-first and resumable web framework.</description></item><item><title>Nexis Labs — Runtime evaluation surface</title><link>https://nexis-showcase.example/labs</link><guid isPermaLink=\"true\">https://nexis-showcase.example/labs</guid><description>Interactive runtime, serialization, server action, and platform adapter tests for Nexis.</description></item><item><title>Nexis Showcase Status — Runtime health</title><link>https://nexis-showcase.example/status</link><guid isPermaLink=\"true\">https://nexis-showcase.example/status</guid><description>Health and coverage status for the Nexis showcase application.</description></item></channel></rss>"
+    },
+    "/atom.xml": {
+      "status": 200,
+      "contentType": "application/xml; charset=utf-8",
+      "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><feed xmlns=\"http://www.w3.org/2005/Atom\"><title>Nexis Showcase Updates</title><id>https://nexis-showcase.example/</id><link href=\"https://nexis-showcase.example/\"/><updated>1970-01-01T00:00:00.000Z</updated><entry><title>Nexis Documentation — Architecture note</title><id>https://nexis-showcase.example/docs/architecture</id><link href=\"https://nexis-showcase.example/docs/architecture\"/><updated>1970-01-01T00:00:00.000Z</updated><summary>Static documentation generated from a dynamic Nexis route.</summary></entry><entry><title>Nexis Documentation — Architecture note</title><id>https://nexis-showcase.example/docs/resumability</id><link href=\"https://nexis-showcase.example/docs/resumability\"/><updated>1970-01-01T00:00:00.000Z</updated><summary>Static documentation generated from a dynamic Nexis route.</summary></entry><entry><title>Nexis Documentation — Architecture note</title><id>https://nexis-showcase.example/docs/performance</id><link href=\"https://nexis-showcase.example/docs/performance\"/><updated>1970-01-01T00:00:00.000Z</updated><summary>Static documentation generated from a dynamic Nexis route.</summary></entry><entry><title>Nexis Features — Runtime surface area</title><id>https://nexis-showcase.example/features</id><link href=\"https://nexis-showcase.example/features\"/><updated>1970-01-01T00:00:00.000Z</updated><summary>A route-by-route inventory of the Nexis framework features exercised by the showcase.</summary></entry><entry><title>Nexis Showcase — HTML-first, resumable applications</title><id>https://nexis-showcase.example/</id><link href=\"https://nexis-showcase.example/\"/><updated>1970-01-01T00:00:00.000Z</updated><summary>A complete, runnable feature showcase for the Nexis HTML-first and resumable web framework.</summary></entry><entry><title>Nexis Labs — Runtime evaluation surface</title><id>https://nexis-showcase.example/labs</id><link href=\"https://nexis-showcase.example/labs\"/><updated>1970-01-01T00:00:00.000Z</updated><summary>Interactive runtime, serialization, server action, and platform adapter tests for Nexis.</summary></entry><entry><title>Nexis Showcase Status — Runtime health</title><id>https://nexis-showcase.example/status</id><link href=\"https://nexis-showcase.example/status\"/><updated>1970-01-01T00:00:00.000Z</updated><summary>Health and coverage status for the Nexis showcase application.</summary></entry></feed>"
+    },
+    "/docs": {
+      "status": 308,
+      "contentType": "text/plain; charset=utf-8",
+      "body": "Redirecting to /docs/architecture"
+    }
+  },
+  "action": {
+    "status": 200,
+    "body": {
+      "ok": true,
+      "data": "queued:Ada"
+    }
+  },
+  "crawler": {
+    "brokenLinks": [],
+    "duplicateMetadata": []
+  },
+  "media": {
+    "variants": [
+      {
+        "format": "webp",
+        "width": 320,
+        "fileName": "nexis-showcase-320.webp",
+        "bytes": 2278,
+        "cacheHit": false
+      },
+      {
+        "format": "avif",
+        "width": 320,
+        "fileName": "nexis-showcase-320.avif",
+        "bytes": 2113,
+        "cacheHit": false
+      },
+      {
+        "format": "webp",
+        "width": 640,
+        "fileName": "nexis-showcase-640.webp",
+        "bytes": 5786,
+        "cacheHit": false
+      },
+      {
+        "format": "avif",
+        "width": 640,
+        "fileName": "nexis-showcase-640.avif",
+        "bytes": 4101,
+        "cacheHit": false
+      }
+    ],
+    "smallerOrEqual": true
   },
   "assets": {
     "bootstrap": {
-      "bytes": 1374,
-      "gzipBytes": 651
+      "bytes": 1621,
+      "gzipBytes": 930
     },
     "chunks": [
       {
-        "name": "chunk_8c63500a574e.js",
-        "bytes": 318,
-        "gzipBytes": 222
+        "name": "chunk_535ea9ea9b73.js",
+        "bytes": 319,
+        "gzipBytes": 219
       },
       {
-        "name": "chunk_c5ad680cc074.js",
+        "name": "chunk_a0ed3ab49db7.js",
         "bytes": 312,
         "gzipBytes": 216
+      },
+      {
+        "name": "chunk_f04ac5ef53ed.js",
+        "bytes": 711,
+        "gzipBytes": 417
       }
     ],
     "assets": [
+      {
+        "name": "images/nexis-showcase-320.avif",
+        "bytes": 2113,
+        "gzipBytes": 2042
+      },
+      {
+        "name": "images/nexis-showcase-320.webp",
+        "bytes": 2278,
+        "gzipBytes": 2301
+      },
+      {
+        "name": "images/nexis-showcase-640.avif",
+        "bytes": 4101,
+        "gzipBytes": 4030
+      },
+      {
+        "name": "images/nexis-showcase-640.webp",
+        "bytes": 5786,
+        "gzipBytes": 5809
+      },
       {
         "name": "nexis.css",
         "bytes": 52,
@@ -283,16 +388,38 @@
       },
       {
         "name": "styles.css",
-        "bytes": 9124,
-        "gzipBytes": 2941
+        "bytes": 9916,
+        "gzipBytes": 3174
+      }
+    ],
+    "ogCards": [
+      {
+        "name": "acb7aace2c620ebf2ef71023.png",
+        "bytes": 83570,
+        "gzipBytes": 77292
+      },
+      {
+        "name": "ae6fbb2390f383afacc00541.png",
+        "bytes": 77228,
+        "gzipBytes": 70888
+      },
+      {
+        "name": "d78034addec6c5e1136c3485.png",
+        "bytes": 79233,
+        "gzipBytes": 72632
+      },
+      {
+        "name": "f874a4e3d2f2094b94c53d85.png",
+        "bytes": 81471,
+        "gzipBytes": 75188
       }
     ]
   },
   "totals": {
     "routeCount": 7,
     "interactiveRoutes": 2,
-    "chunkCount": 2,
-    "clientJsBytes": 2004,
-    "clientJsGzipBytes": 1089
+    "chunkCount": 3,
+    "clientJsBytes": 2963,
+    "clientJsGzipBytes": 1782
   }
 }

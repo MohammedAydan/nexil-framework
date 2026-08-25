@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-08-25T17:17:16.858Z",
-  "passed": 18,
-  "total": 18,
+  "generatedAt": "2026-08-25T18:34:06.922Z",
+  "passed": 19,
+  "total": 19,
   "results": [
     {
       "name": "Home SSR stamp is visible",
@@ -16,7 +16,11 @@
       "passed": true
     },
     {
-      "name": "Signal interaction updates without hydration",
+      "name": "Signal interaction updates through a live ScopeRef",
+      "passed": true
+    },
+    {
+      "name": "Labs action performs a real POST round-trip",
       "passed": true
     },
     {

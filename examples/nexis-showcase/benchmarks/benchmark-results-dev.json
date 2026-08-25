@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-25T17:00:29.842Z",
+  "generatedAt": "2026-08-25T18:40:26.882Z",
   "environment": {
     "node": "v22.13.0",
     "platform": "linux",
@@ -47,18 +47,18 @@
         "route": "/",
         "source": "index.tsx",
         "interactive": true,
-        "clientJsBytes": 318,
-        "clientJsGzipBytes": 222,
-        "bootstrapGzipBytes": 651,
+        "clientJsBytes": 319,
+        "clientJsGzipBytes": 219,
+        "bootstrapGzipBytes": 930,
         "cssBytes": 52
       },
       {
         "route": "/labs",
         "source": "labs.tsx",
         "interactive": true,
-        "clientJsBytes": 312,
-        "clientJsGzipBytes": 216,
-        "bootstrapGzipBytes": 651,
+        "clientJsBytes": 1023,
+        "clientJsGzipBytes": 509,
+        "bootstrapGzipBytes": 930,
         "cssBytes": 0
       },
       {
@@ -75,12 +75,12 @@
       {
         "path": "/",
         "status": 200,
-        "bytes": 7798,
-        "gzipBytes": 2724,
+        "bytes": 8018,
+        "gzipBytes": 2793,
         "latencyMs": {
-          "min": 3.42,
-          "median": 3.71,
-          "max": 83.76
+          "min": 2.7,
+          "median": 3.04,
+          "max": 64.72
         },
         "cacheControl": "no-store",
         "contentType": "text/html; charset=utf-8",
@@ -92,18 +92,19 @@
           "openGraph": true,
           "twitter": true,
           "jsonLd": true,
+          "jsonLdSchema": true,
           "noDangerousUrl": true
         }
       },
       {
         "path": "/features",
         "status": 200,
-        "bytes": 5347,
-        "gzipBytes": 1996,
+        "bytes": 5419,
+        "gzipBytes": 2020,
         "latencyMs": {
-          "min": 2.62,
-          "median": 3.59,
-          "max": 14.32
+          "min": 2.14,
+          "median": 2.81,
+          "max": 4.97
         },
         "cacheControl": "no-store",
         "contentType": "text/html; charset=utf-8",
@@ -115,18 +116,19 @@
           "openGraph": true,
           "twitter": true,
           "jsonLd": true,
+          "jsonLdSchema": true,
           "noDangerousUrl": true
         }
       },
       {
         "path": "/labs",
         "status": 200,
-        "bytes": 4584,
-        "gzipBytes": 1746,
+        "bytes": 5082,
+        "gzipBytes": 1927,
         "latencyMs": {
-          "min": 2.15,
-          "median": 2.45,
-          "max": 2.68
+          "min": 1.89,
+          "median": 2.32,
+          "max": 10.15
         },
         "cacheControl": "no-store",
         "contentType": "text/html; charset=utf-8",
@@ -138,18 +140,19 @@
           "openGraph": true,
           "twitter": true,
           "jsonLd": true,
+          "jsonLdSchema": true,
           "noDangerousUrl": true
         }
       },
       {
         "path": "/docs/architecture",
         "status": 200,
-        "bytes": 2385,
-        "gzipBytes": 951,
+        "bytes": 2465,
+        "gzipBytes": 974,
         "latencyMs": {
-          "min": 1.77,
-          "median": 1.94,
-          "max": 1.99
+          "min": 1.73,
+          "median": 1.87,
+          "max": 2.1
         },
         "cacheControl": "no-store",
         "contentType": "text/html; charset=utf-8",
@@ -161,18 +164,19 @@
           "openGraph": true,
           "twitter": true,
           "jsonLd": true,
+          "jsonLdSchema": true,
           "noDangerousUrl": true
         }
       },
       {
         "path": "/docs/resumability",
         "status": 200,
-        "bytes": 2411,
-        "gzipBytes": 982,
+        "bytes": 2491,
+        "gzipBytes": 1007,
         "latencyMs": {
-          "min": 1.76,
-          "median": 1.79,
-          "max": 2.21
+          "min": 1.61,
+          "median": 1.68,
+          "max": 1.8
         },
         "cacheControl": "no-store",
         "contentType": "text/html; charset=utf-8",
@@ -184,18 +188,19 @@
           "openGraph": true,
           "twitter": true,
           "jsonLd": true,
+          "jsonLdSchema": true,
           "noDangerousUrl": true
         }
       },
       {
         "path": "/docs/performance",
         "status": 200,
-        "bytes": 2379,
-        "gzipBytes": 970,
+        "bytes": 2457,
+        "gzipBytes": 994,
         "latencyMs": {
-          "min": 1.77,
+          "min": 1.7,
           "median": 1.89,
-          "max": 7.54
+          "max": 2.3
         },
         "cacheControl": "no-store",
         "contentType": "text/html; charset=utf-8",
@@ -207,18 +212,19 @@
           "openGraph": true,
           "twitter": true,
           "jsonLd": true,
+          "jsonLdSchema": true,
           "noDangerousUrl": true
         }
       },
       {
         "path": "/status",
         "status": 200,
-        "bytes": 3257,
-        "gzipBytes": 1257,
+        "bytes": 3493,
+        "gzipBytes": 1333,
         "latencyMs": {
-          "min": 1.85,
-          "median": 2.11,
-          "max": 2.26
+          "min": 1.83,
+          "median": 1.88,
+          "max": 2.34
         },
         "cacheControl": "no-store",
         "contentType": "text/html; charset=utf-8",
@@ -230,6 +236,7 @@
           "openGraph": true,
           "twitter": true,
           "jsonLd": true,
+          "jsonLdSchema": true,
           "noDangerousUrl": true
         }
       }
@@ -240,9 +247,9 @@
       "bytes": 9,
       "gzipBytes": 29,
       "latencyMs": {
-        "min": 0.56,
-        "median": 0.62,
-        "max": 1.39
+        "min": 0.63,
+        "median": 0.69,
+        "max": 1.57
       },
       "cacheControl": "no-store",
       "contentType": "text/plain; charset=utf-8",
@@ -254,28 +261,111 @@
         "openGraph": false,
         "twitter": false,
         "jsonLd": false,
+        "jsonLdSchema": false,
         "noDangerousUrl": true
-      }
+      },
+      "body": "Not Found"
     }
+  },
+  "endpoints": {
+    "/sitemap.xml": {
+      "status": 200,
+      "contentType": "application/xml; charset=utf-8",
+      "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\"><url><loc>https://nexis-showcase.example/docs/architecture</loc><changefreq>weekly</changefreq></url><url><loc>https://nexis-showcase.example/docs/resumability</loc><changefreq>weekly</changefreq></url><url><loc>https://nexis-showcase.example/docs/performance</loc><changefreq>weekly</changefreq></url><url><loc>https://nexis-showcase.example/features</loc><changefreq>weekly</changefreq></url><url><loc>https://nexis-showcase.example/</loc><changefreq>weekly</changefreq></url><url><loc>https://nexis-showcase.example/labs</loc><changefreq>weekly</changefreq></url><url><loc>https://nexis-showcase.example/status</loc><changefreq>weekly</changefreq></url></urlset>"
+    },
+    "/robots.txt": {
+      "status": 200,
+      "contentType": "text/plain; charset=utf-8",
+      "body": "User-agent: *\nSitemap: https://nexis-showcase.example/sitemap.xml\n"
+    }
+  },
+  "action": {
+    "status": 200,
+    "body": {
+      "ok": true,
+      "data": "queued:Ada"
+    }
+  },
+  "crawler": {
+    "brokenLinks": [],
+    "duplicateMetadata": []
+  },
+  "media": {
+    "variants": [
+      {
+        "format": "webp",
+        "width": 320,
+        "fileName": "nexis-showcase-320.webp",
+        "bytes": 2278,
+        "cacheHit": false
+      },
+      {
+        "format": "avif",
+        "width": 320,
+        "fileName": "nexis-showcase-320.avif",
+        "bytes": 2113,
+        "cacheHit": false
+      },
+      {
+        "format": "webp",
+        "width": 640,
+        "fileName": "nexis-showcase-640.webp",
+        "bytes": 5786,
+        "cacheHit": false
+      },
+      {
+        "format": "avif",
+        "width": 640,
+        "fileName": "nexis-showcase-640.avif",
+        "bytes": 4101,
+        "cacheHit": false
+      }
+    ],
+    "smallerOrEqual": true
   },
   "assets": {
     "bootstrap": {
-      "bytes": 1374,
-      "gzipBytes": 651
+      "bytes": 1621,
+      "gzipBytes": 930
     },
     "chunks": [
       {
-        "name": "chunk_8c63500a574e.js",
-        "bytes": 318,
-        "gzipBytes": 222
+        "name": "chunk_535ea9ea9b73.js",
+        "bytes": 319,
+        "gzipBytes": 219
       },
       {
-        "name": "chunk_c5ad680cc074.js",
+        "name": "chunk_a0ed3ab49db7.js",
         "bytes": 312,
         "gzipBytes": 216
+      },
+      {
+        "name": "chunk_f04ac5ef53ed.js",
+        "bytes": 711,
+        "gzipBytes": 417
       }
     ],
     "assets": [
+      {
+        "name": "images/nexis-showcase-320.avif",
+        "bytes": 2113,
+        "gzipBytes": 2042
+      },
+      {
+        "name": "images/nexis-showcase-320.webp",
+        "bytes": 2278,
+        "gzipBytes": 2301
+      },
+      {
+        "name": "images/nexis-showcase-640.avif",
+        "bytes": 4101,
+        "gzipBytes": 4030
+      },
+      {
+        "name": "images/nexis-showcase-640.webp",
+        "bytes": 5786,
+        "gzipBytes": 5809
+      },
       {
         "name": "nexis.css",
         "bytes": 52,
@@ -283,16 +373,16 @@
       },
       {
         "name": "styles.css",
-        "bytes": 9124,
-        "gzipBytes": 2941
+        "bytes": 9152,
+        "gzipBytes": 2952
       }
     ]
   },
   "totals": {
     "routeCount": 7,
     "interactiveRoutes": 2,
-    "chunkCount": 2,
-    "clientJsBytes": 2004,
-    "clientJsGzipBytes": 1089
+    "chunkCount": 3,
+    "clientJsBytes": 2963,
+    "clientJsGzipBytes": 1782
   }
 }

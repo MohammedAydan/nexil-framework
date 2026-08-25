@@ -59,3 +59,49 @@ describe('runtime adapter parity', () => {
     expect(caches).toEqual(['private, no-store', 'private, no-store', 'private, no-store'])
   })
 })
+
+it('runs shared header, body, and capability conformance across all adapters', async () => {
+  const adapters = [
+    createNodeAdapter(async () => new Response('ok', { headers: { 'x-runtime': 'portable' } })),
+    createCloudflareAdapter(
+      async () => new Response('ok', { headers: { 'x-runtime': 'portable' } }),
+    ),
+    createDenoAdapter(async () => new Response('ok', { headers: { 'x-runtime': 'portable' } })),
+  ]
+  for (const adapter of adapters) {
+    const response = await adapter.handle(new Request('https://example.test/conformance'))
+    expect(response.status).toBe(200)
+    expect(response.headers.get('x-runtime')).toBe('portable')
+    expect(await response.text()).toBe('ok')
+  }
+})
+
+it('keeps streamed SSR byte-identical and stops work after disconnect', async () => {
+  const { renderToStream } = await import('../../packages/renderer/src/stream')
+  const { renderToString } = await import('../../packages/renderer/src/index')
+  const root = element('article', {}, [element('h1', {}, 'Stream'), element('p', {}, 'Parity')])
+  const reader = renderToStream(root, { chunkSize: 4 }).getReader()
+  const chunks: Uint8Array[] = []
+  while (true) {
+    const result = await reader.read()
+    if (result.done) break
+    chunks.push(result.value)
+  }
+  const bytes = new TextDecoder().decode(
+    chunks.reduce((all, chunk) => new Uint8Array([...all, ...chunk]), new Uint8Array()),
+  )
+  expect(bytes).toBe(renderToString(root))
+
+  const controller = new AbortController()
+  let cancelled = false
+  const stream = renderToStream(Promise.resolve(root), {
+    signal: controller.signal,
+    onCancel: () => {
+      cancelled = true
+    },
+  })
+  controller.abort()
+  const abortedReader = stream.getReader()
+  await abortedReader.read()
+  expect(cancelled).toBe(true)
+})

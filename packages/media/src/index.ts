@@ -1,4 +1,7 @@
 import { isIP } from 'node:net'
+import { createHash } from 'node:crypto'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 
 export interface ImageProps {
   readonly src: string
@@ -7,6 +10,49 @@ export interface ImageProps {
   readonly alt: string
   readonly priority?: boolean
   readonly sizes?: string
+}
+
+export interface PictureProps extends ImageProps {
+  readonly widths?: readonly number[]
+  readonly formats?: readonly ('avif' | 'webp')[]
+}
+
+export interface PictureMarkup {
+  readonly html: string
+  readonly sources: readonly { readonly type: string; readonly srcset: string }[]
+  readonly fallback: ImageAttributes
+}
+
+function escapeAttribute(value: string): string {
+  return value.replace(
+    /[&<>"']/g,
+    (character) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character] ??
+      character,
+  )
+}
+
+export function pictureMarkup(props: PictureProps): PictureMarkup {
+  const widths = [...(props.widths ?? [320, 640, 960, 1280])]
+  const formats = [...(props.formats ?? ['avif', 'webp'])]
+  const fallback = imageAttributes(props, widths)
+  const sources = formats.map((format) => ({
+    type: `image/${format}`,
+    srcset: widths
+      .map(
+        (width) =>
+          `${props.src}${props.src.includes('?') ? '&' : '?'}format=${format}&w=${width} ${width}w`,
+      )
+      .join(', '),
+  }))
+  const sourceMarkup = sources
+    .map(
+      (source) =>
+        `<source type="${source.type}" srcset="${escapeAttribute(source.srcset)}"${props.sizes ? ` sizes="${escapeAttribute(props.sizes)}"` : ''}>`,
+    )
+    .join('')
+  const imageMarkup = `<img src="${escapeAttribute(fallback.src)}" srcset="${escapeAttribute(fallback.srcset)}" width="${fallback.width}" height="${fallback.height}" alt="${escapeAttribute(fallback.alt)}" loading="${fallback.loading}" decoding="async"${fallback.fetchpriority ? ' fetchpriority="high"' : ''}${fallback.sizes ? ` sizes="${escapeAttribute(fallback.sizes)}"` : ''}>`
+  return { html: `<picture>${sourceMarkup}${imageMarkup}</picture>`, sources, fallback }
 }
 
 export interface ImageAttributes {
@@ -202,4 +248,101 @@ export function fontFace(props: FontProps): string {
         `@font-face{font-family:"${props.family}";font-style:normal;font-weight:${weight};font-display:${display};src:url("${props.source}") format("woff2");}`,
     )
     .join('')
+}
+
+export interface BuildImageOptions {
+  readonly sourcePath: string
+  readonly outputDir: string
+  readonly fileBase: string
+  readonly widths?: readonly number[]
+  readonly cacheDir?: string
+}
+
+export interface BuiltImageVariant {
+  readonly format: 'webp' | 'avif'
+  readonly width: number
+  readonly fileName: string
+  readonly bytes: number
+  readonly cacheHit: boolean
+}
+
+const imageBuildCache = new Map<string, readonly ImageVariant[]>()
+let imageFallbackWarningShown = false
+
+export async function buildImageVariants(
+  options: BuildImageOptions,
+): Promise<readonly BuiltImageVariant[]> {
+  if (!/^[a-zA-Z0-9_-]+$/.test(options.fileBase)) throw new TypeError('Invalid image file base.')
+  const widths = [...(options.widths ?? [320, 640, 960])]
+  const source = new Uint8Array(await readFile(options.sourcePath))
+  const key = createHash('sha256').update(source).update(JSON.stringify(widths)).digest('hex')
+  const diskCacheDir = options.cacheDir
+  const diskManifest = diskCacheDir ? join(diskCacheDir, `${key}.json`) : undefined
+  let variants = imageBuildCache.get(key)
+  let cacheHit = variants !== undefined
+  if (!variants && diskManifest) {
+    try {
+      const cached = JSON.parse(await readFile(diskManifest, 'utf8')) as readonly {
+        format: 'webp' | 'avif'
+        width: number
+        fileName: string
+      }[]
+      const cacheRoot = diskCacheDir
+      if (!cacheRoot) throw new Error('Missing media cache directory.')
+      const loaded = await Promise.all(
+        cached.map(async (entry) => ({
+          ...entry,
+          bytes: new Uint8Array(await readFile(join(cacheRoot, entry.fileName))),
+        })),
+      )
+      variants = loaded
+      imageBuildCache.set(key, variants)
+      cacheHit = true
+    } catch {
+      // A partial cache is discarded and rebuilt below.
+    }
+  }
+  if (!variants) {
+    try {
+      variants = await transformImage(source, options.fileBase, widths)
+      imageBuildCache.set(key, variants)
+      if (diskCacheDir) {
+        await mkdir(diskCacheDir, { recursive: true })
+        await Promise.all(
+          variants.map((variant) => writeFile(join(diskCacheDir, variant.fileName), variant.bytes)),
+        )
+        await writeFile(
+          diskManifest!,
+          JSON.stringify(
+            variants.map(({ format, width, fileName }) => ({ format, width, fileName })),
+          ),
+        )
+      }
+    } catch (error) {
+      if (!imageFallbackWarningShown) {
+        console.warn(
+          `[nexis/media] Image transform unavailable; keeping original asset. ${error instanceof Error ? error.message : String(error)}`,
+        )
+        imageFallbackWarningShown = true
+      }
+      return []
+    }
+  }
+  await mkdir(options.outputDir, { recursive: true })
+  const result: BuiltImageVariant[] = []
+  for (const variant of variants) {
+    await writeFile(join(options.outputDir, variant.fileName), variant.bytes)
+    result.push({
+      format: variant.format,
+      width: variant.width,
+      fileName: variant.fileName,
+      bytes: variant.bytes.byteLength,
+      cacheHit,
+    })
+  }
+  return result
+}
+
+export function clearImageTransformCache(): void {
+  imageBuildCache.clear()
 }

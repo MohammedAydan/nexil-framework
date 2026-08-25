@@ -4,6 +4,7 @@ import {
   createHandlerReference,
   createResumeAttribute,
   serializeResumeState,
+  serializeScopeRefs,
 } from '@mohammedaydan/client'
 import { component, computed, state } from '@mohammedaydan/core'
 import { cn, extractStyle } from '@mohammedaydan/css'
@@ -29,6 +30,10 @@ export const seo = {
 }
 
 const score = state(8)
+const count = state(0)
+const countScope = serializeScopeRefs({
+  count: { kind: 'signal', id: 'nx:signal:showcase-count', initial: 0 },
+})
 const doubledScore = computed(() => score() * 2)
 const registry = createStateRegistry()
 const preferences = registry.getOrCreate('global', 'showcase-preferences', {
@@ -188,8 +193,10 @@ export default component(() => {
               id="signal-button"
               className={signalClass}
               data-nx-state="0"
+              data-nx-scope={countScope}
               onClick$={({ element }) => {
-                const next = Number(element.dataset.nxState || '0') + 1
+                const next = count() + 1
+                count.set(next)
                 element.textContent = `Signal acknowledged / ${next}`
                 element.dataset.nxState = String(next)
               }}

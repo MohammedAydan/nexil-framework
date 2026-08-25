@@ -85,3 +85,36 @@ describe('Nexis Vite transform', () => {
     expect(result.css[0]).toContain('margin-top:4px;')
   })
 })
+
+it('allows component$ state to flow through the automatic ScopeRef capture path', async () => {
+  const result = await transformNexisSource(
+    `import { component$, state } from '@mohammedaydan/core'
+const view = component$(() => { const count = state(0); return <button onClick$={() => count.set(count() + 1)}>{count()}</button> })`,
+    '/app/src/routes/component.tsx',
+  )
+  expect(result.code).toContain('data-nx-on-click=')
+  expect(result.scopeCaptures).toEqual(
+    expect.arrayContaining([expect.objectContaining({ name: 'count', kind: 'signal' })]),
+  )
+})
+
+it('classifies live signal captures and warns for unsupported closures', async () => {
+  const result = await transformNexisSource(
+    `import { state } from '@mohammedaydan/core'
+const count = state(0)
+const runtimeValue = new Date()
+const view = <button onClick$={({ element }) => { element.textContent = String(count()) + runtimeValue.toISOString() }}>+</button>`,
+    '/app/src/routes/scope.tsx',
+  )
+  expect(result.scopeCaptures).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        name: 'count',
+        kind: 'signal',
+        id: expect.stringMatching(/^nx:signal:/),
+      }),
+      expect.objectContaining({ name: 'runtimeValue', kind: 'unsupported' }),
+    ]),
+  )
+  expect(result.warnings.some((warning) => warning.includes('runtimeValue'))).toBe(true)
+})

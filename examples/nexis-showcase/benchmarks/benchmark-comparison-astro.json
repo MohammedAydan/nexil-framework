@@ -1,0 +1,31 @@
+{
+  "generatedAt": "2026-08-25T20:29:02.758Z",
+  "methodology": "Local Chromium lab comparison; Astro baseline is a checked-in equivalent island fixture, not an Astro framework build.",
+  "routes": {
+    "nexis": "/",
+    "astro": "/"
+  },
+  "clientJsBytes": {
+    "nexis": 1940,
+    "astro": 2272,
+    "nexisFiles": ["nexis-bootstrap.js", "nexis-chunks/chunk_535ea9ea9b73.js"],
+    "astroFiles": ["astro-island.js"],
+    "gatePassed": true
+  },
+  "vitals": {
+    "nexis": {
+      "ttfbMs": 2.6000001430511475,
+      "lcp": 152,
+      "cls": 0,
+      "inp": 16.200000047683716,
+      "wallMs": 403.703808
+    },
+    "astro": {
+      "ttfbMs": 5.700000047683716,
+      "lcp": 40,
+      "cls": 0,
+      "inp": null,
+      "wallMs": 311.460818
+    }
+  }
+}

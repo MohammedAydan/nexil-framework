@@ -1,5 +1,6 @@
 import { component } from '@mohammedaydan/core'
 import { createSecurityHeaders } from '@mohammedaydan/server'
+import { renderTelemetryScript } from '@mohammedaydan/telemetry'
 
 export const seo = {
   title: 'Nexis Showcase Status — Runtime health',
@@ -10,6 +11,7 @@ export const seo = {
 }
 
 const headers = createSecurityHeaders()
+const telemetryDisabledBytes = renderTelemetryScript({ endpoint: '/__nexis/telemetry' }).length
 
 export default component(() => (
   <>
@@ -92,6 +94,14 @@ export default component(() => (
             <p>
               Dangerous URL protocols, CSS delimiters, cookie injection, and untrusted origins are
               exercised.
+            </p>
+          </article>
+          <article className="card">
+            <span className="tag">Telemetry</span>
+            <h3>Opt-in only</h3>
+            <p>
+              Disabled by default: emitted telemetry script bytes{' '}
+              <strong>{telemetryDisabledBytes}</strong>.
             </p>
           </article>
         </div>

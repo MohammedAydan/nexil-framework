@@ -1,0 +1,33 @@
+{
+  "name": "@mohammedaydan/serve",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@mohammedaydan/actions": "workspace:*"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "clean": "node -e \"const fs=require('fs');for(const f of ['dist','tsconfig.tsbuildinfo']){try{fs.rmSync(f,{recursive:true,force:true})}catch(e){}}\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MohammedAydan/nexis-framework.git",
+    "directory": "packages/serve"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.test.*",
+    "README.md"
+  ]
+}

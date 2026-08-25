@@ -1,19 +1,74 @@
 import { readFile, readdir } from 'node:fs/promises'
 import { join, relative } from 'node:path'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Plugin } from 'vite'
 import { escapeHtml, renderToString } from '@mohammedaydan/renderer'
-import { renderHead } from '@mohammedaydan/seo'
+import { renderHead, withCanonical } from '@mohammedaydan/seo'
 import { routeFromFile, resolveRoute, matchRoute } from '@mohammedaydan/router'
 import type { NexisHandler } from '@mohammedaydan/adapters'
+import { createMemoryIdempotencyStore, handleActionRequest } from '@mohammedaydan/actions'
+import type { ServerAction } from '@mohammedaydan/actions'
 import nexis from '@mohammedaydan/vite-plugin'
 
 const routeCache = new Map<string, ReturnType<typeof routeFromFile>[]>()
+const devIdempotency = createMemoryIdempotencyStore()
 
 function injectStylesheetLink(template: string, href: string): string {
   const link = `<link rel="stylesheet" href="${href}">`
   if (template.includes(`href="${href}"`) || template.includes(`href='${href}'`)) return template
   if (template.includes('</head>')) return template.replace('</head>', `  ${link}\n</head>`)
   return `${link}${template}`
+}
+
+export async function nodeRequest(request: IncomingMessage): Promise<Request> {
+  const chunks: Buffer[] = []
+  for await (const chunk of request) chunks.push(Buffer.from(chunk))
+  const headers = new Headers()
+  for (const [name, value] of Object.entries(request.headers)) {
+    if (value !== undefined) headers.set(name, Array.isArray(value) ? value.join(', ') : value)
+  }
+  const method = request.method ?? 'GET'
+  const init: RequestInit = { method, headers }
+  if (method !== 'GET' && method !== 'HEAD') init.body = Buffer.concat(chunks)
+  const forwardedProto =
+    process.env.NEXIS_TRUST_PROXY === '1' ? request.headers['x-forwarded-proto'] : undefined
+  const forwardedHost =
+    process.env.NEXIS_TRUST_PROXY === '1' ? request.headers['x-forwarded-host'] : undefined
+  const proto =
+    (Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto)?.split(',')[0]?.trim() ||
+    'http'
+  const host =
+    (Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost)?.split(',')[0]?.trim() ||
+    request.headers.host ||
+    'localhost'
+  return new Request(`${proto}://${host}${request.url ?? '/'}`, init)
+}
+
+async function handleDevAction(
+  root: string,
+  server: { readonly ssrLoadModule: (path: string) => Promise<unknown> },
+  request: IncomingMessage,
+  response: ServerResponse,
+  pathname: string,
+): Promise<boolean> {
+  const match = /^\/__nexis\/actions\/(.+)\/([^/]+)$/.exec(pathname)
+  if (!match?.[1] || !match[2]) return false
+  const route = match[1]
+  const name = match[2]
+  if (!/^[a-zA-Z0-9_/-]+$/.test(route) || !/^[a-zA-Z0-9_-]+$/.test(name)) return false
+  const module = (await server.ssrLoadModule(`/src/routes/${route}.tsx`)) as {
+    readonly actions?: Readonly<Record<string, ServerAction<unknown, unknown>>>
+  }
+  const action = module.actions?.[name]
+  if (!action) return false
+  const result = await handleActionRequest(await nodeRequest(request), action, {
+    idempotency: devIdempotency,
+  })
+  response.statusCode = result.status
+  result.headers.forEach((value: string, key: string) => response.setHeader(key, value))
+  response.end(Buffer.from(await result.arrayBuffer()))
+  void root
+  return true
 }
 
 export interface DevServer {
@@ -84,9 +139,31 @@ export function nexisSSRPlugin(root: string): Plugin {
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         try {
+          const requestUrl = req.url || '/'
+          const pathname = new URL(requestUrl, 'http://localhost').pathname
+          if (pathname.startsWith('/__nexis/actions/')) {
+            if (await handleDevAction(root, server, req, res, pathname)) return
+          }
+          if (pathname === '/sitemap.xml' || pathname === '/robots.txt') {
+            try {
+              const file = await readFile(join(root, 'dist', 'client', pathname.slice(1)))
+              res.statusCode = 200
+              res.setHeader(
+                'Content-Type',
+                pathname.endsWith('.xml')
+                  ? 'application/xml; charset=utf-8'
+                  : 'text/plain; charset=utf-8',
+              )
+              res.setHeader('Cache-Control', 'no-store')
+              res.end(req.method === 'HEAD' ? undefined : file)
+              return
+            } catch {
+              // Continue through Vite when no generated artifact exists yet.
+            }
+          }
           if (req.method !== 'GET' && req.method !== 'HEAD') return next()
+
           const url = req.url || '/'
-          const pathname = new URL(url, 'http://localhost').pathname
           const accept = req.headers.accept || ''
 
           const isHtmlRequest =
@@ -135,14 +212,25 @@ export function nexisSSRPlugin(root: string): Plugin {
             return next(err)
           }
 
-          const seo = routeModule.seo as { title?: string; description?: string } | undefined
+          const rawSeo = routeModule.seo as unknown
+          const resolvedSeo = typeof rawSeo === 'function' ? rawSeo({ pathname }) : rawSeo
+          const seo =
+            resolvedSeo && typeof resolvedSeo === 'object'
+              ? withCanonical(
+                  resolvedSeo as any,
+                  pathname,
+                  process.env.NEXIS_SITE_ORIGIN ?? 'https://nexis-showcase.example',
+                )
+              : resolvedSeo
           const head = (() => {
             try {
-              if (seo?.title) return renderHead(seo as any)
+              if (seo && typeof seo === 'object' && 'title' in seo && seo.title)
+                return renderHead(seo as any)
             } catch {
               // Fall through to the escaped title fallback.
             }
-            if (seo?.title) return `<title>${escapeHtml(seo.title)}</title>`
+            if (seo && typeof seo === 'object' && 'title' in seo && seo.title)
+              return `<title>${escapeHtml(String(seo.title))}</title>`
             return '<title>Nexis App</title>'
           })()
 

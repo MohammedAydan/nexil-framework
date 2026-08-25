@@ -2,8 +2,19 @@ import { describe, expect, it } from 'vitest'
 import {
   createHandlerReference,
   createResumeAttribute,
+  createScopeId,
+  createScopeRegistry,
+  deserializeScopeRefs,
+  disposeScope,
+  getScopeRegistry,
+  inspectScope,
+  registerScopeAction,
+  registerScopeSignal,
+  registerScopeStore,
+  resolveScopeRefs,
   deserializeResumeState,
   serializeResumeState,
+  serializeScopeRefs,
 } from './index'
 
 describe('resumability payloads', () => {
@@ -46,5 +57,50 @@ describe('handler references', () => {
     expect(() => createResumeAttribute('c:1', { chunk: 'chunk.js', exportName: 'run' })).toThrow(
       /boundary/,
     )
+  })
+})
+
+describe('ScopeRef ABI', () => {
+  it('round-trips tagged value, signal, store, action, and unsupported references', () => {
+    const payload = serializeScopeRefs({
+      value: { kind: 'value', data: { mode: 'deep-sea' } },
+      signal: { kind: 'signal', id: 'nx:signal:one', initial: 1 },
+      store: { kind: 'store', id: 'nx:store:one', initial: { count: 1 } },
+      action: { kind: 'action', id: 'nx:action:one', endpoint: '/__nexis/actions/labs/submit' },
+      unsupported: { kind: 'unsupported', reason: 'class instance' },
+    })
+    expect(deserializeScopeRefs(payload)).toMatchObject({
+      signal: { kind: 'signal', id: 'nx:signal:one' },
+      store: { kind: 'store', id: 'nx:store:one' },
+    })
+    expect(resolveScopeRefs(deserializeScopeRefs(payload)).value).toEqual({ mode: 'deep-sea' })
+  })
+
+  it('supports live signal/store mutation and stable registry disposal', () => {
+    const id = createScopeId('signal', 'client-test-signal')
+    const signal = registerScopeSignal<number>(id, 1)
+    signal.set((value) => value + 1)
+    expect(signal()).toBe(2)
+    const store = registerScopeStore('nx:store:client-test', { count: 1 })
+    store.set({ count: 2 })
+    expect(store.snapshot()).toEqual({ count: 2 })
+    expect(inspectScope().some((entry) => entry.id === id && entry.kind === 'signal')).toBe(true)
+    expect(disposeScope(id)).toBe(true)
+    expect(getScopeRegistry().dispose('nx:store:client-test')).toBe(true)
+  })
+
+  it('supports action references and rejects unsupported plain values', async () => {
+    const action = async (input: { name: string }) => `queued:${input.name}`
+    registerScopeAction('nx:action:client-test', action)
+    expect(
+      resolveScopeRefs({
+        action: { kind: 'action', id: 'nx:action:client-test', endpoint: '/action' },
+      }).action,
+    ).toBe(action)
+    expect(() => serializeScopeRefs({ bad: { kind: 'unsupported', reason: '' } })).toThrow(/reason/)
+    expect(() => createScopeRegistry().register('bad', () => undefined, 'signal')).toThrow(
+      /callable signals/,
+    )
+    await expect(action({ name: 'Ada' })).resolves.toBe('queued:Ada')
   })
 })

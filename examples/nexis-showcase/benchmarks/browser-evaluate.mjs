@@ -35,13 +35,22 @@ await check(
   'Home exposes no hydration root script',
   async () => !(await page.content()).includes('react-dom'),
 )
-await check('Signal interaction updates without hydration', async () => {
+await check('Signal interaction updates through a live ScopeRef', async () => {
   const button = page.locator('#signal-button')
   const before = await button.textContent()
   await button.click()
   await page.waitForTimeout(350)
   const after = await button.textContent()
   return before !== after && after.includes('Signal acknowledged')
+})
+await page.goto('http://localhost:5173/labs', { waitUntil: 'networkidle' })
+await check('Labs action performs a real POST round-trip', async () => {
+  await page.locator('#action-name').fill('Ada')
+  await page.locator('#action-form button[type="submit"]').click()
+  await page.waitForFunction(() =>
+    document.querySelector('#action-output')?.textContent?.includes('queued:Ada'),
+  )
+  return (await page.locator('#action-output').textContent()) === 'Action result: queued:Ada'
 })
 for (const path of [
   '/features',

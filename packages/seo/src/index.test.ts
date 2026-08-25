@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { buildRobots, buildSitemap, normalizeSeo, renderHead } from './index'
+import {
+  buildRobots,
+  buildSitemap,
+  deriveBreadcrumbList,
+  generateAtomFeed,
+  generateFeed,
+  deriveCanonical,
+  normalizeSeo,
+  renderHead,
+  validateJsonLd,
+  withCanonical,
+} from './index'
 
 describe('SEO metadata', () => {
   it('requires a non-empty title', () => {
@@ -41,10 +52,18 @@ describe('SEO metadata', () => {
 })
 
 describe('SEO outputs', () => {
-  it('builds a sitemap with validated priorities', () => {
-    expect(buildSitemap([{ url: 'https://example.test/', priority: 1 }])).toContain(
-      '<priority>1.0</priority>',
-    )
+  it('builds a sitemap with validated priorities, alternates, and images', () => {
+    const sitemap = buildSitemap([
+      {
+        url: 'https://example.test/',
+        priority: 1,
+        alternates: [{ hrefLang: 'en-US', href: 'https://example.test/' }],
+        images: ['https://example.test/hero.png'],
+      },
+    ])
+    expect(sitemap).toContain('<priority>1.0</priority>')
+    expect(sitemap).toContain('hreflang="en-US"')
+    expect(sitemap).toContain('<image:loc>https://example.test/hero.png</image:loc>')
     expect(() => buildSitemap([{ url: 'https://example.test/', priority: 2 }])).toThrow(
       /between 0 and 1/,
     )
@@ -52,6 +71,14 @@ describe('SEO outputs', () => {
     expect(() => buildSitemap([{ url: 'https://example.test/', priority: Number.NaN }])).toThrow(
       /between 0 and 1/,
     )
+    expect(() =>
+      buildSitemap([
+        {
+          url: 'https://example.test/',
+          alternates: [{ hrefLang: 'bad tag', href: 'https://example.test/' }],
+        },
+      ]),
+    ).toThrow(/BCP-47/)
   })
 
   it('builds robots output with sitemap and disallow rules', () => {
@@ -61,5 +88,79 @@ describe('SEO outputs', () => {
     expect(() => buildRobots('https://example.test/sitemap.xml', ['/admin\nAllow: /'])).toThrow(
       /newlines/,
     )
+  })
+})
+
+describe('SEO validation helpers', () => {
+  it('generates escaped RSS and Atom feeds with stable identifiers', () => {
+    const item = {
+      title: 'A <story>',
+      link: 'https://example.test/docs/a',
+      description: 'Safe & useful',
+      pubDate: '2026-01-02T03:04:05Z',
+    }
+    const rss = generateFeed([item], {
+      title: 'Nexis',
+      link: 'https://example.test/',
+      description: 'Updates',
+      feedUrl: 'https://example.test/feed.xml',
+      updated: '2026-01-02T03:04:05Z',
+    })
+    expect(rss).toContain('<rss version="2.0"')
+    expect(rss).toContain('&lt;story&gt;')
+    expect(rss).toContain('isPermaLink="true"')
+    expect(
+      generateAtomFeed([item], {
+        title: 'Nexis',
+        link: 'https://example.test/',
+        description: 'Updates',
+      }),
+    ).toContain('<feed xmlns="http://www.w3.org/2005/Atom">')
+  })
+
+  it('derives nested BreadcrumbList JSON-LD', () => {
+    const breadcrumb = deriveBreadcrumbList('/docs/architecture', 'https://example.test')
+    expect(breadcrumb).toMatchObject({ '@type': 'BreadcrumbList' })
+    expect(breadcrumb.itemListElement).toHaveLength(3)
+  })
+
+  it('checks required Article properties without weakening existing types', () => {
+    expect(
+      validateJsonLd({ '@context': 'https://schema.org', '@type': 'Article', name: 'Post' }),
+    ).toMatchObject({ valid: false })
+    expect(
+      validateJsonLd({
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        name: 'Post',
+        headline: 'Post',
+        datePublished: '2026-01-02',
+      }),
+    ).toEqual({ valid: true, errors: [] })
+  })
+
+  it('derives canonical URLs from the resolved route path and preserves overrides', () => {
+    expect(deriveCanonical('https://example.test', '/docs/architecture')).toBe(
+      'https://example.test/docs/architecture',
+    )
+    expect(
+      withCanonical({ title: 'Docs' }, '/docs/architecture', 'https://example.test').canonical,
+    ).toBe('https://example.test/docs/architecture')
+    expect(
+      withCanonical(
+        { title: 'Docs', canonical: 'https://override.test/docs' },
+        '/docs/architecture',
+        'https://example.test',
+      ).canonical,
+    ).toBe('https://override.test/docs')
+  })
+
+  it('validates supported schema.org JSON-LD types and rejects malformed documents', () => {
+    expect(
+      validateJsonLd({ '@context': 'https://schema.org', '@type': 'TechArticle', name: 'Docs' }),
+    ).toEqual({ valid: true, errors: [] })
+    expect(
+      validateJsonLd({ '@context': 'https://schema.org', '@type': 'Unknown', name: '' }),
+    ).toMatchObject({ valid: false })
   })
 })

@@ -22,7 +22,7 @@ export function createStore<T extends Serializable>(
   if (!isSerializable(initial))
     throw new TypeError('Nexis store initial state must be serializable.')
   const signal = state(initial)
-  const selectors = new Set<Unsubscribe>()
+  const selectors = new Set<ReadableSignal<unknown>>()
   let disposed = false
 
   const assertActive = () => {
@@ -45,7 +45,7 @@ export function createStore<T extends Serializable>(
     select: <Selected>(selector: (value: T) => Selected) => {
       assertActive()
       const selected = computed(() => selector(signal()))
-      selectors.add(selected.subscribe(() => undefined))
+      selectors.add(selected as ReadableSignal<unknown>)
       return selected
     },
     subscribe: (listener) => {
@@ -55,8 +55,9 @@ export function createStore<T extends Serializable>(
     dispose: () => {
       if (disposed) return
       disposed = true
-      for (const unsubscribe of selectors) unsubscribe()
+      for (const selected of selectors) selected.dispose()
       selectors.clear()
+      signal.dispose()
     },
   }
   return store

@@ -6,6 +6,8 @@
     "@mohammedaydan/compiler": "workspace:*",
     "@mohammedaydan/dev-server": "workspace:*",
     "@mohammedaydan/renderer": "workspace:*",
+    "@mohammedaydan/og-image": "workspace:*",
+    "@mohammedaydan/serve": "workspace:*",
     "@mohammedaydan/router": "workspace:*",
     "@mohammedaydan/seo": "workspace:*",
     "@mohammedaydan/vite-plugin": "workspace:*",
