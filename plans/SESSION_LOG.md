@@ -1,6 +1,6 @@
-# Session Log
+﻿# Session Log
 
-## Session: 2026-08-25 ~01:30–03:00 (local) — v2.0.0 GA
+## Session: 2026-08-25 ~01:30â€“03:00 (local) â€” v2.0.0 GA
 
 ### What was done
 
@@ -19,9 +19,9 @@
   module so the spec never loads vite under Deno.
 - All 18 public packages bumped to 2.0.0 (ADR-006); tag v2.0.0 pushed;
   Publish packages workflow completed SUCCESS on first live run.
-- External consumer validation at 2.0.0: dlx scaffold → install (all five deps
-  resolve at 2.0.0) → build → check:budget → start serves 200 (+bootstrap).
-  create-nexis-app alias form verified via pnpm dlx --package=…
+- External consumer validation at 2.0.0: dlx scaffold â†’ install (all five deps
+  resolve at 2.0.0) â†’ build â†’ check:budget â†’ start serves 200 (+bootstrap).
+  create-nexis-app alias form verified via pnpm dlx --package=â€¦
 
 ### Incident notes
 
@@ -37,16 +37,16 @@
 - Next: none blocking; optional follow-up = route HTML emission in build
   (documented roadmap in README limitations discussion).
 
-## Session: 2026-08-25 ~00:20–01:30 (local)
+## Session: 2026-08-25 ~00:20â€“01:30 (local)
 
 ### What was done
 
-- Fixed Windows path bugs: `tests/e2e/build-basic-app.mjs` (`new URL().pathname` →
-  `fileURLToPath`) and `tests/e2e/serve.mjs` (forward-slash containment checks →
+- Fixed Windows path bugs: `tests/e2e/build-basic-app.mjs` (`new URL().pathname` â†’
+  `fileURLToPath`) and `tests/e2e/serve.mjs` (forward-slash containment checks â†’
   `path.relative`). E2E suite went from webServer-timeout to 6/6 passing.
 - Full local gate green on Windows PowerShell: build, typecheck, lint,
   80 unit/integration tests, 6 Playwright e2e, node + miniflare smokes.
-  Deno smoke unavailable (Deno not installed) — environment limitation.
+  Deno smoke unavailable (Deno not installed) â€” environment limitation.
 - Publishing readiness:
   - Recursive publish filter never matched in npm scripts on Windows
     (single quotes not stripped by cmd). Replaced with `pnpm -C packages publish -r`.
@@ -59,8 +59,8 @@
 - Scaffold improvements (both cli and create-nexis copies): standalone apps now get
   `pnpm.onlyBuiltDependencies` and a `start` script.
 - End-to-end consumer validation outside the repo via
-  `pnpm dlx @mohammedaydan/create-nexis@latest`: scaffold → install → build → dev (HTTP 200)
-  → start (HTTP 200); no workspace/local leaks in package.json or pnpm-lock.yaml.
+  `pnpm dlx @mohammedaydan/create-nexis@latest`: scaffold â†’ install â†’ build â†’ dev (HTTP 200)
+  â†’ start (HTTP 200); no workspace/local leaks in package.json or pnpm-lock.yaml.
 - New tag-driven `.github/workflows/publish-packages.yml` with gates and tarball validation.
 - SECURITY.md: credential handling + compromised-token revocation policy.
 - Prettier-normalized repository (format gate was failing before this session).
@@ -68,7 +68,7 @@
 
 ### Decisions made
 
-- create-nexis-app superseded by create-nexis (ADR-002) — private, kept for reference.
+- create-nexis-app superseded by create-nexis (ADR-002) â€” private, kept for reference.
 - Project .npmrc carries scope routing only; tokens stay user-level/env (ADR-003).
 - Tag-driven releases instead of per-push publishing (ADR-004).
 - Bumped cli/create-nexis to 0.1.2 rather than re-publishing immutable versions.
@@ -79,7 +79,7 @@ See commits 17472bb, ba58a88, efbd72d, 6092bd2 (pushed to origin/main).
 
 ### State at end of session
 
-- Active feature: windows-build-publish — COMPLETE except GitHub-side visibility flip.
+- Active feature: windows-build-publish â€” COMPLETE except GitHub-side visibility flip.
 - Last completed task: push + quality CI run triggered on 6092bd2.
 - Next task: manual one-time visibility change of the 18 GitHub Packages to public
   (no API exists for user-owned npm packages; UI-only).
@@ -88,6 +88,37 @@ See commits 17472bb, ba58a88, efbd72d, 6092bd2 (pushed to origin/main).
 ### Resume instructions
 
 Verify quality.yml finished green for 6092bd2. If the user has flipped package
-visibility to public, re-test anonymous `npm view` (still expect 401 — GitHub Packages
+visibility to public, re-test anonymous `npm view` (still expect 401 â€” GitHub Packages
 npm always requires auth; visibility only affects who can install with their own token).
 For a release: bump package versions, tag `v<version>`, push tag.
+
+## Session: 2026-08-25 ~02:00-04:00 (local) - Ghost Static File Bypass Remediation
+
+### What was done
+
+- Root-caused the bypass: scaffold index.html carried a full pre-baked page;
+  dev used bare Vite (no route handling); build copied that HTML verbatim.
+  Renderer/jsx-runtime/signals/resumability never executed.
+- Implemented nexisSSRPlugin in dev-server (router match -> ssrLoadModule ->
+  renderToString -> renderHead -> bootstrap injection); wired into `nexis dev`.
+- nexis build now executes the same SSR engine and prerenders per-route HTML
+  to dist/client/<route>/index.html (+ mirrored dist roots).
+- core re-exports component/state/computed/batch; jsx-dev-runtime with jsxDEV
+  added to core + jsx-runtime (Vite SSR dev transform requirement).
+- Chunk hashes normalized across transform/build contexts (root cause of a
+  404-on-click: HTML referenced a hash that was never emitted).
+- Templates reduced to outlet-only shells; scaffold route uses component/state.
+- clean scripts now also remove tsconfig.tsbuildinfo (ADR-008) after composite
+  tsc silently skipped emit on stale buildinfo.
+- engine-proof e2e suite added (real app scaffold -> build -> prerender assert
+  -> preview -> click resume 0->1->2); full suite 9/9 green.
+- All public packages bumped to 2.1.0; tag v2.1.0 pushed; publish workflow ran.
+
+### Decisions
+
+- ADR-007: routes are engine-rendered; index.html is a pure shell (outlets only)
+- ADR-008: composite clean must remove tsbuildinfo
+
+### State at end of session
+
+- main HEAD = SSR remediation commit; tag v2.1.0 -> publish workflow in flight
