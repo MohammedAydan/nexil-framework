@@ -79,21 +79,27 @@ Signals are callable, expose `get()` and readonly `value`, and provide `set`, `s
 
 ## Server and data
 
-| API                                         | Purpose                            |
-| ------------------------------------------- | ---------------------------------- |
-| `createProductionServer(root, options)`     | Start the official Node server     |
-| `createProductionMiddleware(root, options)` | Create embeddable middleware       |
-| `createSecurityHeaders(nonce?)`             | Create security headers            |
-| `serializeCookie(name, value, options)`     | Serialize a cookie safely          |
-| `createDataContext(request)`                | Create request-scoped data context |
-| `defineLoader(loader)`                      | Create a typed request loader      |
-| `parseCookies(requestOrHeader)`             | Decode request cookies safely      |
-| `getCookie(request, name)`                  | Read one decoded cookie            |
-| `notFound(message?)`                        | Create a 404 response              |
+| API                                     | Purpose                                           |
+| --------------------------------------- | ------------------------------------------------- |
+| `createServer(root, options)`           | Start the official Node server                    |
+| `createMiddleware(root, options)`       | Create embeddable route middleware                |
+| `composeMiddleware(...handlers)`        | Compose application and Nexis handlers in order   |
+| `defineConfig(config)`                  | Define optional typed Nexis project configuration |
+| `createSecurityHeaders(nonce?)`         | Create security headers                           |
+| `serializeCookie(name, value, options)` | Serialize a cookie safely                         |
+| `createDataContext(request)`            | Create request-scoped data context                |
+| `defineLoader(loader)`                  | Create a typed request loader                     |
+| `parseCookies(requestOrHeader)`         | Decode request cookies safely                     |
+| `getCookie(request, name)`              | Read one decoded cookie                           |
+| `notFound(message?)`                    | Create a 404 response                             |
 
 ## Actions
 
 `@mohammedaydan/actions` provides `action`, `assertTrustedOrigin`, typed action responses, request parsing, validation, endpoint options, and `createMemoryIdempotencyStore`. Use the durable-store contract for distributed production.
+
+## Security
+
+`@mohammedaydan/security` provides `createSession`, `hasRole`, `requireRole`, `hasPermission`, `requirePermission`, and `requireAccess`. It supplies framework-level session and policy primitives while applications continue to own identity providers, credential verification, session persistence, RBAC data, and audit records.
 
 ## Vite plugin and Client
 
@@ -151,4 +157,4 @@ It resolves a registered `nx:signal:<id>` or `nx:store:<id>` reference, installs
 
 ## CLI
 
-The CLI discovers routes, recursively composes `_layout.*` modules, loads configuration, builds HTML and assets, generates feeds, sitemap, robots, redirect manifests, and OG cards, and writes the manifest. It also provides `preview`, safe generators, `doctor`, `test`, and `upgrade` commands. Prefer CLI commands and documented configuration over importing internal build helpers from application code.
+The CLI discovers routes, recursively composes `_layout.*` modules, loads optional configuration, builds HTML and copies public assets, generates feeds, sitemap, robots, redirect manifests, and OG cards, and writes the manifest. `start` serves the artifact through the official production server; `preview` and `serve` are compatibility aliases. Prefer CLI commands and documented configuration over importing internal build helpers from application code.

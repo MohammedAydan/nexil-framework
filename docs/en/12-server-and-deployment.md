@@ -20,12 +20,21 @@ pnpm build
 
 Check for `dist/client/index.html`, `nexis-manifest.json`, and `nexis-bootstrap.js` when interactive routes exist. Also check `sitemap.xml`, `robots.txt`, `feed.xml`, and `atom.xml`.
 
+For the standard Node path, the build is immediately runnable. No custom server file or configuration file is required:
+
+```bash
+pnpm build
+pnpm start
+```
+
+`NEXIS_HOST` and `NEXIS_PORT` override the default production host and port. Set `NEXIS_SITE_ORIGIN` during the production build, or use `app.origin` in an optional typed `nexis.config.ts`, when canonical metadata and feeds need the real public origin.
+
 ## Node production server
 
 ```ts
-import { createProductionServer } from '@mohammedaydan/serve'
+import { createServer } from '@mohammedaydan/serve'
 
-const app = createProductionServer('./dist/client', {
+const app = createServer('./dist/client', {
   host: process.env.HOST ?? '0.0.0.0',
   port: Number(process.env.PORT ?? 3000),
   redirects: [{ from: '/docs', to: '/docs/architecture', status: 308 }],
@@ -35,6 +44,21 @@ await app.listen()
 ```
 
 The official server implements route mapping, 404, 405, HEAD, MIME types, cache headers, traversal rejection, action delegation, and an optional telemetry receiver.
+
+For application-specific request work, compose clear middleware before Nexis route handling:
+
+```ts
+import { composeMiddleware, createMiddleware } from '@mohammedaydan/serve'
+
+const handler = composeMiddleware(
+  requestId,
+  resolveSession,
+  rateLimit,
+  createMiddleware('./dist/client'),
+)
+```
+
+Middleware is the correct layer for request IDs, session resolution, rate limits, and private route guards. Authorization for a particular mutation still belongs in the Action that owns that mutation.
 
 ## Deno
 
@@ -95,7 +119,7 @@ RUN corepack enable && pnpm install --frozen-lockfile
 COPY . .
 RUN pnpm build
 EXPOSE 3000
-CMD ["node", "server.mjs"]
+CMD ["pnpm", "start"]
 ```
 
 Use a non-root user, a read-only filesystem when possible, and explicit memory and CPU limits. Never bake secrets into the image.

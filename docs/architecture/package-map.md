@@ -10,6 +10,7 @@ shared -> core -> reactivity
 shared -> core -> renderer
 core -> router -> compiler -> cli
 core -> server -> actions
+core -> server -> security
 core -> seo -> renderer
 core -> media -> compiler
 renderer -> adapters
@@ -32,6 +33,7 @@ compiler -> dev-server -> cli
 | `media`       | active         | dimension-safe image and local font contracts                |
 | `css`         | active         | deterministic compile-time style extraction                  |
 | `actions`     | active         | validation, authorization, origin and idempotency primitives |
+| `security`    | active         | storage-agnostic sessions and authorization guards           |
 | `state`       | active         | scoped stores, selectors, snapshots, lifecycle               |
 | `dev-server`  | planned        | HMR and development diagnostics                              |
 | `cli`         | planned        | create, dev, build, start, check, analyze, routes            |

@@ -413,23 +413,23 @@ export default function Contact() {
 
 The installed `nexis` binary and repository scripts expose the framework workflow:
 
-| Command                           | Purpose                                                                                             |
-| --------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `nexis dev`                       | Run the Vite development server with Nexis SSR middleware and hot updates                           |
-| `nexis build`                     | Build route HTML, server modules, assets, lazy chunks, runtimes, feeds, redirects, and the manifest |
-| `nexis start`                     | Serve a production build locally                                                                    |
-| `nexis serve`                     | Serve built client output with route-aware production behavior                                      |
-| `nexis check --budget`            | Run build and byte-budget checks                                                                    |
-| `nexis analyze`                   | Report route output and client-size metrics                                                         |
-| `nexis routes`                    | List discovered route files                                                                         |
-| `nexis create <name>`             | Scaffold an application                                                                             |
-| `nexis preview`                   | Preview the production build                                                                        |
-| `nexis generate route <path>`     | Generate a route safely                                                                             |
-| `nexis generate component <name>` | Generate a component safely                                                                         |
-| `nexis add action <name>`         | Generate a server action scaffold                                                                   |
-| `nexis doctor`                    | Diagnose package, shell, and route configuration                                                    |
-| `nexis test`                      | Run the integrated test workflow                                                                    |
-| `nexis upgrade`                   | Scan for upgrade and migration work                                                                 |
+| Command                           | Purpose                                                                                                          |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `nexis dev`                       | Run the Vite development server with Nexis SSR middleware and hot updates                                        |
+| `nexis build`                     | Build route HTML, server modules, assets, lazy chunks, runtimes, feeds, redirects, manifest, and `public/` files |
+| `nexis start`                     | Serve the built artifact with route-aware Nexis production behavior                                              |
+| `nexis serve`                     | Compatibility alias for `nexis start`                                                                            |
+| `nexis check --budget`            | Run build and byte-budget checks                                                                                 |
+| `nexis analyze`                   | Report route output and client-size metrics                                                                      |
+| `nexis routes`                    | List discovered route files                                                                                      |
+| `nexis create <name>`             | Scaffold an application                                                                                          |
+| `nexis preview`                   | Compatibility alias for `nexis start`                                                                            |
+| `nexis generate route <path>`     | Generate a route safely                                                                                          |
+| `nexis generate component <name>` | Generate a component safely                                                                                      |
+| `nexis add action <name>`         | Generate a server action scaffold                                                                                |
+| `nexis doctor`                    | Diagnose package, shell, and route configuration                                                                 |
+| `nexis test`                      | Run the integrated test workflow                                                                                 |
+| `nexis upgrade`                   | Scan for upgrade and migration work                                                                              |
 
 A production build commonly contains:
 
@@ -453,6 +453,16 @@ dist/
 
 Exact generated files depend on the route inventory and configuration. Treat `nexis-manifest.json` and the build output as the source of truth for a particular release.
 
+A generated project needs no configuration for the standard lifecycle:
+
+```bash
+pnpm dev
+pnpm build
+pnpm start
+```
+
+Use an optional typed `nexis.config.ts` with `defineConfig` from `@mohammedaydan/serve` only to override defaults such as the public origin, port, redirects, feed metadata, cache controls, or Action policy.
+
 ## Package map
 
 | Package                           | Responsibility                                                                                      |
@@ -470,6 +480,7 @@ Exact generated files depend on the route inventory and configuration. Treat `ne
 | `@mohammedaydan/media`            | Image variants, responsive markup, fonts, and media caching                                         |
 | `@mohammedaydan/actions`          | Typed server Actions, validation, Origin checks, cookies, and idempotency                           |
 | `@mohammedaydan/server`           | Server composition and request-scoped data helpers                                                  |
+| `@mohammedaydan/security`         | Session, role, permission, and resource-policy primitives with application-owned storage            |
 | `@mohammedaydan/adapters`         | Node, Deno, Cloudflare, and Fetch adapter contracts                                                 |
 | `@mohammedaydan/serve`            | Node production server and middleware                                                               |
 | `@mohammedaydan/serve-deno`       | Deno edge handler package                                                                           |

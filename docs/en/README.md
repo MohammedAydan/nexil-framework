@@ -6,31 +6,32 @@ This directory contains the complete English documentation for Nexis Framework `
 
 ## Start here
 
-| Goal                                           | Recommended document                                                         |
-| ---------------------------------------------- | ---------------------------------------------------------------------------- |
-| Understand the framework quickly               | [01-overview.md](./01-overview.md)                                           |
-| Understand the internal architecture           | [02-architecture-and-how-it-works.md](./02-architecture-and-how-it-works.md) |
-| Create an application with the current release | [03-project-creation.md](./03-project-creation.md)                           |
-| Write pages and components                     | [04-pages-and-components.md](./04-pages-and-components.md)                   |
-| Understand routing and rendering               | [05-routing-and-rendering.md](./05-routing-and-rendering.md)                 |
-| Add resumable interaction                      | [06-interactivity-and-scoperef.md](./06-interactivity-and-scoperef.md)       |
-| Manage state and reactivity                    | [07-state-and-reactivity.md](./07-state-and-reactivity.md)                   |
-| Build secure actions and forms                 | [08-actions-and-forms.md](./08-actions-and-forms.md)                         |
-| Write CSS and use Tailwind                     | [09-css-and-styling.md](./09-css-and-styling.md)                             |
-| Optimize images and media                      | [10-media-and-images.md](./10-media-and-images.md)                           |
-| Implement SEO and metadata                     | [11-seo-and-metadata.md](./11-seo-and-metadata.md)                           |
-| Deploy the framework                           | [12-server-and-deployment.md](./12-server-and-deployment.md)                 |
-| Test and measure performance                   | [13-testing-and-performance.md](./13-testing-and-performance.md)             |
-| Apply production security                      | [14-security-and-operations.md](./14-security-and-operations.md)             |
-| Find an API quickly                            | [15-api-reference.md](./15-api-reference.md)                                 |
-| Diagnose common failures                       | [16-troubleshooting.md](./16-troubleshooting.md)                             |
-| Follow recommended practices                   | [17-best-practices.md](./17-best-practices.md)                               |
-| Build a complete example                       | [18-complete-example.md](./18-complete-example.md)                           |
-| Upgrade between releases                       | [19-releases-and-upgrades.md](./19-releases-and-upgrades.md)                 |
-| Use the CLI and configuration                  | [20-cli-and-configuration.md](./20-cli-and-configuration.md)                 |
-| Contribute to the framework                    | [21-contributing.md](./21-contributing.md)                                   |
-| Learn the terminology                          | [22-glossary.md](./22-glossary.md)                                           |
-| Read the v1.1.0 release and migration guide    | [v1.1.0 release notes](../releases/v1.1.0.md)                                |
+| Goal                                           | Recommended document                                                                           |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Understand the framework quickly               | [01-overview.md](./01-overview.md)                                                             |
+| Understand the internal architecture           | [02-architecture-and-how-it-works.md](./02-architecture-and-how-it-works.md)                   |
+| Create an application with the current release | [03-project-creation.md](./03-project-creation.md)                                             |
+| Write pages and components                     | [04-pages-and-components.md](./04-pages-and-components.md)                                     |
+| Understand routing and rendering               | [05-routing-and-rendering.md](./05-routing-and-rendering.md)                                   |
+| Add resumable interaction                      | [06-interactivity-and-scoperef.md](./06-interactivity-and-scoperef.md)                         |
+| Manage state and reactivity                    | [07-state-and-reactivity.md](./07-state-and-reactivity.md)                                     |
+| Build secure actions and forms                 | [08-actions-and-forms.md](./08-actions-and-forms.md)                                           |
+| Write CSS and use Tailwind                     | [09-css-and-styling.md](./09-css-and-styling.md)                                               |
+| Optimize images and media                      | [10-media-and-images.md](./10-media-and-images.md)                                             |
+| Implement SEO and metadata                     | [11-seo-and-metadata.md](./11-seo-and-metadata.md)                                             |
+| Deploy the framework                           | [12-server-and-deployment.md](./12-server-and-deployment.md)                                   |
+| Test and measure performance                   | [13-testing-and-performance.md](./13-testing-and-performance.md)                               |
+| Apply production security                      | [14-security-and-operations.md](./14-security-and-operations.md)                               |
+| Find an API quickly                            | [15-api-reference.md](./15-api-reference.md)                                                   |
+| Diagnose common failures                       | [16-troubleshooting.md](./16-troubleshooting.md)                                               |
+| Follow recommended practices                   | [17-best-practices.md](./17-best-practices.md)                                                 |
+| Build a complete example                       | [18-complete-example.md](./18-complete-example.md)                                             |
+| Upgrade between releases                       | [19-releases-and-upgrades.md](./19-releases-and-upgrades.md)                                   |
+| Use the CLI and configuration                  | [20-cli-and-configuration.md](./20-cli-and-configuration.md)                                   |
+| Contribute to the framework                    | [21-contributing.md](./21-contributing.md)                                                     |
+| Learn the terminology                          | [22-glossary.md](./22-glossary.md)                                                             |
+| Add sessions, authorization, and middleware    | [23-security-authentication-and-middleware.md](./23-security-authentication-and-middleware.md) |
+| Read the v1.1.0 release and migration guide    | [v1.1.0 release notes](../releases/v1.1.0.md)                                                  |
 
 ## Recommended reading paths
 
@@ -52,6 +53,7 @@ Nexis is an HTML-first TypeScript framework built around SSR/SSG, progressive en
 | DOM binding       | A Signal subscription that updates one text node or scalar property |
 | Action            | A server operation invoked through a typed endpoint                 |
 | Production server | `@mohammedaydan/serve` serving the final build                      |
+| Security package  | `@mohammedaydan/security` session and authorization primitives      |
 | Build artifact    | Generated HTML, CSS, JavaScript, media, and metadata                |
 
 ## Example policy

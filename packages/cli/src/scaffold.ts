@@ -152,6 +152,7 @@ function packageJson(
         '@mohammedaydan/jsx-runtime': dependency('jsx-runtime', '^1.0.0'),
         '@mohammedaydan/media': dependency('media', '^1.0.0'),
         '@mohammedaydan/reactivity': dependency('reactivity', '^1.0.0'),
+        '@mohammedaydan/security': dependency('security', '^1.0.0'),
         '@mohammedaydan/seo': dependency('seo', '^1.0.0'),
         '@mohammedaydan/state': dependency('state', '^1.0.0'),
       },
