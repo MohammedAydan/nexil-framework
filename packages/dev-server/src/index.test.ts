@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { Readable } from 'node:stream'
+import type { IncomingMessage } from 'node:http'
 import { createDevServer, nodeRequest } from './index'
 
 describe('dev server', () => {
@@ -13,7 +15,8 @@ describe('dev server', () => {
 
   it('honors forwarded origin headers only when the proxy is explicitly trusted', async () => {
     const previous = process.env.NEXIS_TRUST_PROXY
-    const request = {
+    const request = Readable.from([]) as IncomingMessage
+    Object.assign(request, {
       headers: {
         host: 'internal.test:5173',
         'x-forwarded-host': 'public.test',
@@ -21,8 +24,7 @@ describe('dev server', () => {
       },
       method: 'POST',
       url: '/__nexis/actions/labs/submit',
-      async *[Symbol.asyncIterator]() {},
-    } as any
+    })
 
     try {
       delete process.env.NEXIS_TRUST_PROXY

@@ -36,6 +36,8 @@ const UNITLESS_PROPERTIES = new Set([
   'strokeOpacity',
   'animationIterationCount',
 ])
+export type DomBindingTarget = 'text' | 'value' | 'checked' | 'disabled' | 'hidden'
+
 const ATTRIBUTE_ALIASES: Readonly<Record<string, string>> = {
   className: 'class',
   htmlFor: 'for',
@@ -122,9 +124,32 @@ function isSafeUrl(value: string): boolean {
   }
 }
 
+export function renderBindingMarker(scopeId: string, target: DomBindingTarget): string {
+  if (!/^nx:(?:signal|store):[A-Za-z0-9_-]+$/.test(scopeId))
+    throw new TypeError('Nexis binding scope id must be a stable signal or store id.')
+  if (!['text', 'value', 'checked', 'disabled', 'hidden'].includes(target))
+    throw new TypeError('Nexis binding target is not supported.')
+  return `data-nx-bind="${escapeHtml(`${scopeId}#${target}`)}"`
+}
+
 function renderAttribute(rawName: string, value: unknown): string {
   const name = normalizeAttributeName(rawName)
   if (!SAFE_ATTRIBUTE.test(name) || EVENT_ATTRIBUTE.test(name)) return ''
+  if (name === 'data-nx-bind') {
+    const serialized = String(value)
+    if (
+      !serialized.split(';').every((part) => {
+        const separator = part.lastIndexOf('#')
+        return (
+          separator > 0 &&
+          /^nx:(?:signal|store):[A-Za-z0-9_-]+$/.test(part.slice(0, separator)) &&
+          ['text', 'value', 'checked', 'disabled', 'hidden'].includes(part.slice(separator + 1))
+        )
+      })
+    )
+      return ''
+    return ` data-nx-bind="${escapeHtml(serialized)}"`
+  }
   if (value === false || value === null || value === undefined) return ''
   if (name === 'style') {
     const style = renderStyle(value)

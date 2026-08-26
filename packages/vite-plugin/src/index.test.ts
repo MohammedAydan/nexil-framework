@@ -172,3 +172,73 @@ export const view = <button onClick$={() => items.set([])}>clear</button>`,
   expect(result.warnings.some((warning) => warning.includes('items'))).toBe(true)
   expect(result.code).not.toContain('data-nx-scope')
 })
+
+it('lowers explicit bindText$ into a ScopeRef DOM binding', async () => {
+  const result = await transformNexisSource(
+    `import { state } from '@mohammedaydan/core'
+const count = state(0)
+export const view = <button bindText$={count} onClick$={() => count.set((value) => value + 1)}>{count()}</button>`,
+    '/app/src/routes/bind-text.tsx',
+  )
+  expect(result.bindings).toEqual([
+    expect.objectContaining({ target: 'text', source: 'count', automatic: false }),
+  ])
+  expect(result.code).not.toContain('bindText$')
+  expect(result.code).toContain('data-nx-bind="nx:signal:')
+  expect(result.code).toContain('#text')
+  expect(result.code).toContain('data-nx-scope=')
+})
+
+it('lowers explicit scalar property bindings and removes authoring-only props', async () => {
+  const result = await transformNexisSource(
+    `import { state } from '@mohammedaydan/core'
+const disabled = state(false)
+export const view = <button bindDisabled$={disabled} disabled={disabled()}>Save</button>`,
+    '/app/src/routes/bind-disabled.tsx',
+  )
+  expect(result.bindings).toEqual([
+    expect.objectContaining({ target: 'disabled', source: 'disabled', automatic: false }),
+  ])
+  expect(result.code).not.toContain('bindDisabled$')
+  expect(result.code).toContain('#disabled')
+})
+
+it('automatically binds a direct Signal child read without a component rerender', async () => {
+  const result = await transformNexisSource(
+    `import { state } from '@mohammedaydan/core'
+const count = state(0)
+export const view = <output>{count()}</output>`,
+    '/app/src/routes/auto-bind.tsx',
+  )
+  expect(result.bindings).toEqual([
+    expect.objectContaining({ target: 'text', source: 'count', automatic: true }),
+  ])
+  expect(result.code).toContain('data-nx-bind="nx:signal:')
+  expect(result.code).toContain('{count()}')
+})
+
+it('does not auto-bind derived or structurally ambiguous JSX expressions', async () => {
+  const result = await transformNexisSource(
+    `import { state } from '@mohammedaydan/core'
+const count = state(0)
+export const view = <output>{count() + ' items'}</output>`,
+    '/app/src/routes/ambiguous-bind.tsx',
+  )
+  expect(result.bindings).toHaveLength(0)
+  expect(result.code).not.toContain('data-nx-bind=')
+  expect(result.warnings.some((warning) => warning.includes('dynamic'))).toBe(true)
+})
+
+it('automatically binds a direct Signal value property read', async () => {
+  const result = await transformNexisSource(
+    `import { state } from '@mohammedaydan/core'
+const disabled = state(false)
+export const view = <button disabled={disabled.value}>{disabled.value ? 'Disabled' : 'Save'}</button>`,
+    '/app/src/routes/auto-value-bind.tsx',
+  )
+  expect(result.bindings).toEqual([
+    expect.objectContaining({ target: 'disabled', source: 'disabled', automatic: true }),
+  ])
+  expect(result.code).toContain('data-nx-bind="nx:signal:')
+  expect(result.code).toContain('#disabled')
+})

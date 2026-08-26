@@ -26,7 +26,6 @@ export default component(() => {
         id="scope-btn"
         onClick$={() => {
           count.set((current) => current + 1)
-          document.getElementById('scope-value').textContent = String(count())
         }}
       >
         increment
@@ -67,6 +66,9 @@ test.beforeAll(async () => {
   }
   if (!/nx:signal:[a-f0-9]+/.test(html)) {
     throw new Error('Build output missing signal scope reference id')
+  }
+  if (!html.includes('data-nx-bind=') || !html.includes('#text')) {
+    throw new Error('Build output missing automatic Signal text binding')
   }
 
   // Budget gate must stay green with the enriched bootstrap.

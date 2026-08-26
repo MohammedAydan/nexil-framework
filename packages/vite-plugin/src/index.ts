@@ -5,12 +5,12 @@ import MagicString from 'magic-string'
 import { transformWithEsbuild } from 'vite'
 import type { Plugin } from 'vite'
 import { findSecretExposure, validateImport } from '@mohammedaydan/compiler'
-import { RESUMABILITY_BOOTSTRAP } from './bootstrap.js'
+import { RESUMABILITY_BINDINGS, RESUMABILITY_BOOTSTRAP } from './bootstrap.js'
 
 const traverse = ((traverseModule as unknown as { default?: typeof traverseModule }).default ??
   traverseModule) as typeof traverseModule
 
-export { RESUMABILITY_BOOTSTRAP }
+export { RESUMABILITY_BINDINGS, RESUMABILITY_BOOTSTRAP }
 
 interface AstNode {
   readonly type?: string
@@ -49,12 +49,23 @@ export interface ScopeCapture {
   readonly endpoint?: string
 }
 
+export type DomBindingTarget = 'text' | 'value' | 'checked' | 'disabled' | 'hidden'
+
+export interface DomBinding {
+  readonly id: string
+  readonly scopeId: string
+  readonly target: DomBindingTarget
+  readonly source: string
+  readonly automatic: boolean
+}
+
 export interface NexisTransformResult {
   readonly code: string
   readonly map: ReturnType<MagicString['generateMap']>
   readonly chunks: readonly LazyChunk[]
   readonly css: readonly string[]
   readonly scopeCaptures: readonly ScopeCapture[]
+  readonly bindings: readonly DomBinding[]
   readonly warnings: readonly string[]
 }
 
@@ -272,6 +283,115 @@ function toJsonAttribute(value: unknown): string {
   return JSON.stringify(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
+function astIdentifierName(node: unknown): string | undefined {
+  if (!node || typeof node !== 'object') return undefined
+  const name = (node as { readonly name?: unknown }).name
+  if (typeof name === 'string') return name
+  if (
+    name &&
+    typeof name === 'object' &&
+    typeof (name as { readonly name?: unknown }).name === 'string'
+  )
+    return (name as { readonly name: string }).name
+  return undefined
+}
+
+function directReactiveIdentifier(expression: AstNode | undefined): string | undefined {
+  const node = expression as
+    | (AstNode & {
+        readonly callee?: AstNode
+        readonly arguments?: readonly unknown[]
+        readonly object?: AstNode
+        readonly property?: AstNode
+        readonly computed?: boolean
+      })
+    | undefined
+  if (
+    node?.type === 'CallExpression' &&
+    node.arguments?.length === 0 &&
+    node.callee?.type === 'Identifier'
+  ) {
+    return astIdentifierName(node.callee)
+  }
+  if (
+    node?.type === 'MemberExpression' &&
+    node.computed !== true &&
+    node.object?.type === 'Identifier' &&
+    node.property?.type === 'Identifier' &&
+    astIdentifierName(node.property) === 'value'
+  ) {
+    return astIdentifierName(node.object)
+  }
+  return undefined
+}
+
+function bindingExpressionIdentifier(expression: AstNode | undefined): string | undefined {
+  return expression?.type === 'Identifier' ? astIdentifierName(expression) : undefined
+}
+
+function identifierNamesInAst(expression: AstNode | undefined): readonly string[] {
+  const names = new Set<string>()
+  walk(expression, (node) => {
+    if (node.type === 'Identifier') {
+      const name = astIdentifierName(node)
+      if (name) names.add(name)
+    }
+  })
+  return [...names]
+}
+
+function bindingInsertionOffset(source: string, end: number): number {
+  return source.slice(Math.max(0, end - 2), end).includes('/') ? end - 2 : end - 1
+}
+
+function hasScopeAttribute(source: string, start: number, end: number): boolean {
+  const openingStart = source.lastIndexOf('<', start)
+  const openingEnd = source.indexOf('>', end)
+  if (openingStart < 0 || openingEnd < 0) return false
+  return /(?:^|\s)data-nx-scope\s*=/.test(source.slice(openingStart, openingEnd + 1))
+}
+
+function mergeScopeAttributes(code: string): string {
+  return code.replace(/<[A-Za-z][^>]*>/g, (tag) => {
+    const matches = [...tag.matchAll(/\sdata-nx-scope="([^"]*)"/g)]
+    if (matches.length < 2) return tag
+    const merged: Record<string, unknown> = {}
+    for (const match of matches) {
+      try {
+        const decoded = JSON.parse(match[1]!.replace(/&quot;/g, '"').replace(/&amp;/g, '&'))
+        if (decoded && typeof decoded === 'object' && !Array.isArray(decoded))
+          Object.assign(merged, decoded)
+      } catch {
+        return tag
+      }
+    }
+    const replacement = ` data-nx-scope="${toJsonAttribute(merged)}"`
+    let output = tag
+    let replaced = false
+    for (const match of matches) {
+      if (!replaced) {
+        output = output.replace(match[0], replacement)
+        replaced = true
+      } else output = output.replace(match[0], '')
+    }
+    return output
+  })
+}
+
+function mergeBindingAttributes(code: string): string {
+  let merged = code
+  let previous = ''
+  while (merged !== previous) {
+    previous = merged
+    merged = merged.replace(
+      /data-nx-bind="([^"]+)"(\s+)data-nx-bind="([^"]+)"/g,
+      (_match, first: string, spacing: string, second: string) =>
+        `data-nx-bind="${first};${second}"${spacing}`,
+    )
+  }
+  return merged
+}
+
 export { classifyScopeCaptures }
 
 function walk(node: unknown, visit: (node: AstNode) => void): void {
@@ -384,6 +504,12 @@ export async function transformNexisSource(
   }> = []
   const css: string[] = []
   const scopeCaptures: ScopeCapture[] = []
+  const bindings: DomBinding[] = []
+  const bindingRanges: Array<{
+    readonly offset: number
+    readonly attribute: string
+  }> = []
+  const bindingAttrRemovals: Array<{ readonly start: number; readonly end: number }> = []
   const warnings: string[] = []
   const magic = new MagicString(source)
 
@@ -396,6 +522,7 @@ export async function transformNexisSource(
     if (
       node.type === 'JSXAttribute' &&
       typeof node.name?.name === 'string' &&
+      node.name.name.startsWith('on') &&
       node.name.name.endsWith('$')
     ) {
       const start = node.start
@@ -425,6 +552,167 @@ export async function transformNexisSource(
       }
       chunkSpecs.push({ fileName, exportName, expressionSource })
       attrRanges.push({ start, end, eventName, specIndex: chunkSpecs.length - 1 })
+    }
+
+    if (node.type === 'JSXOpeningElement') {
+      const opening = node as AstNode & {
+        readonly attributes?: readonly AstNode[]
+      }
+      const attributes = opening.attributes ?? []
+      const explicitBindings = attributes.filter((attribute) => {
+        const name = attribute.name?.name
+        return (
+          typeof name === 'string' && /^bind(?:Text|Value|Checked|Disabled|Hidden)\$$/.test(name)
+        )
+      })
+      const addBinding = (
+        attribute: AstNode,
+        target: DomBindingTarget,
+        sourceName: string,
+        automatic: boolean,
+        removeAttribute: boolean,
+      ): void => {
+        const capture = classifyScopeCaptures(source, [sourceName])[0]
+        const start = attribute.start
+        const end = attribute.end
+        if (!capture || !capture.id || capture.kind === 'unsupported') {
+          warnings.push(
+            `${automatic ? 'Automatic binding' : 'Binding'} for ${sourceName} was skipped because its initial value is not statically resumable.`,
+          )
+          if (removeAttribute && start !== undefined && end !== undefined)
+            bindingAttrRemovals.push({ start, end })
+          return
+        }
+        if (capture.kind !== 'signal' || capture.initial === undefined) {
+          warnings.push(
+            `${automatic ? 'Automatic binding' : 'Binding'} for ${sourceName} only supports Signals with JSON-literal initial values in this release.`,
+          )
+          if (removeAttribute && start !== undefined && end !== undefined)
+            bindingAttrRemovals.push({ start, end })
+          return
+        }
+        const binding: DomBinding = {
+          id: `nx:bind:${hash(`${normalizeIdForHash(id)}:${start ?? 0}:${target}:${automatic ? 'auto' : 'explicit'}`)}`,
+          scopeId: capture.id,
+          target,
+          source: sourceName,
+          automatic,
+        }
+        bindings.push(binding)
+        scopeCaptures.push(capture)
+        if (removeAttribute && start !== undefined && end !== undefined)
+          bindingAttrRemovals.push({ start, end })
+        if (opening.end !== undefined) {
+          const payload = buildScopePayload([capture])
+          bindingRanges.push({
+            offset: bindingInsertionOffset(source, opening.end),
+            attribute: ` data-nx-bind="${capture.id}#${target}"${
+              payload && !hasScopeAttribute(source, opening.start ?? 0, opening.end)
+                ? ` data-nx-scope="${toJsonAttribute(payload)}"`
+                : ''
+            }`,
+          })
+        }
+      }
+      for (const attribute of explicitBindings) {
+        const attributeName = attribute.name?.name
+        if (typeof attributeName !== 'string') continue
+        const target = attributeName
+          .slice(4, -1)
+          .replace(/^[A-Z]/, (letter) => letter.toLowerCase()) as DomBindingTarget
+        const sourceName = bindingExpressionIdentifier(attribute.value?.expression)
+        if (sourceName) addBinding(attribute, target, sourceName, false, true)
+        else if (attribute.start !== undefined && attribute.end !== undefined)
+          bindingAttrRemovals.push({ start: attribute.start, end: attribute.end })
+      }
+      const automaticAttributeTargets: Readonly<Record<string, DomBindingTarget>> = {
+        value: 'value',
+        checked: 'checked',
+        disabled: 'disabled',
+        hidden: 'hidden',
+      }
+      for (const attribute of attributes) {
+        const attributeName = attribute.name?.name
+        if (typeof attributeName !== 'string') continue
+        const target = automaticAttributeTargets[attributeName]
+        const sourceName = target
+          ? directReactiveIdentifier(attribute.value?.expression)
+          : undefined
+        if (
+          target &&
+          sourceName &&
+          !explicitBindings.some(
+            (binding) =>
+              binding.name?.name ===
+              `bind${attributeName[0]!.toUpperCase()}${attributeName.slice(1)}$`,
+          )
+        )
+          addBinding(attribute, target, sourceName, true, false)
+      }
+    }
+
+    if (node.type === 'JSXElement') {
+      const element = node as AstNode & {
+        readonly children?: readonly AstNode[]
+      }
+      const attributes = element.openingElement?.attributes ?? []
+      const hasExplicitTextBinding = attributes.some(
+        (attribute) => attribute.name?.name === 'bindText$',
+      )
+      const children = (element.children ?? []).filter(
+        (child) =>
+          !(child.type === 'JSXText' && /^\\s*$/.test(source.slice(child.start, child.end))),
+      )
+      const child = children.length === 1 ? children[0] : undefined
+      const expression =
+        child?.type === 'JSXExpressionContainer'
+          ? (child as AstNode & { readonly expression?: AstNode }).expression
+          : undefined
+      const sourceName = hasExplicitTextBinding ? undefined : directReactiveIdentifier(expression)
+      const capture = sourceName ? classifyScopeCaptures(source, [sourceName])[0] : undefined
+      if (!sourceName && !hasExplicitTextBinding && expression) {
+        for (const name of identifierNamesInAst(expression)) {
+          const candidate = classifyScopeCaptures(source, [name])[0]
+          if (candidate?.kind === 'signal') {
+            warnings.push(
+              `Automatic binding for ${name} was skipped because the JSX expression is dynamic; use bindText$ for a direct binding.`,
+            )
+          }
+        }
+      }
+      if (sourceName && capture) {
+        if (capture.kind === 'signal' && capture.id && capture.initial !== undefined) {
+          const binding: DomBinding = {
+            id: `nx:bind:${hash(`${normalizeIdForHash(id)}:${child?.start ?? 0}:text`)}`,
+            scopeId: capture.id,
+            target: 'text',
+            source: sourceName,
+            automatic: true,
+          }
+          bindings.push(binding)
+          scopeCaptures.push(capture)
+          if (element.openingElement?.end !== undefined) {
+            const payload = buildScopePayload([capture])
+            bindingRanges.push({
+              offset: bindingInsertionOffset(source, element.openingElement.end),
+              attribute: ` data-nx-bind="${capture.id}#text"${
+                payload &&
+                !hasScopeAttribute(
+                  source,
+                  element.openingElement.start ?? 0,
+                  element.openingElement.end,
+                )
+                  ? ` data-nx-scope="${toJsonAttribute(payload)}"`
+                  : ''
+              }`,
+            })
+          }
+        } else {
+          warnings.push(
+            `Automatic binding for ${sourceName} was skipped because its initial value is not statically resumable.`,
+          )
+        }
+      }
     }
 
     // component$ bodies use the same capture classifier as route components;
@@ -476,25 +764,34 @@ export async function transformNexisSource(
     chunks.push({ fileName, source: source_ })
   }
 
+  // Remove authoring-only binding directives and insert compact SSR binding metadata.
+  for (const removal of bindingAttrRemovals.sort((left, right) => right.start - left.start)) {
+    magic.remove(removal.start, removal.end)
+  }
   // Emit each boundary reference together with its serialized scope payload so
-  // the bootstrap can materialize captured signals/stores/actions on click.
+  // the bootstrap can materialize captured signals/stores/actions before the handler runs.
   for (const range of attrRanges) {
     const spec = chunkSpecs[range.specIndex]
     if (!spec) continue
     const reference = `${spec.fileName}#${spec.exportName}`
     const payload = buildScopePayload(capturesBySpec[range.specIndex] ?? [])
-    const attribute = payload
-      ? `data-nx-on-${range.eventName}="${reference}" data-nx-scope="${toJsonAttribute(payload)}"`
-      : `data-nx-on-${range.eventName}="${reference}"`
+    const attribute =
+      payload && !hasScopeAttribute(source, range.start, range.end)
+        ? `data-nx-on-${range.eventName}="${reference}" data-nx-scope="${toJsonAttribute(payload)}"`
+        : `data-nx-on-${range.eventName}="${reference}"`
     magic.overwrite(range.start, range.end, attribute)
+  }
+  for (const range of bindingRanges) {
+    magic.appendLeft(range.offset, range.attribute)
   }
 
   return {
-    code: mergeEventAttributes(magic.toString()),
+    code: mergeScopeAttributes(mergeBindingAttributes(mergeEventAttributes(magic.toString()))),
     map: magic.generateMap({ hires: true }),
     chunks,
     css: extractStaticCss(source, id),
     scopeCaptures,
+    bindings,
     warnings,
   }
 }
@@ -502,6 +799,7 @@ export async function transformNexisSource(
 export function nexis(options: { readonly root?: string } = {}): Plugin {
   const generatedChunks = new Map<string, string>()
   const generatedCss = new Set<string>()
+  let hasBindings = false
   return {
     name: 'nexis',
     enforce: 'pre',
@@ -515,9 +813,11 @@ export function nexis(options: { readonly root?: string } = {}): Plugin {
       server.middlewares.use((request, response, next) => {
         if (request.method !== 'GET') return next()
         const url = request.url ?? ''
-        if (url === '/nexis-bootstrap.js') {
+        if (url === '/nexis-bootstrap.js' || url === '/nexis-bindings.js') {
           response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' })
-          response.end(RESUMABILITY_BOOTSTRAP)
+          response.end(
+            url === '/nexis-bindings.js' ? RESUMABILITY_BINDINGS : RESUMABILITY_BOOTSTRAP,
+          )
           return
         }
         const match = /^\/nexis-chunks\/([A-Za-z0-9_.-]+\.js)$/.exec(url)
@@ -539,7 +839,14 @@ export function nexis(options: { readonly root?: string } = {}): Plugin {
     async transform(source, id) {
       if (!/\.(tsx|jsx|ts|js)$/.test(id) || id.includes('/node_modules/')) return null
       const result = await transformNexisSource(source, id)
-      for (const chunk of result.chunks) generatedChunks.set(chunk.fileName, chunk.source)
+      hasBindings ||= result.bindings.length > 0
+      for (const chunk of result.chunks) {
+        const minified = await transformWithEsbuild(chunk.source, chunk.fileName, {
+          loader: 'js',
+          minify: true,
+        })
+        generatedChunks.set(chunk.fileName, minified.code)
+      }
       for (const css of result.css) generatedCss.add(css)
       return { code: result.code, map: result.map }
     },
@@ -552,11 +859,18 @@ export function nexis(options: { readonly root?: string } = {}): Plugin {
       for (const [fileName, source] of generatedChunks) {
         this.emitFile({ type: 'asset', fileName: `nexis-chunks/${fileName}`, source })
       }
-      if (generatedChunks.size > 0) {
+      if (generatedChunks.size > 0 || hasBindings) {
         this.emitFile({
           type: 'asset',
           fileName: 'nexis-bootstrap.js',
           source: RESUMABILITY_BOOTSTRAP,
+        })
+      }
+      if (hasBindings) {
+        this.emitFile({
+          type: 'asset',
+          fileName: 'nexis-bindings.js',
+          source: RESUMABILITY_BINDINGS,
         })
       }
       if (generatedCss.size > 0) {

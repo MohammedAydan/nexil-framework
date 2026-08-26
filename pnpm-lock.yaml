@@ -216,6 +216,9 @@ importers:
       '@mohammedaydan/compiler':
         specifier: workspace:*
         version: link:../compiler
+      '@mohammedaydan/core':
+        specifier: workspace:*
+        version: link:../core
       '@mohammedaydan/dev-server':
         specifier: workspace:*
         version: link:../dev-server
@@ -246,6 +249,9 @@ importers:
       '@mohammedaydan/core':
         specifier: workspace:*
         version: link:../core
+      '@mohammedaydan/reactivity':
+        specifier: workspace:*
+        version: link:../reactivity
 
   packages/compiler: {}
 
@@ -273,6 +279,9 @@ importers:
       '@mohammedaydan/adapters':
         specifier: workspace:*
         version: link:../adapters
+      '@mohammedaydan/core':
+        specifier: workspace:*
+        version: link:../core
       '@mohammedaydan/renderer':
         specifier: workspace:*
         version: link:../renderer
