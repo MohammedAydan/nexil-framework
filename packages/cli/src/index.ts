@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
-import { dirname, join, relative, resolve } from 'node:path'
+import { dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { build, createServer, preview, transformWithEsbuild } from 'vite'
 import type { Child } from '@mohammedaydan/core'
@@ -213,7 +213,7 @@ async function scaffoldCliArtifact(root: string, kind: string, name: string): Pr
       `export default function ${componentName}() {\n  return <main><h1>${componentName}</h1></main>\n}\n`,
       'utf8',
     )
-    return relative(root, file)
+    return relative(root, file).split(sep).join('/')
   }
   if (kind === 'component') {
     const file = join(root, 'src', 'components', `${normalized}.${extension}`)
@@ -223,7 +223,7 @@ async function scaffoldCliArtifact(root: string, kind: string, name: string): Pr
       `export interface ${normalized.split('/').at(-1)}Props {\n  children?: unknown\n}\n\nexport function ${normalized.split('/').at(-1)}() {\n  return <div />\n}\n`,
       'utf8',
     )
-    return relative(root, file)
+    return relative(root, file).split(sep).join('/')
   }
   if (kind === 'action') {
     const file = join(root, 'src', 'actions', `${normalized}.ts`)
@@ -233,7 +233,7 @@ async function scaffoldCliArtifact(root: string, kind: string, name: string): Pr
       `import { action } from '@mohammedaydan/actions'\n\nexport const ${normalized.split('/').at(-1)} = action({\n  validate: (input: unknown) => input,\n  async handle(_context, input) {\n    return { input }\n  },\n})\n`,
       'utf8',
     )
-    return relative(root, file)
+    return relative(root, file).split(sep).join('/')
   }
   throw new Error(`Unknown generator kind: ${kind}`)
 }
