@@ -44,6 +44,21 @@ A simple serializable `postId` may be included in scope. A database connection, 
 | `action`      | A reference to a server action                 | Does not send server execution to the browser        |
 | `unsupported` | A capture the compiler cannot transfer         | Produces diagnostics instead of silent serialization |
 
+## Automatic scope serialization
+
+You do not write `data-nx-scope` by hand. When a lazy handler captures a signal,
+store, or action, the compiler serializes the declaration next to the event
+reference so the browser can materialize it on first interaction:
+
+```tsx
+const count = state(0) // ✅ JSON-literal initial — serialized into the page
+const items = state(load()) // ⚠️ unsupported capture diagnostic at build time
+```
+
+Captures require a statically serializable initial value. Multiple handlers
+capturing the same declaration share one live instance in the browser, keyed by
+its scope id.
+
 ## The registry
 
 The client registry exposes operations such as `resolve`, `inspectScope`, `dispose`, and `disposeAll`. Do not keep global references forever; every route or boundary should own a clear lifetime.

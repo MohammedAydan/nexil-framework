@@ -4,7 +4,7 @@ This is a practical map of the public APIs. The installed TypeScript declaration
 
 ## Core
 
-`@mohammedaydan/core` exposes RenderNode, ElementNode, Child, and related rendering types. Use it when implementing low-level renderers or adapters.
+`@mohammedaydan/core` exposes RenderNode, ElementNode, Child, and related rendering types, plus the authoring APIs used by routes: `component`, `text`, `element`, and a full re-export of the reactivity toolkit (`state`, `useState`, `computed`, `effect`, `watch`, `batch`, `untrack`, `createRoot`, `onCleanup`). Import reactive primitives from core or from `@mohammedaydan/reactivity` directly; stores come from `@mohammedaydan/state`, which generated projects depend on by default.
 
 ## Renderer
 
@@ -88,20 +88,26 @@ Signals are callable, expose `get()` and readonly `value`, and provide `set`, `s
 
 ## Vite plugin and Client
 
-| API                                | Purpose                                                             |
-| ---------------------------------- | ------------------------------------------------------------------- |
-| `nexis(options)`                   | Vite plugin                                                         |
-| `transformNexisSource(source, id)` | Analyze source and produce metadata                                 |
-| `classifyScopeCaptures(...)`       | Classify values, signals, stores, actions, and unsupported captures |
-| `serializeResumeState`             | Serialize bounded resume data                                       |
-| `deserializeResumeState`           | Deserialize resume data                                             |
-| `createHandlerReference`           | Create a lazy handler reference                                     |
-| `createScopeRegistry`              | Create a ScopeRef registry                                          |
-| `registerScopeSignal`              | Register a signal reference                                         |
-| `registerScopeStore`               | Register a store reference                                          |
-| `registerScopeAction`              | Register an action reference                                        |
-| `disposeScope`                     | Dispose one registered scope                                        |
-| `inspectScope`                     | Inspect active scope records                                        |
+| API                                 | Purpose                                                             |
+| ----------------------------------- | ------------------------------------------------------------------- |
+| `nexis(options)`                    | Vite plugin                                                         |
+| `transformNexisSource(source, id)`  | Extract lazy chunks and emit per-boundary `data-nx-scope` payloads  |
+| `classifyScopeCaptures(...)`        | Classify values, signals, stores, actions, and unsupported captures |
+| `RESUMABILITY_BOOTSTRAP`            | The delegated resumability runtime served as `nexis-bootstrap.js`   |
+| `bootstrapResumability(root, load)` | Bind boundaries in a DOM root; parity with the shipped bootstrap    |
+| `serializeResumeState`              | Serialize bounded resume data                                       |
+| `deserializeResumeState`            | Deserialize resume data                                             |
+| `createHandlerReference`            | Create a lazy handler reference                                     |
+| `createScopeRegistry`               | Create a ScopeRef registry                                          |
+| `registerScopeSignal`               | Register a signal reference                                         |
+| `registerScopeStore`                | Register a store reference                                          |
+| `registerScopeAction`               | Register an action reference                                        |
+| `disposeScope`                      | Dispose one registered scope                                        |
+| `inspectScope`                      | Inspect active scope records                                        |
+
+Lazy handlers receive `{ element, event, scope }`. Signals, stores, and actions
+captured by a handler are materialized once per scope id and shared across every
+boundary that captures the same declaration.
 
 ## Media
 
