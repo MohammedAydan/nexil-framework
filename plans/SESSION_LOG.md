@@ -151,3 +151,30 @@ For a release: bump package versions, tag `v<version>`, push tag.
   root pnpm install relinked. Note: temp workspaces created inside the
   repo can orphan package symlinks on deletion - reinstall afterwards.
 - Gates green: build/typecheck/test/format. Pushed ffb1b56.
+
+## Session: 2026-08-26 - State management audit and repair
+
+- Audited signals/computed/effect engine, state pkg, client scope registry,
+  vite-plugin capture classifier, and shipped bootstrap against docs/en 06+07.
+- CRITICAL FIX: data-nx-scope was never emitted - handlers closing over
+  state/useState received undefined scope and crashed on first click. The
+  transform now serializes JSON-literal initializers into per-boundary scope
+  payloads; unserializable captures downgrade to unsupported build warnings.
+- useState tuples (both positions) now classify as signal captures.
+- reactivity: removed cleanup hoisting in computed - fixed permanently stale
+  derivations when created inside re-running effects.
+- core: full reactive surface re-exported (effect/watch/untrack/createRoot/
+  onCleanup). Scaffold depends on @mohammedaydan/state for createStore.
+- client: bootstrapResumability parity with shipped bootstrap ({element,event,
+  scope}, unified attrs, registry-cached materialization); register() disposes
+  overwritten entries; minified shim gained value/subscribe.
+- e2e: new state-scope.spec.ts proves lazy resume + persistence in browser
+  (14/14 total). Fixture teardown now restores root symlinks BEFORE deleting
+  temp workspaces; specs serialized (workers:1) to stop install races.
+- Gates: format/build/typecheck/test/lint all green; dev+build paths verified.
+
+### Resume instructions
+
+Registry still holds pre-fix 1.0.0 artifacts; run the refresh cycle when the
+user wants consumers to receive these fixes. plans/state-management-audit/ has
+full task history.

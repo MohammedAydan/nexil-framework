@@ -30,11 +30,23 @@ export interface LazyChunk {
 
 export type ScopeCaptureKind = 'value' | 'signal' | 'store' | 'action' | 'unsupported'
 
+export type ScopeCaptureInitial =
+  | string
+  | number
+  | boolean
+  | null
+  | readonly ScopeCaptureInitial[]
+  | { readonly [key: string]: ScopeCaptureInitial }
+
 export interface ScopeCapture {
   readonly name: string
   readonly kind: ScopeCaptureKind
   readonly id?: string
   readonly reason?: string
+  /** Statically extracted JSON-literal initial value for signal/store captures. */
+  readonly initial?: ScopeCaptureInitial
+  /** Local endpoint for action captures. */
+  readonly endpoint?: string
 }
 
 export interface NexisTransformResult {
@@ -123,30 +135,141 @@ function captureExpression(expressionSource: string): {
   }
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+/**
+ * Extracts a JSON-literal initializer for a named signal/store/action
+ * declaration so the compiled page can serialize it into `data-nx-scope`.
+ * Returns undefined when the initializer is not a pure JSON literal.
+ */
+function extractStaticInitial(source: string, name: string): ScopeCaptureInitial | undefined {
+  const compact = source.replace(/\s+/g, ' ')
+  const namePattern = escapeRegExp(name)
+  const patterns = [
+    `(?:const|let|var) ${namePattern} = (?:state|createStore|computed)\\(`,
+    `(?:const|let|var) \\[\\s*${namePattern}\\s*,[^\\]]*\\]\\s*=\\s*useState\\(`,
+    `(?:const|let|var) \\[\\s*[A-Za-z_$][\\w$]*\\s*,\\s*${namePattern}\\s*\\]\\s*=\\s*useState\\(`,
+  ]
+  for (const pattern of patterns) {
+    const match = new RegExp(pattern).exec(compact)
+    if (!match) continue
+    const open = match.index + match[0].length - 1
+    let depth = 0
+    let close = -1
+    for (let index = open; index < compact.length; index += 1) {
+      const character = compact[index]
+      if (character === '(') depth += 1
+      else if (character === ')') {
+        depth -= 1
+        if (depth === 0) {
+          close = index
+          break
+        }
+      }
+    }
+    if (close < 0) continue
+    try {
+      return JSON.parse(compact.slice(open + 1, close)) as ScopeCaptureInitial
+    } catch {
+      return undefined
+    }
+  }
+  return undefined
+}
+
+/** Extracts the first string-literal argument of an action declaration. */
+function extractStaticEndpoint(source: string, name: string): string | undefined {
+  const compact = source.replace(/\s+/g, ' ')
+  const match = new RegExp(`(?:const|let|var) ${escapeRegExp(name)} = action\\(`).exec(compact)
+  if (!match) return undefined
+  const rest = compact.slice(match.index + match[0].length)
+  const quoted = /^(['"])([^'"]+)\1/.exec(rest)
+  if (!quoted) return undefined
+  return quoted[2]
+}
+
 function classifyScopeCaptures(source: string, names: readonly string[]): ScopeCapture[] {
   const captures: ScopeCapture[] = []
   const compactSource = source.replace(/\s+/g, ' ')
   for (const name of names) {
-    const kind = (['state', 'computed', 'createStore', 'action'] as const).find((candidate) =>
-      new RegExp(`(?:const|let|var) ${name} = ${candidate}\\(`).test(compactSource),
-    )
-    if (kind === 'state' || kind === 'computed') {
-      captures.push({ name, kind: 'signal', id: `nx:signal:${hash(`${name}:${source}`)}` })
-    } else if (kind === 'createStore') {
-      captures.push({ name, kind: 'store', id: `nx:store:${hash(`${name}:${source}`)}` })
-    } else if (kind === 'action') {
-      captures.push({ name, kind: 'action', id: `nx:action:${hash(`${name}:${source}`)}` })
-    } else if (/^(?:true|false|null|undefined|NaN)$/.test(name)) {
-      captures.push({ name, kind: 'value' })
-    } else {
-      captures.push({
-        name,
-        kind: 'unsupported',
-        reason: `Capture "${name}" is not a serializable Nexis signal, store, action, or plain value.`,
-      })
+    const namePattern = escapeRegExp(name)
+    const declares = (candidate: string): boolean =>
+      new RegExp(`(?:const|let|var) ${namePattern} = ${candidate}\\(`).test(compactSource)
+    const declaresStateTuple =
+      new RegExp(`(?:const|let|var) \\[\\s*${namePattern}\\s*,[^\\]]*\\]\\s*=\\s*useState\\(`).test(
+        compactSource,
+      ) ||
+      new RegExp(
+        `(?:const|let|var) \\[\\s*[A-Za-z_$][\\w$]*\\s*,\\s*${namePattern}\\s*\\]\\s*=\\s*useState\\(`,
+      ).test(compactSource)
+
+    const kind: 'signal' | 'store' | 'action' | undefined = declares('createStore')
+      ? 'store'
+      : declares('action')
+        ? 'action'
+        : declares('state') || declares('computed') || declaresStateTuple
+          ? 'signal'
+          : undefined
+
+    if (kind === 'signal' || kind === 'store') {
+      const initial = extractStaticInitial(source, name)
+      if (initial === undefined) {
+        captures.push({
+          name,
+          kind: 'unsupported',
+          reason: `Capture "${name}" needs a JSON-literal initial value to resume in the browser.`,
+        })
+        continue
+      }
+      captures.push({ name, kind, id: `nx:${kind}:${hash(`${name}:${source}`)}`, initial })
+      continue
     }
+    if (kind === 'action') {
+      const endpoint = extractStaticEndpoint(source, name)
+      if (endpoint === undefined || !endpoint.startsWith('/')) {
+        captures.push({
+          name,
+          kind: 'unsupported',
+          reason: `Capture "${name}" needs a local string endpoint such as action('/api/x').`,
+        })
+        continue
+      }
+      captures.push({ name, kind, id: `nx:action:${hash(`${name}:${source}`)}`, endpoint })
+      continue
+    }
+    if (/^(?:true|false|null|undefined|NaN)$/.test(name)) {
+      captures.push({ name, kind: 'value' })
+      continue
+    }
+    captures.push({
+      name,
+      kind: 'unsupported',
+      reason: `Capture "${name}" is not a serializable Nexis signal, store, action, or plain value.`,
+    })
   }
   return captures
+}
+
+/**
+ * Builds the JSON payload embedded next to a lazy boundary so the browser can
+ * materialize captured signals, stores, and actions before the handler runs.
+ */
+function buildScopePayload(
+  captures: readonly ScopeCapture[],
+): Record<string, ScopeCapture> | undefined {
+  const payload: Record<string, ScopeCapture> = {}
+  for (const capture of captures) {
+    if (capture.kind === 'unsupported' || capture.kind === 'value') continue
+    payload[capture.name] = capture
+  }
+  return Object.keys(payload).length > 0 ? payload : undefined
+}
+
+/** Escapes JSON for safe embedding inside a double-quoted JSX attribute. */
+function toJsonAttribute(value: unknown): string {
+  return JSON.stringify(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
 export { classifyScopeCaptures }
@@ -253,6 +376,12 @@ export async function transformNexisSource(
   const ast = parseSource(source, id)
   const moduleDiagnostics: string[] = []
   const chunkSpecs: Array<{ fileName: string; exportName: string; expressionSource: string }> = []
+  const attrRanges: Array<{
+    readonly start: number
+    readonly end: number
+    readonly eventName: string
+    readonly specIndex: number
+  }> = []
   const css: string[] = []
   const scopeCaptures: ScopeCapture[] = []
   const warnings: string[] = []
@@ -295,8 +424,7 @@ export async function transformNexisSource(
         return
       }
       chunkSpecs.push({ fileName, exportName, expressionSource })
-      const reference = `${fileName}#${exportName}`
-      magic.overwrite(start, end, `data-nx-on-${eventName}="${reference}"`)
+      attrRanges.push({ start, end, eventName, specIndex: chunkSpecs.length - 1 })
     }
 
     // component$ bodies use the same capture classifier as route components;
@@ -327,9 +455,11 @@ export async function transformNexisSource(
   // always plain JavaScript, regardless of the authoring language.
   const isTypeScript = /\.tsx?$/.test(id)
   const chunks: LazyChunk[] = []
+  const capturesBySpec: ScopeCapture[][] = []
   for (const { fileName, exportName, expressionSource } of chunkSpecs) {
     const capturedExpression = captureExpression(expressionSource)
     const captures = classifyScopeCaptures(source, capturedExpression.names)
+    capturesBySpec.push(captures)
     scopeCaptures.push(...captures)
     for (const capture of captures) {
       if (capture.kind === 'unsupported')
@@ -344,6 +474,19 @@ export async function transformNexisSource(
         ).code
       : raw
     chunks.push({ fileName, source: source_ })
+  }
+
+  // Emit each boundary reference together with its serialized scope payload so
+  // the bootstrap can materialize captured signals/stores/actions on click.
+  for (const range of attrRanges) {
+    const spec = chunkSpecs[range.specIndex]
+    if (!spec) continue
+    const reference = `${spec.fileName}#${spec.exportName}`
+    const payload = buildScopePayload(capturesBySpec[range.specIndex] ?? [])
+    const attribute = payload
+      ? `data-nx-on-${range.eventName}="${reference}" data-nx-scope="${toJsonAttribute(payload)}"`
+      : `data-nx-on-${range.eventName}="${reference}"`
+    magic.overwrite(range.start, range.end, attribute)
   }
 
   return {

@@ -72,3 +72,14 @@
 - **Context:** Packages sat at 0.1.x while the project narrative declared v2.0.0 GA.
 - **Decision:** All 18 public packages move to 2.0.0; scaffold templates depend on ^2.0.0; tag `v2.0.0` triggers publication through the existing pipeline.
 - **Consequences:** Tag â†” registry versions match; consumers receive coherent ^2.0.0 ranges.
+
+---
+
+## ADR-009: Static scope serialization for resumable state captures
+
+- **Date:** 2026-08-26
+- **Status:** Accepted
+- **Context:** Lazy handlers closing over signals/stores compiled to `scope.count`, and the bootstrap could materialize scope refs from `data-nx-scope` - but nothing emitted that attribute, so handlers received undefined and crashed on first click. useState tuples were never classified as captures; captures carried no initial value to serialize; and computeds created inside effects went permanently stale because computed hoisted dependency unsubscribes into the parent context.
+- **Decision:** The Vite transform emits `data-nx-scope` beside every boundary reference whose handler has classifiable captures. Signal/store captures require JSON-literal initializers (balanced-paren scan + strict JSON parse); action captures require local string endpoints; unserializable captures downgrade to `unsupported` build diagnostics per the documented philosophy. Both useState tuple positions classify as one signal capture. `computed` owns its subscriptions exclusively (hoisting removed), fixing stale derivations after parent effect re-runs. Exported bootstrapResumability matches the shipped minified contract with registry-cached materialization keyed by scope id. ScopeRegistry.register disposes overwritten entries.
+- **Alternatives considered:** Runtime value extraction during compile (rejected: non-deterministic, SSR-order coupling); page-level scope manifest (deferred: per-element attributes match the shipped bootstrap design).
+- **Consequences:** Documented state patterns (docs/en 06/07) are literally true; non-literal initializers warn at build time by design; ~130 raw bytes added to the bootstrap (budget gates green); e2e temp fixtures restore root symlinks before deletion and spec files run serialized.

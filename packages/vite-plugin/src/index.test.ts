@@ -118,3 +118,57 @@ const view = <button onClick$={({ element }) => { element.textContent = String(c
   )
   expect(result.warnings.some((warning) => warning.includes('runtimeValue'))).toBe(true)
 })
+
+it('emits a data-nx-scope payload with the serialized initial value', async () => {
+  const result = await transformNexisSource(
+    `import { state } from '@mohammedaydan/core'
+const count = state(0)
+export const view = <button onClick$={() => count.set((c) => c + 1)}>+</button>`,
+    '/app/src/routes/live.tsx',
+  )
+  expect(result.code).toContain('data-nx-on-click="chunk_')
+  expect(result.code).toContain('data-nx-scope=')
+  const payload = /data-nx-scope="([^"]+)"/.exec(result.code)?.[1] ?? ''
+  const decoded = JSON.parse(payload.replace(/&quot;/g, '"').replace(/&amp;/g, '&')) as Record<
+    string,
+    { kind: string; initial?: unknown }
+  >
+  expect(decoded.count).toMatchObject({ kind: 'signal', initial: 0 })
+  const chunkSource = result.chunks[0]?.source ?? ''
+  expect(chunkSource).toContain('scope.count.set')
+})
+
+it('classifies useState tuple declarations as signal captures', async () => {
+  const result = await transformNexisSource(
+    `import { useState } from '@mohammedaydan/core'
+const [count, setCount] = useState(7)
+export const view = <button onClick$={() => setCount(count + 1)}>+</button>`,
+    '/app/src/routes/tuple.tsx',
+  )
+  expect(result.scopeCaptures).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ name: 'count', kind: 'signal', initial: 7 }),
+      expect.objectContaining({ name: 'setCount', kind: 'signal', initial: 7 }),
+    ]),
+  )
+})
+
+it('downgrades non-literal signal initializers to unsupported diagnostics', async () => {
+  const result = await transformNexisSource(
+    `import { state } from '@mohammedaydan/core'
+const items = state([1, 2, 3].map((n) => n * 2))
+export const view = <button onClick$={() => items.set([])}>clear</button>`,
+    '/app/src/routes/dynamic.tsx',
+  )
+  expect(result.scopeCaptures).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        name: 'items',
+        kind: 'unsupported',
+        reason: expect.stringContaining('JSON-literal'),
+      }),
+    ]),
+  )
+  expect(result.warnings.some((warning) => warning.includes('items'))).toBe(true)
+  expect(result.code).not.toContain('data-nx-scope')
+})

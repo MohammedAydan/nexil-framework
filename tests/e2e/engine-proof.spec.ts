@@ -9,6 +9,20 @@ test.setTimeout(120_000)
 let tempDir: string
 let server: any
 
+test.afterAll(async () => {
+  if (!tempDir) return
+  await server?.close?.()
+  // Restore workspace symlinks before removal — see state-scope.spec.ts for
+  // the rationale; temp-workspace installs re-point framework package links.
+  const { execSync } = await import('node:child_process')
+  try {
+    execSync('pnpm install --silent', { cwd: process.cwd(), timeout: 120_000, stdio: 'ignore' })
+  } catch {
+    // Best effort: a later suite's install will also relink.
+  }
+  await rm(tempDir, { recursive: true, force: true })
+})
+
 test.beforeAll(async () => {
   test.setTimeout(120_000)
   const { scaffoldProject } = await import('../../packages/cli/dist/index.js')

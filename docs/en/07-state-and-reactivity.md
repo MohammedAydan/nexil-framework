@@ -38,6 +38,22 @@ const total = computed(() => price() * quantity())
 
 Nexis detects computed re-entry and emits a descriptive cycle error instead of leaving an obscure stack overflow. When a cycle appears, look for direct or indirect self-reference.
 
+### Signals captured by lazy handlers
+
+When an `onClick$` handler closes over a signal or store, the compiler serializes
+the declaration into `data-nx-scope` so the browser can materialize it on first
+interaction. This requires a **JSON-literal initial value**:
+
+```ts
+const count = state(0) // ✅ serialized into the page
+const items = state(load()) // ⚠️ unsupported capture diagnostic — not statically serializable
+```
+
+Captures that cannot be serialized produce an explicit `unsupported` warning at
+build time instead of failing silently at click time. Multiple handlers capturing
+the same declaration share one live signal instance in the browser, keyed by its
+scope id.
+
 ## Effects
 
 Effects are for side effects such as updating `document.title` or emitting a local event. Do not use an effect to represent a derived value.

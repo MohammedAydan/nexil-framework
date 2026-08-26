@@ -89,5 +89,15 @@ export function component<Props>(fn: Component<Props>): Component<Props> {
   return fn
 }
 
-export { state, useState, computed, batch } from '@mohammedaydan/reactivity'
-export type { Signal, ReadableSignal } from '@mohammedaydan/reactivity'
+export {
+  batch,
+  computed,
+  createRoot,
+  effect,
+  onCleanup,
+  state,
+  untrack,
+  useState,
+  watch,
+} from '@mohammedaydan/reactivity'
+export type { Signal, ReadableSignal, Unsubscribe } from '@mohammedaydan/reactivity'

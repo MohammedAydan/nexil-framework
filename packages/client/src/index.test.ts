@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
+  bootstrapResumability,
   createHandlerReference,
   createResumeAttribute,
   createScopeId,
@@ -102,5 +103,125 @@ describe('ScopeRef ABI', () => {
       /callable signals/,
     )
     await expect(action({ name: 'Ada' })).resolves.toBe('queued:Ada')
+  })
+})
+
+describe('bootstrapResumability scope materialization', () => {
+  interface FakeElement {
+    attributes: ReadonlyArray<{ name: string; value: string }>
+    getAttribute(name: string): string | null
+    addEventListener(name: string, listener: (event: unknown) => void): void
+    removeEventListener(name: string, listener: (event: unknown) => void): void
+    dispatch(eventName: string, event?: unknown): void
+  }
+
+  function fakeElement(attributes: Record<string, string>): FakeElement {
+    const listeners = new Map<string, Array<(event: unknown) => void>>()
+    const element: FakeElement = {
+      attributes: Object.entries(attributes).map(([name, value]) => ({ name, value })),
+      getAttribute: (name) => attributes[name] ?? null,
+      addEventListener: (name, listener) => {
+        listeners.set(name, [...(listeners.get(name) ?? []), listener])
+      },
+      removeEventListener: (name, listener) => {
+        listeners.set(
+          name,
+          (listeners.get(name) ?? []).filter((candidate) => candidate !== listener),
+        )
+      },
+      dispatch: (eventName, event = {}) => {
+        for (const listener of [...(listeners.get(eventName) ?? [])]) listener(event)
+      },
+    }
+    return element
+  }
+
+  it('delivers values and shared live signals through the scope argument', async () => {
+    const json = JSON.stringify({
+      mode: { kind: 'value', data: 'dark' },
+      count: { kind: 'signal', id: 'nx:signal:t1', initial: 2 },
+    })
+    const first = fakeElement({
+      'data-nx-on-click': 'chunk_0000000000aa.js#run',
+      'data-nx-scope': json,
+    })
+    const second = fakeElement({
+      'data-nx-on-click': 'chunk_0000000000bb.js#run',
+      'data-nx-scope': json,
+    })
+    const root = {
+      querySelectorAll: () => [first as unknown as HTMLElement, second as unknown as HTMLElement],
+    } as unknown as Document
+    const scopes: Array<Record<string, unknown>> = []
+    bootstrapResumability(root, async () => ({
+      run: ({ scope }: { scope: Record<string, unknown> }) => {
+        scopes.push(scope)
+        const count = scope.count as { set: (n: number) => void; (): number }
+        count.set(9)
+      },
+    }))
+    first.dispatch('click')
+    await vi.waitFor(() => expect(scopes).toHaveLength(1))
+    expect(scopes[0]?.mode).toBe('dark')
+    const sharedCount = scopes[0]?.count as { (): number }
+    expect(sharedCount()).toBe(9)
+    second.dispatch('click')
+    await vi.waitFor(() => expect(scopes).toHaveLength(2))
+    expect(scopes[1]?.count).toBe(sharedCount)
+  })
+
+  it('stops binding after disposal', () => {
+    const element = fakeElement({ 'data-nx-on-click': 'chunk_0000000000cc.js#run' })
+    const root = {
+      querySelectorAll: () => [element as unknown as HTMLElement],
+    } as unknown as Document
+    const handler = vi.fn()
+    const dispose = bootstrapResumability(root, async () => ({ run: handler }))
+    dispose()
+    element.dispatch('click')
+    expect(handler).not.toHaveBeenCalled()
+  })
+
+  it('warns and skips unsupported captures without throwing', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const json = JSON.stringify({
+      broken: { kind: 'unsupported', reason: 'closure over db' },
+    })
+    const element = fakeElement({
+      'data-nx-on-click': 'chunk_0000000000dd.js#run',
+      'data-nx-scope': json,
+    })
+    const root = {
+      querySelectorAll: () => [element as unknown as HTMLElement],
+    } as unknown as Document
+    const scopes: Array<Record<string, unknown>> = []
+    bootstrapResumability(root, async () => ({
+      run: ({ scope }: { scope: Record<string, unknown> }) => {
+        scopes.push(scope)
+      },
+    }))
+    element.dispatch('click')
+    await vi.waitFor(() => expect(scopes).toHaveLength(1))
+    expect(scopes[0]).toEqual({})
+    expect(warn).toHaveBeenCalledWith('[nexis] unsupported scope:', 'closure over db')
+    warn.mockRestore()
+  })
+})
+
+describe('ScopeRegistry ownership', () => {
+  it('disposes the previous entry when an id is re-registered', () => {
+    const registry = createScopeRegistry()
+    const first = (() => undefined) as unknown as {
+      set: () => void
+      dispose: ReturnType<typeof vi.fn>
+    }
+    first.set = () => undefined
+    first.dispose = vi.fn()
+    registry.register('nx:signal:overwrite-test', first)
+    const replacement = (() => undefined) as unknown as { set: () => void }
+    replacement.set = () => undefined
+    registry.register('nx:signal:overwrite-test', replacement)
+    expect(first.dispose).toHaveBeenCalledTimes(1)
+    expect(registry.inspectScope()).toEqual([{ id: 'nx:signal:overwrite-test', kind: 'signal' }])
   })
 })

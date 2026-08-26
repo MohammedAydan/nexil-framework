@@ -97,35 +97,126 @@ export function createResumeAttribute(id: string, reference: HandlerReference): 
 
 export type ResumeImport = (chunk: string) => Promise<Record<string, unknown>>
 
+interface MaterializedRef {
+  readonly eventName: string
+  readonly chunk: string
+  readonly exportName: string
+}
+
+function parseHandlerAttribute(value: string, eventName?: string): MaterializedRef[] {
+  const references: MaterializedRef[] = []
+  let event = eventName ?? ''
+  let list = value
+  if (!eventName) {
+    const separator = value.indexOf(':')
+    if (separator < 1) return references
+    event = value.slice(0, separator)
+    list = value.slice(separator + 1)
+  }
+  if (!/^[a-z][a-z0-9-]*$/.test(event)) return references
+  for (const part of list.split(';')) {
+    const hashSeparator = part.indexOf('#')
+    if (hashSeparator < 1) continue
+    references.push({
+      eventName: event,
+      chunk: part.slice(0, hashSeparator),
+      exportName: part.slice(hashSeparator + 1),
+    })
+  }
+  return references
+}
+
+/**
+ * Resolves a boundary's serialized ScopeRefs into live browser objects,
+ * caching signal/store/action instances by reference ID so every boundary
+ * that captures the same declaration shares one identity.
+ */
+function materializeScope(
+  element: HTMLElement,
+  cache: Map<string, unknown>,
+): Record<string, unknown> {
+  const raw = element.getAttribute('data-nx-scope')
+  if (!raw) return {}
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    return {}
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {}
+  const scope: Record<string, unknown> = {}
+  for (const [name, ref] of Object.entries(parsed as Record<string, ScopeRef>)) {
+    if (!ref || typeof ref.kind !== 'string') continue
+    if (ref.kind === 'value') {
+      scope[name] = (ref as ScopeRefValue).data
+      continue
+    }
+    if (ref.kind === 'unsupported') {
+      console.warn('[nexis] unsupported scope:', (ref as ScopeRefUnsupported).reason)
+      continue
+    }
+    const id = (ref as ScopeRefSignal | ScopeRefStore | ScopeRefAction).id
+    let live = cache.get(id)
+    if (!live) {
+      if (ref.kind === 'signal') live = createSignal((ref as ScopeRefSignal).initial)
+      else if (ref.kind === 'store') {
+        const signal = createSignal((ref as ScopeRefStore).initial)
+        live = {
+          value: signal,
+          snapshot: () => JSON.parse(JSON.stringify(signal())) as Serializable,
+          set: (next: Serializable | ((previous: Serializable) => Serializable)) =>
+            signal.set(next),
+          dispose: () => signal.dispose(),
+        }
+      } else if (ref.kind === 'action') {
+        const endpoint = (ref as ScopeRefAction).endpoint
+        live = (input: unknown) =>
+          fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(input),
+          }).then((response) => response.json())
+      }
+      if (live) cache.set(id, live)
+    }
+    if (live) scope[name] = live
+  }
+  return scope
+}
+
 export function bootstrapResumability(
   root: Document | HTMLElement,
   load: ResumeImport,
 ): () => void {
   const listeners: Array<() => void> = []
-  const elements = new Set<HTMLElement>()
-  for (const element of root.querySelectorAll<HTMLElement>('[data-nx-on], [data-nx-on-click]'))
-    elements.add(element)
-
-  for (const element of elements) {
-    const unified = element.getAttribute('data-nx-on')
-    const legacy = element.getAttribute('data-nx-on-click')
-    const separator = unified?.indexOf(':') ?? -1
-    const eventName = separator > 0 ? unified!.slice(0, separator) : 'click'
-    const attribute = separator > 0 ? unified!.slice(separator + 1) : legacy
-    if (!attribute) continue
-    const hashSeparator = attribute.indexOf('#')
-    if (hashSeparator < 1) continue
-    const chunk = attribute.slice(0, hashSeparator)
-    const exportName = attribute.slice(hashSeparator + 1)
-    const listener = async (event: Event) => {
-      const module = await load(chunk)
-      const handler = module[exportName]
-      if (typeof handler !== 'function')
-        throw new TypeError(`Missing resumable handler export: ${exportName}`)
-      await handler({ element, event })
+  const cache = new Map<string, unknown>()
+  const bound = new WeakMap<HTMLElement, Set<string>>()
+  const attributePattern = /^data-nx-on(?:-([a-z][a-z0-9-]*))?$/
+  for (const element of root.querySelectorAll<HTMLElement>('*')) {
+    for (const attribute of Array.from(element.attributes)) {
+      const match = attributePattern.exec(attribute.name)
+      if (!match) continue
+      for (const reference of parseHandlerAttribute(attribute.value, match[1])) {
+        const key = `${reference.eventName}:${reference.chunk}#${reference.exportName}`
+        const seen = bound.get(element) ?? new Set<string>()
+        if (seen.has(key)) continue
+        seen.add(key)
+        bound.set(element, seen)
+        const listener = async (event: Event) => {
+          const module = await load(reference.chunk)
+          const handler = module[reference.exportName]
+          if (typeof handler !== 'function')
+            throw new TypeError(`Missing resumable handler export: ${reference.exportName}`)
+          await handler({
+            element,
+            event,
+            scope: materializeScope(element, cache),
+          })
+        }
+        element.addEventListener(reference.eventName, listener)
+        listeners.push(() => element.removeEventListener(reference.eventName, listener))
+      }
     }
-    element.addEventListener(eventName, listener)
-    listeners.push(() => element.removeEventListener(eventName, listener))
   }
   return () => listeners.splice(0).forEach((dispose) => dispose())
 }
@@ -261,6 +352,10 @@ export function createScopeRegistry(): ScopeRegistry {
         throw new TypeError('Nexis store scope values must expose a signal value.')
       if (kind === 'action' && typeof value !== 'function')
         throw new TypeError('Nexis action scope values must be callable.')
+      const previous = entries.get(id)
+      if (previous && typeof (previous.value as { dispose?: unknown }).dispose === 'function') {
+        ;(previous.value as { dispose: () => void }).dispose()
+      }
       entries.set(id, { kind, value })
     },
     resolve(id) {

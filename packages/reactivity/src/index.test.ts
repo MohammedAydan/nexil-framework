@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { batch, computed, state, useState } from './index'
+import { batch, computed, effect, state, useState } from './index'
 
 describe('state', () => {
   it('reads and updates values', () => {
@@ -82,5 +82,31 @@ describe('computed', () => {
     const derived = computed(() => read())
     read = () => derived() + source()
     expect(() => source.set(1)).toThrow('computed dependency cycle')
+  })
+
+  it('stays reactive when created inside an effect that later re-runs', () => {
+    const source = state(1)
+    const seen: number[] = []
+    let derived!: ReturnType<typeof computed<number>>
+    const stop = effect(() => {
+      derived = computed(() => source() * 2)
+      seen.push(derived.value)
+    })
+    source.set(3)
+    expect(derived.value).toBe(6)
+    expect(seen).toEqual([2, 6])
+    stop()
+  })
+
+  it('keeps its own subscriptions independent of the parent effect lifecycle', () => {
+    const source = state(5)
+    let derived!: ReturnType<typeof computed<number>>
+    const stop = effect(() => {
+      derived = computed(() => source() + 1)
+      void derived.value
+    })
+    stop()
+    source.set(10)
+    expect(derived.value).toBe(11)
   })
 })

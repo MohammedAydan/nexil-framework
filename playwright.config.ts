@@ -12,6 +12,11 @@ export default defineConfig({
     ...devices['Desktop Chrome'],
   },
   testIgnore: ['**/deno-runtime.spec.ts'],
+  // Temp-workspace fixtures (engine-proof, state-scope) mutate framework
+  // package symlinks during their installs; parallel spec files would race
+  // those mutations against each other and the showcase dev server.
+  fullyParallel: false,
+  workers: 1,
   webServer: [
     {
       command:

@@ -141,9 +141,6 @@ export function computed<T>(derive: () => T): ReadableSignal<T> {
       evaluating = false
       evaluatingComputeds.delete(derive)
       activeCollector = previousCollector
-      if (activeCollector) {
-        for (const cleanup of nextCleanups) activeCollector.cleanups.add(cleanup)
-      }
     }
   }
 
