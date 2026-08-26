@@ -181,3 +181,39 @@ describe('Nexis CLI', () => {
     )
   })
 })
+
+it('isolates the binding runtime to binding-enabled routes', async () => {
+  const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-bindings-'))
+  try {
+    const staticDirectory = await createProject('static-app', parent)
+    await writeFile(
+      join(staticDirectory, 'src/routes/index.tsx'),
+      'export default function Home() { return <main>Static HTML</main> }\n',
+      'utf8',
+    )
+    await runCli(['build'], staticDirectory)
+    const staticHtml = await readFile(join(staticDirectory, 'dist/client/index.html'), 'utf8')
+    expect(staticHtml).not.toContain('/nexis-bindings.js')
+    await expect(
+      readFile(join(staticDirectory, 'dist/client/nexis-bindings.js'), 'utf8'),
+    ).rejects.toThrow()
+
+    const bindingDirectory = await createProject('binding-app', parent)
+    await writeFile(
+      join(bindingDirectory, 'src/routes/index.tsx'),
+      `import { state } from '@mohammedaydan/core'
+const count = state(0)
+export default function Home() { return <output>{count()}</output> }
+`,
+      'utf8',
+    )
+    await runCli(['build'], bindingDirectory)
+    const bindingHtml = await readFile(join(bindingDirectory, 'dist/client/index.html'), 'utf8')
+    expect(bindingHtml).toContain('/nexis-bindings.js')
+    expect(
+      await readFile(join(bindingDirectory, 'dist/client/nexis-bindings.js'), 'utf8'),
+    ).toContain('data-nx-bind')
+  } finally {
+    await rm(parent, { recursive: true, force: true })
+  }
+})

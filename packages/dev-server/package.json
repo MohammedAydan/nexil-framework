@@ -4,6 +4,7 @@
   "type": "module",
   "dependencies": {
     "@mohammedaydan/actions": "workspace:*",
+    "@mohammedaydan/core": "workspace:*",
     "@mohammedaydan/adapters": "workspace:*",
     "@mohammedaydan/renderer": "workspace:*",
     "@mohammedaydan/router": "workspace:*",

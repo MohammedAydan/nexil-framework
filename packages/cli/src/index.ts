@@ -4,6 +4,7 @@ import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { build, createServer, preview, transformWithEsbuild } from 'vite'
+import type { Child } from '@mohammedaydan/core'
 import { assertBudget } from '@mohammedaydan/compiler'
 import nexis, {
   RESUMABILITY_BINDINGS,
@@ -25,6 +26,7 @@ import { matchRoute, routeFromFile } from '@mohammedaydan/router'
 import { nexisSSRPlugin } from '@mohammedaydan/dev-server'
 import { createProductionServer } from '@mohammedaydan/serve'
 import type { RedirectRule } from '@mohammedaydan/serve'
+import type { SeoMetadata } from '@mohammedaydan/seo'
 export { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 import { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 
@@ -54,6 +56,52 @@ function workspaceAliases(): readonly { readonly find: string; readonly replacem
 }
 
 const VITE_WORKSPACE_CONFIG = { resolve: { alias: workspaceAliases() } }
+
+interface BuildOutputEntry {
+  readonly type: 'asset' | 'chunk'
+  readonly fileName: string
+  readonly source?: string | Uint8Array
+  readonly code?: string
+  readonly isEntry?: boolean
+}
+
+interface RouteModule {
+  readonly default?:
+    Child | ((props: Readonly<Record<string, string | string[]>>) => Child | Promise<Child>)
+  readonly seo?: SeoMetadata | ((context: { readonly pathname: string }) => SeoMetadata)
+  readonly render?: { readonly mode?: string }
+  readonly getStaticPaths?: () => Promise<readonly StaticPathValue[]> | readonly StaticPathValue[]
+  readonly staticPaths?: readonly StaticPathValue[]
+}
+
+function buildOutputEntries(value: unknown): readonly BuildOutputEntry[] {
+  const outputs = Array.isArray(value) ? value : [value]
+  return outputs.flatMap((output) => {
+    if (!output || typeof output !== 'object') return []
+    const rawEntries = (output as { readonly output?: unknown }).output
+    if (!Array.isArray(rawEntries)) return []
+    return rawEntries.flatMap((entry): readonly BuildOutputEntry[] => {
+      if (!entry || typeof entry !== 'object') return []
+      const record = entry as Record<string, unknown>
+      if (
+        (record.type !== 'asset' && record.type !== 'chunk') ||
+        typeof record.fileName !== 'string'
+      )
+        return []
+      return [
+        {
+          type: record.type,
+          fileName: record.fileName,
+          ...(typeof record.source === 'string' || record.source instanceof Uint8Array
+            ? { source: record.source }
+            : {}),
+          ...(typeof record.code === 'string' ? { code: record.code } : {}),
+          ...(typeof record.isEntry === 'boolean' ? { isEntry: record.isEntry } : {}),
+        },
+      ]
+    })
+  })
+}
 
 export type NexisCommand =
   'create' | 'dev' | 'build' | 'start' | 'serve' | 'check' | 'analyze' | 'routes'
@@ -216,7 +264,7 @@ function staticPathToRoute(pattern: string, value: StaticPathValue): string {
 async function resolveStaticPaths(
   pattern: string,
   routePath: string,
-  module: any,
+  module: RouteModule,
 ): Promise<readonly string[]> {
   const exported =
     typeof module.getStaticPaths === 'function' ? await module.getStaticPaths() : module.staticPaths
@@ -231,16 +279,14 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   const outputRoot = join(root, 'dist')
   const siteOrigin = process.env.NEXIS_SITE_ORIGIN ?? 'https://nexis-showcase.example'
   const config = await readNexisConfig(root)
-  const resolveSeo = (seo: unknown, pathname: string): any => {
+  const resolveSeo = (seo: RouteModule['seo'], pathname: string): SeoMetadata | undefined => {
     if (!seo) return undefined
     const metadata = typeof seo === 'function' ? seo({ pathname }) : seo
-    return metadata && typeof metadata === 'object'
-      ? withCanonical(metadata, pathname, siteOrigin)
-      : undefined
+    return withCanonical(metadata, pathname, siteOrigin)
   }
   await rm(outputRoot, { recursive: true, force: true })
   const serverRoot = join(outputRoot, 'server', 'routes')
-  const serverModules = new Map<string, any>()
+  const serverModules = new Map<string, RouteModule>()
   const chunkRoot = join(outputRoot, CHUNK_DIRECTORY)
   const clientRoot = join(outputRoot, 'client')
   const assetRoot = join(clientRoot, 'assets')
@@ -272,10 +318,10 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
       },
       logLevel: 'silent',
     })
-    const outputs = Array.isArray(clientBuild) ? clientBuild : [clientBuild]
-    const stylesheet = outputs
-      .flatMap((output: any) => output.output ?? [])
-      .find((entry: any) => entry.type === 'asset' && entry.fileName.endsWith('.css'))
+    const outputs = buildOutputEntries(clientBuild)
+    const stylesheet = outputs.find(
+      (entry) => entry.type === 'asset' && entry.fileName.endsWith('.css'),
+    )
     if (stylesheet?.source !== undefined) {
       await writeFile(join(assetRoot, 'styles.css'), String(stylesheet.source), 'utf8')
       template = template.replaceAll('/src/styles.css', '/assets/styles.css')
@@ -285,7 +331,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     // Tailwind is opt-in; applications without src/styles.css need no CSS transform.
   }
 
-  const loadServerModule = async (route: string): Promise<any> => {
+  const loadServerModule = async (route: string): Promise<RouteModule> => {
     const cached = serverModules.get(route)
     if (cached) return cached
     const sourcePath = join(routeRoot, route)
@@ -300,10 +346,8 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
       },
       logLevel: 'silent',
     })
-    const outputs = Array.isArray(result) ? result : [result]
-    const entry = outputs
-      .flatMap((output: any) => output.output ?? [])
-      .find((chunk: any) => chunk.type === 'chunk' && chunk.isEntry)
+    const outputs = buildOutputEntries(result)
+    const entry = outputs.find((chunk) => chunk.type === 'chunk' && chunk.isEntry)
     if (!entry?.code) throw new Error(`Vite SSR build produced no entry for ${route}.`)
     const outputName = route.replace(/\\/g, '/').replace(/\.(tsx|jsx|ts|js)$/, '.js')
     const serverModulePath = join(serverRoot, outputName)
@@ -336,11 +380,15 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     await writeFile(join(serverRoot, outputName), transformed.code, 'utf8')
     let clientBytes = 0
     for (const chunk of transformed.chunks) {
-      await writeFile(join(chunkRoot, chunk.fileName), chunk.source, 'utf8')
-      clientBytes += Buffer.byteLength(chunk.source)
+      const minified = await transformWithEsbuild(chunk.source, chunk.fileName, {
+        loader: 'js',
+        minify: true,
+      })
+      await writeFile(join(chunkRoot, chunk.fileName), minified.code, 'utf8')
+      clientBytes += Buffer.byteLength(minified.code)
       const chunkClientPath = join(clientRoot, CHUNK_DIRECTORY, chunk.fileName)
       await mkdir(join(clientRoot, CHUNK_DIRECTORY), { recursive: true })
-      await writeFile(chunkClientPath, chunk.source, 'utf8')
+      await writeFile(chunkClientPath, minified.code, 'utf8')
     }
     for (const css of transformed.css) cssAssets.add(css)
     const routeTemplate =
@@ -360,11 +408,14 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     if (transformed.bindings.length > 0)
       scriptsHtml += `<script type="module" src="/nexis-bindings.js"></script>`
     try {
-      const mod: any = await loadServerModule(route)
-      const routeSeo = resolveSeo(mod.seo, routePath)
+      const mod = await loadServerModule(route)
+      let routeSeo = resolveSeo(mod.seo, routePath)
       if (routeSeo) {
         if (routePath !== '/') {
-          routeSeo.jsonLd ??= deriveBreadcrumbList(routePath, siteOrigin)
+          routeSeo = {
+            ...routeSeo,
+            jsonLd: routeSeo.jsonLd ?? deriveBreadcrumbList(routePath, siteOrigin),
+          }
         }
         if (!routeSeo.image) {
           const og = await generateOgImage(
@@ -374,7 +425,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
             },
             ogRoot,
           )
-          routeSeo.image = `/og/${og.fileName}`
+          routeSeo = { ...routeSeo, image: `/og/${og.fileName}` }
         }
         if (!routePath.includes('['))
           feedItems.push({
@@ -398,7 +449,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
       } else if (Component) {
         renderedHtml = renderToString(Component)
       } else {
-        renderedHtml = renderToString(transformed.code as any)
+        throw new TypeError(`Route ${routePath} does not export a renderable default component.`)
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
@@ -434,7 +485,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
 
     if (routePath.includes('[')) {
       try {
-        const staticModule: any = await loadServerModule(route)
+        const staticModule = await loadServerModule(route)
         const staticPaths = await resolveStaticPaths(routeRecord.pattern, routePath, staticModule)
         if (staticPaths.some((generatedPath) => generatedPath !== routePath)) {
           await rm(join(clientRoot, routePath.slice(1)), { recursive: true, force: true })
@@ -450,7 +501,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
               ? await GeneratedComponent(generatedMatch?.params ?? {})
               : GeneratedComponent
           const generatedRenderedHtml = renderToString(generatedResult)
-          const generatedSeo = resolveSeo(staticModule.seo, generatedPath)
+          let generatedSeo = resolveSeo(staticModule.seo, generatedPath)
           if (generatedSeo && !generatedSeo.image) {
             const og = await generateOgImage(
               {
@@ -459,7 +510,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
               },
               ogRoot,
             )
-            generatedSeo.image = `/og/${og.fileName}`
+            generatedSeo = { ...generatedSeo, image: `/og/${og.fileName}` }
           }
           if (generatedSeo)
             feedItems.push({

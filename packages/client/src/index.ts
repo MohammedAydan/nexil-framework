@@ -488,9 +488,9 @@ export function createScopeRegistry(): ScopeRegistry {
       }
       entries.set(id, { kind, value })
     },
-    resolve(id) {
+    resolve<T = unknown>(id: string) {
       assertScopeId(id)
-      return entries.get(id)?.value as unknown as any
+      return entries.get(id)?.value as T | undefined
     },
     dispose(id) {
       assertScopeId(id)

@@ -3,7 +3,9 @@ import { join, relative } from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Plugin } from 'vite'
 import { escapeHtml, renderToString } from '@mohammedaydan/renderer'
+import type { Child } from '@mohammedaydan/core'
 import { renderHead, withCanonical } from '@mohammedaydan/seo'
+import type { SeoMetadata } from '@mohammedaydan/seo'
 import { routeFromFile, resolveRoute, matchRoute } from '@mohammedaydan/router'
 import type { NexisHandler } from '@mohammedaydan/adapters'
 import { createMemoryIdempotencyStore, handleActionRequest } from '@mohammedaydan/actions'
@@ -12,6 +14,22 @@ import nexis from '@mohammedaydan/vite-plugin'
 
 const routeCache = new Map<string, ReturnType<typeof routeFromFile>[]>()
 const devIdempotency = createMemoryIdempotencyStore()
+
+type RouteComponent =
+  Child | ((props: Readonly<Record<string, string | string[]>>) => Child | Promise<Child>)
+
+interface DevRouteModule {
+  readonly default?: RouteComponent
+  readonly seo?: SeoMetadata | ((context: { readonly pathname: string }) => SeoMetadata)
+}
+
+function routeModuleFromUnknown(value: unknown): DevRouteModule {
+  return value && typeof value === 'object' ? (value as DevRouteModule) : {}
+}
+
+function errorFromUnknown(value: unknown): Error {
+  return value instanceof Error ? value : new Error(String(value))
+}
 
 function injectStylesheetLink(template: string, href: string): string {
   const link = `<link rel="stylesheet" href="${href}">`
@@ -203,34 +221,32 @@ export function nexisSSRPlugin(root: string): Plugin {
           const filePath = matched.route.file
           const modulePath = `/${filePath}`
 
-          let routeModule: any
+          let routeModule: DevRouteModule
           try {
-            routeModule = await server.ssrLoadModule(modulePath)
+            routeModule = routeModuleFromUnknown(await server.ssrLoadModule(modulePath))
           } catch (err) {
-            server.ssrFixStacktrace(err as Error)
-            console.error(`[nexis] SSR load error for ${modulePath}:`, (err as Error).message)
-            return next(err)
+            const error = errorFromUnknown(err)
+            server.ssrFixStacktrace(error)
+            console.error(`[nexis] SSR load error for ${modulePath}:`, error.message)
+            return next(error)
           }
 
-          const rawSeo = routeModule.seo as unknown
+          const rawSeo = routeModule.seo
           const resolvedSeo = typeof rawSeo === 'function' ? rawSeo({ pathname }) : rawSeo
-          const seo =
-            resolvedSeo && typeof resolvedSeo === 'object'
-              ? withCanonical(
-                  resolvedSeo as any,
-                  pathname,
-                  process.env.NEXIS_SITE_ORIGIN ?? 'https://nexis-showcase.example',
-                )
-              : resolvedSeo
+          const seo = resolvedSeo
+            ? withCanonical(
+                resolvedSeo,
+                pathname,
+                process.env.NEXIS_SITE_ORIGIN ?? 'https://nexis-showcase.example',
+              )
+            : undefined
           const head = (() => {
             try {
-              if (seo && typeof seo === 'object' && 'title' in seo && seo.title)
-                return renderHead(seo as any)
+              if (seo?.title) return renderHead(seo)
             } catch {
               // Fall through to the escaped title fallback.
             }
-            if (seo && typeof seo === 'object' && 'title' in seo && seo.title)
-              return `<title>${escapeHtml(String(seo.title))}</title>`
+            if (seo?.title) return `<title>${escapeHtml(seo.title)}</title>`
             return '<title>Nexis App</title>'
           })()
 
@@ -243,11 +259,13 @@ export function nexisSSRPlugin(root: string): Plugin {
             renderedHtml = renderToString(Component)
           }
 
-          const hasInteractive =
-            renderedHtml.includes('data-nx-on') || renderedHtml.includes('data-nx-on-click')
-          const scripts = hasInteractive
-            ? '<script type="module" src="/nexis-bootstrap.js"></script>'
-            : ''
+          const hasEventHandlers = renderedHtml.includes('data-nx-on')
+          const hasBindings = renderedHtml.includes('data-nx-bind')
+          const scripts = `${
+            hasEventHandlers || hasBindings
+              ? '<script type="module" src="/nexis-bootstrap.js"></script>'
+              : ''
+          }${hasBindings ? '<script type="module" src="/nexis-bindings.js"></script>' : ''}`
 
           let template: string
           try {
@@ -274,8 +292,9 @@ export function nexisSSRPlugin(root: string): Plugin {
           res.setHeader('Cache-Control', 'no-store')
           res.end(html)
         } catch (err) {
-          server.ssrFixStacktrace(err as Error)
-          next(err)
+          const error = errorFromUnknown(err)
+          server.ssrFixStacktrace(error)
+          next(error)
         }
       })
     },

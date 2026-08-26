@@ -813,9 +813,11 @@ export function nexis(options: { readonly root?: string } = {}): Plugin {
       server.middlewares.use((request, response, next) => {
         if (request.method !== 'GET') return next()
         const url = request.url ?? ''
-        if (url === '/nexis-bootstrap.js') {
+        if (url === '/nexis-bootstrap.js' || url === '/nexis-bindings.js') {
           response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' })
-          response.end(RESUMABILITY_BOOTSTRAP)
+          response.end(
+            url === '/nexis-bindings.js' ? RESUMABILITY_BINDINGS : RESUMABILITY_BOOTSTRAP,
+          )
           return
         }
         const match = /^\/nexis-chunks\/([A-Za-z0-9_.-]+\.js)$/.exec(url)
@@ -838,7 +840,13 @@ export function nexis(options: { readonly root?: string } = {}): Plugin {
       if (!/\.(tsx|jsx|ts|js)$/.test(id) || id.includes('/node_modules/')) return null
       const result = await transformNexisSource(source, id)
       hasBindings ||= result.bindings.length > 0
-      for (const chunk of result.chunks) generatedChunks.set(chunk.fileName, chunk.source)
+      for (const chunk of result.chunks) {
+        const minified = await transformWithEsbuild(chunk.source, chunk.fileName, {
+          loader: 'js',
+          minify: true,
+        })
+        generatedChunks.set(chunk.fileName, minified.code)
+      }
       for (const css of result.css) generatedCss.add(css)
       return { code: result.code, map: result.map }
     },
