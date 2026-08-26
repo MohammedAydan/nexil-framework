@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
+  bindSignalToDOM,
   bootstrapResumability,
   createHandlerReference,
   createResumeAttribute,
@@ -109,6 +110,12 @@ describe('ScopeRef ABI', () => {
 describe('bootstrapResumability scope materialization', () => {
   interface FakeElement {
     attributes: ReadonlyArray<{ name: string; value: string }>
+    nodeType: number
+    textContent: string
+    value: string
+    checked: boolean
+    disabled: boolean
+    hidden: boolean
     getAttribute(name: string): string | null
     addEventListener(name: string, listener: (event: unknown) => void): void
     removeEventListener(name: string, listener: (event: unknown) => void): void
@@ -119,6 +126,12 @@ describe('bootstrapResumability scope materialization', () => {
     const listeners = new Map<string, Array<(event: unknown) => void>>()
     const element: FakeElement = {
       attributes: Object.entries(attributes).map(([name, value]) => ({ name, value })),
+      nodeType: 1,
+      textContent: '',
+      value: '',
+      checked: false,
+      disabled: false,
+      hidden: false,
       getAttribute: (name) => attributes[name] ?? null,
       addEventListener: (name, listener) => {
         listeners.set(name, [...(listeners.get(name) ?? []), listener])
@@ -168,6 +181,46 @@ describe('bootstrapResumability scope materialization', () => {
     second.dispatch('click')
     await vi.waitFor(() => expect(scopes).toHaveLength(2))
     expect(scopes[1]?.count).toBe(sharedCount)
+  })
+
+  it('binds a registered signal to a DOM target through effect and disposes cleanly', () => {
+    const id = createScopeId('signal', 'client-dom-binding')
+    const signal = registerScopeSignal<number>(id, 0)
+    const element = { nodeType: 1, textContent: '' } as unknown as HTMLElement
+    const dispose = bindSignalToDOM(id, element, 'text')
+    expect(element.textContent).toBe('0')
+    signal.set(1)
+    expect(element.textContent).toBe('1')
+    dispose()
+    signal.set(2)
+    expect(element.textContent).toBe('1')
+    expect(disposeScope(id)).toBe(true)
+  })
+
+  it('binds scalar properties from the standalone resumability bootstrap', async () => {
+    const json = JSON.stringify({
+      count: { kind: 'signal', id: 'nx:signal:binding-bootstrap', initial: 2 },
+    })
+    const element = fakeElement({
+      'data-nx-bind': 'nx:signal:binding-bootstrap#text',
+      'data-nx-scope': json,
+      'data-nx-on-click': 'chunk_0000000000ee.js#capture',
+    })
+    const root = {
+      querySelectorAll: () => [element as unknown as HTMLElement],
+    } as unknown as Document
+    let liveSignal: { set: (value: number) => void } | undefined
+    const dispose = bootstrapResumability(root, async () => ({
+      capture: ({ scope }: { scope: Record<string, unknown> }) => {
+        liveSignal = scope.count as { set: (value: number) => void }
+      },
+    }))
+    expect(element.textContent).toBe('2')
+    element.dispatch('click')
+    await vi.waitFor(() => expect(liveSignal).toBeDefined())
+    liveSignal?.set(4)
+    expect(element.textContent).toBe('4')
+    dispose()
   })
 
   it('stops binding after disposal', () => {
@@ -224,4 +277,18 @@ describe('ScopeRegistry ownership', () => {
     expect(first.dispose).toHaveBeenCalledTimes(1)
     expect(registry.inspectScope()).toEqual([{ id: 'nx:signal:overwrite-test', kind: 'signal' }])
   })
+})
+
+it('updates a scalar DOM property without rerendering', () => {
+  const id = createScopeId('signal', 'client-dom-disabled')
+  const signal = registerScopeSignal<boolean>(id, false)
+  const element = { nodeType: 1, disabled: false } as unknown as HTMLButtonElement
+  const dispose = bindSignalToDOM(id, element, 'disabled')
+  expect(element.disabled).toBe(false)
+  signal.set(true)
+  expect(element.disabled).toBe(true)
+  dispose()
+  signal.set(false)
+  expect(element.disabled).toBe(true)
+  expect(disposeScope(id)).toBe(true)
 })

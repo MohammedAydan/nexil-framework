@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "@mohammedaydan/core": "workspace:*"
+    "@mohammedaydan/core": "workspace:*",
+    "@mohammedaydan/reactivity": "workspace:*"
   },
   "exports": {
     ".": {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { element, text } from '@mohammedaydan/core'
-import { renderToString } from './index'
+import { renderBindingMarker, renderToString } from './index'
 
 describe('renderToString', () => {
   it('renders deterministic escaped HTML', () => {
@@ -38,5 +38,21 @@ describe('renderToString', () => {
     expect(renderToString(['a', null, ['b', false, element('strong', {}, 'c')]])).toBe(
       'ab<strong>c</strong>',
     )
+  })
+
+  it('renders a safe SSR binding marker', () => {
+    const marker = renderBindingMarker('nx:signal:counter', 'text')
+    expect(marker).toBe('data-nx-bind="nx:signal:counter#text"')
+    expect(
+      renderToString(element('output', { 'data-nx-bind': 'nx:signal:counter#text' }, '0')),
+    ).toBe('<output data-nx-bind="nx:signal:counter#text">0</output>')
+  })
+
+  it('rejects unsafe binding marker inputs', () => {
+    expect(() => renderBindingMarker('nx:signal:../secret', 'text')).toThrow(/scope id/)
+    expect(() => renderBindingMarker('nx:signal:counter', 'style' as never)).toThrow(/target/)
+    expect(
+      renderToString(element('output', { 'data-nx-bind': 'nx:signal:counter#style' }, '0')),
+    ).toBe('<output>0</output>')
   })
 })

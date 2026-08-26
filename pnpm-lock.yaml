@@ -246,6 +246,9 @@ importers:
       '@mohammedaydan/core':
         specifier: workspace:*
         version: link:../core
+      '@mohammedaydan/reactivity':
+        specifier: workspace:*
+        version: link:../reactivity
 
   packages/compiler: {}
 

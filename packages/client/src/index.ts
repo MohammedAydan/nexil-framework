@@ -1,5 +1,6 @@
 import type { Serializable } from '@mohammedaydan/core'
 import { isSerializable } from '@mohammedaydan/core'
+import { effect, state } from '@mohammedaydan/reactivity'
 
 export const RESUME_FORMAT_VERSION = 1 as const
 export const MAX_RESUME_DEPTH = 8
@@ -13,6 +14,19 @@ export interface ResumePayload {
 export interface HandlerReference {
   readonly chunk: string
   readonly exportName: string
+}
+
+export type DomBindingTarget = 'text' | 'value' | 'checked' | 'disabled' | 'hidden'
+
+export interface DomBindingTargetNode {
+  readonly node: Text | HTMLElement
+  readonly target: DomBindingTarget
+}
+
+export interface BindingSignal<T = unknown> {
+  (): T
+  readonly value: T
+  subscribe(listener: () => void): () => void
 }
 
 export interface ResumeManifest {
@@ -184,6 +198,131 @@ function materializeScope(
   return scope
 }
 
+function isBindingSignal(value: unknown): value is BindingSignal {
+  return (
+    typeof value === 'function' &&
+    typeof (value as { subscribe?: unknown }).subscribe === 'function'
+  )
+}
+
+function applyBindingTarget(target: DomBindingTargetNode, value: unknown): void {
+  if (target.target === 'text') {
+    if (target.node.nodeType === 3) target.node.nodeValue = value == null ? '' : String(value)
+    else (target.node as HTMLElement).textContent = value == null ? '' : String(value)
+    return
+  }
+  const element = target.node as HTMLElement
+  if (target.target === 'value') {
+    ;(element as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement).value =
+      value == null ? '' : String(value)
+    return
+  }
+  if (target.target === 'checked') {
+    ;(element as HTMLInputElement).checked = Boolean(value)
+    return
+  }
+  if (target.target === 'disabled') {
+    ;(
+      element as HTMLButtonElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    ).disabled = Boolean(value)
+    return
+  }
+  element.hidden = Boolean(value)
+}
+
+function bindReadableSignalToDOM<T>(
+  signal: BindingSignal<T>,
+  target: DomBindingTargetNode,
+): () => void {
+  if (!isBindingSignal(signal)) throw new TypeError('Nexis DOM bindings require a readable signal.')
+  return effect(() => {
+    applyBindingTarget(target, signal())
+  })
+}
+
+/** Bind a registered Signal or Store value to one DOM target without rerendering a component. */
+export function bindSignalToDOM(
+  scopeId: string,
+  node: Text | HTMLElement,
+  targetProperty: DomBindingTarget,
+): () => void {
+  if (!/^nx:(?:signal|store):[A-Za-z0-9_-]+$/.test(scopeId))
+    throw new TypeError('Nexis DOM binding scope id must be a stable signal or store id.')
+  const registered = getScopeRegistry().resolve<BindingSignal | { value: BindingSignal }>(scopeId)
+  const signal =
+    registered && typeof registered === 'object' && 'value' in registered
+      ? registered.value
+      : registered
+  if (!signal || !isBindingSignal(signal))
+    throw new Error(`Nexis DOM binding signal is not registered: ${scopeId}`)
+  return bindReadableSignalToDOM(signal, { node, target: targetProperty })
+}
+
+function parseBindingAttribute(value: string): Array<{
+  readonly scopeId: string
+  readonly target: DomBindingTarget
+}> {
+  const bindings: Array<{ readonly scopeId: string; readonly target: DomBindingTarget }> = []
+  for (const part of value.split(';')) {
+    const separator = part.lastIndexOf('#')
+    if (separator < 1) continue
+    const scopeId = part.slice(0, separator)
+    const target = part.slice(separator + 1) as DomBindingTarget
+    if (!/^nx:(?:signal|store):[A-Za-z0-9_-]+$/.test(scopeId)) continue
+    if (!['text', 'value', 'checked', 'disabled', 'hidden'].includes(target)) continue
+    bindings.push({ scopeId, target })
+  }
+  return bindings
+}
+
+function resolveMaterializedBinding(
+  element: HTMLElement,
+  cache: Map<string, unknown>,
+  scopeId: string,
+): BindingSignal | undefined {
+  const raw = element.getAttribute('data-nx-scope')
+  if (!raw) return undefined
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    return undefined
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return undefined
+  const scope = materializeScope(element, cache)
+  for (const [name, ref] of Object.entries(parsed as Record<string, ScopeRef>)) {
+    if (ref && 'id' in ref && ref.id === scopeId) {
+      const value = scope[name]
+      if (isBindingSignal(value)) return value
+      if (value && typeof value === 'object' && 'value' in value) {
+        const signal = (value as { value?: unknown }).value
+        if (isBindingSignal(signal)) return signal
+      }
+    }
+  }
+  return undefined
+}
+
+function bindResumableDOMBindings(
+  root: Document | HTMLElement,
+  cache: Map<string, unknown>,
+  disposers: Array<() => void>,
+): void {
+  const elements = root.querySelectorAll<HTMLElement>('[data-nx-bind]')
+  for (const element of elements) {
+    const value = element.getAttribute('data-nx-bind')
+    if (!value) continue
+    for (const binding of parseBindingAttribute(value)) {
+      const signal = resolveMaterializedBinding(element, cache, binding.scopeId)
+      if (!signal) {
+        console.warn(`[nexis] binding signal unavailable: ${binding.scopeId}`)
+        continue
+      }
+      disposers.push(bindReadableSignalToDOM(signal, { node: element, target: binding.target }))
+    }
+  }
+}
+
 export function bootstrapResumability(
   root: Document | HTMLElement,
   load: ResumeImport,
@@ -191,6 +330,7 @@ export function bootstrapResumability(
   const listeners: Array<() => void> = []
   const cache = new Map<string, unknown>()
   const bound = new WeakMap<HTMLElement, Set<string>>()
+  bindResumableDOMBindings(root, cache, listeners)
   const attributePattern = /^data-nx-on(?:-([a-z][a-z0-9-]*))?$/
   for (const element of root.querySelectorAll<HTMLElement>('*')) {
     for (const attribute of Array.from(element.attributes)) {
@@ -218,7 +358,10 @@ export function bootstrapResumability(
       }
     }
   }
-  return () => listeners.splice(0).forEach((dispose) => dispose())
+  return () => {
+    listeners.splice(0).forEach((dispose) => dispose())
+    cache.clear()
+  }
 }
 
 export type ScopeRefKind = 'value' | 'signal' | 'store' | 'action' | 'unsupported'
@@ -305,30 +448,17 @@ function assertSupportedScopeValue(value: unknown): asserts value is Serializabl
 }
 
 function createSignal<T extends Serializable>(initial: T): ScopeSignal<T> {
-  let current = initial
-  let disposed = false
-  const listeners = new Set<() => void>()
-  const signal = (() => {
-    if (disposed) throw new Error('Nexis scope signal has been disposed.')
-    return current
-  }) as ScopeSignal<T>
-  Object.defineProperty(signal, 'value', { enumerable: true, get: () => signal() })
+  const signal = state(initial) as ScopeSignal<T> & {
+    setValue(next: T): void
+  }
+  const originalSetValue = signal.setValue
+  signal.setValue = (next) => {
+    assertSupportedScopeValue(next)
+    originalSetValue(next)
+  }
   signal.set = (next) => {
-    if (disposed) throw new Error('Nexis scope signal has been disposed.')
-    const resolved = typeof next === 'function' ? (next as (previous: T) => T)(current) : next
-    assertSupportedScopeValue(resolved)
-    if (Object.is(current, resolved)) return
-    current = resolved
-    for (const listener of [...listeners]) listener()
-  }
-  signal.subscribe = (listener) => {
-    if (disposed) return () => undefined
-    listeners.add(listener)
-    return () => listeners.delete(listener)
-  }
-  signal.dispose = () => {
-    disposed = true
-    listeners.clear()
+    const resolved = typeof next === 'function' ? (next as (previous: T) => T)(signal()) : next
+    signal.setValue(resolved)
   }
   return signal
 }

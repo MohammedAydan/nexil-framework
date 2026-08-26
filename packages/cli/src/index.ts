@@ -5,7 +5,11 @@ import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { build, createServer, preview, transformWithEsbuild } from 'vite'
 import { assertBudget } from '@mohammedaydan/compiler'
-import nexis, { RESUMABILITY_BOOTSTRAP, transformNexisSource } from '@mohammedaydan/vite-plugin'
+import nexis, {
+  RESUMABILITY_BINDINGS,
+  RESUMABILITY_BOOTSTRAP,
+  transformNexisSource,
+} from '@mohammedaydan/vite-plugin'
 import { escapeHtml, renderToString } from '@mohammedaydan/renderer'
 import { generateOgImage } from '@mohammedaydan/og-image'
 import {
@@ -314,6 +318,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   const feedItems: Array<{ title: string; link: string; description?: string }> = []
   const cssAssets = new Set<string>()
   let hasInteractiveRoute = false
+  let hasBindingRoute = false
   const minifiedBootstrap = (
     await transformWithEsbuild(RESUMABILITY_BOOTSTRAP, BOOTSTRAP_FILE, {
       loader: 'js',
@@ -345,12 +350,15 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
       .replace(/\.(tsx|jsx|ts|js)$/, '')
       .replace(/\/index$/, '')
     const routePath = routeName === 'index' ? '/' : `/${routeName}`
-    const interactive = transformed.chunks.length > 0
+    const interactive = transformed.chunks.length > 0 || transformed.bindings.length > 0
     hasInteractiveRoute ||= interactive
+    hasBindingRoute ||= transformed.bindings.length > 0
 
     let renderedHtml = ''
     let headHtml = '<title>Nexis App</title>'
     let scriptsHtml = interactive ? `<script type="module" src="/${BOOTSTRAP_FILE}"></script>` : ''
+    if (transformed.bindings.length > 0)
+      scriptsHtml += `<script type="module" src="/nexis-bindings.js"></script>`
     try {
       const mod: any = await loadServerModule(route)
       const routeSeo = resolveSeo(mod.seo, routePath)
@@ -494,6 +502,16 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   if (hasInteractiveRoute) {
     await writeFile(join(outputRoot, BOOTSTRAP_FILE), minifiedBootstrap, 'utf8')
     await writeFile(join(clientRoot, BOOTSTRAP_FILE), minifiedBootstrap, 'utf8')
+  }
+  if (hasBindingRoute) {
+    const minifiedBindings = (
+      await transformWithEsbuild(RESUMABILITY_BINDINGS, 'nexis-bindings.js', {
+        loader: 'js',
+        minify: true,
+      })
+    ).code
+    await writeFile(join(outputRoot, 'nexis-bindings.js'), minifiedBindings, 'utf8')
+    await writeFile(join(clientRoot, 'nexis-bindings.js'), minifiedBindings, 'utf8')
   }
   const sitemap = buildSitemap(
     records.map((record) => ({
