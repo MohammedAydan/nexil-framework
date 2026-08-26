@@ -137,3 +137,17 @@ For a release: bump package versions, tag `v<version>`, push tag.
   pnpm local metadata cache can falsely report deleted versions as existing (CI cold runners are
   authoritative); Windows pathname bug keeps resurfacing via Linux-authored scripts - watch for it
   in future PRs touching *.mjs build tooling.
+
+## Session: 2026-08-26 - Branch audit + phase2-parity integration
+
+- Audited all remote branches vs main: fix/production-audit-verification,
+  feat/nexis-showcase-benchmarks, feat/tailwind-vscode-api-v1 fully merged
+  (0 ahead). feat/phase2-production-parity had 2 commits: Arabic docs
+  package (docs/ar, 23 files) + English docs relocated to docs/en.
+- Merged --no-ff into main (clean, 7778f23). Deduped English docs:
+  docs/en supersedes identical docs/docs_en from PR #7 (ffb1b56).
+- Local gates briefly red post-merge: packages/css tailwind-merge symlink
+  dangled into a deleted temp workspace fixture (.tmp-engine-proof-*);
+  root pnpm install relinked. Note: temp workspaces created inside the
+  repo can orphan package symlinks on deletion - reinstall afterwards.
+- Gates green: build/typecheck/test/format. Pushed ffb1b56.
