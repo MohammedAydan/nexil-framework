@@ -25,6 +25,8 @@ Additional architectural commitments: rendering produces real HTML (no virtual D
 
 للحصول على شرح مفصل لطريقة عمل الفريمورك، إنشاء المشاريع، الصفحات والمكونات، Resumability، الحالة، Actions، SEO، الوسائط، النشر، الاختبار، الأمان، ومرجع API، راجع [حزمة التوثيق العربية الكاملة](docs/ar/README.md).
 
+For the complete English documentation covering the same framework surface, see [the English documentation package](docs/en/README.md).
+
 ## Quickstart
 
 Initialize a project from **GitHub Packages** (the registry hosting every `@mohammedaydan/*` package):
