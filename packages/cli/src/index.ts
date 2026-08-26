@@ -2,10 +2,10 @@ import { gzipSync } from 'node:zlib'
 import { existsSync } from 'node:fs'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
-import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { build, createServer, preview, transformWithEsbuild } from 'vite'
+import { build, createServer, transformWithEsbuild } from 'vite'
 import type { Child } from '@mohammedaydan/core'
 import { assertBudget } from '@mohammedaydan/compiler'
 import nexis, {
@@ -27,8 +27,8 @@ import {
 } from '@mohammedaydan/seo'
 import { matchRoute, routeFromFile } from '@mohammedaydan/router'
 import { nexisSSRPlugin } from '@mohammedaydan/dev-server'
-import { createProductionServer } from '@mohammedaydan/serve'
-import type { RedirectRule } from '@mohammedaydan/serve'
+import { createServer as createProductionServer } from '@mohammedaydan/serve'
+import type { NexisConfig, RedirectRule } from '@mohammedaydan/serve'
 import type { SeoMetadata } from '@mohammedaydan/seo'
 export { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 import { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
@@ -164,9 +164,9 @@ export function helpText(): string {
     '  dev            Start the development server',
     '                 Env: NEXIS_HOST, NEXIS_PORT, NEXIS_ALLOW_ALL_HOSTS=1',
     '  build          Build SSG/ISR/SSR bundles',
-    '  start          Start a production build',
+    '  start          Start the route-aware production build',
     '  preview        Preview a production build (alias for start)',
-    '  serve          Serve dist/client with route-aware production semantics',
+    '  serve          Alias for start (kept for compatibility)',
     '  check          Run type, route, SEO, and boundary checks',
     '  analyze        Report route output and client budgets',
     '  routes         List discovered routes',
@@ -299,21 +299,12 @@ interface BuildManifest {
   readonly routes: readonly BuildRouteRecord[]
 }
 
-interface NexisBuildConfig {
-  readonly redirects?: readonly RedirectRule[]
-  readonly feed?: {
-    readonly title?: string
-    readonly description?: string
-    readonly language?: string
-  }
-}
-
-async function readNexisConfig(root: string): Promise<NexisBuildConfig> {
+async function readNexisConfig(root: string): Promise<NexisConfig> {
   try {
     const parsed = JSON.parse(await readFile(join(root, 'nexis.config.json'), 'utf8')) as unknown
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed))
       throw new TypeError('Invalid nexis.config.json.')
-    return parsed as NexisBuildConfig
+    return parsed as NexisConfig
   } catch (error) {
     if (error instanceof SyntaxError) throw new TypeError('Invalid nexis.config.json.')
     if (error instanceof TypeError) throw error
@@ -333,9 +324,25 @@ async function readNexisConfig(root: string): Promise<NexisBuildConfig> {
     const config = module.default ?? module.config ?? module
     if (!config || typeof config !== 'object' || Array.isArray(config))
       throw new TypeError(`Invalid ${fileName}.`)
-    return config as NexisBuildConfig
+    return config as NexisConfig
   }
   return {}
+}
+
+async function copyPublicDirectory(source: string, target: string): Promise<void> {
+  if (!existsSync(source)) return
+  for (const entry of await readdir(source, { withFileTypes: true })) {
+    const from = join(source, entry.name)
+    const to = join(target, entry.name)
+    if (entry.isDirectory()) {
+      await mkdir(to, { recursive: true })
+      await copyPublicDirectory(from, to)
+      continue
+    }
+    if (!entry.isFile() || existsSync(to)) continue
+    await mkdir(dirname(to), { recursive: true })
+    await copyFile(from, to)
+  }
 }
 
 async function discoverRoutes(directory: string, root: string): Promise<string[]> {
@@ -615,8 +622,8 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   const routes = await discoverRoutes(routeRoot, routeRoot)
   if (routes.length === 0) throw new Error(`No routes found in ${routeRoot}.`)
   const outputRoot = join(root, 'dist')
-  const siteOrigin = process.env.NEXIS_SITE_ORIGIN ?? 'https://nexis-showcase.example'
   const config = await readNexisConfig(root)
+  const siteOrigin = process.env.NEXIS_SITE_ORIGIN ?? config.app?.origin ?? 'http://localhost:4173'
   const resolveSeo = (seo: RouteModule['seo'], pathname: string): SeoMetadata | undefined => {
     if (!seo) return undefined
     const metadata = typeof seo === 'function' ? seo({ pathname }) : seo
@@ -1067,6 +1074,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     `${JSON.stringify(manifest, null, 2)}\n`,
     'utf8',
   )
+  await copyPublicDirectory(join(root, 'public'), clientRoot)
   return manifest
 }
 
@@ -1077,6 +1085,43 @@ async function readManifest(root: string): Promise<BuildManifest> {
   if (manifest.version !== 1 || !Array.isArray(manifest.routes))
     throw new Error('Invalid Nexis build manifest.')
   return manifest
+}
+
+function configuredPort(config: NexisConfig): number {
+  const environmentPort = process.env.NEXIS_PORT?.trim()
+  const raw = environmentPort || config.server?.port
+  if (raw === undefined) return 4173
+  const port = typeof raw === 'number' ? raw : Number(raw)
+  if (!Number.isInteger(port) || port < 0 || port > 65535)
+    throw new RangeError('NEXIS_PORT must be an integer between 0 and 65535.')
+  return port
+}
+
+async function startProduction(root: string): Promise<string> {
+  const clientDir = join(root, 'dist', 'client')
+  if (!existsSync(join(clientDir, 'index.html')))
+    throw new Error('No production build found. Run `pnpm build` before `pnpm start`.')
+  const config = await readNexisConfig(root)
+  const serverConfig = config.server ?? {}
+  const host = process.env.NEXIS_HOST ?? serverConfig.host ?? '0.0.0.0'
+  const port = configuredPort(config)
+  const environmentOrigins = process.env.NEXIS_ACTION_ORIGINS
+  const actionOrigins = environmentOrigins
+    ? environmentOrigins
+        .split(',')
+        .map((value) => value.trim())
+        .filter(Boolean)
+    : serverConfig.actionOrigins
+  const production = createProductionServer(clientDir, {
+    ...serverConfig,
+    ...(config.redirects ? { redirects: config.redirects } : {}),
+    host,
+    port,
+    serverDir: serverConfig.serverDir ?? join(root, 'dist', 'server', 'routes'),
+    ...(actionOrigins ? { actionOrigins } : {}),
+  })
+  await production.listen()
+  return `Nexis production server running at http://localhost:${port}/`
 }
 
 export async function runCli(argv: readonly string[], cwd = process.cwd()): Promise<string> {
@@ -1133,10 +1178,8 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
     await server.listen()
     return `Nexis dev server running at ${server.resolvedUrls?.local?.[0] ?? 'local URL'}`
   }
-  if (parsed.command === 'start' || parsed.command === 'preview') {
-    const server = await preview({ root, build: { outDir: 'dist/client' } })
-    return `Nexis production server running at ${server.resolvedUrls?.local?.[0] ?? 'local URL'}`
-  }
+  if (parsed.command === 'start' || parsed.command === 'preview' || parsed.command === 'serve')
+    return startProduction(root)
   if (parsed.command === 'generate') {
     const [kind, name] = parsed.args
     if (!kind || !name || !['route', 'component'].includes(kind))
@@ -1153,20 +1196,6 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
   if (parsed.command === 'test') {
     const result = await execFileAsync('pnpm', ['test', ...parsed.args], { cwd: root })
     return result.stdout.trim() || result.stderr.trim() || 'Nexis tests passed.'
-  }
-  if (parsed.command === 'serve') {
-    const config = await readNexisConfig(root)
-    const production = createProductionServer(join(root, 'dist', 'client'), {
-      ...(config.redirects ? { redirects: config.redirects } : {}),
-      ...(process.env.NEXIS_HOST ? { host: process.env.NEXIS_HOST } : {}),
-      ...(process.env.NEXIS_PORT ? { port: Number(process.env.NEXIS_PORT) } : {}),
-      serverDir: join(root, 'dist', 'server', 'routes'),
-      ...(process.env.NEXIS_ACTION_ORIGINS
-        ? { actionOrigins: process.env.NEXIS_ACTION_ORIGINS.split(',').filter(Boolean) }
-        : {}),
-    })
-    await production.listen()
-    return `Nexis route-aware server running at http://${process.env.NEXIS_HOST ?? 'localhost'}:${process.env.NEXIS_PORT ?? '4173'}/`
   }
   // Keep the command exhaustive if a new command is added to NexisCommand.
   const unreachable: never = parsed.command

@@ -13,6 +13,7 @@
     { "path": "./packages/og-image" },
     { "path": "./packages/css" },
     { "path": "./packages/server" },
+    { "path": "./packages/security" },
     { "path": "./packages/actions" },
     { "path": "./packages/state" },
     { "path": "./packages/adapters" },

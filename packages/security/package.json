@@ -1,10 +1,9 @@
 {
-  "name": "@mohammedaydan/state",
+  "name": "@mohammedaydan/security",
   "version": "1.1.0",
   "type": "module",
   "dependencies": {
-    "@mohammedaydan/core": "workspace:*",
-    "@mohammedaydan/reactivity": "workspace:*"
+    "@mohammedaydan/server": "workspace:*"
   },
   "exports": {
     ".": {
@@ -20,7 +19,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MohammedAydan/nexis-framework.git",
-    "directory": "packages/state"
+    "directory": "packages/security"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com",

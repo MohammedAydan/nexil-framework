@@ -26,7 +26,37 @@ describe('Nexis CLI', () => {
     await expect(createProject('../escape', parent)).rejects.toThrow(/Project name/)
     await expect(runCli(['routes'], directory)).resolves.toContain('index.tsx')
     await expect(runCli(['build'], directory)).resolves.toContain('build completed')
+    expect(await readFile(join(directory, 'dist/client/styles.css'), 'utf8')).toContain(
+      'Nexis starter design system',
+    )
     await expect(runCli(['analyze'], directory)).resolves.toMatch(/\/\s+\d+\s+\d+\s+interactive/)
+  })
+
+  it('requires a production artifact before start', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-start-'))
+    try {
+      const directory = await createProject('start-app', parent)
+      await expect(runCli(['start'], directory)).rejects.toThrow(/Run `pnpm build`/)
+    } finally {
+      await rm(parent, { recursive: true, force: true })
+    }
+  })
+
+  it('uses optional project configuration for the production origin', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-config-'))
+    try {
+      const directory = await createProject('configured-app', parent)
+      await writeFile(
+        join(directory, 'nexis.config.mjs'),
+        "export default { app: { origin: 'https://configured.example.test' } }\n",
+        'utf8',
+      )
+      await runCli(['build'], directory)
+      const html = await readFile(join(directory, 'dist/client/index.html'), 'utf8')
+      expect(html).toContain('https://configured.example.test/')
+    } finally {
+      await rm(parent, { recursive: true, force: true })
+    }
   })
 
   it('uses local workspace dependencies when scaffolded inside the repository', async () => {

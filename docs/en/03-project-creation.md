@@ -11,12 +11,13 @@ pnpm --version
 
 ## Create a project
 
-The repository provides `@mohammedaydan/create-nexis-app` and `@mohammedaydan/create-nexis`. Use the published CLI or the workspace package when developing the framework itself.
+The supported initializer is `@mohammedaydan/create-nexis`. Use the published CLI or the workspace package when developing the framework itself.
 
 ```bash
-pnpm dlx @mohammedaydan/create-nexis-app my-site
+pnpm dlx @mohammedaydan/create-nexis@latest my-site --yes --ts
 cd my-site
 pnpm install
+pnpm dev
 ```
 
 Do not mix an old generated `dist` directory with a new CLI version. Recreate a disposable project or reinstall dependencies from the target release.
@@ -35,7 +36,6 @@ my-site/
 │   ├── lib/
 │   └── styles/
 ├── public/
-├── nexis.config.ts
 ├── package.json
 ├── tsconfig.json
 └── pnpm-lock.yaml
@@ -80,38 +80,40 @@ export default function Home() {
 }
 ```
 
-## `nexis.config.ts`
+## Optional `nexis.config.ts`
+
+Nexis does not require a configuration file for the normal lifecycle. A new application is ready for local development with `pnpm dev`, and a completed `pnpm build` is ready for `pnpm start`. Add configuration only when you need to override the defaults.
 
 ```ts
-import type { NexisBuildConfig } from '@mohammedaydan/cli'
+import { defineConfig } from '@mohammedaydan/serve'
 
-const config: NexisBuildConfig = {
-  siteOrigin: 'https://example.com',
+export default defineConfig({
+  app: { origin: 'https://example.com' },
+  server: { port: 3000 },
   feed: {
     title: 'My site',
     description: 'Recent pages and updates.',
     language: 'en',
   },
   redirects: [{ from: '/old-docs', to: '/docs/architecture', status: 308 }],
-}
-
-export default config
+})
 ```
 
 Use the real production origin when generating canonical URLs and sitemaps. Do not use a temporary preview hostname for public metadata.
 
 ## Development commands
 
-| Command              | Purpose                                                  |
-| -------------------- | -------------------------------------------------------- |
-| `pnpm dev`           | Start the development server when defined by the project |
-| `pnpm build`         | Build the workspace or application                       |
-| `pnpm typecheck`     | Run TypeScript project-reference checks                  |
-| `pnpm test`          | Run Vitest                                               |
-| `pnpm test:e2e`      | Run Playwright                                           |
-| `pnpm lint`          | Run ESLint                                               |
-| `pnpm format:check`  | Run the Prettier check                                   |
-| `pnpm release:check` | Dry-run the publishable packages                         |
+| Command              | Purpose                                                 |
+| -------------------- | ------------------------------------------------------- |
+| `pnpm dev`           | Start the Nexis development server                      |
+| `pnpm build`         | Build the production artifact and copy `public/` assets |
+| `pnpm start`         | Start the route-aware production server                 |
+| `pnpm typecheck`     | Run TypeScript project-reference checks                 |
+| `pnpm test`          | Run Vitest                                              |
+| `pnpm test:e2e`      | Run Playwright                                          |
+| `pnpm lint`          | Run ESLint                                              |
+| `pnpm format:check`  | Run the Prettier check                                  |
+| `pnpm release:check` | Dry-run the publishable packages                        |
 
 ## First verification
 

@@ -17,7 +17,7 @@ For an existing project, inspect the installed CLI and use the repository script
 
 ```bash
 nexis --help
-nexis preview
+nexis start
 nexis generate route account/settings
 nexis generate component Button
 nexis add action saveProfile
@@ -35,11 +35,12 @@ The v1.1 CLI also provides `generate route`, `generate component`, `add action`,
 pnpm install
 pnpm dev
 pnpm build
+pnpm start
 pnpm typecheck
 pnpm test
 ```
 
-`dev` is for local iteration. Production verification must use the built output and the production adapter, not only the development server.
+`dev` is for local iteration. `build` creates the full production artifact, including `public/` assets, and `start` serves it with Nexis route, Action, cache, and security semantics. Production verification must use `pnpm build` then `pnpm start`, not only the development server.
 
 ## Route discovery
 
@@ -47,9 +48,17 @@ The build discovers route files under the configured source directory, recursive
 
 ## Rendering configuration
 
-Use the current exported configuration types to select static, server, ISR, or partial behavior. The exact field names can evolve, so inspect the installed `@mohammedaydan/*` declarations before writing a new configuration example.
+Configuration is optional. Import `defineConfig` from `@mohammedaydan/serve` only when overriding defaults such as the public origin, server port, redirects, feed metadata, cache policy, or Action origin policy. Keep configuration narrowly typed and avoid undocumented fields.
 
-The current Phase 3 surface includes typed support for feed metadata and redirects. Keep the configuration narrowly typed and avoid undocumented fields that the current package does not export.
+```ts
+import { defineConfig } from '@mohammedaydan/serve'
+
+export default defineConfig({
+  app: { origin: 'https://app.example.com' },
+  server: { port: 3000 },
+  redirects: [{ from: '/old', to: '/new', status: 308 }],
+})
+```
 
 ## Feeds
 
@@ -65,10 +74,10 @@ When OG generation is enabled, build outputs PNG cards from escaped title and de
 
 ## Environment variables
 
-Use environment variables for deployment-specific values such as host, port, trusted-proxy mode, and secrets. Document whether each variable is read at build time or request time.
+Use environment variables for deployment-specific values such as host, port, public origin, trusted-proxy mode, and secrets. Document whether each variable is read at build time or request time.
 
 ```bash
-HOST=127.0.0.1 PORT=3000 pnpm start
+NEXIS_HOST=127.0.0.1 NEXIS_PORT=3000 pnpm start
 ```
 
 Never commit secrets or include them in generated HTML.

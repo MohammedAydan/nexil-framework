@@ -1,7 +1,11 @@
-import { createServer as createHttpServer } from 'node:http'
 import { readFile, stat } from 'node:fs/promises'
 import { extname, join, normalize, relative, resolve } from 'node:path'
-import type { IncomingMessage, Server, ServerResponse } from 'node:http'
+import {
+  createServer as createHttpServer,
+  type IncomingMessage,
+  type Server,
+  type ServerResponse,
+} from 'node:http'
 import { createMemoryIdempotencyStore, handleActionRequest } from '@mohammedaydan/actions'
 import type { IdempotencyStore, ServerAction } from '@mohammedaydan/actions'
 
@@ -14,10 +18,31 @@ export interface ProductionServerOptions {
   readonly redirects?: readonly RedirectRule[]
   readonly telemetry?: TelemetryReceiverOptions
   readonly idempotency?: IdempotencyStore
+  /** Runs before Nexis route and Action handling for app-level guards and instrumentation. */
+  readonly middleware?: readonly ProductionRequestHandler[]
   readonly cacheControl?: {
     readonly html?: string
     readonly assets?: string
   }
+}
+
+/** Optional project configuration. Applications run without it; use it to override defaults. */
+export interface NexisConfig {
+  readonly app?: {
+    readonly origin?: string
+  }
+  readonly server?: ProductionServerOptions
+  readonly redirects?: readonly RedirectRule[]
+  readonly feed?: {
+    readonly title?: string
+    readonly description?: string
+    readonly language?: string
+  }
+}
+
+/** Define typed optional project configuration with no runtime work. */
+export function defineConfig<Config extends NexisConfig>(config: Config): Config {
+  return config
 }
 
 export interface RedirectRule {
@@ -40,6 +65,26 @@ export interface ProductionServer {
   readonly server: Server
   readonly listen: (port?: number, host?: string) => Promise<Server>
   readonly close: () => Promise<void>
+}
+
+/** Compose Node middleware in order. The Nexis route handler is normally the final handler. */
+export function composeMiddleware(
+  ...handlers: readonly ProductionRequestHandler[]
+): ProductionRequestHandler {
+  return async (request, response, next) => {
+    let cursor = -1
+    const dispatch = async (index: number): Promise<void> => {
+      if (index <= cursor) throw new Error('Nexis middleware called next() more than once.')
+      cursor = index
+      const handler = handlers[index]
+      if (!handler) {
+        next?.()
+        return
+      }
+      await handler(request, response, () => dispatch(index + 1))
+    }
+    await dispatch(0)
+  }
 }
 
 const MIME_TYPES: Readonly<Record<string, string>> = {
@@ -141,7 +186,8 @@ async function findAction(
   }
 }
 
-export function createProductionMiddleware(
+/** Create the route-aware Nexis request handler for an existing Node server. */
+export function createMiddleware(
   distDir: string,
   options: ProductionServerOptions = {},
 ): ProductionRequestHandler {
@@ -274,11 +320,15 @@ export function createProductionMiddleware(
   }
 }
 
-export function createProductionServer(
+/** Create a production-ready Nexis server with route, Action, cache, and security defaults. */
+export function createServer(
   distDir: string,
   options: ProductionServerOptions = {},
 ): ProductionServer {
-  const middleware = createProductionMiddleware(distDir, options)
+  const routeMiddleware = createMiddleware(distDir, options)
+  const middleware = options.middleware?.length
+    ? composeMiddleware(...options.middleware, routeMiddleware)
+    : routeMiddleware
   const server = createHttpServer((request, response) => {
     void middleware(request, response)
   })
@@ -309,5 +359,11 @@ export function createProductionServer(
       }),
   }
 }
+
+/** @deprecated Use createMiddleware for new projects. */
+export const createProductionMiddleware = createMiddleware
+
+/** @deprecated Use createServer for new projects. */
+export const createProductionServer = createServer
 
 export type { Server, ServerResponse }

@@ -2,7 +2,12 @@ import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { createProductionServer } from './index.js'
+import {
+  composeMiddleware,
+  createMiddleware,
+  createProductionServer,
+  createServer,
+} from './index.js'
 
 async function withServer(run: (base: string) => Promise<void>): Promise<void> {
   const root = await mkdtemp(join(tmpdir(), 'nexis-serve-'))
@@ -113,5 +118,33 @@ describe('official production server', () => {
       expect(unsupported.status).toBe(405)
       expect(unsupported.headers.get('allow')).toBe('GET, HEAD')
     })
+  })
+
+  it('exposes concise server and middleware APIs for application composition', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'nexis-serve-composed-'))
+    await writeFile(join(root, 'index.html'), '<h1>home</h1>')
+    const app = createServer(root, {
+      host: '127.0.0.1',
+      port: 0,
+      middleware: [
+        async (_request, response, next) => {
+          response.setHeader('X-Request-Policy', 'applied')
+          await next?.()
+        },
+      ],
+    })
+    await app.listen()
+    const address = app.server.address()
+    if (!address || typeof address === 'string') throw new Error('Missing test server address.')
+    try {
+      const response = await fetch(`http://127.0.0.1:${address.port}/`)
+      expect(response.status).toBe(200)
+      expect(response.headers.get('x-request-policy')).toBe('applied')
+      const handler = composeMiddleware(createMiddleware(root))
+      expect(typeof handler).toBe('function')
+    } finally {
+      await app.close()
+      await rm(root, { recursive: true, force: true })
+    }
   })
 })
