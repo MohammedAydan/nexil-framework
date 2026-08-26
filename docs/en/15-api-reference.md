@@ -4,7 +4,7 @@ This is a practical map of the public APIs. The installed TypeScript declaration
 
 ## Core
 
-`@mohammedaydan/core` exposes RenderNode, ElementNode, Child, and related rendering types, plus the authoring APIs used by routes: `component`, `text`, `element`, and a full re-export of the reactivity toolkit (`state`, `useState`, `computed`, `effect`, `watch`, `batch`, `untrack`, `createRoot`, `onCleanup`). Import reactive primitives from core or from `@mohammedaydan/reactivity` directly; stores come from `@mohammedaydan/state`, which generated projects depend on by default.
+`@mohammedaydan/core` exposes RenderNode, ElementNode, Child, and related rendering types, plus the authoring APIs used by routes: `component`, `text`, `element`, `For`, `Show`, `createContext`, `ErrorBoundary`, `Suspense`, `Form`, and `SubmitButton`. It also re-exports the reactivity toolkit (`state`, `useState`, `computed`, `effect`, `watch`, `batch`, `untrack`, `createRoot`, `onCleanup`, and `resource`). Import reactive primitives from core or from `@mohammedaydan/reactivity` directly; stores come from `@mohammedaydan/state`, which generated projects depend on by default.
 
 ## Renderer
 
@@ -22,25 +22,28 @@ This is a practical map of the public APIs. The installed TypeScript declaration
 
 ## Router
 
-| API                              | Purpose                                 |
-| -------------------------------- | --------------------------------------- |
-| `routeFromFile(file)`            | Convert a filename into a RouteRecord   |
-| `matchRoute(route, pathname)`    | Match a pathname and extract parameters |
-| `resolveRoute(routes, pathname)` | Select a route from a collection        |
+| API                              | Purpose                                             |
+| -------------------------------- | --------------------------------------------------- |
+| `routeFromFile(file)`            | Convert a filename into a RouteRecord               |
+| `matchRoute(route, pathname)`    | Match a pathname and extract parameters             |
+| `resolveRoute(routes, pathname)` | Select a route from a collection                    |
+| `Link(props)`                    | Create a typed internal link with prefetch metadata |
+| `parseUrlParts(url)`             | Parse pathname, query, and hash parts               |
 
 ## Reactivity
 
-| API                       | Purpose                            |
-| ------------------------- | ---------------------------------- |
-| `state(initial)`          | Create a writable signal           |
-| `useState(initial)`       | Return a signal and setter tuple   |
-| `computed(fn)`            | Create a memoized derived signal   |
-| `effect(fn)`              | Create a tracked side effect       |
-| `watch(source, listener)` | Observe a value and listener       |
-| `batch(fn)`               | Group notifications                |
-| `untrack(fn)`             | Read without creating a dependency |
-| `createRoot(fn)`          | Create an owner and cleanup scope  |
-| `onCleanup(fn)`           | Register cleanup                   |
+| API                         | Purpose                                                     |
+| --------------------------- | ----------------------------------------------------------- |
+| `state(initial)`            | Create a writable signal                                    |
+| `useState(initial)`         | Return a signal and setter tuple                            |
+| `computed(fn)`              | Create a memoized derived signal                            |
+| `effect(fn)`                | Create a tracked side effect                                |
+| `watch(source, listener)`   | Observe a value and listener                                |
+| `batch(fn)`                 | Group notifications                                         |
+| `untrack(fn)`               | Read without creating a dependency                          |
+| `createRoot(fn)`            | Create an owner and cleanup scope                           |
+| `onCleanup(fn)`             | Register cleanup                                            |
+| `resource(loader, options)` | Track async loading, value, error, and race-safe refetching |
 
 Signals are callable, expose `get()` and readonly `value`, and provide `set`, `setValue`, `subscribe`, and `dispose`.
 
@@ -56,6 +59,8 @@ Signals are callable, expose `get()` and readonly `value`, and provide `set`, `s
 | `store.subscribe(listener)`   | Subscribe to changes                    |
 | `store.dispose()`             | Dispose the signal and selectors        |
 | `createStateRegistry()`       | Reuse stores by scope and validated key |
+| `setPath(store, path, value)` | Update a nested store path immutably    |
+| `lens(store, path)`           | Create a writable focused signal        |
 
 ## SEO
 
@@ -81,6 +86,10 @@ Signals are callable, expose `get()` and readonly `value`, and provide `set`, `s
 | `createSecurityHeaders(nonce?)`             | Create security headers            |
 | `serializeCookie(name, value, options)`     | Serialize a cookie safely          |
 | `createDataContext(request)`                | Create request-scoped data context |
+| `defineLoader(loader)`                      | Create a typed request loader      |
+| `parseCookies(requestOrHeader)`             | Decode request cookies safely      |
+| `getCookie(request, name)`                  | Read one decoded cookie            |
+| `notFound(message?)`                        | Create a 404 response              |
 
 ## Actions
 
@@ -105,22 +114,23 @@ Signals are callable, expose `get()` and readonly `value`, and provide `set`, `s
 | `disposeScope`                           | Dispose one registered scope                                        |
 | `inspectScope`                           | Inspect active scope records                                        |
 | `bindSignalToDOM(scopeId, node, target)` | Bind a registered Signal or Store value to one DOM target           |
+| `enhanceForms(options)`                  | Enhance `Form` nodes while preserving native fallback               |
 
 Lazy handlers receive `{ element, event, scope }`. Signals, stores, and actions
 captured by a handler are materialized once per scope id and shared across every
 boundary that captures the same declaration.
 
-The compiler directives `bindText$`, `bindValue$`, `bindChecked$`, `bindDisabled$`, and `bindHidden$` create fine-grained DOM bindings. The client function has the following contract:
+The compiler directives `bindText$`, `bindValue$`, `bindChecked$`, `bindDisabled$`, `bindHidden$`, `bindClass$`, `bindStyle$`, `bindHref$`, `bindSrc$`, and `bindAriaLabel$` create fine-grained DOM bindings. The client function has the following contract:
 
 ```ts
 bindSignalToDOM(
   scopeId: string,
   node: Text | HTMLElement,
-  targetProperty: 'text' | 'value' | 'checked' | 'disabled' | 'hidden',
+  targetProperty: 'text' | 'value' | 'checked' | 'disabled' | 'hidden' | 'class' | 'style' | 'href' | 'src' | `aria-${string}`,
 ): () => void
 ```
 
-It resolves a registered `nx:signal:<id>` or `nx:store:<id>` reference, installs an `effect()`, applies the current value immediately, and returns a disposer. Binding updates mutate the target directly; they do not rerun a component or reconcile a virtual DOM. `nexis-bindings.js` is emitted only for routes whose transformed output contains binding metadata.
+It resolves a registered `nx:signal:<id>` or `nx:store:<id>` reference, installs an `effect()`, applies the current value immediately, and returns a disposer. Binding updates mutate the target directly; they do not rerun a component or reconcile a virtual DOM. `nexis-bindings.js` is emitted only for routes whose transformed output contains binding metadata; `nexis-forms.js` is emitted only when a route contains a progressive `Form`.
 
 ## Media
 
@@ -141,4 +151,4 @@ It resolves a registered `nx:signal:<id>` or `nx:store:<id>` reference, installs
 
 ## CLI
 
-The CLI discovers routes, loads configuration, builds HTML and assets, generates feeds, sitemap, robots, redirect manifests, and OG cards, and writes the manifest. Prefer CLI commands and documented configuration over importing internal build helpers from application code.
+The CLI discovers routes, recursively composes `_layout.*` modules, loads configuration, builds HTML and assets, generates feeds, sitemap, robots, redirect manifests, and OG cards, and writes the manifest. It also provides `preview`, safe generators, `doctor`, `test`, and `upgrade` commands. Prefer CLI commands and documented configuration over importing internal build helpers from application code.

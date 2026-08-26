@@ -2,14 +2,21 @@
 
 ## أوامر CLI
 
-| الأمر              | الوظيفة                                 |
-| ------------------ | --------------------------------------- |
-| `nexis build`      | بناء routes وHTML والأصول والـ metadata |
-| `nexis serve`      | تشغيل production server على build جاهز  |
-| `nexis --help`     | عرض الأوامر والخيارات                   |
-| `create-nexis-app` | إنشاء مشروع جديد                        |
+| الأمر                             | الوظيفة                                 |
+| --------------------------------- | --------------------------------------- |
+| `nexis build`                     | بناء routes وHTML والأصول والـ metadata |
+| `nexis preview`                   | معاينة production build                 |
+| `nexis serve`                     | تشغيل production server على build جاهز  |
+| `nexis generate route <path>`     | إنشاء route بأمان                       |
+| `nexis generate component <name>` | إنشاء component بأمان                   |
+| `nexis add action <name>`         | إنشاء server action scaffold            |
+| `nexis doctor`                    | فحص config وshell وroute structure      |
+| `nexis test`                      | تشغيل workflow الاختبارات               |
+| `nexis upgrade`                   | فحص متطلبات الترقية                     |
+| `nexis --help`                    | عرض الأوامر والخيارات                   |
+| `create-nexis-app`                | إنشاء مشروع جديد                        |
 
-استخدم scripts في `package.json` لتوحيد الخيارات داخل الفريق بدل تمرير flags مختلفة يدويًا في كل مرة.
+استخدم scripts في `package.json` لتوحيد الخيارات داخل الفريق بدل تمرير flags مختلفة يدويًا في كل مرة. في v1.1.0 استخدم `_layout.*` للتخطيطات المتداخلة؛ تبقى `layout.*` مدعومة للتوافق، ولا تتحول route groups إلى أجزاء من URL.
 
 ## ملف التهيئة
 
@@ -68,6 +75,9 @@ export default {
 ```text
 dist/client/index.html
 dist/client/nexis-manifest.json
+dist/client/nexis-bootstrap.js
+dist/client/nexis-bindings.js
+dist/client/nexis-forms.js
 dist/client/sitemap.xml
 dist/client/robots.txt
 dist/client/feed.xml
@@ -93,4 +103,4 @@ pnpm test:e2e
 pnpm bench:lighthouse
 ```
 
-احفظ artifacts المهمة، ولا تنشر إذا كان build أو gate فاشلًا.
+احفظ artifacts المهمة، ولا تنشر إذا كان build أو gate فاشلًا. راجع [ملاحظات v1.1.0](../releases/v1.1.0-ar.md) لقائمة الترقية الكاملة.

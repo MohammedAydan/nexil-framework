@@ -1,6 +1,6 @@
 # Nexis Framework Documentation
 
-This directory contains the complete English documentation for Nexis Framework `1.0.0`. It is written for developers who need to understand the framework internally, build production applications, test them, optimize them, secure them, and deploy them.
+This directory contains the complete English documentation for Nexis Framework `1.1.0`. It is written for developers who need to understand the framework internally, build production applications, test them, optimize them, secure them, and deploy them.
 
 > This documentation describes the behavior implemented in the current repository. When using another version, verify the exact TypeScript declarations and generated `.d.ts` files for that version.
 
@@ -30,6 +30,7 @@ This directory contains the complete English documentation for Nexis Framework `
 | Use the CLI and configuration                  | [20-cli-and-configuration.md](./20-cli-and-configuration.md)                 |
 | Contribute to the framework                    | [21-contributing.md](./21-contributing.md)                                   |
 | Learn the terminology                          | [22-glossary.md](./22-glossary.md)                                           |
+| Read the v1.1.0 release and migration guide    | [v1.1.0 release notes](../releases/v1.1.0.md)                                |
 
 ## Recommended reading paths
 
@@ -42,7 +43,10 @@ Nexis is an HTML-first TypeScript framework built around SSR/SSG, progressive en
 | Concept           | Practical meaning                                                   |
 | ----------------- | ------------------------------------------------------------------- |
 | Route             | A page module under `src/routes` mapped to a URL                    |
-| Render mode       | `static`, `server`, or `isr` output behavior                        |
+| Render mode       | `static`, `server`, `isr`, or `partial` output behavior             |
+| Layout            | Recursive `_layout.*` composition and metadata inheritance          |
+| Suspense boundary | Fallback-first asynchronous streaming boundary                      |
+| Form              | Progressive native form with optional resumable enhancement         |
 | ScopeRef          | A safe tagged reference to a value, signal, store, or action        |
 | Lazy handler      | An event handler emitted into a separately loaded chunk             |
 | DOM binding       | A Signal subscription that updates one text node or scalar property |
@@ -63,3 +67,4 @@ The examples use TypeScript and JSX. Adjust paths to match your application. Nev
 - [Production server README](../../packages/serve/README.md)
 - [Telemetry README](../../packages/telemetry/README.md)
 - [Showcase report](../../examples/nexis-showcase/SHOWCASE-REPORT.md)
+- [v1.1.0 release and migration guide](../releases/v1.1.0.md)

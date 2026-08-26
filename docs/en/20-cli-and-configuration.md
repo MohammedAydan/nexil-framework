@@ -17,12 +17,17 @@ For an existing project, inspect the installed CLI and use the repository script
 
 ```bash
 nexis --help
+nexis preview
+nexis generate route account/settings
+nexis generate component Button
+nexis add action saveProfile
+nexis doctor
 pnpm build
 pnpm check:budget
 pnpm release:check
 ```
 
-The exact CLI flags are versioned. Do not copy an option from an unrelated release without checking help and declarations.
+The v1.1 CLI also provides `generate route`, `generate component`, `add action`, `doctor`, `preview`, `test`, and `upgrade`. The exact flags are versioned; do not copy an option from an unrelated release without checking `nexis --help` and the installed declarations.
 
 ## Typical workflow
 
@@ -38,11 +43,11 @@ pnpm test
 
 ## Route discovery
 
-The build discovers route files under the configured source directory, derives route records, renders the selected mode, and emits a manifest. Inspect the manifest when a route is missing or has the wrong rendering mode.
+The build discovers route files under the configured source directory, recursively composes `_layout.*` modules, derives route records, renders the selected mode, and emits a manifest. Route-group directories contribute layout context but not public URL segments. Inspect the manifest when a route is missing or has the wrong rendering mode.
 
 ## Rendering configuration
 
-Use the current exported configuration types to select static, server, or ISR behavior. The exact field names can evolve, so inspect the installed `@mohammedaydan/*` declarations before writing a new configuration example.
+Use the current exported configuration types to select static, server, ISR, or partial behavior. The exact field names can evolve, so inspect the installed `@mohammedaydan/*` declarations before writing a new configuration example.
 
 The current Phase 3 surface includes typed support for feed metadata and redirects. Keep the configuration narrowly typed and avoid undocumented fields that the current package does not export.
 
@@ -81,6 +86,7 @@ dist/
 │   ├── nexis-manifest.json
 │   ├── nexis-bootstrap.js       # interactive routes only
 │   ├── nexis-bindings.js        # binding routes only
+│   ├── nexis-forms.js           # progressive Form routes only
 │   ├── robots.txt
 │   ├── sitemap.xml
 │   ├── feed.xml
@@ -89,7 +95,7 @@ dist/
 └── nexis-chunks/                 # hashed lazy handler chunks
 ```
 
-The current CLI writes `nexis-manifest.json`. `nexis-bootstrap.js` is emitted when an event boundary exists, while `nexis-bindings.js` is emitted only when transformed routes contain Signal binding metadata. Use the generated manifest and build logs as the release-specific source of truth.
+The current CLI writes `nexis-manifest.json`. `nexis-bootstrap.js` is emitted when an event boundary exists, `nexis-bindings.js` when transformed routes contain binding metadata, and `nexis-forms.js` when a route contains a progressive `Form`. Use the generated manifest and build logs as the release-specific source of truth.
 
 ## CI configuration
 
@@ -103,3 +109,4 @@ Use a clean checkout and a frozen lockfile. Cache package-manager downloads, not
 - Make defaults safe for shared caching.
 - Fail the build on invalid SEO or redirect data.
 - Record configuration changes in release notes.
+- Keep generated runtime assumptions synchronized with `nexis-bootstrap.js`, `nexis-bindings.js`, and `nexis-forms.js`.

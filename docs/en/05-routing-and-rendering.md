@@ -108,3 +108,7 @@ HTML commonly needs `public, max-age=0, must-revalidate` or an application-speci
 ## Recommended separation
 
 A route should define what to render, a component should define how to render it, a data layer should define where data comes from, and the action/server layer should define what can change. This separation reduces cache mistakes and makes each layer directly testable.
+
+## v1.1 layout and streaming additions
+
+Nexis v1.1.0 discovers `_layout.*` files recursively and composes them around route content. Route groups preserve layout context without adding URL segments. Parent `seo` exports can provide `titleTemplate` and `openGraph.siteName`; child routes override only the fields they need. The `Suspense` render node sends a fallback in the initial shell and flushes completed asynchronous boundaries out of order. See the [v1.1.0 release and migration guide](../releases/v1.1.0.md) for a complete example.

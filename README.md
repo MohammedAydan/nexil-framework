@@ -8,7 +8,7 @@ Nexis is designed for applications that need strong server rendering, small clie
 
 ## Current status
 
-The repository contains the v1.0.0 framework surface and its production verification fixtures. The main branch includes resumable event handlers, fine-grained Signal-to-DOM bindings, static CSS extraction, SSG/ISR/SSR/PPR rendering modes, media processing, SEO generation, server Actions, Node/Deno/Cloudflare adapters, telemetry primitives, and release-oriented quality gates.
+The repository contains the v1.1.0 framework surface and its production verification fixtures. The main branch includes compiler-inferred resumability, hierarchical ScopeRef deduplication, nested layouts, inherited SEO metadata, out-of-order Suspense streaming, fine-grained Signal-to-DOM bindings, progressive Forms, typed loaders, static CSS extraction, SSG/ISR/SSR/PPR rendering modes, media processing, server Actions, Node/Deno/Cloudflare adapters, telemetry primitives, and release-oriented quality gates.
 
 The detailed documentation is available in the [English documentation package](docs/en/README.md). The equivalent Arabic package is available at [docs/ar/README.md](docs/ar/README.md).
 
@@ -22,14 +22,14 @@ State changes use fine-grained Signals. A bound text node or scalar property is 
 
 These contracts are enforced by compiler tests, integration tests, runtime parity checks, browser tests, and CI budgets.
 
-| Contract                 | Meaning                                                                                                                | Verification surface                          |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| Static output            | A route without resumable interaction emits zero route-specific client JavaScript.                                     | CLI manifest, build tests, Playwright         |
-| Small interactive output | Interactive route code remains within the configured compressed budget.                                                | `pnpm check:budget`, CLI checks               |
-| Isolated runtimes        | `nexis-bootstrap.js` serves event resumability; `nexis-bindings.js` is emitted only for binding-enabled routes.        | CLI integration tests, E2E network assertions |
-| No full hydration        | Resumed handlers and bindings materialize their references without rerunning the component tree.                       | Client runtime and browser tests              |
-| Request isolation        | Request-specific values are created per request and are not shared through mutable module singletons.                  | Server and parity tests                       |
-| Web-standard boundaries  | Adapters use `Request`, `Response`, `Headers`, `ReadableStream`, and Web Crypto-compatible contracts where applicable. | Node, Deno, Cloudflare, and parity tests      |
+| Contract                 | Meaning                                                                                                                          | Verification surface                          |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| Static output            | A route without resumable interaction emits zero route-specific client JavaScript.                                               | CLI manifest, build tests, Playwright         |
+| Small interactive output | Interactive route code remains within the configured compressed budget.                                                          | `pnpm check:budget`, CLI checks               |
+| Isolated runtimes        | `nexis-bootstrap.js` serves events; `nexis-bindings.js` serves bindings; `nexis-forms.js` is emitted only for progressive forms. | CLI integration tests, E2E network assertions |
+| No full hydration        | Resumed handlers and bindings materialize their references without rerunning the component tree.                                 | Client runtime and browser tests              |
+| Request isolation        | Request-specific values are created per request and are not shared through mutable module singletons.                            | Server and parity tests                       |
+| Web-standard boundaries  | Adapters use `Request`, `Response`, `Headers`, `ReadableStream`, and Web Crypto-compatible contracts where applicable.           | Node, Deno, Cloudflare, and parity tests      |
 
 ## Quick start
 
@@ -68,7 +68,7 @@ A small application commonly looks like this:
 my-nexis-app/
 ├── src/
 │   ├── routes/
-│   │   ├── layout.tsx
+│   │   ├── _layout.tsx
 │   │   ├── index.tsx
 │   │   └── counter.tsx
 │   └── styles.css
@@ -79,7 +79,7 @@ my-nexis-app/
 └── vite.config.ts
 ```
 
-Routes are discovered under `src/routes/**/*.{tsx,jsx,ts,js}`. `layout.*` files are composition modules rather than standalone routes. The application shell should contain the Nexis outlet markers:
+Routes are discovered under `src/routes/**/*.{tsx,jsx,ts,js}`. `_layout.*` files are recursive composition modules rather than standalone routes; legacy `layout.*` files remain supported for compatibility. Route groups retain their directory context for layout composition without becoming URL segments. The application shell should contain the Nexis outlet markers:
 
 ```html
 <!doctype html>
@@ -207,13 +207,18 @@ export default function ProfileForm() {
 
 The supported directives and runtime targets are:
 
-| Directive       | Runtime target | Typical use                                     |
-| --------------- | -------------- | ----------------------------------------------- |
-| `bindText$`     | `text`         | Replace the target text content                 |
-| `bindValue$`    | `value`        | Synchronize an input, textarea, or select value |
-| `bindChecked$`  | `checked`      | Synchronize a checkbox or radio state           |
-| `bindDisabled$` | `disabled`     | Enable or disable a form control                |
-| `bindHidden$`   | `hidden`       | Toggle an element’s hidden property             |
+| Directive        | Runtime target | Typical use                                     |
+| ---------------- | -------------- | ----------------------------------------------- |
+| `bindText$`      | `text`         | Replace the target text content                 |
+| `bindValue$`     | `value`        | Synchronize an input, textarea, or select value |
+| `bindChecked$`   | `checked`      | Synchronize a checkbox or radio state           |
+| `bindDisabled$`  | `disabled`     | Enable or disable a form control                |
+| `bindHidden$`    | `hidden`       | Toggle an element’s hidden property             |
+| `bindClass$`     | `class`        | Update the element class                        |
+| `bindStyle$`     | `style`        | Update inline style values                      |
+| `bindHref$`      | `href`         | Update an anchor URL                            |
+| `bindSrc$`       | `src`          | Update an image or media URL                    |
+| `bindAriaLabel$` | `aria-label`   | Update an accessible label                      |
 
 The public client primitive is:
 
@@ -221,7 +226,17 @@ The public client primitive is:
 bindSignalToDOM(
   scopeId: string,
   node: Text | HTMLElement,
-  targetProperty: 'text' | 'value' | 'checked' | 'disabled' | 'hidden',
+  targetProperty:
+    | 'text'
+    | 'value'
+    | 'checked'
+    | 'disabled'
+    | 'hidden'
+    | 'class'
+    | 'style'
+    | 'href'
+    | 'src'
+    | `aria-${string}`
 ): () => void
 ```
 
@@ -229,9 +244,22 @@ It resolves a registered `nx:signal:<id>` or `nx:store:<id>`, applies the curren
 
 Automatic lowering intentionally does not guess arbitrary dependency graphs. An expression such as `{count() + ' items'}` remains ordinary SSR output and emits a compiler diagnostic recommending an explicit directive. Use `bindText$` when a complex expression must be updated as one binding.
 
-A route that contains only events receives `nexis-bootstrap.js`. A route that contains bindings receives the separate `nexis-bindings.js` runtime in addition to any required event bootstrap. Static routes receive neither runtime.
+A route that contains only events receives `nexis-bootstrap.js`. A route that contains bindings receives the separate `nexis-bindings.js` runtime in addition to any required event bootstrap. A route containing a `Form` receives `nexis-forms.js`; a route may receive more than one runtime when it contains multiple boundary kinds. Static routes receive none of these runtimes.
 
 ## State and reactivity
+
+Signals also support comparator-aware updates and asynchronous resources. Use `resource()` for request-local loading, success, and error state; its refetch generation prevents stale responses from replacing newer data. Use stores with `setPath()` for nested immutable updates and `lens()` for writable focused views.
+
+```ts
+import { resource, state } from '@mohammedaydan/reactivity'
+import { createStore, setPath } from '@mohammedaydan/state'
+
+const userId = state('ada')
+const profile = resource(() => fetchProfile(userId()), { immediate: true })
+const preferences = createStore({ theme: 'light' })
+
+setPath(preferences, ['theme'], 'dark')
+```
 
 Signals are callable for reads and expose a readonly `.value` getter. Update them with `.set(...)` or `.setValue(...)`; do not assign to `.value`.
 
@@ -255,6 +283,22 @@ dispose()
 ```
 
 Stores provide `value`, `snapshot()`, `set`, `select`, `subscribe`, and `dispose`. Keep route and user state request-local, give effects a clear owner, and dispose stores and bindings when their route or application lifetime ends. Do not use a mutable global signal for private request data.
+
+## Layouts, metadata, and streaming
+
+Use `_layout.tsx` files to share navigation, shells, and metadata. Parent `seo` exports may define a `titleTemplate` and `openGraph.siteName`; child routes override only the fields they need. Use `Suspense` to stream a fallback immediately and flush completed asynchronous boundaries out of order.
+
+```tsx
+import { Suspense } from '@mohammedaydan/core'
+
+export default function Page() {
+  return (
+    <Suspense id="results" fallback={<p>Loading…</p>}>
+      {loadResults().then(renderResults)}
+    </Suspense>
+  )
+}
+```
 
 ## Rendering modes
 
@@ -348,20 +392,44 @@ Production deployment should include the built `dist` directory, generated route
 
 Health checks, graceful shutdown, bounded request bodies, safe cookies, strict Origin validation for Actions, and secret management belong in the deployment configuration rather than in page components. Never place credentials in client code or generated HTML.
 
+## Progressive forms
+
+`Form` and `SubmitButton` preserve native browser submission while enabling the generated forms runtime. The runtime serializes repeated fields, sends an idempotency key, forwards an optional CSRF token, and exposes loading and success/error events. Server-side actions must still validate input, authorize the request, enforce trusted origins, and bound idempotency storage.
+
+```tsx
+import { Form, SubmitButton } from '@mohammedaydan/core'
+
+export default function Contact() {
+  return (
+    <Form action="/__nexis/actions/contact" csrfToken={csrfToken}>
+      <input name="email" type="email" required />
+      <SubmitButton loadingText="Sending…">Send</SubmitButton>
+    </Form>
+  )
+}
+```
+
 ## CLI commands
 
 The installed `nexis` binary and repository scripts expose the framework workflow:
 
-| Command                | Purpose                                                                                             |
-| ---------------------- | --------------------------------------------------------------------------------------------------- |
-| `nexis dev`            | Run the Vite development server with Nexis SSR middleware and hot updates                           |
-| `nexis build`          | Build route HTML, server modules, assets, lazy chunks, runtimes, feeds, redirects, and the manifest |
-| `nexis start`          | Serve a production build locally                                                                    |
-| `nexis serve`          | Serve built client output with route-aware production behavior                                      |
-| `nexis check --budget` | Run build and byte-budget checks                                                                    |
-| `nexis analyze`        | Report route output and client-size metrics                                                         |
-| `nexis routes`         | List discovered route files                                                                         |
-| `nexis create <name>`  | Scaffold an application                                                                             |
+| Command                           | Purpose                                                                                             |
+| --------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `nexis dev`                       | Run the Vite development server with Nexis SSR middleware and hot updates                           |
+| `nexis build`                     | Build route HTML, server modules, assets, lazy chunks, runtimes, feeds, redirects, and the manifest |
+| `nexis start`                     | Serve a production build locally                                                                    |
+| `nexis serve`                     | Serve built client output with route-aware production behavior                                      |
+| `nexis check --budget`            | Run build and byte-budget checks                                                                    |
+| `nexis analyze`                   | Report route output and client-size metrics                                                         |
+| `nexis routes`                    | List discovered route files                                                                         |
+| `nexis create <name>`             | Scaffold an application                                                                             |
+| `nexis preview`                   | Preview the production build                                                                        |
+| `nexis generate route <path>`     | Generate a route safely                                                                             |
+| `nexis generate component <name>` | Generate a component safely                                                                         |
+| `nexis add action <name>`         | Generate a server action scaffold                                                                   |
+| `nexis doctor`                    | Diagnose package, shell, and route configuration                                                    |
+| `nexis test`                      | Run the integrated test workflow                                                                    |
+| `nexis upgrade`                   | Scan for upgrade and migration work                                                                 |
 
 A production build commonly contains:
 
@@ -374,6 +442,7 @@ dist/
 │   ├── nexis-manifest.json
 │   ├── nexis-bootstrap.js       # event routes only
 │   ├── nexis-bindings.js        # binding routes only
+│   ├── nexis-forms.js           # progressive form routes only
 │   ├── robots.txt
 │   ├── sitemap.xml
 │   ├── feed.xml
@@ -386,28 +455,28 @@ Exact generated files depend on the route inventory and configuration. Treat `ne
 
 ## Package map
 
-| Package                           | Responsibility                                                                              |
-| --------------------------------- | ------------------------------------------------------------------------------------------- |
-| `@mohammedaydan/core`             | Render nodes, component types, request context, and reactivity re-exports                   |
-| `@mohammedaydan/jsx-runtime`      | Automatic JSX runtime used by `react-jsx` projects                                          |
-| `@mohammedaydan/reactivity`       | Signals, computed values, effects, batching, roots, and cleanup                             |
-| `@mohammedaydan/state`            | Serializable stores, selectors, registries, and disposal                                    |
-| `@mohammedaydan/compiler`         | Boundary analysis, capture diagnostics, and byte-budget enforcement                         |
-| `@mohammedaydan/vite-plugin`      | JSX transformation, lazy chunks, ScopeRef metadata, binding markers, and development assets |
-| `@mohammedaydan/client`           | Scope materialization, delegated events, DOM binding runtime, and cleanup                   |
-| `@mohammedaydan/renderer`         | HTML/string/stream rendering and render modes                                               |
-| `@mohammedaydan/router`           | Route discovery, matching, parameters, and resolution                                       |
-| `@mohammedaydan/seo`              | Head tags, canonicals, JSON-LD, sitemap, robots, RSS, and Atom                              |
-| `@mohammedaydan/media`            | Image variants, responsive markup, fonts, and media caching                                 |
-| `@mohammedaydan/actions`          | Typed server Actions, validation, Origin checks, cookies, and idempotency                   |
-| `@mohammedaydan/server`           | Server composition and request-scoped data helpers                                          |
-| `@mohammedaydan/adapters`         | Node, Deno, Cloudflare, and Fetch adapter contracts                                         |
-| `@mohammedaydan/serve`            | Node production server and middleware                                                       |
-| `@mohammedaydan/serve-deno`       | Deno edge handler package                                                                   |
-| `@mohammedaydan/serve-cloudflare` | Cloudflare edge handler package                                                             |
-| `@mohammedaydan/telemetry`        | Optional Web Vitals and telemetry receiver primitives                                       |
-| `@mohammedaydan/cli`              | CLI orchestration and production build pipeline                                             |
-| `@mohammedaydan/create-nexis`     | Project initializer and compatibility initializer binaries                                  |
+| Package                           | Responsibility                                                                                      |
+| --------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `@mohammedaydan/core`             | Render nodes, component types, layouts, Suspense, forms, request context, and reactivity re-exports |
+| `@mohammedaydan/jsx-runtime`      | Automatic JSX runtime used by `react-jsx` projects                                                  |
+| `@mohammedaydan/reactivity`       | Signals, comparators, resources, computed values, effects, batching, roots, and cleanup             |
+| `@mohammedaydan/state`            | Serializable stores, selectors, registries, and disposal                                            |
+| `@mohammedaydan/compiler`         | Boundary analysis, capture diagnostics, and byte-budget enforcement                                 |
+| `@mohammedaydan/vite-plugin`      | JSX transformation, lazy chunks, ScopeRef metadata, binding markers, and development assets         |
+| `@mohammedaydan/client`           | Scope materialization, delegated events, DOM bindings, progressive forms, and cleanup               |
+| `@mohammedaydan/renderer`         | HTML/string/stream rendering and render modes                                                       |
+| `@mohammedaydan/router`           | Route discovery, groups, nested layouts, query/hash matching, parameters, and resolution            |
+| `@mohammedaydan/seo`              | Head tags, canonicals, JSON-LD, sitemap, robots, RSS, and Atom                                      |
+| `@mohammedaydan/media`            | Image variants, responsive markup, fonts, and media caching                                         |
+| `@mohammedaydan/actions`          | Typed server Actions, validation, Origin checks, cookies, and idempotency                           |
+| `@mohammedaydan/server`           | Server composition and request-scoped data helpers                                                  |
+| `@mohammedaydan/adapters`         | Node, Deno, Cloudflare, and Fetch adapter contracts                                                 |
+| `@mohammedaydan/serve`            | Node production server and middleware                                                               |
+| `@mohammedaydan/serve-deno`       | Deno edge handler package                                                                           |
+| `@mohammedaydan/serve-cloudflare` | Cloudflare edge handler package                                                                     |
+| `@mohammedaydan/telemetry`        | Optional Web Vitals and telemetry receiver primitives                                               |
+| `@mohammedaydan/cli`              | CLI orchestration and production build pipeline                                                     |
+| `@mohammedaydan/create-nexis`     | Project initializer and compatibility initializer binaries                                          |
 
 ## Verification workflow
 
@@ -427,6 +496,8 @@ pnpm test:edge
 pnpm test:e2e
 pnpm test:deno:e2e   # requires an actual Deno executable
 pnpm security
+pnpm test:node-runtime
+pnpm test:edge
 ```
 
 The repository’s Playwright suite verifies SSR output, no-JavaScript static routes, lazy event chunks, binding behavior, metadata, Actions, 404 responses, and showcase routes. Runtime parity tests compare Node and edge contracts. Local Lighthouse and benchmark results are controlled lab measurements; they are not field Web Vitals, production traffic measurements, search rankings, or CDN performance guarantees.
