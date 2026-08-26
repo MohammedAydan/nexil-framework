@@ -24,7 +24,7 @@ console.log(count())
 count.set((previous) => previous + 1)
 ```
 
-The Signal interface also exposes `get()`, a readonly `value` getter, `subscribe()`, and `dispose()`. Use `set()` or `setValue()` to update it; do not assign to the readonly `value` getter.
+The Signal interface also exposes `get()`, a readonly `value` getter, `subscribe()`, and `dispose()`. Use `set()` or `setValue()` to update it; do not assign to the readonly `value` getter. Pass a comparator in `SignalOptions` when updates should be compared by domain equality rather than `Object.is`.
 
 ## Computed values
 
@@ -53,6 +53,15 @@ Captures that cannot be serialized produce an explicit `unsupported` warning at
 build time instead of failing silently at click time. Multiple handlers capturing
 the same declaration share one live signal instance in the browser, keyed by its
 scope id.
+
+## Async resources
+
+Use `resource(loader, options)` for request-local asynchronous data. It exposes loading, value, and error signals, supports manual or immediate loading, and uses a generation token so a slower earlier request cannot overwrite a newer refetch.
+
+```ts
+const profile = resource(() => fetchProfile(userId()), { immediate: true })
+profile.refetch()
+```
 
 ## Effects
 
@@ -96,7 +105,7 @@ cart.set((current) => ({
 console.log(cart.snapshot())
 ```
 
-The current Store interface exposes `scope`, `value`, `snapshot`, `set`, `select`, `subscribe`, and `dispose`.
+The current Store interface exposes `scope`, `value`, `snapshot`, `set`, `select`, `subscribe`, and `dispose`. Use `setPath(store, ['preferences', 'theme'], 'dark')` for nested immutable updates and `lens(store, ['preferences', 'theme'])` for a writable focused signal. `snapshot()` returns a detached structured clone when the state is serializable.
 
 ## Selectors
 
@@ -134,9 +143,13 @@ return (
 )
 ```
 
-Use explicit directives for predictable intent, especially when a value is not a direct Signal read or when the target is a scalar property. Supported directives are `bindText$`, `bindValue$`, `bindChecked$`, `bindDisabled$`, and `bindHidden$`. The runtime supports the corresponding `text`, `value`, `checked`, `disabled`, and `hidden` targets.
+Use explicit directives for predictable intent, especially when a value is not a direct Signal read or when the target is a scalar property. Supported directives are `bindText$`, `bindValue$`, `bindChecked$`, `bindDisabled$`, `bindHidden$`, `bindClass$`, `bindStyle$`, `bindHref$`, `bindSrc$`, and `bindAriaLabel$`. The runtime supports the corresponding `text`, `value`, `checked`, `disabled`, `hidden`, `class`, `style`, `href`, `src`, and `aria-*` targets.
 
 The compiler serializes a stable scope reference and emits a `data-nx-bind="nx:signal:<id>#<target>"` marker. The binding runtime resolves the materialized Signal and installs an `effect()` subscription. The subscription mutates only the target node/property and is removed by the returned disposer or route-scope cleanup. Dynamic expressions such as `{count() + ' items'}` are intentionally not auto-lowered; use an explicit directive when that behavior is required.
+
+## v1.1 lifecycle checklist
+
+When state crosses a lazy boundary, prefer compiler inference over manual ScopeRef serialization. Keep resources and stores request-local, dispose effects and selectors with their owner, and verify that repeated handler captures share one scope identity.
 
 ## State checklist
 

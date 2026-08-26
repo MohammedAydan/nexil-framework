@@ -16,9 +16,20 @@ const seo = {
 
 Never point production canonicals to a temporary preview hostname.
 
-## Titles and descriptions
+## Titles, descriptions, and inheritance
 
-Write a unique title and an accurate description for each route. Dynamic routes must not reuse one description blindly. Use `noindex` for a deliberate indexing policy, not to hide broken content.
+Write a unique title and an accurate description for each route. Dynamic routes must not reuse one description blindly. A parent `_layout.*` may define `titleTemplate: '%s · Site'` and `openGraph.siteName`; child routes inherit those values and override only their own fields. The generated head resolves one effective metadata value per key.
+
+```ts
+// src/routes/_layout.tsx
+export const seo = {
+  title: 'Nexis App',
+  titleTemplate: '%s · Nexis App',
+  openGraph: { siteName: 'Nexis App' },
+}
+```
+
+Use `noindex` for a deliberate indexing policy, not to hide broken content.
 
 ## Canonical URLs
 
@@ -76,7 +87,7 @@ const feed = generateFeed(items, {
 
 ## Open Graph and Twitter
 
-Provide `og:title`, `og:description`, `og:url`, and `og:image` as appropriate, together with `twitter:card`. The image must be an absolute URL accessible outside the developer’s machine.
+Provide `og:title`, `og:description`, `og:url`, `og:image`, and `og:site_name` as appropriate, together with `twitter:card`. Structural tags such as charset and viewport are owned by the document builder and are deduplicated. The image must be an absolute URL accessible outside the developer’s machine.
 
 ## Hreflang
 
@@ -86,16 +97,17 @@ When localized versions exist, every alternate should point to a real page. Use 
 
 Test every published route rather than one representative page:
 
-| Check       | Requirement                                      |
-| ----------- | ------------------------------------------------ |
-| Title       | Present and unique                               |
-| Description | Present and non-empty                            |
-| Canonical   | HTTPS and path-appropriate                       |
-| Open Graph  | Title, URL, and image when applicable            |
-| JSON-LD     | Context, type, name, and type-specific fields    |
-| Sitemap     | Published routes only and no dangerous protocols |
-| Links       | No broken internal links                         |
-| Feeds       | Valid RSS and Atom                               |
-| Lighthouse  | Meets the configured gate                        |
+| Check       | Requirement                                        |
+| ----------- | -------------------------------------------------- |
+| Title       | Present and unique                                 |
+| Description | Present and non-empty                              |
+| Canonical   | HTTPS and path-appropriate                         |
+| Open Graph  | Title, URL, and image when applicable              |
+| JSON-LD     | Context, type, name, and type-specific fields      |
+| Sitemap     | Published routes only and no dangerous protocols   |
+| Links       | No broken internal links                           |
+| Head        | No duplicate structural or inherited metadata tags |
+| Feeds       | Valid RSS and Atom                                 |
+| Lighthouse  | Meets the configured gate                          |
 
 A local Lighthouse result does not prove indexing or traffic. These are engineering measurements, not ranking evidence.

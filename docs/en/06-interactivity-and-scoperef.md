@@ -10,6 +10,7 @@ SSR HTML
   + data-nx-scope="..."
   + nexis-bootstrap.js
   + nexis-bindings.js (binding routes only)
+  + nexis-forms.js (progressive Form routes only)
         │
         └── click → import lazy chunk → resolve scope → execute handler
 ```
@@ -40,9 +41,9 @@ return (
 )
 ```
 
-The supported targets are `text`, `value`, `checked`, `disabled`, and `hidden`, exposed through `bindText$`, `bindValue$`, `bindChecked$`, `bindDisabled$`, and `bindHidden$`. The compiler preserves the SSR value, emits a stable `nx:signal:<id>#<target>` marker, and writes the marker beside the serialized scope declaration. On the client, the binding runtime materializes the registered Signal and installs an `effect()` that mutates only that target. The disposer removes the subscription and clears materialized scope state.
+The supported targets are `text`, `value`, `checked`, `disabled`, `hidden`, `class`, `style`, `href`, `src`, and `aria-*`, exposed through `bindText$`, `bindValue$`, `bindChecked$`, `bindDisabled$`, `bindHidden$`, `bindClass$`, `bindStyle$`, `bindHref$`, `bindSrc$`, and `bindAriaLabel$`. The compiler preserves the SSR value, emits a stable `nx:signal:<id>#<target>` marker, and writes the marker beside the serialized scope declaration. On the client, the binding runtime materializes the registered Signal and installs an `effect()` that mutates only that target. The disposer removes the subscription and clears materialized scope state.
 
-Automatic lowering is deliberately conservative. Direct `{signal()}`, `{signal.value}`, and direct scalar-attribute reads are supported. An expression such as `{count() + ' items'}` is left as normal SSR output and emits a diagnostic recommending an explicit `bindText$`; the compiler does not guess a dependency graph for arbitrary expressions.
+Automatic lowering is deliberately conservative. Direct `{signal()}`, `{signal.value}`, and direct scalar-attribute reads are supported. Equivalent handler expressions share one canonical lazy chunk, and repeated identical scope envelopes are lifted to their nearest shared HTML ancestor. An expression such as `{count() + ' items'}` is left as normal SSR output and emits a diagnostic recommending an explicit `bindText$`; the compiler does not guess a dependency graph for arbitrary expressions.
 
 A route containing only ordinary SSR markup does not receive `nexis-bindings.js`. The CLI and Vite plugin emit and inject the separate binding runtime only when transformed route metadata contains a binding.
 
@@ -92,6 +93,10 @@ Captures require a statically serializable initial value. Multiple handlers
 capturing the same declaration share one live instance in the browser, keyed by
 its scope id.
 
+## Scope deduplication
+
+Application routes should not call `serializeScopeRefs()` manually. The compiler emits supported Signal, store, and action references, while the build lifts repeated identical `data-nx-scope` payloads to a shared ancestor. The low-level serializer remains intended for runtime and adapter tests.
+
 ## The registry
 
 The client registry exposes operations such as `resolve`, `inspectScope`, `dispose`, and `disposeAll`. Binding subscriptions use the same scope ownership model. Do not keep global references forever; every route or boundary should own a clear lifetime.
@@ -119,6 +124,7 @@ Bootstrap delegates events at the document level and finds Nexis event attribute
 - Narrow `event.target` before using it.
 - Prevent native form submission synchronously before awaiting a lazy import.
 - Keep a real `action` and `method` so progressive enhancement remains available.
+- Use `Form` and `SubmitButton` for native-first forms; the generated `nexis-forms.js` runtime adds idempotency, optional CSRF, loading state, and success/error events.
 
 ## Interaction boundaries
 

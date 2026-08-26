@@ -8,10 +8,18 @@
 SSR HTML
   + data-nx-on-click="chunk-id#handler"
   + data-nx-scope="..."
-  + nex-bootstrap.js
+  + nexis-bootstrap.js
+  + nexis-bindings.js (binding routes only)
+  + nexis-forms.js (progressive Form routes only)
         │
         └── click → import lazy chunk → resolve scope → execute handler
 ```
+
+## الربط الدقيق والاستدلال التلقائي
+
+يمكن لـ Nexis تحديث عقدة نصية أو خاصية DOM مباشرة من Signal دون إعادة تشغيل component. القراءة المباشرة مثل `{count()}` تُحلل تلقائيًا عندما تكون القيمة قابلة للاستعادة. كما تدعم التوجيهات `bindText$` و`bindValue$` و`bindChecked$` و`bindDisabled$` و`bindHidden$` و`bindClass$` و`bindStyle$` و`bindHref$` و`bindSrc$` و`bindAriaLabel$`.
+
+تستخدم v1.1.0 تحليل AST للقيم الابتدائية، وتجمع التعبيرات المتساوية في lazy chunk واحد، وترفع حمولات `data-nx-scope` المتطابقة إلى أقرب سلف مشترك. لذلك لا تكتب `data-nx-scope` ولا تستدعِ `serializeScopeRefs()` يدويًا داخل route.
 
 ## كتابة Handler lazy
 
@@ -43,6 +51,10 @@ export function LikeButton({ postId }: { readonly postId: string }) {
 | `store`       | Store وSelectors                         | يجب التخلص منه عند نهاية النطاق |
 | `action`      | مرجع إلى Action خادمي                    | لا يرسل تنفيذ الخادم إلى العميل |
 | `unsupported` | قيمة لم يستطع Compiler نقلها             | تظهر كتشخيص ولا تُسلسل بصمت     |
+
+## النماذج التدريجية
+
+تحافظ `Form` و`SubmitButton` على الإرسال الأصلي للمتصفح، ويضيف runtime `nexis-forms.js` idempotency key وCSRF اختياريًا وحالة تحميل وأحداث نجاح وفشل. استخدم `endpoint` داخل action عند تمرير مرجع Action إلى Form، وابقِ التحقق والتفويض وفحص Origin على الخادم.
 
 ## Registry
 
@@ -81,6 +93,7 @@ Bootstrap يلتقط الأحداث على مستوى document ويبحث عن a
 - لا تعتمد على `event.target` دون تضييق نوعه.
 - إذا كان الحدث submit، يجب منع الإرسال الأصلي في الوقت المناسب ثم تنفيذ enhancement.
 - يجب أن يعمل النموذج حتى قبل تحميل JavaScript، عبر `action` و`method` حقيقيين.
+- استخدم `Form` و`SubmitButton` للنماذج؛ يُضاف `nexis-forms.js` فقط عندما يحتوي route على Form تدريجي.
 
 ## حدود التفاعل
 

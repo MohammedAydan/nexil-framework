@@ -16,9 +16,17 @@ const seo = {
 
 لا تجعل canonical يشير إلى preview hostname إذا كان الموقع النهائي مختلفًا.
 
-## Title وDescription
+## Title وDescription والتوارث
 
-اكتب title فريدًا وواضحًا، وdescription يشرح الصفحة فعلًا. لا تكرر description نفسها لكل routes الديناميكية. إذا كانت الصفحة غير قابلة للفهرسة استخدم `noindex` بسبب مقصود واضح، وليس لإخفاء مشكلة محتوى.
+اكتب title فريدًا وواضحًا، وdescription يشرح الصفحة فعلًا. لا تكرر description نفسها لكل routes الديناميكية. يمكن لـ`_layout.*` الأب أن يحدد `titleTemplate` و`openGraph.siteName`، ثم يرث route الابن هذه القيم ويغيّر الحقول التي تخصه فقط. إذا كانت الصفحة غير قابلة للفهرسة استخدم `noindex` بسبب مقصود واضح، وليس لإخفاء مشكلة محتوى.
+
+```ts
+export const seo = {
+  title: 'Nexis App',
+  titleTemplate: '%s · Nexis App',
+  openGraph: { siteName: 'Nexis App' },
+}
+```
 
 ## Canonical
 
@@ -76,7 +84,7 @@ const feed = generateFeed(items, {
 
 ## OG وTwitter
 
-أضف `og:title` و`og:description` و`og:url` و`og:image`، و`twitter:card`. يجب أن يكون OG image مطلقًا وقابلًا للوصول من خارج الموقع، لا مسار preview خاصًا بجهاز المطور.
+أضف `og:title` و`og:description` و`og:url` و`og:image` و`og:site_name`، و`twitter:card`. يملك document builder tags الخاصة بـcharset وviewport ويزيل تكرارها. يجب أن يكون OG image مطلقًا وقابلًا للوصول من خارج الموقع، لا مسار preview خاصًا بجهاز المطور.
 
 ## Hreflang
 
@@ -86,16 +94,17 @@ const feed = generateFeed(items, {
 
 اختبر كل route منشورًا عبر جدول لا عبر صفحة واحدة فقط:
 
-| الفحص       | المطلوب                       |
-| ----------- | ----------------------------- |
-| title       | موجود وفريد                   |
-| description | موجود وغير فارغ               |
-| canonical   | HTTPS ومطابق للمسار           |
-| OpenGraph   | title وURL وimage عند الحاجة  |
-| JSON-LD     | context/type/name وحقول النوع |
-| sitemap     | route منشور، لا خطر بروتوكول  |
-| links       | لا broken internal links      |
-| feed        | RSS وAtom صالحان              |
-| Lighthouse  | SEO يحقق gate المحدد          |
+| الفحص       | المطلوب                                  |
+| ----------- | ---------------------------------------- |
+| title       | موجود وفريد                              |
+| description | موجود وغير فارغ                          |
+| canonical   | HTTPS ومطابق للمسار                      |
+| OpenGraph   | title وURL وimage عند الحاجة             |
+| JSON-LD     | context/type/name وحقول النوع            |
+| sitemap     | route منشور، لا خطر بروتوكول             |
+| links       | لا broken internal links                 |
+| head        | لا duplicate metadata أو structural tags |
+| feed        | RSS وAtom صالحان                         |
+| Lighthouse  | SEO يحقق gate المحدد                     |
 
 لا يعني Lighthouse المحلي أن Google فهرس الموقع أو أن traffic تحسن. هذه قياسات هندسية فقط.

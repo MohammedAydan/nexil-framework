@@ -36,6 +36,8 @@ pnpm check:budget
 pnpm bench:compare
 pnpm bench:lighthouse
 pnpm release:check
+pnpm security
+pnpm test:deno:e2e  # requires an actual Deno executable
 ```
 
 Run the Deno E2E command in an environment that actually has Deno. Do not report a Node fallback as Deno verification.
@@ -52,21 +54,30 @@ For each upgrade, write:
 6. Rollback procedure.
 7. Tests and benchmarks run.
 
+## v1.1.0 migration
+
+When moving from v1.0.0 to v1.1.0, rename preferred composition modules to `_layout.*`, remove manual `serializeScopeRefs()` calls from route components, and extract repeated shells into root or nested layouts. Update output checks to account for `nexis-forms.js`, recursive `nexis-chunks/`, inherited metadata, and Suspense replacement templates. Existing `layout.*` modules remain supported for compatibility.
+
+Use `Form` and `SubmitButton` for native-first forms. Add an action `endpoint` when passing an action reference to `Form`, and keep server-side validation, authorization, Origin, CSRF, and idempotency checks in place.
+
 ## Generated files
 
 Never edit generated client chunks or manifests as a fix. Change source or configuration, rebuild, and review the diff. Check that static routes remain static and that interactive routes have valid handler references.
 
 ## Compatibility matrix
 
-| Area       | Verify                                       |
-| ---------- | -------------------------------------------- |
-| Node       | Supported Node version and ESM behavior      |
-| Deno       | Fetch handler and permission assumptions     |
-| Cloudflare | Assets binding and Worker limits             |
-| Browser    | Bootstrap, event delegation, and lazy chunks |
-| CSS        | Tailwind scanning and extracted output       |
-| SEO        | Head, sitemap, feeds, and safe URLs          |
-| Actions    | Method, Origin, validation, and idempotency  |
+| Area       | Verify                                                                |
+| ---------- | --------------------------------------------------------------------- |
+| Node       | Supported Node version and ESM behavior                               |
+| Deno       | Fetch handler and permission assumptions                              |
+| Cloudflare | Assets binding and Worker limits                                      |
+| Browser    | Bootstrap, event delegation, and lazy chunks                          |
+| CSS        | Tailwind scanning and extracted output                                |
+| SEO        | Head, sitemap, feeds, and safe URLs                                   |
+| Actions    | Method, Origin, validation, CSRF, and idempotency                     |
+| Layouts    | `_layout.*` discovery, route groups, and metadata inheritance         |
+| Streaming  | Suspense fallback ordering and disconnect cleanup                     |
+| Forms      | Native fallback, `nexis-forms.js`, loading state, and repeated fields |
 
 ## Rollback
 

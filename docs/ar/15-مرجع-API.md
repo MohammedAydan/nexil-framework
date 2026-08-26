@@ -4,7 +4,7 @@
 
 ## Core
 
-توفر `@mohammedaydan/core` أنواع RenderNode وElementNode وChild وواجهات بناء الشجرة. استخدمها عند كتابة renderer أو adapter منخفض المستوى.
+توفر `@mohammedaydan/core` أنواع RenderNode وElementNode وChild، وواجهات التأليف `For` و`Show` و`createContext` و`ErrorBoundary` و`Suspense` و`Form` و`SubmitButton`، إضافة إلى إعادة تصدير أدوات reactivity.
 
 ## Renderer
 
@@ -27,29 +27,35 @@
 | `routeFromFile(file)`            | تحويل اسم الملف إلى RouteRecord |
 | `matchRoute(route, pathname)`    | مطابقة URL واستخراج params      |
 | `resolveRoute(routes, pathname)` | اختيار route من مجموعة          |
+| `Link(props)`                    | رابط داخلي typed مع prefetch    |
+| `parseUrlParts(url)`             | تحليل pathname وquery وhash     |
 
 ## Reactivity
 
-| API                               | الاستخدام                |
-| --------------------------------- | ------------------------ |
-| `state(initial)` / signal factory | قيمة قابلة للتحديث       |
-| `computed(fn)`                    | قيمة مشتقة ومخزنة مؤقتًا |
-| `effect(fn)`                      | أثر جانبي مع tracking    |
-| `batch(fn)`                       | تجميع تحديثات            |
-| `createRoot(fn)`                  | owner وcleanup           |
-| `onCleanup(fn)`                   | تسجيل cleanup            |
-| `dispose()`                       | إيقاف owner/resource     |
+| API                               | الاستخدام                        |
+| --------------------------------- | -------------------------------- |
+| `state(initial)` / signal factory | قيمة قابلة للتحديث               |
+| `computed(fn)`                    | قيمة مشتقة ومخزنة مؤقتًا         |
+| `effect(fn)`                      | أثر جانبي مع tracking            |
+| `batch(fn)`                       | تجميع تحديثات                    |
+| `createRoot(fn)`                  | owner وcleanup                   |
+| `onCleanup(fn)`                   | تسجيل cleanup                    |
+| `resource(loader, options)`       | loading/value/error وrefetch آمن |
+| `SignalOptions.equals`            | comparator لتحديد equality       |
+| `dispose()`                       | إيقاف owner/resource             |
 
 ## State
 
-| API                      | الاستخدام                     |
-| ------------------------ | ----------------------------- |
-| `createStore(initial)`   | Store serializable            |
-| `store.get()`            | قراءة current value           |
-| `store.set(update)`      | تحديث immutable أو functional |
-| `store.select(selector)` | Computed selector             |
-| `store.dispose()`        | تحرير signal وselectors       |
-| `createStateRegistry()`  | تسجيل Stores حسب scope        |
+| API                           | الاستخدام                     |
+| ----------------------------- | ----------------------------- |
+| `createStore(initial)`        | Store serializable            |
+| `store.get()`                 | قراءة current value           |
+| `store.set(update)`           | تحديث immutable أو functional |
+| `store.select(selector)`      | Computed selector             |
+| `store.dispose()`             | تحرير signal وselectors       |
+| `createStateRegistry()`       | تسجيل Stores حسب scope        |
+| `setPath(store, path, value)` | تحديث nested path immutable   |
+| `lens(store, path)`           | writable focused signal       |
 
 ## SEO
 
@@ -75,6 +81,10 @@
 | `createSecurityHeaders(nonce?)`             | security headers       |
 | `serializeCookie(name, value, options)`     | Set-Cookie آمن         |
 | `createDataContext(request)`                | request-scoped context |
+| `defineLoader(loader)`                      | typed route loader     |
+| `parseCookies(requestOrHeader)`             | فك cookies بأمان       |
+| `getCookie(request, name)`                  | قراءة cookie واحدة     |
+| `notFound(message?)`                        | Response بحالة 404     |
 
 ## Actions
 
@@ -82,12 +92,15 @@
 
 ## Vite plugin
 
-| API                                | الاستخدام                                   |
-| ---------------------------------- | ------------------------------------------- |
-| `nexis(options)`                   | Vite plugin                                 |
-| `transformNexisSource(source, id)` | تحليل source وإنتاج metadata                |
-| `classifyScopeCaptures(...)`       | تصنيف value/signal/store/action/unsupported |
-| `RESUMABILITY_BOOTSTRAP`           | bootstrap الأساسي                           |
+| API                                      | الاستخدام                                   |
+| ---------------------------------------- | ------------------------------------------- |
+| `nexis(options)`                         | Vite plugin                                 |
+| `transformNexisSource(source, id)`       | تحليل source وإنتاج metadata                |
+| `classifyScopeCaptures(...)`             | تصنيف value/signal/store/action/unsupported |
+| `RESUMABILITY_BOOTSTRAP`                 | bootstrap الأساسي                           |
+| `RESUMABILITY_FORMS`                     | runtime للنماذج التدريجية                   |
+| `enhanceForms(options)`                  | تحسين Form مع native fallback               |
+| `bindSignalToDOM(scopeId, node, target)` | ربط Signal بهدف DOM                         |
 
 ## Media
 
@@ -108,4 +121,4 @@
 
 ## CLI
 
-CLI يكتشف routes، يقرأ config، يبني HTML وassets، يولد feeds وsitemap وrobots وredirect manifest وOG cards، ويكتب manifest. استخدم CLI عبر scripts بدل استدعاء helpers الداخلية من التطبيق دون سبب.
+CLI يكتشف routes، يركّب `_layout.*` بشكل متداخل، يقرأ config، يبني HTML وassets والـ lazy chunks والـ runtimes، يولد feeds وsitemap وrobots وredirect manifest وOG cards، ويكتب manifest. في v1.1.0 أضيفت أوامر `preview` و`generate route` و`generate component` و`add action` و`doctor` و`test` و`upgrade`. استخدم CLI عبر scripts بدل استدعاء helpers الداخلية من التطبيق دون سبب.

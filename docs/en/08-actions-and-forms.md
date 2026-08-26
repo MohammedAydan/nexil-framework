@@ -16,7 +16,30 @@ Build a form that works without JavaScript first:
 </form>
 ```
 
-Then add `onSubmit$` to enhance the experience asynchronously while retaining the real `action` and `method` as a fallback.
+For the standard path, replace the raw element with `Form` and `SubmitButton`. They retain native submission while marking the route for the generated `nexis-forms.js` runtime. Use `onSubmit$` only when the page needs custom result rendering; the native `action` and `method` remain the no-JavaScript fallback.
+
+```tsx
+import { Form, SubmitButton } from '@mohammedaydan/core'
+import { action } from '@mohammedaydan/actions'
+
+const contactAction = action({
+  endpoint: '/__nexis/actions/contact/submit',
+  validate: (input) => input,
+  handle: async (_context, input) => saveContact(input),
+})
+
+export function ContactForm({ csrfToken }: { readonly csrfToken: string }) {
+  return (
+    <Form action={contactAction} csrfToken={csrfToken}>
+      <label htmlFor="email">Email</label>
+      <input id="email" name="email" type="email" required />
+      <SubmitButton loadingText="Sending…">Send</SubmitButton>
+    </Form>
+  )
+}
+```
+
+The generated enhancer serializes repeated fields without loss, supplies an `Idempotency-Key`, forwards `X-CSRF-Token` when configured, disables the submit button while pending, and emits `nexis:form-success` or `nexis:form-error`.
 
 ## Action transport stages
 
@@ -27,13 +50,14 @@ The transport should:
 3. Enforce a request-size limit.
 4. Check Origin and site policy.
 5. Validate the input schema.
-6. Apply `Idempotency-Key` when present.
-7. Execute the server handler.
-8. Return a typed envelope:
+6. Apply `Idempotency-Key` when present and reject duplicates within the configured retention period.
+7. Validate `X-CSRF-Token` when the application enables CSRF protection.
+8. Execute the server handler.
+9. Return a typed envelope:
 
 ```ts
 { ok: true, data: result }
-{ ok: false, errors: [{ field: 'email', message: 'Invalid email' }] }
+{ ok: false, errors: ['Invalid email'] }
 ```
 
 ## Validation
@@ -43,7 +67,7 @@ Do not rely on browser validation alone. Validate types, lengths, ranges, and al
 ```ts
 const input = parseContactInput(await request.formData())
 if (!input.email.includes('@')) {
-  return { ok: false, errors: [{ field: 'email', message: 'Invalid email' }] }
+  return { ok: false, errors: ['Invalid email'] }
 }
 ```
 
@@ -69,15 +93,16 @@ The production server can expose an optional `POST /__nexis/telemetry` receiver.
 
 ## Common mistakes
 
-| Mistake                                           | Correction                                           |
-| ------------------------------------------------- | ---------------------------------------------------- |
-| Mutating state through GET                        | Use POST or another appropriate method               |
-| Validating only in the browser                    | Validate again on the server                         |
-| Accepting arbitrary origins                       | Use an explicit allowlist                            |
-| Process-local idempotency with multiple instances | Use shared durable storage                           |
-| Returning internal errors to users                | Return a safe message and log securely               |
-| Executing server code in the client bundle        | Keep implementation server-side                      |
-| Omitting loading state                            | Disable the control and provide `aria-live` feedback |
+| Mistake                                           | Correction                                                                     |
+| ------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Mutating state through GET                        | Use POST or another appropriate method                                         |
+| Validating only in the browser                    | Validate again on the server                                                   |
+| Accepting arbitrary origins                       | Use an explicit allowlist                                                      |
+| Process-local idempotency with multiple instances | Use shared durable storage                                                     |
+| Returning internal errors to users                | Return a safe message and log securely                                         |
+| Executing server code in the client bundle        | Keep implementation server-side                                                |
+| Omitting loading state                            | Use `SubmitButton loadingText` and provide `aria-live` feedback                |
+| Treating client enhancement as security           | Enforce validation, authorization, Origin, CSRF, and idempotency on the server |
 
 ## Action testing
 
