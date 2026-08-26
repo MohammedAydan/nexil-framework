@@ -1,5 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { createRequestContext, element, isSerializable, text } from './index'
+import {
+  createContext,
+  createRequestContext,
+  element,
+  ErrorBoundary,
+  For,
+  Form,
+  isSerializable,
+  Show,
+  SubmitButton,
+  Suspense,
+  text,
+} from './index'
 
 describe('core nodes', () => {
   it('creates validated element and text nodes', () => {
@@ -17,6 +29,54 @@ describe('core nodes', () => {
 
   it('accepts camelCase SVG element names', () => {
     expect(element('foreignObject', {}).tag).toBe('foreignObject')
+  })
+
+  it('renders Show truthy and fallback branches', () => {
+    expect(Show({ when: true, children: text('yes'), fallback: text('no') })).toEqual(text('yes'))
+    expect(Show({ when: false, children: text('yes'), fallback: text('no') })).toEqual(text('no'))
+  })
+
+  it('renders For values and empty fallbacks', () => {
+    expect(For({ each: [1, 2], children: (value) => text(String(value)) })).toHaveLength(2)
+    expect(
+      For({ each: [], children: (value: number) => text(String(value)), fallback: text('empty') }),
+    ).toEqual(text('empty'))
+  })
+
+  it('scopes context values while rendering a provider', () => {
+    const context = createContext('default')
+    expect(context.useContext()).toBe('default')
+    expect(
+      context.Provider({ value: 'provided', children: () => text(context.useContext()) }),
+    ).toEqual(text('provided'))
+    expect(context.useContext()).toBe('default')
+  })
+
+  it('converts caught errors to a fallback child', () => {
+    expect(
+      ErrorBoundary({
+        children: () => {
+          throw new Error('boom')
+        },
+        fallback: (error) => text((error as Error).message),
+      }),
+    ).toEqual(text('boom'))
+  })
+
+  it('marks forms and submit buttons for progressive enhancement', () => {
+    const form = Form({
+      action: '/save',
+      csrfToken: 'token',
+      children: SubmitButton({ loadingText: 'Saving' }),
+    })
+    expect(form.props['data-nx-form']).toBe('progressive')
+    expect(form.children[0]).toMatchObject({ props: { 'data-nx-loading-text': 'Saving' } })
+  })
+
+  it('creates validated Suspense boundary nodes', () => {
+    expect(
+      Suspense({ id: 'profile', fallback: text('loading'), children: text('ready') }),
+    ).toMatchObject({ kind: 'suspense', id: 'profile' })
   })
 })
 

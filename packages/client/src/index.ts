@@ -16,7 +16,17 @@ export interface HandlerReference {
   readonly exportName: string
 }
 
-export type DomBindingTarget = 'text' | 'value' | 'checked' | 'disabled' | 'hidden'
+export type DomBindingTarget =
+  | 'text'
+  | 'value'
+  | 'checked'
+  | 'disabled'
+  | 'hidden'
+  | 'class'
+  | 'style'
+  | 'href'
+  | 'src'
+  | `aria-${string}`
 
 export interface DomBindingTargetNode {
   readonly node: Text | HTMLElement
@@ -227,6 +237,29 @@ function applyBindingTarget(target: DomBindingTargetNode, value: unknown): void 
     ).disabled = Boolean(value)
     return
   }
+  if (target.target === 'hidden') {
+    element.hidden = Boolean(value)
+    return
+  }
+  if (target.target === 'class') {
+    element.className = value == null ? '' : String(value)
+    return
+  }
+  if (target.target === 'style') {
+    if (value && typeof value === 'object') Object.assign(element.style, value)
+    else element.style.cssText = value == null ? '' : String(value)
+    return
+  }
+  if (target.target === 'href' || target.target === 'src') {
+    if (value == null || value === '') element.removeAttribute(target.target)
+    else element.setAttribute(target.target, String(value))
+    return
+  }
+  if (target.target.startsWith('aria-')) {
+    if (value == null) element.removeAttribute(target.target)
+    else element.setAttribute(target.target, String(value))
+    return
+  }
   element.hidden = Boolean(value)
 }
 
@@ -269,10 +302,39 @@ function parseBindingAttribute(value: string): Array<{
     const scopeId = part.slice(0, separator)
     const target = part.slice(separator + 1) as DomBindingTarget
     if (!/^nx:(?:signal|store):[A-Za-z0-9_-]+$/.test(scopeId)) continue
-    if (!['text', 'value', 'checked', 'disabled', 'hidden'].includes(target)) continue
+    if (
+      !(
+        [
+          'text',
+          'value',
+          'checked',
+          'disabled',
+          'hidden',
+          'class',
+          'style',
+          'href',
+          'src',
+        ] as string[]
+      ).includes(target) &&
+      !/^aria-[a-z][a-z0-9-]*$/.test(target)
+    )
+      continue
     bindings.push({ scopeId, target })
   }
   return bindings
+}
+
+function scopeOwner(element: HTMLElement): HTMLElement | undefined {
+  let current: HTMLElement | null = element
+  while (current) {
+    if (
+      typeof current.getAttribute === 'function' &&
+      current.getAttribute('data-nx-scope') !== null
+    )
+      return current
+    current = current.parentElement
+  }
+  return undefined
 }
 
 function resolveMaterializedBinding(
@@ -280,7 +342,9 @@ function resolveMaterializedBinding(
   cache: Map<string, unknown>,
   scopeId: string,
 ): BindingSignal | undefined {
-  const raw = element.getAttribute('data-nx-scope')
+  const owner = scopeOwner(element)
+  if (!owner) return undefined
+  const raw = owner.getAttribute('data-nx-scope')
   if (!raw) return undefined
   let parsed: unknown
   try {
@@ -289,7 +353,7 @@ function resolveMaterializedBinding(
     return undefined
   }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return undefined
-  const scope = materializeScope(element, cache)
+  const scope = materializeScope(owner, cache)
   for (const [name, ref] of Object.entries(parsed as Record<string, ScopeRef>)) {
     if (ref && 'id' in ref && ref.id === scopeId) {
       const value = scope[name]
@@ -529,7 +593,10 @@ export function registerScopeSignal<T extends Serializable>(
 export function registerScopeStore<T extends Serializable>(id: string, initial: T): ScopeStore<T> {
   const store: ScopeStore<T> = {
     value: createSignal(initial),
-    snapshot: () => JSON.parse(JSON.stringify(store.value())) as T,
+    snapshot: () =>
+      typeof structuredClone === 'function'
+        ? structuredClone(store.value())
+        : (JSON.parse(JSON.stringify(store.value())) as T),
     set: (next) => store.value.set(next),
     dispose: () => store.value.dispose(),
   }
@@ -620,7 +687,11 @@ export type ActionCallResult<Output> = ActionCallSuccess<Output> | ActionCallErr
 export async function callAction<Input, Output>(
   actionRef: { readonly endpoint: string } | string,
   input: Input,
-  options: { readonly fetch?: typeof fetch; readonly idempotencyKey?: string } = {},
+  options: {
+    readonly fetch?: typeof fetch
+    readonly idempotencyKey?: string
+    readonly csrfToken?: string
+  } = {},
 ): Promise<ActionCallResult<Output>> {
   const endpoint = typeof actionRef === 'string' ? actionRef : actionRef.endpoint
   if (!endpoint.startsWith('/') || endpoint.startsWith('//'))
@@ -631,6 +702,7 @@ export async function callAction<Input, Output>(
     headers: {
       'Content-Type': 'application/json',
       ...(options.idempotencyKey ? { 'Idempotency-Key': options.idempotencyKey } : {}),
+      ...(options.csrfToken ? { 'X-CSRF-Token': options.csrfToken } : {}),
     },
     body: JSON.stringify(input),
   })
@@ -643,4 +715,64 @@ export async function callAction<Input, Output>(
   if (!response.ok || !payload || typeof payload !== 'object')
     return { ok: false, errors: [`Action endpoint returned HTTP ${response.status}.`] }
   return payload as ActionCallResult<Output>
+}
+
+export interface EnhanceFormsOptions {
+  readonly root?: ParentNode
+  readonly fetch?: typeof fetch
+  readonly onSuccess?: (form: HTMLFormElement, result: ActionCallSuccess<unknown>) => void
+  readonly onError?: (form: HTMLFormElement, result: ActionCallError) => void
+}
+
+function formDataObject(form: HTMLFormElement): Record<string, unknown> {
+  const data: Record<string, unknown> = {}
+  new FormData(form).forEach((value, key) => {
+    const previous = data[key]
+    if (previous === undefined) data[key] = value
+    else data[key] = Array.isArray(previous) ? [...previous, value] : [previous, value]
+  })
+  return data
+}
+
+/** Progressive enhancement for core Form nodes; native POST remains the no-JS fallback. */
+export function enhanceForms(options: EnhanceFormsOptions = {}): () => void {
+  const root = options.root ?? document
+  const forms = [...root.querySelectorAll<HTMLFormElement>('form[data-nx-form]')]
+  const listeners = forms.map((form) => {
+    const listener = async (event: Event) => {
+      event.preventDefault()
+      const button = form.querySelector<HTMLButtonElement>('[data-nx-submit-button]')
+      const originalText = button?.textContent ?? ''
+      const loadingText = button?.dataset.nxLoadingText
+      if (button) {
+        button.disabled = true
+        if (loadingText) button.textContent = loadingText
+      }
+      form.setAttribute('aria-busy', 'true')
+      const key =
+        globalThis.crypto?.randomUUID?.() ??
+        `nx-${Date.now()}-${Math.random().toString(36).slice(2)}`
+      const endpoint = form.getAttribute('action') ?? form.action
+      const result = await callAction(endpoint, formDataObject(form), {
+        ...(options.fetch ? { fetch: options.fetch } : {}),
+        idempotencyKey: key,
+        ...(form.dataset.nxCsrf ? { csrfToken: form.dataset.nxCsrf } : {}),
+      })
+      if (result.ok) {
+        options.onSuccess?.(form, result)
+        form.dispatchEvent(new CustomEvent('nexis:form-success', { detail: result.data }))
+      } else {
+        options.onError?.(form, result)
+        form.dispatchEvent(new CustomEvent('nexis:form-error', { detail: result.errors }))
+      }
+      form.removeAttribute('aria-busy')
+      if (button) {
+        button.disabled = false
+        button.textContent = originalText
+      }
+    }
+    form.addEventListener('submit', listener)
+    return () => form.removeEventListener('submit', listener)
+  })
+  return () => listeners.forEach((dispose) => dispose())
 }

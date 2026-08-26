@@ -6,6 +6,11 @@ type DependencyCollector = {
   readonly cleanups: Set<Unsubscribe>
 }
 
+export interface SignalOptions<T> {
+  /** Return true when the previous and next values should be treated as equal. */
+  readonly equals?: (previous: T, next: T) => boolean
+}
+
 export interface ReadableSignal<T> {
   (): T
   get(): T
@@ -17,6 +22,12 @@ export interface ReadableSignal<T> {
 export interface Signal<T> extends ReadableSignal<T> {
   set(next: T | ((previous: T) => T)): void
   setValue(next: T): void
+}
+
+export interface Resource<T> extends ReadableSignal<T | undefined> {
+  readonly loading: ReadableSignal<boolean>
+  readonly error: ReadableSignal<Error | null>
+  refetch(): Promise<void>
 }
 
 let activeCollector: DependencyCollector | undefined
@@ -57,10 +68,11 @@ function registerCleanup(cleanup: () => void): void {
   activeScope?.add(cleanup)
 }
 
-export function state<T>(initial: T): Signal<T> {
+export function state<T>(initial: T, options: SignalOptions<T> = {}): Signal<T> {
   let value = initial
   let disposed = false
   const listeners = new Set<Listener>()
+  const equals = options.equals ?? Object.is
 
   const read = (() => {
     if (disposed) throw new Error('Nexis signal has been disposed.')
@@ -78,7 +90,7 @@ export function state<T>(initial: T): Signal<T> {
     get: () => read.get(),
   })
   read.setValue = (next) => {
-    if (disposed || Object.is(value, next)) return
+    if (disposed || equals(value, next)) return
     value = next
     for (const listener of [...listeners]) notify(listener)
     flushNotifications()
@@ -101,12 +113,15 @@ export function state<T>(initial: T): Signal<T> {
 }
 
 /** Compact state form for components that prefer a value/setter tuple. */
-export function useState<T>(initial: T): readonly [Signal<T>, Signal<T>['set']] {
-  const value = state(initial)
+export function useState<T>(
+  initial: T,
+  options?: SignalOptions<T>,
+): readonly [Signal<T>, Signal<T>['set']] {
+  const value = state(initial, options)
   return [value, value.set] as const
 }
 
-export function computed<T>(derive: () => T): ReadableSignal<T> {
+export function computed<T>(derive: () => T, options: SignalOptions<T> = {}): ReadableSignal<T> {
   const result = state<T | undefined>(undefined)
   let initialized = false
   let current!: T
@@ -114,6 +129,7 @@ export function computed<T>(derive: () => T): ReadableSignal<T> {
   let evaluating = false
   let scheduled = false
   let cleanups = new Set<Unsubscribe>()
+  const equals = options.equals ?? Object.is
 
   const recompute = () => {
     if (disposed) return
@@ -132,7 +148,7 @@ export function computed<T>(derive: () => T): ReadableSignal<T> {
       evaluatingComputeds.delete(derive)
       for (const cleanup of cleanups) cleanup()
       cleanups = nextCleanups
-      if (!initialized || !Object.is(current, next)) {
+      if (!initialized || !equals(current, next)) {
         initialized = true
         current = next
         result.setValue(next)
@@ -172,6 +188,56 @@ export function computed<T>(derive: () => T): ReadableSignal<T> {
     result.dispose()
   }
   registerCleanup(read.dispose)
+  return read
+}
+
+/**
+ * Reactive async data with explicit loading/error state and a race-safe refetch.
+ * The loader is invoked immediately and again whenever refetch is called.
+ */
+export function resource<T>(loader: () => Promise<T> | T): Resource<T> {
+  const value = state<T | undefined>(undefined)
+  const loading = state(false)
+  const error = state<Error | null>(null)
+  let disposed = false
+  let requestId = 0
+
+  const refetch = async (): Promise<void> => {
+    if (disposed) return
+    const currentRequest = ++requestId
+    loading.set(true)
+    error.set(null)
+    try {
+      const next = await loader()
+      if (disposed || currentRequest !== requestId) return
+      value.set(next)
+    } catch (cause) {
+      if (disposed || currentRequest !== requestId) return
+      error.set(cause instanceof Error ? cause : new Error(String(cause)))
+    } finally {
+      if (!disposed && currentRequest === requestId) loading.set(false)
+    }
+  }
+
+  const read = (() => value()) as Resource<T>
+  read.get = () => value()
+  Object.defineProperty(read, 'value', { enumerable: true, get: () => read.get() })
+  read.subscribe = value.subscribe
+  read.dispose = () => {
+    if (disposed) return
+    disposed = true
+    requestId += 1
+    value.dispose()
+    loading.dispose()
+    error.dispose()
+  }
+  Object.defineProperties(read, {
+    loading: { enumerable: true, value: loading },
+    error: { enumerable: true, value: error },
+    refetch: { enumerable: true, value: refetch },
+  })
+  registerCleanup(read.dispose)
+  void refetch()
   return read
 }
 

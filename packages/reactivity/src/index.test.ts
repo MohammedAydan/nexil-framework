@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { batch, computed, effect, state, useState } from './index'
+import { batch, computed, effect, resource, state, useState } from './index'
 
 describe('state', () => {
   it('reads and updates values', () => {
@@ -108,5 +108,34 @@ describe('computed', () => {
     stop()
     source.set(10)
     expect(derived.value).toBe(11)
+  })
+})
+
+describe('advanced reactivity', () => {
+  it('supports custom equality comparators', () => {
+    const value = state([1], { equals: (left, right) => left[0] === right[0] })
+    const listener = vi.fn()
+    value.subscribe(listener)
+    value.set([1])
+    expect(listener).not.toHaveBeenCalled()
+    value.set([2])
+    expect(listener).toHaveBeenCalledTimes(1)
+  })
+
+  it('tracks async resource loading, success, and errors', async () => {
+    let shouldFail = false
+    const product = resource(async () => {
+      await Promise.resolve()
+      if (shouldFail) throw new Error('unavailable')
+      return 'ready'
+    })
+    expect(product.loading()).toBe(true)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(product()).toBe('ready')
+    expect(product.error()).toBeNull()
+    shouldFail = true
+    await product.refetch()
+    expect(product.error()?.message).toBe('unavailable')
+    product.dispose()
   })
 })

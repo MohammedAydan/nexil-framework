@@ -5,6 +5,7 @@ import {
   renderElementClosing,
   renderElementOpening,
   renderToString,
+  renderToStringAsync,
 } from './index.js'
 
 export interface RenderStreamOptions {
@@ -23,11 +24,19 @@ function isPromise(value: unknown): value is Promise<unknown> {
   return Boolean(value && typeof (value as { then?: unknown }).then === 'function')
 }
 
-async function* renderIncrementally(child: Child | Promise<Child>): AsyncGenerator<string> {
+function suspenseTemplate(id: string, html: string): string {
+  const safeId = escapeHtml(id)
+  return `<template id="nx-suspense-${safeId}">${html}</template><script>(function(){var t=document.getElementById('nx-suspense-${safeId}'),e=document.querySelector('[data-nx-suspense="${safeId}"]');if(t&&e)e.replaceWith(t.content.cloneNode(true))})()</script>`
+}
+
+async function* renderIncrementally(
+  child: Child | Promise<Child>,
+  deferred: Array<Promise<string>> = [],
+): AsyncGenerator<string> {
   const resolved = await child
   if (resolved === null || resolved === undefined || typeof resolved === 'boolean') return
   if (Array.isArray(resolved)) {
-    for (const item of resolved) yield* renderIncrementally(item)
+    for (const item of resolved) yield* renderIncrementally(item, deferred)
     return
   }
   if (typeof resolved === 'string' || typeof resolved === 'number') {
@@ -35,12 +44,19 @@ async function* renderIncrementally(child: Child | Promise<Child>): AsyncGenerat
     return
   }
   if (isPromise(resolved)) {
-    yield* renderIncrementally(resolved as Promise<Child>)
+    yield* renderIncrementally(resolved as Promise<Child>, deferred)
     return
   }
   const node = resolved as RenderNode
   if (node.kind === 'text') {
     yield escapeHtml(node.value)
+    return
+  }
+  if (node.kind === 'suspense') {
+    yield `<span data-nx-suspense="${escapeHtml(node.id)}">`
+    yield* renderIncrementally(node.fallback, deferred)
+    yield '</span>'
+    deferred.push(renderToStringAsync(node.content).then((html) => suspenseTemplate(node.id, html)))
     return
   }
   if (node.kind !== 'element') {
@@ -49,7 +65,7 @@ async function* renderIncrementally(child: Child | Promise<Child>): AsyncGenerat
   }
   yield renderElementOpening(node)
   if (isVoidElement(node)) return
-  for (const item of node.children) yield* renderIncrementally(item)
+  for (const item of node.children) yield* renderIncrementally(item, deferred)
   yield renderElementClosing(node)
 }
 
@@ -93,7 +109,8 @@ export function renderToStream(
         }
         let buffer = ''
         let firstPiece = true
-        for await (const piece of renderIncrementally(root)) {
+        const deferred: Array<Promise<string>> = []
+        for await (const piece of renderIncrementally(root, deferred)) {
           if (cancelled) return
           if (firstPiece) {
             firstPiece = false
@@ -109,6 +126,13 @@ export function renderToStream(
           }
         }
         if (!cancelled && buffer) await enqueue(buffer)
+        while (!cancelled && deferred.length > 0) {
+          const ready = await Promise.race(
+            deferred.map((promise, index) => promise.then((value) => ({ index, value }))),
+          )
+          deferred.splice(ready.index, 1)
+          await enqueue(ready.value)
+        }
         if (!cancelled) controller.close()
       } catch (error) {
         if (!cancelled) controller.error(error)

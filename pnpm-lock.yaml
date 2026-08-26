@@ -306,6 +306,9 @@ importers:
 
   packages/media:
     dependencies:
+      '@mohammedaydan/core':
+        specifier: workspace:*
+        version: link:../core
       sharp:
         specifier: ^0.35.3
         version: 0.35.3(@types/node@22.20.1)
@@ -328,7 +331,11 @@ importers:
         specifier: workspace:*
         version: link:../core
 
-  packages/router: {}
+  packages/router:
+    dependencies:
+      '@mohammedaydan/core':
+        specifier: workspace:*
+        version: link:../core
 
   packages/seo: {}
 

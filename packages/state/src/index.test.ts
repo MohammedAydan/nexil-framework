@@ -40,3 +40,20 @@ describe('stores', () => {
     expect(() => store.value()).toThrow(/disposed/)
   })
 })
+
+describe('store paths', () => {
+  it('updates nested fields without manual object spreading', () => {
+    const store = createStore({ user: { profile: { name: 'Ada' } }, count: 1 })
+    store.setPath('user.profile.name', 'Eve')
+    expect(store.value().user.profile.name).toBe('Eve')
+  })
+
+  it('exposes a reactive writable lens', () => {
+    const store = createStore({ user: { profile: { name: 'Ada' } } })
+    const name = store.lens<string>('user.profile.name')
+    expect(name()).toBe('Ada')
+    name.set('Eve')
+    expect(name()).toBe('Eve')
+    expect(store.snapshot().user.profile.name).toBe('Eve')
+  })
+})

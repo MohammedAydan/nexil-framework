@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-08-25T20:42:12.593Z",
+  "generatedAt": "2026-08-26T18:33:15.391Z",
   "environment": {
     "node": "v22.13.0",
     "platform": "linux",
-    "port": 4176
+    "port": 5173
   },
   "routes": {
     "manifest": [
@@ -47,18 +47,18 @@
         "route": "/",
         "source": "index.tsx",
         "interactive": true,
-        "clientJsBytes": 319,
+        "clientJsBytes": 236,
         "clientJsGzipBytes": 219,
-        "bootstrapGzipBytes": 930,
+        "bootstrapGzipBytes": 993,
         "cssBytes": 52
       },
       {
         "route": "/labs",
         "source": "labs.tsx",
         "interactive": true,
-        "clientJsBytes": 1023,
-        "clientJsGzipBytes": 509,
-        "bootstrapGzipBytes": 930,
+        "clientJsBytes": 236,
+        "clientJsGzipBytes": 215,
+        "bootstrapGzipBytes": 993,
         "cssBytes": 0
       },
       {
@@ -75,12 +75,12 @@
       {
         "path": "/",
         "status": 200,
-        "bytes": 8204,
-        "gzipBytes": 2790,
+        "bytes": 9187,
+        "gzipBytes": 2936,
         "latencyMs": {
-          "min": 1.67,
-          "median": 2.2,
-          "max": 4.21
+          "min": 0.9,
+          "median": 1.4,
+          "max": 2.03
         },
         "cacheControl": "public, max-age=0, must-revalidate",
         "contentType": "text/html; charset=utf-8",
@@ -99,12 +99,12 @@
       {
         "path": "/features",
         "status": 200,
-        "bytes": 5516,
-        "gzipBytes": 2042,
+        "bytes": 5588,
+        "gzipBytes": 2075,
         "latencyMs": {
-          "min": 1.07,
-          "median": 2.18,
-          "max": 2.45
+          "min": 0.81,
+          "median": 1.2,
+          "max": 1.43
         },
         "cacheControl": "public, max-age=0, must-revalidate",
         "contentType": "text/html; charset=utf-8",
@@ -123,12 +123,12 @@
       {
         "path": "/labs",
         "status": 200,
-        "bytes": 5179,
-        "gzipBytes": 1959,
+        "bytes": 5325,
+        "gzipBytes": 2025,
         "latencyMs": {
-          "min": 0.78,
-          "median": 0.86,
-          "max": 0.97
+          "min": 0.64,
+          "median": 0.68,
+          "max": 0.74
         },
         "cacheControl": "public, max-age=0, must-revalidate",
         "contentType": "text/html; charset=utf-8",
@@ -147,12 +147,12 @@
       {
         "path": "/docs/architecture",
         "status": 200,
-        "bytes": 2562,
-        "gzipBytes": 999,
+        "bytes": 2983,
+        "gzipBytes": 1114,
         "latencyMs": {
-          "min": 0.75,
-          "median": 0.79,
-          "max": 1.44
+          "min": 0.62,
+          "median": 0.64,
+          "max": 0.96
         },
         "cacheControl": "public, max-age=0, must-revalidate",
         "contentType": "text/html; charset=utf-8",
@@ -171,12 +171,12 @@
       {
         "path": "/docs/resumability",
         "status": 200,
-        "bytes": 2588,
-        "gzipBytes": 1033,
+        "bytes": 3009,
+        "gzipBytes": 1151,
         "latencyMs": {
-          "min": 0.71,
-          "median": 0.75,
-          "max": 0.78
+          "min": 0.6,
+          "median": 0.63,
+          "max": 0.88
         },
         "cacheControl": "public, max-age=0, must-revalidate",
         "contentType": "text/html; charset=utf-8",
@@ -195,12 +195,12 @@
       {
         "path": "/docs/performance",
         "status": 200,
-        "bytes": 2554,
-        "gzipBytes": 1018,
+        "bytes": 2975,
+        "gzipBytes": 1137,
         "latencyMs": {
-          "min": 0.74,
-          "median": 0.74,
-          "max": 0.77
+          "min": 0.6,
+          "median": 0.62,
+          "max": 0.67
         },
         "cacheControl": "public, max-age=0, must-revalidate",
         "contentType": "text/html; charset=utf-8",
@@ -219,12 +219,12 @@
       {
         "path": "/status",
         "status": 200,
-        "bytes": 3590,
-        "gzipBytes": 1357,
+        "bytes": 3669,
+        "gzipBytes": 1404,
         "latencyMs": {
-          "min": 0.76,
-          "median": 0.79,
-          "max": 1.36
+          "min": 0.63,
+          "median": 0.68,
+          "max": 0.91
         },
         "cacheControl": "public, max-age=0, must-revalidate",
         "contentType": "text/html; charset=utf-8",
@@ -247,9 +247,9 @@
       "bytes": 128,
       "gzipBytes": 116,
       "latencyMs": {
-        "min": 0.72,
-        "median": 0.77,
-        "max": 1
+        "min": 0.44,
+        "median": 0.47,
+        "max": 0.67
       },
       "cacheControl": "no-store",
       "contentType": "text/html; charset=utf-8",
@@ -340,24 +340,19 @@
   },
   "assets": {
     "bootstrap": {
-      "bytes": 1621,
-      "gzipBytes": 930
+      "bytes": 1732,
+      "gzipBytes": 993
     },
     "chunks": [
       {
-        "name": "chunk_535ea9ea9b73.js",
-        "bytes": 319,
-        "gzipBytes": 219
+        "name": "chunk_1aa4d5defcaf.js",
+        "bytes": 236,
+        "gzipBytes": 192
       },
       {
-        "name": "chunk_a0ed3ab49db7.js",
-        "bytes": 312,
-        "gzipBytes": 216
-      },
-      {
-        "name": "chunk_f04ac5ef53ed.js",
-        "bytes": 711,
-        "gzipBytes": 417
+        "name": "chunk_47c56b2c9215.js",
+        "bytes": 236,
+        "gzipBytes": 195
       }
     ],
     "assets": [
@@ -388,8 +383,8 @@
       },
       {
         "name": "styles.css",
-        "bytes": 9916,
-        "gzipBytes": 3174
+        "bytes": 10407,
+        "gzipBytes": 3279
       }
     ],
     "ogCards": [
@@ -418,8 +413,8 @@
   "totals": {
     "routeCount": 7,
     "interactiveRoutes": 2,
-    "chunkCount": 3,
-    "clientJsBytes": 2963,
-    "clientJsGzipBytes": 1782
+    "chunkCount": 2,
+    "clientJsBytes": 2204,
+    "clientJsGzipBytes": 1380
   }
 }

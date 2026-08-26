@@ -6,6 +6,8 @@ export interface SeoMetadata {
   readonly ogType?: string
   readonly noindex?: boolean
   readonly jsonLd?: Readonly<Record<string, unknown>>
+  readonly titleTemplate?: string
+  readonly openGraph?: { readonly siteName?: string }
 }
 
 function escapeHtml(value: string): string {
@@ -52,16 +54,32 @@ export function normalizeSeo(metadata: SeoMetadata): SeoMetadata {
   }
   if (metadata.canonical !== undefined) assertUrl(metadata.canonical, 'canonical')
   if (metadata.image !== undefined) assertUrl(metadata.image, 'image', true)
-  return { ...metadata, title }
+  if (metadata.titleTemplate !== undefined && /[<>]/.test(metadata.titleTemplate))
+    throw new TypeError('SEO title template contains unsafe characters.')
+  if (metadata.openGraph?.siteName !== undefined && metadata.openGraph.siteName.trim().length === 0)
+    throw new TypeError('OpenGraph site name cannot be empty.')
+  return {
+    ...metadata,
+    title,
+    ...(metadata.titleTemplate ? { titleTemplate: metadata.titleTemplate.trim() } : {}),
+    ...(metadata.openGraph
+      ? {
+          openGraph: {
+            ...(metadata.openGraph.siteName !== undefined
+              ? { siteName: metadata.openGraph.siteName.trim() }
+              : {}),
+          },
+        }
+      : {}),
+  }
 }
 
 export function renderHead(metadata: SeoMetadata): string {
   const normalized = normalizeSeo(metadata)
-  const tags = [
-    '<meta charset="utf-8">',
-    '<meta name="viewport" content="width=device-width, initial-scale=1">',
-    `<title>${escapeHtml(normalized.title)}</title>`,
-  ]
+  const title = normalized.titleTemplate?.includes('%s')
+    ? normalized.titleTemplate.replaceAll('%s', normalized.title)
+    : normalized.title
+  const tags = [`<title>${escapeHtml(title)}</title>`]
   if (normalized.description)
     tags.push(`<meta name="description" content="${escapeHtml(normalized.description)}">`)
   if (normalized.canonical) {
@@ -69,7 +87,11 @@ export function renderHead(metadata: SeoMetadata): string {
     tags.push(`<meta property="og:url" content="${escapeHtml(normalized.canonical)}">`)
   }
 
-  tags.push(`<meta property="og:title" content="${escapeHtml(normalized.title)}">`)
+  tags.push(`<meta property="og:title" content="${escapeHtml(title)}">`)
+  if (normalized.openGraph?.siteName)
+    tags.push(
+      `<meta property="og:site_name" content="${escapeHtml(normalized.openGraph.siteName)}">`,
+    )
   if (normalized.description)
     tags.push(`<meta property="og:description" content="${escapeHtml(normalized.description)}">`)
   if (normalized.image)
@@ -80,7 +102,7 @@ export function renderHead(metadata: SeoMetadata): string {
   tags.push(
     `<meta name="twitter:card" content="${normalized.image ? 'summary_large_image' : 'summary'}">`,
   )
-  tags.push(`<meta name="twitter:title" content="${escapeHtml(normalized.title)}">`)
+  tags.push(`<meta name="twitter:title" content="${escapeHtml(title)}">`)
   if (normalized.description)
     tags.push(`<meta name="twitter:description" content="${escapeHtml(normalized.description)}">`)
   if (normalized.image)

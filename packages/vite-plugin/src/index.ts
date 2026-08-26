@@ -5,12 +5,12 @@ import MagicString from 'magic-string'
 import { transformWithEsbuild } from 'vite'
 import type { Plugin } from 'vite'
 import { findSecretExposure, validateImport } from '@mohammedaydan/compiler'
-import { RESUMABILITY_BINDINGS, RESUMABILITY_BOOTSTRAP } from './bootstrap.js'
+import { RESUMABILITY_BINDINGS, RESUMABILITY_BOOTSTRAP, RESUMABILITY_FORMS } from './bootstrap.js'
 
 const traverse = ((traverseModule as unknown as { default?: typeof traverseModule }).default ??
   traverseModule) as typeof traverseModule
 
-export { RESUMABILITY_BINDINGS, RESUMABILITY_BOOTSTRAP }
+export { RESUMABILITY_BINDINGS, RESUMABILITY_BOOTSTRAP, RESUMABILITY_FORMS }
 
 interface AstNode {
   readonly type?: string
@@ -49,7 +49,17 @@ export interface ScopeCapture {
   readonly endpoint?: string
 }
 
-export type DomBindingTarget = 'text' | 'value' | 'checked' | 'disabled' | 'hidden'
+export type DomBindingTarget =
+  | 'text'
+  | 'value'
+  | 'checked'
+  | 'disabled'
+  | 'hidden'
+  | 'class'
+  | 'style'
+  | 'href'
+  | 'src'
+  | `aria-${string}`
 
 export interface DomBinding {
   readonly id: string
@@ -150,44 +160,83 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
+function evaluateStaticLiteral(node: unknown): ScopeCaptureInitial | undefined {
+  if (!node || typeof node !== 'object') return undefined
+  const value = node as {
+    type?: string
+    value?: unknown
+    elements?: unknown[]
+    properties?: unknown[]
+  }
+  if (
+    value.type === 'StringLiteral' ||
+    value.type === 'NumericLiteral' ||
+    value.type === 'BooleanLiteral'
+  ) {
+    return value.value as ScopeCaptureInitial
+  }
+  if (value.type === 'NullLiteral') return null
+  if (value.type === 'ArrayExpression') {
+    const elements = value.elements ?? []
+    const evaluated = elements.map(evaluateStaticLiteral)
+    return evaluated.every((item) => item !== undefined)
+      ? (evaluated as ScopeCaptureInitial[])
+      : undefined
+  }
+  if (value.type === 'ObjectExpression') {
+    const result: Record<string, ScopeCaptureInitial> = {}
+    for (const property of value.properties ?? []) {
+      if (!property || typeof property !== 'object') return undefined
+      const record = property as {
+        type?: string
+        key?: { type?: string; name?: string; value?: string }
+        value?: unknown
+      }
+      if (
+        record.type !== 'ObjectProperty' ||
+        (record.key?.type !== 'Identifier' && record.key?.type !== 'StringLiteral')
+      )
+        return undefined
+      const key = record.key.name ?? record.key.value
+      if (!key) return undefined
+      const evaluated = evaluateStaticLiteral(record.value)
+      if (evaluated === undefined) return undefined
+      result[key] = evaluated
+    }
+    return result
+  }
+  return undefined
+}
+
 /**
  * Extracts a JSON-literal initializer for a named signal/store/action
  * declaration so the compiled page can serialize it into `data-nx-scope`.
  * Returns undefined when the initializer is not a pure JSON literal.
  */
 function extractStaticInitial(source: string, name: string): ScopeCaptureInitial | undefined {
-  const compact = source.replace(/\s+/g, ' ')
-  const namePattern = escapeRegExp(name)
-  const patterns = [
-    `(?:const|let|var) ${namePattern} = (?:state|createStore|computed)\\(`,
-    `(?:const|let|var) \\[\\s*${namePattern}\\s*,[^\\]]*\\]\\s*=\\s*useState\\(`,
-    `(?:const|let|var) \\[\\s*[A-Za-z_$][\\w$]*\\s*,\\s*${namePattern}\\s*\\]\\s*=\\s*useState\\(`,
-  ]
-  for (const pattern of patterns) {
-    const match = new RegExp(pattern).exec(compact)
-    if (!match) continue
-    const open = match.index + match[0].length - 1
-    let depth = 0
-    let close = -1
-    for (let index = open; index < compact.length; index += 1) {
-      const character = compact[index]
-      if (character === '(') depth += 1
-      else if (character === ')') {
-        depth -= 1
-        if (depth === 0) {
-          close = index
-          break
-        }
-      }
-    }
-    if (close < 0) continue
-    try {
-      return JSON.parse(compact.slice(open + 1, close)) as ScopeCaptureInitial
-    } catch {
-      return undefined
-    }
-  }
-  return undefined
+  const ast = parseSource(source, 'nexis-initializer.tsx')
+  let initial: ScopeCaptureInitial | undefined
+  walk(ast, (node) => {
+    if (initial !== undefined || node.type !== 'VariableDeclarator') return
+    const declaration = node as AstNode & { readonly id?: AstNode; readonly init?: AstNode }
+    const id = declaration.id
+    const isNamed = id?.type === 'Identifier' && astIdentifierName(id) === name
+    const isTuple =
+      id?.type === 'ArrayPattern' &&
+      Array.isArray((id as AstNode & { readonly elements?: readonly AstNode[] }).elements) &&
+      (id as AstNode & { readonly elements: readonly AstNode[] }).elements.some(
+        (element) => element?.type === 'Identifier' && astIdentifierName(element) === name,
+      )
+    if (!isNamed && !isTuple) return
+    const init = declaration.init
+    if (!init || init.type !== 'CallExpression') return
+    const callee = (init as AstNode & { readonly callee?: AstNode }).callee
+    const calleeName = astIdentifierName(callee)
+    if (!['state', 'createStore', 'computed', 'useState'].includes(calleeName ?? '')) return
+    const args = (init as AstNode & { readonly arguments?: readonly AstNode[] }).arguments ?? []
+    initial = evaluateStaticLiteral(args[0])
+  })
+  return initial
 }
 
 /** Extracts the first string-literal argument of an action declaration. */
@@ -540,7 +589,8 @@ export async function transformNexisSource(
         return
       }
       const expressionSource = source.slice(expression.start, expression.end)
-      const idHash = hash(`${normalizeIdForHash(id)}:${start}:${expressionSource}`)
+      const canonicalExpression = expressionSource.replace(/\s+/g, ' ').trim()
+      const idHash = hash(`handler:${canonicalExpression}`)
       const exportName = `handler_${idHash}`
       const fileName = `chunk_${idHash}.js`
       const eventName = node.name.name.slice(2, -1).toLowerCase()
@@ -550,8 +600,12 @@ export async function transformNexisSource(
         )
         return
       }
-      chunkSpecs.push({ fileName, exportName, expressionSource })
-      attrRanges.push({ start, end, eventName, specIndex: chunkSpecs.length - 1 })
+      let specIndex = chunkSpecs.findIndex((spec) => spec.fileName === fileName)
+      if (specIndex < 0) {
+        chunkSpecs.push({ fileName, exportName, expressionSource })
+        specIndex = chunkSpecs.length - 1
+      }
+      attrRanges.push({ start, end, eventName, specIndex })
     }
 
     if (node.type === 'JSXOpeningElement') {
@@ -562,7 +616,8 @@ export async function transformNexisSource(
       const explicitBindings = attributes.filter((attribute) => {
         const name = attribute.name?.name
         return (
-          typeof name === 'string' && /^bind(?:Text|Value|Checked|Disabled|Hidden)\$$/.test(name)
+          typeof name === 'string' &&
+          /^bind(?:Text|Value|Checked|Disabled|Hidden|Class|Style|Href|Src|AriaLabel)\$$/.test(name)
         )
       })
       const addBinding = (
@@ -619,7 +674,8 @@ export async function transformNexisSource(
         if (typeof attributeName !== 'string') continue
         const target = attributeName
           .slice(4, -1)
-          .replace(/^[A-Z]/, (letter) => letter.toLowerCase()) as DomBindingTarget
+          .replace(/^[A-Z]/, (letter) => letter.toLowerCase())
+          .replace(/^ariaLabel$/, 'aria-label') as DomBindingTarget
         const sourceName = bindingExpressionIdentifier(attribute.value?.expression)
         if (sourceName) addBinding(attribute, target, sourceName, false, true)
         else if (attribute.start !== undefined && attribute.end !== undefined)
@@ -630,6 +686,9 @@ export async function transformNexisSource(
         checked: 'checked',
         disabled: 'disabled',
         hidden: 'hidden',
+        className: 'class',
+        href: 'href',
+        src: 'src',
       }
       for (const attribute of attributes) {
         const attributeName = attribute.name?.name
@@ -670,6 +729,48 @@ export async function transformNexisSource(
           : undefined
       const sourceName = hasExplicitTextBinding ? undefined : directReactiveIdentifier(expression)
       const capture = sourceName ? classifyScopeCaptures(source, [sourceName])[0] : undefined
+
+      // Preserve authoring-friendly interpolations such as `Items: {count()}` by
+      // wrapping each direct signal expression in a tiny independently bound span.
+      if (children.length > 1) {
+        for (const candidate of children) {
+          if (candidate.type !== 'JSXExpressionContainer') continue
+          const candidateExpression = (candidate as AstNode & { readonly expression?: AstNode })
+            .expression
+          const candidateName = directReactiveIdentifier(candidateExpression)
+          const candidateCapture = candidateName
+            ? classifyScopeCaptures(source, [candidateName])[0]
+            : undefined
+          if (
+            !candidateName ||
+            candidateCapture?.kind !== 'signal' ||
+            !candidateCapture.id ||
+            candidateCapture.initial === undefined ||
+            candidate.start === undefined ||
+            candidate.end === undefined
+          )
+            continue
+          const bindingId = `nx:bind:${hash(`${normalizeIdForHash(id)}:${candidate.start}:text`)}`
+          const binding: DomBinding = {
+            id: bindingId,
+            scopeId: candidateCapture.id,
+            target: 'text',
+            source: candidateName,
+            automatic: true,
+          }
+          bindings.push(binding)
+          scopeCaptures.push(candidateCapture)
+          const payload = buildScopePayload([candidateCapture])
+          const expressionSource = source.slice(candidate.start, candidate.end)
+          magic.overwrite(
+            candidate.start,
+            candidate.end,
+            `<span data-nx-bind="${candidateCapture.id}#text"${
+              payload ? ` data-nx-scope="${toJsonAttribute(payload)}"` : ''
+            }>${expressionSource}</span>`,
+          )
+        }
+      }
       if (!sourceName && !hasExplicitTextBinding && expression) {
         for (const name of identifierNamesInAst(expression)) {
           const candidate = classifyScopeCaptures(source, [name])[0]

@@ -182,6 +182,49 @@ describe('Nexis CLI', () => {
   })
 })
 
+it('generates routes, components, and actions with safe paths', async () => {
+  const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-generators-'))
+  try {
+    const directory = await createProject('generator-app', parent)
+    await expect(runCli(['generate', 'route', 'account/settings'], directory)).resolves.toContain(
+      'src/routes/account/settings.tsx',
+    )
+    await expect(runCli(['generate', 'component', 'Button'], directory)).resolves.toContain(
+      'src/components/Button.tsx',
+    )
+    await expect(runCli(['add', 'action', 'saveProfile'], directory)).resolves.toContain(
+      'src/actions/saveProfile.ts',
+    )
+    await expect(runCli(['generate', 'route', '../escape'], directory)).rejects.toThrow(
+      /safe relative/,
+    )
+    await expect(runCli(['doctor'], directory)).resolves.toContain('ok package.json')
+  } finally {
+    await rm(parent, { recursive: true, force: true })
+  }
+})
+
+it('emits the automatic progressive-form runtime only for Form routes', async () => {
+  const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-forms-'))
+  try {
+    const directory = await createProject('forms-app', parent)
+    await writeFile(
+      join(directory, 'src/routes/index.tsx'),
+      `import { Form, SubmitButton } from '@mohammedaydan/core'\nexport default function Home() { return <Form action="/save"><input name="name" /><SubmitButton loadingText="Saving">Save</SubmitButton></Form> }\n`,
+      'utf8',
+    )
+    await runCli(['build'], directory)
+    const html = await readFile(join(directory, 'dist/client/index.html'), 'utf8')
+    expect(html).toContain('data-nx-form="progressive"')
+    expect(html).toContain('/nexis-forms.js')
+    expect(await readFile(join(directory, 'dist/client/nexis-forms.js'), 'utf8')).toContain(
+      'Idempotency-Key',
+    )
+  } finally {
+    await rm(parent, { recursive: true, force: true })
+  }
+})
+
 it('isolates the binding runtime to binding-enabled routes', async () => {
   const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-bindings-'))
   try {

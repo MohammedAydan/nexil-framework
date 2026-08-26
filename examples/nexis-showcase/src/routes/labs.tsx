@@ -6,7 +6,7 @@ import {
   deserializeResumeState,
   serializeResumeState,
 } from '@mohammedaydan/client'
-import { component, computed, state } from '@mohammedaydan/core'
+import { component, computed, Form, SubmitButton, state } from '@mohammedaydan/core'
 import { batch } from '@mohammedaydan/reactivity'
 import { createSecurityHeaders, serializeCookie } from '@mohammedaydan/server'
 import { createStateRegistry } from '@mohammedaydan/state'
@@ -35,6 +35,7 @@ const resumeAttribute = createResumeAttribute('labs', resumeReference)
 const headers = createSecurityHeaders()
 const cookie = serializeCookie('lab_session', 'evaluation', { maxAge: 900 })
 const evaluationAction = action({
+  endpoint: '/__nexis/actions/labs/submit',
   validate: (input: unknown) => {
     if (!input || typeof input !== 'object' || !('name' in input))
       throw new TypeError('Name required')
@@ -53,17 +54,6 @@ export default component(() => {
   void payloadRoundTrip
   return (
     <>
-      <header className="shell site-header">
-        <a className="wordmark" href="/">
-          <span className="mark">N</span>
-          <span>Nexis / field guide</span>
-        </a>
-        <nav className="nav" aria-label="Primary navigation">
-          <a href="/">Home</a>
-          <a href="/features">Features</a>
-          <a href="/docs/architecture">Docs</a>
-        </nav>
-      </header>
       <main>
         <section className="shell hero">
           <div>
@@ -91,21 +81,16 @@ export default component(() => {
                 Read the model
               </a>
             </div>
-            <form
+            <Form
               id="action-form"
               className="button-row"
-              action="/__nexis/actions/labs/submit"
+              action={evaluationAction}
               method="post"
               onSubmit$={({ element, event }) => {
                 event.preventDefault()
-                const form = new FormData(element as HTMLFormElement)
-                fetch(element.action, {
+                fetch(element.getAttribute('action') ?? element.action, {
                   method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Idempotency-Key': `lab-${Date.now()}`,
-                  },
-                  body: JSON.stringify({ name: form.get('name') }),
+                  body: new FormData(element as HTMLFormElement),
                 })
                   .then((response) => response.json())
                   .then((result) => {
@@ -121,10 +106,10 @@ export default component(() => {
                 Action name
               </label>
               <input id="action-name" name="name" defaultValue="Ada" />
-              <button className="button secondary" type="submit">
+              <SubmitButton className="button secondary" loadingText="Calling…">
                 Call the action
-              </button>
-            </form>
+              </SubmitButton>
+            </Form>
             <p id="action-output" className="small" aria-live="polite">
               No action call yet.
             </p>
@@ -211,12 +196,6 @@ export default component(() => {
           </div>
         </section>
       </main>
-      <footer className="shell site-footer">
-        <span>Labs / evidence surface</span>
-        <span>
-          <a href="/">Return home</a>
-        </span>
-      </footer>
     </>
   )
 })

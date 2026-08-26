@@ -2,6 +2,9 @@
   "name": "@mohammedaydan/router",
   "version": "1.0.0",
   "type": "module",
+  "dependencies": {
+    "@mohammedaydan/core": "workspace:*"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

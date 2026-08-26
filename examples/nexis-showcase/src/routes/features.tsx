@@ -67,104 +67,85 @@ const features = [
 ]
 
 export default component(() => (
-  <>
-    <header className="shell site-header">
-      <a className="wordmark" href="/">
-        <span className="mark">N</span>
-        <span>Nexis / field guide</span>
-      </a>
-      <nav className="nav" aria-label="Primary navigation">
-        <a href="/">Home</a>
-        <a href="/labs">Labs</a>
-        <a href="/docs/architecture">Docs</a>
-      </nav>
-    </header>
-    <main>
-      <section className="shell hero">
+  <main>
+    <section className="shell hero">
+      <div>
+        <p className="eyebrow">Feature map / 09 systems</p>
+        <h1>
+          A framework surface you can <em>inspect.</em>
+        </h1>
+        <p className="lede">
+          This page is intentionally plain about the machinery. Each tile maps to a package, an
+          observable behavior, and a benchmark target.
+        </p>
+      </div>
+      <div className="console">
+        <div className="dim">$ nexis feature-map --all</div>
+        <div className="good">09 packages connected</div>
+        <div>routes: discovered</div>
+        <div>ssr: rendered</div>
+        <div>seo: validated</div>
+        <div>chunks: lazy</div>
+        <div className="warn">audit: see /labs</div>
+      </div>
+    </section>
+    <section className="shell section" aria-labelledby="feature-list">
+      <div className="section-heading">
         <div>
-          <p className="eyebrow">Feature map / 09 systems</p>
-          <h1>
-            A framework surface you can <em>inspect.</em>
-          </h1>
-          <p className="lede">
-            This page is intentionally plain about the machinery. Each tile maps to a package, an
-            observable behavior, and a benchmark target.
-          </p>
+          <p className="eyebrow">Inventory</p>
+          <h2 id="feature-list">Every layer has a job.</h2>
         </div>
-        <div className="console">
-          <div className="dim">$ nexis feature-map --all</div>
-          <div className="good">09 packages connected</div>
-          <div>routes: discovered</div>
-          <div>ssr: rendered</div>
-          <div>seo: validated</div>
-          <div>chunks: lazy</div>
-          <div className="warn">audit: see /labs</div>
-        </div>
-      </section>
-      <section className="shell section" aria-labelledby="feature-list">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Inventory</p>
-            <h2 id="feature-list">Every layer has a job.</h2>
-          </div>
-          <p>
-            Feature coverage is demonstrated in the running application rather than listed as an
-            abstract promise.
-          </p>
-        </div>
-        <div className="grid-3">
-          {features.map(([number, name, copy, packageName]) => (
-            <article className="card" key={name}>
-              <span className="tag">
-                {number} / {packageName}
-              </span>
-              <h3>{name}</h3>
-              <p>{copy}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-      <section className="shell section split">
-        <div>
-          <p className="eyebrow">Follow the evidence</p>
-          <h2>Test the behavior, not the brochure.</h2>
-          <p className="small">
-            The lab route exposes the actual generated HTML, state payload, security headers, and
-            benchmark inputs. The docs route explains the architecture from the perspective of a
-            page request.
-          </p>
-          <a className="button" href="/labs">
-            Open evaluation lab
-          </a>
-        </div>
-        <div className="card">
-          <span className="pill">Evidence-first</span>
-          <ul className="data-list">
-            <li>
-              <span>Rendered routes</span>
-              <strong>6</strong>
-            </li>
-            <li>
-              <span>Interactive boundaries</span>
-              <strong>3</strong>
-            </li>
-            <li>
-              <span>SEO artifact types</span>
-              <strong>6</strong>
-            </li>
-            <li>
-              <span>Benchmark dimensions</span>
-              <strong>12</strong>
-            </li>
-          </ul>
-        </div>
-      </section>
-    </main>
-    <footer className="shell site-footer">
-      <span>Features / Nexis showcase</span>
-      <span>
-        <a href="/">Return home</a>
-      </span>
-    </footer>
-  </>
+        <p>
+          Feature coverage is demonstrated in the running application rather than listed as an
+          abstract promise.
+        </p>
+      </div>
+      <div className="grid-3">
+        {features.map(([number, name, copy, packageName]) => (
+          <article className="card" key={name}>
+            <span className="tag">
+              {number} / {packageName}
+            </span>
+            <h3>{name}</h3>
+            <p>{copy}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+    <section className="shell section split">
+      <div>
+        <p className="eyebrow">Follow the evidence</p>
+        <h2>Test the behavior, not the brochure.</h2>
+        <p className="small">
+          The lab route exposes the actual generated HTML, state payload, security headers, and
+          benchmark inputs. The docs route explains the architecture from the perspective of a page
+          request.
+        </p>
+        <a className="button" href="/labs">
+          Open evaluation lab
+        </a>
+      </div>
+      <div className="card">
+        <span className="pill">Evidence-first</span>
+        <ul className="data-list">
+          <li>
+            <span>Rendered routes</span>
+            <strong>6</strong>
+          </li>
+          <li>
+            <span>Interactive boundaries</span>
+            <strong>3</strong>
+          </li>
+          <li>
+            <span>SEO artifact types</span>
+            <strong>6</strong>
+          </li>
+          <li>
+            <span>Benchmark dimensions</span>
+            <strong>12</strong>
+          </li>
+        </ul>
+      </div>
+    </section>
+  </main>
 ))
