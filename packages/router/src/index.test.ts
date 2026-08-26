@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { matchRoute, resolveRoute, routeFromFile } from './index'
+import { Link, matchRoute, resolveRoute, routeFromFile } from './index'
 
 describe('routeFromFile and matching', () => {
   it('creates a root route and matches static paths', () => {
@@ -55,4 +55,26 @@ describe('routeFromFile and matching', () => {
     expect(() => routeFromFile('src/routes/index.d.ts')).toThrow(/Declaration/)
     expect(() => routeFromFile('src/routes/index.spec.ts')).toThrow(/Declaration/)
   })
+})
+
+it('omits route groups from URLs and records nested layouts', () => {
+  const route = routeFromFile('src/routes/(dashboard)/settings.tsx')
+  expect(route.pattern).toBe('/settings')
+  expect(route.layouts).toContain('(dashboard)/_layout.tsx')
+})
+
+it('matches URLs while exposing query parameters and hash fragments', () => {
+  const route = routeFromFile('src/routes/search.tsx')
+  const match = matchRoute(route, '/search?q=nexis&page=2#results')
+  expect(match?.query.get('q')).toBe('nexis')
+  expect(match?.query.get('page')).toBe('2')
+  expect(match?.hash).toBe('results')
+})
+
+it('renders safe internal links with prefetch metadata', () => {
+  expect(Link({ href: '/docs', prefetch: 'intent', children: 'Docs' })).toMatchObject({
+    tag: 'a',
+    props: { href: '/docs', 'data-nx-prefetch': 'intent' },
+  })
+  expect(() => Link({ href: 'https://example.com' })).toThrow(/internal/)
 })

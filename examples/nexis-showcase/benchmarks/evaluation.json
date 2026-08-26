@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-25T20:42:22.569Z",
+  "generatedAt": "2026-08-26T18:37:25.911Z",
   "passed": 27,
   "total": 27,
   "passRate": 100,
@@ -17,7 +17,7 @@
     {
       "name": "SSR emits substantive HTML",
       "passed": true,
-      "detail": "/:8204B /features:5516B /labs:5179B /docs/architecture:2562B /docs/resumability:2588B /docs/performance:2554B /status:3590B"
+      "detail": "/:9187B /features:5588B /labs:5325B /docs/architecture:2983B /docs/resumability:3009B /docs/performance:2975B /status:3669B"
     },
     {
       "name": "Nested static paths render",
@@ -57,17 +57,17 @@
     {
       "name": "Bootstrap is below 2KB raw",
       "passed": true,
-      "detail": "1621B"
+      "detail": "1732B"
     },
     {
       "name": "Average interactive chunk is below 2KB raw",
       "passed": true,
-      "detail": "3 chunks"
+      "detail": "2 chunks"
     },
     {
       "name": "Median route latency is below 250ms",
       "passed": true,
-      "detail": "/:2.2ms /features:2.18ms /labs:0.86ms /docs/architecture:0.79ms /docs/resumability:0.75ms /docs/performance:0.74ms /status:0.79ms"
+      "detail": "/:1.4ms /features:1.2ms /labs:0.68ms /docs/architecture:0.64ms /docs/resumability:0.63ms /docs/performance:0.62ms /status:0.68ms"
     },
     {
       "name": "HTML responses include an explicit cache policy",

@@ -1,4 +1,4 @@
-import type { Child, ElementNode, RenderNode, TextNode } from '@mohammedaydan/core'
+import type { Child, ElementNode, RenderNode, SuspenseNode, TextNode } from '@mohammedaydan/core'
 
 const VOID_ELEMENTS = new Set([
   'area',
@@ -36,7 +36,17 @@ const UNITLESS_PROPERTIES = new Set([
   'strokeOpacity',
   'animationIterationCount',
 ])
-export type DomBindingTarget = 'text' | 'value' | 'checked' | 'disabled' | 'hidden'
+export type DomBindingTarget =
+  | 'text'
+  | 'value'
+  | 'checked'
+  | 'disabled'
+  | 'hidden'
+  | 'class'
+  | 'style'
+  | 'href'
+  | 'src'
+  | `aria-${string}`
 
 const ATTRIBUTE_ALIASES: Readonly<Record<string, string>> = {
   className: 'class',
@@ -127,7 +137,22 @@ function isSafeUrl(value: string): boolean {
 export function renderBindingMarker(scopeId: string, target: DomBindingTarget): string {
   if (!/^nx:(?:signal|store):[A-Za-z0-9_-]+$/.test(scopeId))
     throw new TypeError('Nexis binding scope id must be a stable signal or store id.')
-  if (!['text', 'value', 'checked', 'disabled', 'hidden'].includes(target))
+  if (
+    !(
+      [
+        'text',
+        'value',
+        'checked',
+        'disabled',
+        'hidden',
+        'class',
+        'style',
+        'href',
+        'src',
+      ] as string[]
+    ).includes(target) &&
+    !/^aria-[a-z][a-z0-9-]*$/.test(target)
+  )
     throw new TypeError('Nexis binding target is not supported.')
   return `data-nx-bind="${escapeHtml(`${scopeId}#${target}`)}"`
 }
@@ -143,7 +168,20 @@ function renderAttribute(rawName: string, value: unknown): string {
         return (
           separator > 0 &&
           /^nx:(?:signal|store):[A-Za-z0-9_-]+$/.test(part.slice(0, separator)) &&
-          ['text', 'value', 'checked', 'disabled', 'hidden'].includes(part.slice(separator + 1))
+          ((
+            [
+              'text',
+              'value',
+              'checked',
+              'disabled',
+              'hidden',
+              'class',
+              'style',
+              'href',
+              'src',
+            ] as string[]
+          ).includes(part.slice(separator + 1)) ||
+            /^aria-[a-z][a-z0-9-]*$/.test(part.slice(separator + 1)))
         )
       })
     )
@@ -187,9 +225,14 @@ function renderElement(node: ElementNode): string {
   return `${opening}${node.children.map(renderChild).join('')}${renderElementClosing(node)}`
 }
 
+function renderSuspenseFallback(node: SuspenseNode): string {
+  return `<span data-nx-suspense="${escapeHtml(node.id)}">${renderChild(node.fallback)}</span>`
+}
+
 function renderNode(node: RenderNode): string {
   if (node.kind === 'text') return renderText(node)
   if (node.kind === 'element') return renderElement(node)
+  if (node.kind === 'suspense') return renderSuspenseFallback(node)
   throw new TypeError('Unsupported render node.')
 }
 
@@ -207,6 +250,13 @@ export async function renderChildAsync(child: Child | Promise<Child>): Promise<s
   if (Array.isArray(resolved)) return (await Promise.all(resolved.map(renderChildAsync))).join('')
   if (resolved && typeof resolved === 'object' && 'then' in resolved)
     return renderChildAsync(resolved as unknown as Promise<Child>)
+  if (
+    resolved &&
+    typeof resolved === 'object' &&
+    'kind' in resolved &&
+    resolved.kind === 'suspense'
+  )
+    return renderChildAsync(resolved.content)
   return renderChild(resolved)
 }
 

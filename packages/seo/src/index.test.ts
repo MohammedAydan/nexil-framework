@@ -38,6 +38,30 @@ describe('SEO metadata', () => {
     expect(head).toContain('<meta name="twitter:image" content="/social.png">')
   })
 
+  it('applies title templates to document and social titles', () => {
+    const head = renderHead({ title: 'Architecture', titleTemplate: '%s · Nexis' })
+    expect(head).toContain('<title>Architecture · Nexis</title>')
+    expect(head).toContain('property="og:title" content="Architecture · Nexis"')
+  })
+
+  it('emits an inherited OpenGraph site name', () => {
+    expect(renderHead({ title: 'Docs', openGraph: { siteName: 'Nexis' } })).toContain(
+      'property="og:site_name" content="Nexis"',
+    )
+  })
+
+  it('preserves supported metadata extensions during normalization', () => {
+    expect(normalizeSeo({ title: 'Docs', titleTemplate: '%s · Site' })).toMatchObject({
+      titleTemplate: '%s · Site',
+    })
+  })
+
+  it('rejects unsafe title template values', () => {
+    expect(() => normalizeSeo({ title: 'Docs', titleTemplate: '<script>' })).toThrow(
+      /template|metadata|unsafe/i,
+    )
+  })
+
   it('requires absolute HTTPS canonical URLs and emits og:url', () => {
     expect(() => normalizeSeo({ title: 'Home', canonical: '/home' })).toThrow(/absolute/)
     expect(() => normalizeSeo({ title: 'Home', canonical: '//evil.test/home' })).toThrow(/absolute/)

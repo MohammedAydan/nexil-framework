@@ -31,17 +31,6 @@ export default component(({ slug }: { slug?: string }) => {
   const note = notes[slug ?? 'architecture'] ?? notes.architecture
   return (
     <>
-      <header className="shell site-header">
-        <a className="wordmark" href="/">
-          <span className="mark">N</span>
-          <span>Nexis / field guide</span>
-        </a>
-        <nav className="nav" aria-label="Primary navigation">
-          <a href="/">Home</a>
-          <a href="/features">Features</a>
-          <a href="/labs">Labs</a>
-        </nav>
-      </header>
       <main className="shell">
         <section className="hero">
           <div>
@@ -66,12 +55,6 @@ export default component(({ slug }: { slug?: string }) => {
           </div>
         </section>
       </main>
-      <footer className="shell site-footer">
-        <span>Dynamic route / static path expansion</span>
-        <span>
-          <a href="/features">Feature map</a>
-        </span>
-      </footer>
     </>
   )
 })

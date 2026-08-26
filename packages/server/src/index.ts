@@ -58,6 +58,57 @@ export function serializeCookie(name: string, value: string, options: CookieOpti
   return parts.join('; ')
 }
 
+function cookieHeader(input: Request | Headers | string): string {
+  if (typeof input === 'string') return input
+  if (input instanceof Request) return input.headers.get('cookie') ?? ''
+  return input.get('cookie') ?? ''
+}
+
+/** Parse a Cookie header without throwing on malformed percent-encoding. */
+export function parseCookies(input: Request | Headers | string): Record<string, string> {
+  const cookies: Record<string, string> = {}
+  for (const part of cookieHeader(input).split(';')) {
+    const separator = part.indexOf('=')
+    if (separator <= 0) continue
+    const name = part.slice(0, separator).trim()
+    const rawValue = part.slice(separator + 1).trim()
+    if (!/^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/.test(name)) continue
+    try {
+      cookies[name] = decodeURIComponent(rawValue)
+    } catch {
+      cookies[name] = rawValue
+    }
+  }
+  return cookies
+}
+
+export function getCookie(input: Request | Headers | string, name: string): string | undefined {
+  assertToken(name, 'name')
+  return parseCookies(input)[name]
+}
+
+export interface LoaderContext<
+  Params extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
+> {
+  readonly request: Request
+  readonly params: Params
+  readonly data: DataContext
+}
+
+export type Loader<Params extends Readonly<Record<string, unknown>>, Output> = (
+  context: LoaderContext<Params>,
+) => Output | Promise<Output>
+
+export function defineLoader<Params extends Readonly<Record<string, unknown>>, Output>(
+  loader: Loader<Params, Output>,
+): Loader<Params, Output> {
+  return loader
+}
+
+export function notFound(message = 'Not Found'): Response {
+  return new Response(message, { status: 404, statusText: 'Not Found' })
+}
+
 export function createSecurityHeaders(nonce?: string): Headers {
   if (nonce !== undefined && !/^[a-zA-Z0-9+/_-]+={0,2}$/.test(nonce))
     throw new TypeError('Invalid CSP nonce.')

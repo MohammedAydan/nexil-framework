@@ -317,6 +317,47 @@ code {
   font: 11px var(--mono);
 }
 
+.docs-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+  padding-top: 34px;
+}
+.docs-sidebar {
+  position: sticky;
+  top: 92px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+.docs-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 12px;
+}
+.docs-nav a {
+  color: var(--muted);
+  font: 12px var(--mono);
+  text-decoration: none;
+}
+.docs-nav a:hover {
+  color: var(--cyan);
+}
+.docs-content {
+  min-width: 0;
+}
+
+@media (max-width: 820px) {
+  .docs-layout {
+    grid-template-columns: 1fr;
+  }
+  .docs-sidebar {
+    position: static;
+  }
+}
+
 @media (max-width: 820px) {
   .hero,
   .split {

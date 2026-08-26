@@ -1,3 +1,6 @@
+import { element } from '@mohammedaydan/core'
+import type { Child, ElementNode } from '@mohammedaydan/core'
+
 export interface RouteParam {
   readonly name: string
   readonly kind: 'static' | 'dynamic' | 'catch-all' | 'optional-catch-all'
@@ -9,11 +12,38 @@ export interface RouteRecord {
   readonly pattern: string
   readonly params: readonly RouteParam[]
   readonly score: number
+  readonly layouts: readonly string[]
 }
 
 export interface RouteMatch {
   readonly route: RouteRecord
   readonly params: Readonly<Record<string, string | string[]>>
+  readonly query: URLSearchParams
+  readonly hash: string
+}
+
+export interface LinkProps {
+  readonly href: string
+  readonly prefetch?: 'intent' | 'viewport' | 'none'
+  readonly children?: Child | readonly Child[]
+  readonly [key: string]: unknown
+}
+
+/** Render a framework-aware anchor. Prefetch intent/viewport is consumed by the client runtime. */
+export function Link({ href, prefetch = 'none', children, ...props }: LinkProps): ElementNode {
+  if (!href.startsWith('/') || href.startsWith('//'))
+    throw new TypeError('Nexis Link href must be an internal absolute path.')
+  const linkChildren: Child[] =
+    children === undefined
+      ? []
+      : Array.isArray(children)
+        ? [...(children as readonly Child[])]
+        : [children as Child]
+  return element(
+    'a',
+    { ...props, href, ...(prefetch !== 'none' ? { 'data-nx-prefetch': prefetch } : {}) },
+    ...linkChildren,
+  )
 }
 
 function normalizeFile(file: string): string[] {
@@ -35,18 +65,23 @@ function decodeSegment(value: string): string | undefined {
 
 export function routeFromFile(file: string): RouteRecord {
   let segments = normalizeFile(file)
-  if (/\.(?:d|spec|test)\.(?:tsx|ts|jsx|js)$/.test(segments.at(-1) ?? ''))
+  if (/(?:^|\/)(?:[^/]+\.)?(?:d|spec|test)\.(?:tsx|ts|jsx|js)$/.test(segments.at(-1) ?? ''))
     throw new TypeError('Declaration and test files cannot define routes.')
   const routesIndex = segments.indexOf('routes')
   if (routesIndex >= 0) segments = segments.slice(routesIndex + 1)
   if (segments.length === 0) throw new TypeError('Route file cannot be empty.')
   const filename = segments.pop() as string
   const stem = filename.replace(/\.(tsx|ts|jsx|js)$/, '')
-  if (!stem || stem === 'layout') throw new TypeError('A route file must be a non-layout module.')
-  segments.push(stem === 'index' ? '' : stem)
+  if (!stem || stem === 'layout' || stem === '_layout')
+    throw new TypeError('A route file must be a non-layout module.')
 
+  const pathSegments = segments.filter((segment) => !/^\(.+\)$/.test(segment))
+  const routeSegments = [...pathSegments, stem === 'index' ? '' : stem]
+  const layouts = segments.map((_, index, values) =>
+    [...values.slice(0, index + 1), '_layout.tsx'].join('/'),
+  )
   const params: RouteParam[] = []
-  const patternParts = segments.flatMap((segment) => {
+  const patternParts = routeSegments.flatMap((segment) => {
     if (!segment) return []
     if (/^\[\.\.\.([\w-]+)\]$/.test(segment)) {
       const name = segment.slice(4, -1)
@@ -73,6 +108,7 @@ export function routeFromFile(file: string): RouteRecord {
     file,
     pattern: `/${patternParts.join('/')}` || '/',
     params,
+    layouts,
     score: params.reduce(
       (total, param) =>
         total +
@@ -88,7 +124,13 @@ export function routeFromFile(file: string): RouteRecord {
   }
 }
 
-export function matchRoute(route: RouteRecord, pathname: string): RouteMatch | undefined {
+function splitUrl(input: string | URL): { pathname: string; query: URLSearchParams; hash: string } {
+  const url = input instanceof URL ? input : new URL(input, 'http://nexis.invalid')
+  return { pathname: url.pathname, query: url.searchParams, hash: url.hash.slice(1) }
+}
+
+export function matchRoute(route: RouteRecord, input: string | URL): RouteMatch | undefined {
+  const { pathname, query, hash } = splitUrl(input)
   const pathSegments = pathname
     .replace(/^\/+|\/+$/g, '')
     .split('/')
@@ -136,12 +178,12 @@ export function matchRoute(route: RouteRecord, pathname: string): RouteMatch | u
   }
 
   const params = matchAt(0, 0, {})
-  return params ? { route, params } : undefined
+  return params ? { route, params, query, hash } : undefined
 }
 
 export function resolveRoute(
   routes: readonly RouteRecord[],
-  pathname: string,
+  pathname: string | URL,
 ): RouteMatch | undefined {
   const sorted = [...routes].sort(
     (left, right) => right.score - left.score || right.pattern.length - left.pattern.length,

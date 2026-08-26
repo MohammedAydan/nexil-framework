@@ -2,6 +2,8 @@ import { isIP } from 'node:net'
 import { createHash } from 'node:crypto'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { element } from '@mohammedaydan/core'
+import type { ElementNode } from '@mohammedaydan/core'
 
 export interface ImageProps {
   readonly src: string
@@ -99,6 +101,44 @@ export function imageAttributes(
     ...(props.sizes ? { sizes: props.sizes } : {}),
   }
   return attributes
+}
+
+export interface ImageComponentProps extends ImageProps {
+  readonly widths?: readonly number[]
+  readonly formats?: readonly ('avif' | 'webp')[]
+  readonly className?: string
+}
+
+/** Render a responsive picture element from one declarative JSX component. */
+export function Image(props: ImageComponentProps): ElementNode {
+  const widths = [...(props.widths ?? [320, 640, 960, 1280])]
+  const formats = [...(props.formats ?? ['avif', 'webp'])]
+  const fallback = imageAttributes(props, widths)
+  const sources = formats.map((format) =>
+    element('source', {
+      type: `image/${format}`,
+      srcSet: widths
+        .map(
+          (width) =>
+            `${props.src}${props.src.includes('?') ? '&' : '?'}format=${format}&w=${width} ${width}w`,
+        )
+        .join(', '),
+      ...(props.sizes ? { sizes: props.sizes } : {}),
+    }),
+  )
+  const image = element('img', {
+    src: fallback.src,
+    srcSet: fallback.srcset,
+    width: fallback.width,
+    height: fallback.height,
+    alt: fallback.alt,
+    loading: fallback.loading,
+    decoding: fallback.decoding,
+    ...(fallback.fetchpriority ? { fetchpriority: fallback.fetchpriority } : {}),
+    ...(fallback.sizes ? { sizes: fallback.sizes } : {}),
+    ...(props.className ? { className: props.className } : {}),
+  })
+  return element('picture', {}, ...sources, image)
 }
 
 export interface FontProps {

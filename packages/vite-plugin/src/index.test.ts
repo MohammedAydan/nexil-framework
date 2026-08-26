@@ -242,3 +242,39 @@ export const view = <button disabled={disabled.value}>{disabled.value ? 'Disable
   expect(result.code).toContain('data-nx-bind="nx:signal:')
   expect(result.code).toContain('#disabled')
 })
+
+it('extracts single-quoted and nested literal signal initializers with the AST evaluator', async () => {
+  const result = await transformNexisSource(
+    `import { state } from '@mohammedaydan/core'
+const label = state('hello')
+const settings = state({ theme: 'dark', flags: [true, false] })
+export const view = <button onClick$={() => label.set('world')}>{label()}</button>`,
+    '/app/src/routes/literals.tsx',
+  )
+  expect(result.scopeCaptures).toEqual(
+    expect.arrayContaining([expect.objectContaining({ name: 'label', initial: 'hello' })]),
+  )
+})
+
+it('shares chunks for identical handler expressions', async () => {
+  const result = await transformNexisSource(
+    `const count = state(0)
+export const view = <div><button onClick$={() => count.set((value) => value + 1)}>+</button><button onClick$={() => count.set((value) => value + 1)}>+</button></div>`,
+    '/app/src/routes/dedup.tsx',
+  )
+  expect(result.chunks).toHaveLength(1)
+  expect(result.code.match(/data-nx-on-click=/g)).toHaveLength(2)
+})
+
+it('wraps direct signal expressions in mixed text interpolations', async () => {
+  const result = await transformNexisSource(
+    `import { state } from '@mohammedaydan/core'
+const count = state(0)
+export const view = <span>Items: {count()}</span>`,
+    '/app/src/routes/interpolation.tsx',
+  )
+  expect(result.bindings).toEqual([
+    expect.objectContaining({ target: 'text', source: 'count', automatic: true }),
+  ])
+  expect(result.code).toContain('<span data-nx-bind="nx:signal:')
+})

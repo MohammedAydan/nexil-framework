@@ -4,11 +4,10 @@ import {
   createHandlerReference,
   createResumeAttribute,
   serializeResumeState,
-  serializeScopeRefs,
 } from '@mohammedaydan/client'
 import { component, computed, state } from '@mohammedaydan/core'
 import { cn, extractStyle } from '@mohammedaydan/css'
-import { imageAttributes, fontFace } from '@mohammedaydan/media'
+import { Image, imageAttributes, fontFace } from '@mohammedaydan/media'
 import { batch } from '@mohammedaydan/reactivity'
 import { buildRobots, buildSitemap } from '@mohammedaydan/seo'
 import { createStateRegistry } from '@mohammedaydan/state'
@@ -31,9 +30,6 @@ export const seo = {
 
 const score = state(8)
 const count = state(0)
-const countScope = serializeScopeRefs({
-  count: { kind: 'signal', id: 'nx:signal:showcase-count', initial: 0 },
-})
 const doubledScore = computed(() => score() * 2)
 const registry = createStateRegistry()
 const preferences = registry.getOrCreate('global', 'showcase-preferences', {
@@ -102,19 +98,6 @@ export default component(() => {
   return (
     <>
       <style>{typeCss}</style>
-      <header className="shell site-header">
-        <a className="wordmark" href="/">
-          <span className="mark">N</span>
-          <span>Nexis / field guide</span>
-        </a>
-        <nav className="nav" aria-label="Primary navigation">
-          <a href="/features">Features</a>
-          <a href="/labs">Labs</a>
-          <a href="/docs/architecture">Docs</a>
-          <a href="/status">Status</a>
-        </nav>
-      </header>
-
       <main>
         <section className="shell hero">
           <div>
@@ -193,7 +176,6 @@ export default component(() => {
               id="signal-button"
               className={signalClass}
               data-nx-state="0"
-              data-nx-scope={countScope}
               onClick$={({ element }) => {
                 const next = count() + 1
                 count.set(next)
@@ -232,7 +214,15 @@ export default component(() => {
           <div className="grid-2">
             <article className="card">
               <span className="tag">media / imageAttributes</span>
-              <img {...heroImage} className="showcase-image" />
+              <Image
+                src={heroImage.src}
+                width={heroImage.width}
+                height={heroImage.height}
+                alt={heroImage.alt}
+                priority
+                sizes={heroImage.sizes}
+                className="showcase-image"
+              />
               <p>
                 Generated srcset: <code>{heroImage.srcset.slice(0, 92)}…</code>
               </p>
@@ -297,11 +287,6 @@ export default component(() => {
           </div>
         </section>
       </main>
-
-      <footer className="shell site-footer">
-        <span>Built with Nexis / no hydration required</span>
-        <span>HTML → boundary → edge</span>
-      </footer>
     </>
   )
 })

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { element } from '@mohammedaydan/core'
+import { element, Suspense } from '@mohammedaydan/core'
 import { renderToString } from './index'
 import { renderToStream } from './stream'
 
@@ -15,6 +15,36 @@ async function readText(stream: ReadableStream<Uint8Array>): Promise<string> {
 }
 
 describe('renderToStream', () => {
+  it('flushes a Suspense fallback before the resolved subtree template', async () => {
+    let resolveContent!: (value: ReturnType<typeof element>) => void
+    const content = new Promise<ReturnType<typeof element>>((resolve) => {
+      resolveContent = resolve
+    })
+    const stream = renderToStream(
+      element(
+        'main',
+        {},
+        Suspense({ id: 'user-card', fallback: element('p', {}, 'Loading'), children: content }),
+      ),
+      { flushThreshold: 1 },
+    )
+    const reader = stream.getReader()
+    let output = ''
+    while (!output.includes('data-nx-suspense="user-card"')) {
+      const next = await reader.read()
+      if (next.done) break
+      output += new TextDecoder().decode(next.value)
+    }
+    expect(output).toContain('data-nx-suspense="user-card"')
+    resolveContent(element('p', {}, 'Ada'))
+    while (true) {
+      const next = await reader.read()
+      if (next.done) break
+      output += new TextDecoder().decode(next.value)
+    }
+    expect(output).toContain('<template id="nx-suspense-user-card"><p>Ada</p></template>')
+  })
+
   it('streams asynchronously resolved HTML', async () => {
     await expect(
       readText(renderToStream(Promise.resolve(element('h1', {}, 'Streamed')))),

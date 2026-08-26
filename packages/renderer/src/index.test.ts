@@ -48,11 +48,13 @@ describe('renderToString', () => {
     ).toBe('<output data-nx-bind="nx:signal:counter#text">0</output>')
   })
 
-  it('rejects unsafe binding marker inputs', () => {
+  it('rejects unsafe binding marker inputs while allowing supported targets', () => {
     expect(() => renderBindingMarker('nx:signal:../secret', 'text')).toThrow(/scope id/)
-    expect(() => renderBindingMarker('nx:signal:counter', 'style' as never)).toThrow(/target/)
+    expect(renderBindingMarker('nx:signal:counter', 'style')).toBe(
+      'data-nx-bind="nx:signal:counter#style"',
+    )
     expect(
       renderToString(element('output', { 'data-nx-bind': 'nx:signal:counter#style' }, '0')),
-    ).toBe('<output>0</output>')
+    ).toBe('<output data-nx-bind="nx:signal:counter#style">0</output>')
   })
 })

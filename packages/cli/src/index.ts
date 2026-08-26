@@ -1,5 +1,7 @@
 import { gzipSync } from 'node:zlib'
 import { existsSync } from 'node:fs'
+import { execFile } from 'node:child_process'
+import { promisify } from 'node:util'
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -9,6 +11,7 @@ import { assertBudget } from '@mohammedaydan/compiler'
 import nexis, {
   RESUMABILITY_BINDINGS,
   RESUMABILITY_BOOTSTRAP,
+  RESUMABILITY_FORMS,
   transformNexisSource,
 } from '@mohammedaydan/vite-plugin'
 import { escapeHtml, renderToString } from '@mohammedaydan/renderer'
@@ -66,9 +69,9 @@ interface BuildOutputEntry {
 }
 
 interface RouteModule {
-  readonly default?:
-    Child | ((props: Readonly<Record<string, string | string[]>>) => Child | Promise<Child>)
+  readonly default?: Child | ((props: Readonly<Record<string, unknown>>) => Child | Promise<Child>)
   readonly seo?: SeoMetadata | ((context: { readonly pathname: string }) => SeoMetadata)
+  readonly metadata?: Partial<SeoMetadata>
   readonly render?: { readonly mode?: string }
   readonly getStaticPaths?: () => Promise<readonly StaticPathValue[]> | readonly StaticPathValue[]
   readonly staticPaths?: readonly StaticPathValue[]
@@ -104,7 +107,20 @@ function buildOutputEntries(value: unknown): readonly BuildOutputEntry[] {
 }
 
 export type NexisCommand =
-  'create' | 'dev' | 'build' | 'start' | 'serve' | 'check' | 'analyze' | 'routes'
+  | 'create'
+  | 'dev'
+  | 'build'
+  | 'start'
+  | 'preview'
+  | 'serve'
+  | 'check'
+  | 'analyze'
+  | 'routes'
+  | 'generate'
+  | 'add'
+  | 'doctor'
+  | 'upgrade'
+  | 'test'
 
 export interface ParsedCommand {
   readonly command: NexisCommand | 'help'
@@ -116,10 +132,16 @@ const commands = new Set<NexisCommand>([
   'dev',
   'build',
   'start',
+  'preview',
   'serve',
   'check',
   'analyze',
   'routes',
+  'generate',
+  'add',
+  'doctor',
+  'upgrade',
+  'test',
 ])
 
 export function parseCommand(argv: readonly string[]): ParsedCommand {
@@ -143,11 +165,123 @@ export function helpText(): string {
     '                 Env: NEXIS_HOST, NEXIS_PORT, NEXIS_ALLOW_ALL_HOSTS=1',
     '  build          Build SSG/ISR/SSR bundles',
     '  start          Start a production build',
+    '  preview        Preview a production build (alias for start)',
     '  serve          Serve dist/client with route-aware production semantics',
     '  check          Run type, route, SEO, and boundary checks',
     '  analyze        Report route output and client budgets',
     '  routes         List discovered routes',
+    '  generate route <name>       Scaffold a route',
+    '  generate component <name>  Scaffold a component',
+    '  add action <name>           Scaffold a server action',
+    '  doctor         Diagnose common project configuration issues',
+    '  upgrade        Report deprecated APIs and migration suggestions',
+    '  test           Run the project test script',
   ].join('\n')
+}
+
+const execFileAsync = promisify(execFile)
+const GENERATOR_PATH = /^[A-Za-z][A-Za-z0-9_/-]*$/
+
+function assertGeneratorPath(name: string): void {
+  if (
+    !GENERATOR_PATH.test(name) ||
+    name.includes('..') ||
+    name.startsWith('/') ||
+    name.endsWith('/')
+  )
+    throw new TypeError('Generator name must be a safe relative path.')
+}
+
+async function scaffoldCliArtifact(root: string, kind: string, name: string): Promise<string> {
+  assertGeneratorPath(name)
+  const extension = existsSync(join(root, 'tsconfig.json')) ? 'tsx' : 'jsx'
+  const normalized = name.replace(/\\/g, '/')
+  if (kind === 'route') {
+    const file = join(root, 'src', 'routes', `${normalized}.${extension}`)
+    await mkdir(dirname(file), { recursive: true })
+    const componentName =
+      normalized
+        .split('/')
+        .at(-1)!
+        .replace(/[^A-Za-z0-9]/g, ' ')
+        .split(' ')
+        .filter(Boolean)
+        .map((part) => part[0]!.toUpperCase() + part.slice(1))
+        .join('') || 'GeneratedRoute'
+    await writeFile(
+      file,
+      `export default function ${componentName}() {\n  return <main><h1>${componentName}</h1></main>\n}\n`,
+      'utf8',
+    )
+    return relative(root, file)
+  }
+  if (kind === 'component') {
+    const file = join(root, 'src', 'components', `${normalized}.${extension}`)
+    await mkdir(dirname(file), { recursive: true })
+    await writeFile(
+      file,
+      `export interface ${normalized.split('/').at(-1)}Props {\n  children?: unknown\n}\n\nexport function ${normalized.split('/').at(-1)}() {\n  return <div />\n}\n`,
+      'utf8',
+    )
+    return relative(root, file)
+  }
+  if (kind === 'action') {
+    const file = join(root, 'src', 'actions', `${normalized}.ts`)
+    await mkdir(dirname(file), { recursive: true })
+    await writeFile(
+      file,
+      `import { action } from '@mohammedaydan/actions'\n\nexport const ${normalized.split('/').at(-1)} = action({\n  validate: (input: unknown) => input,\n  async handle(_context, input) {\n    return { input }\n  },\n})\n`,
+      'utf8',
+    )
+    return relative(root, file)
+  }
+  throw new Error(`Unknown generator kind: ${kind}`)
+}
+
+async function diagnoseProject(root: string): Promise<string> {
+  const checks: string[] = []
+  const routes = join(root, 'src', 'routes')
+  checks.push(
+    existsSync(join(root, 'package.json')) ? 'ok package.json' : 'error missing package.json',
+  )
+  checks.push(existsSync(routes) ? 'ok src/routes' : 'error missing src/routes')
+  checks.push(
+    existsSync(join(root, 'index.html'))
+      ? 'ok index.html'
+      : 'warn missing index.html (fallback template will be used)',
+  )
+  try {
+    await readNexisConfig(root)
+    checks.push('ok Nexis configuration')
+  } catch (error) {
+    checks.push(`error configuration: ${error instanceof Error ? error.message : String(error)}`)
+  }
+  return checks.join('\\n')
+}
+
+async function migrationReport(root: string): Promise<string> {
+  const files: string[] = []
+  const visit = async (directory: string): Promise<void> => {
+    if (!existsSync(directory)) return
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      const file = join(directory, entry.name)
+      if (entry.isDirectory() && entry.name !== 'node_modules' && entry.name !== 'dist')
+        await visit(file)
+      else if (/\.(tsx|jsx|ts|js)$/.test(entry.name)) files.push(file)
+    }
+  }
+  await visit(join(root, 'src'))
+  const findings: string[] = []
+  for (const file of files) {
+    const source = await readFile(file, 'utf8')
+    if (/\.get\(\)/.test(source) || /\.value/.test(source))
+      findings.push(`${relative(root, file)}: prefer callable signal reads (sig())`)
+    if (/serializeScopeRefs|data-nx-scope/.test(source))
+      findings.push(`${relative(root, file)}: compiler-managed scope capture is available`)
+    if (/renderHead\(/.test(source))
+      findings.push(`${relative(root, file)}: export route metadata for inherited SEO`)
+  }
+  return findings.length === 0 ? 'No deprecated API patterns found.' : findings.join('\n')
 }
 
 interface BuildRouteRecord {
@@ -210,7 +344,11 @@ async function discoverRoutes(directory: string, root: string): Promise<string[]
   for (const entry of entries) {
     const file = join(directory, entry.name)
     if (entry.isDirectory()) routes.push(...(await discoverRoutes(file, root)))
-    else if (/\.(tsx|jsx|ts|js)$/.test(entry.name) && !entry.name.startsWith('layout.'))
+    else if (
+      /\.(tsx|jsx|ts|js)$/.test(entry.name) &&
+      !entry.name.startsWith('layout.') &&
+      !entry.name.startsWith('_layout.')
+    )
       routes.push(relative(root, file))
   }
   return routes.sort()
@@ -224,6 +362,163 @@ function injectStylesheetLink(template: string, href: string): string {
   if (template.includes(`href="${href}"`) || template.includes(`href='${href}'`)) return template
   if (template.includes('</head>')) return template.replace('</head>', `  ${link}\n</head>`)
   return `${link}${template}`
+}
+
+function dedupeStructuralMetaTags(html: string): string {
+  const seen = new Set<string>()
+  return html.replace(/<meta\s+[^>]*>/gi, (tag) => {
+    const charset = /\bcharset\s*=\s*/i.test(tag)
+    const viewport = /name=["']viewport["']/i.test(tag)
+    if (!charset && !viewport) return tag
+    const key = charset ? 'charset' : 'viewport'
+    if (seen.has(key)) return ''
+    seen.add(key)
+    return tag
+  })
+}
+
+type ScopeHtmlNode = {
+  readonly tag: string
+  readonly start: number
+  readonly end: number
+  readonly raw: string
+  readonly parent: ScopeHtmlNode | undefined
+}
+
+function scopeAttributePayload(
+  tag: string,
+): Array<{ readonly raw: string; readonly value: Record<string, unknown> }> {
+  const entries: Array<{ readonly raw: string; readonly value: Record<string, unknown> }> = []
+  for (const match of tag.matchAll(/\sdata-nx-scope="([^"]*)"/g)) {
+    try {
+      const decoded = JSON.parse(
+        match[1]!.replace(/&quot;/g, '"').replace(/&amp;/g, '&'),
+      ) as unknown
+      if (decoded && typeof decoded === 'object' && !Array.isArray(decoded))
+        entries.push({ raw: match[0], value: decoded as Record<string, unknown> })
+    } catch {
+      // Invalid scope data is left untouched for the runtime to reject safely.
+    }
+  }
+  return entries
+}
+
+function scopeKey(value: Record<string, unknown>): string {
+  return JSON.stringify(value)
+}
+
+function liftRepeatedScopes(html: string): string {
+  const root: ScopeHtmlNode = { tag: '#root', start: -1, end: -1, raw: '', parent: undefined }
+  const stack: ScopeHtmlNode[] = [root]
+  const nodes: ScopeHtmlNode[] = []
+  for (const match of html.matchAll(/<\/?[A-Za-z][^>]*>/g)) {
+    const raw = match[0]!
+    const start = match.index ?? 0
+    if (raw.startsWith('</')) {
+      const name = /^<\/([A-Za-z][A-Za-z0-9:-]*)/i.exec(raw)?.[1]?.toLowerCase()
+      if (name) {
+        while (stack.length > 1 && stack.at(-1)!.tag !== name) stack.pop()
+        if (stack.length > 1) stack.pop()
+      }
+      continue
+    }
+    const name = /^<([A-Za-z][A-Za-z0-9:-]*)/i.exec(raw)?.[1]?.toLowerCase()
+    if (!name) continue
+    const parent = stack.at(-1) && stack.at(-1) !== root ? stack.at(-1) : undefined
+    const node: ScopeHtmlNode = {
+      tag: name,
+      start,
+      end: start + raw.length,
+      raw,
+      parent,
+    }
+    nodes.push(node)
+    if (
+      !/\/>$/.test(raw) &&
+      ![
+        'area',
+        'base',
+        'br',
+        'col',
+        'embed',
+        'hr',
+        'img',
+        'input',
+        'link',
+        'meta',
+        'param',
+        'source',
+        'track',
+        'wbr',
+      ].includes(name)
+    )
+      stack.push(node)
+  }
+
+  const grouped = new Map<string, Array<{ node: ScopeHtmlNode; value: Record<string, unknown> }>>()
+  for (const node of nodes) {
+    for (const entry of scopeAttributePayload(node.raw)) {
+      const key = scopeKey(entry.value)
+      const group = grouped.get(key) ?? []
+      group.push({ node, value: entry.value })
+      grouped.set(key, group)
+    }
+  }
+
+  const removals = new Map<ScopeHtmlNode, Set<string>>()
+  const lifts = new Map<ScopeHtmlNode, Record<string, unknown>[]>()
+  for (const [key, entries] of grouped) {
+    if (entries.length < 2) continue
+    const ancestorSets = entries.map(({ node }) => {
+      const ancestors = new Set<ScopeHtmlNode>()
+      let current: ScopeHtmlNode | undefined = node
+      while (current) {
+        ancestors.add(current)
+        current = current.parent
+      }
+      return ancestors
+    })
+    let common = entries[0]!.node
+    while (!ancestorSets.every((set) => set.has(common)) && common.parent) common = common.parent
+    if (common === root) continue
+    for (const { node } of entries) {
+      if (node === common) continue
+      const current = removals.get(node) ?? new Set<string>()
+      current.add(key)
+      removals.set(node, current)
+    }
+    const current = lifts.get(common) ?? []
+    current.push(entries[0]!.value)
+    lifts.set(common, current)
+  }
+
+  if (removals.size === 0 && lifts.size === 0) return html
+  const edits: Array<{ start: number; end: number; value: string }> = []
+  for (const node of nodes) {
+    const nodeRemovals = removals.get(node)
+    const nodeLifts = lifts.get(node)
+    if (!nodeRemovals && !nodeLifts) continue
+    const existing = scopeAttributePayload(node.raw)
+    const merged: Record<string, unknown> = {}
+    for (const entry of existing) {
+      if (!nodeRemovals?.has(scopeKey(entry.value))) Object.assign(merged, entry.value)
+    }
+    for (const lifted of nodeLifts ?? []) Object.assign(merged, lifted)
+    let replacement = node.raw
+    for (const entry of existing) replacement = replacement.replace(entry.raw, '')
+    if (Object.keys(merged).length > 0) {
+      const attribute = ` data-nx-scope="${JSON.stringify(merged).replace(/&/g, '&amp;').replace(/"/g, '&quot;')}"`
+      replacement = replacement.replace(/\s*\/?>(?=[^>]*$)/, `${attribute}$&`)
+    }
+    edits.push({ start: node.start, end: node.end, value: replacement })
+  }
+  for (const edit of edits.sort((left, right) => right.start - left.start))
+    html = `${html.slice(0, edit.start)}${edit.value}${html.slice(edit.end)}`
+  return html
+}
+
+function sanitizeDocument(html: string): string {
+  return liftRepeatedScopes(dedupeStructuralMetaTags(html))
 }
 
 type StaticPathValue =
@@ -270,6 +565,49 @@ async function resolveStaticPaths(
     typeof module.getStaticPaths === 'function' ? await module.getStaticPaths() : module.staticPaths
   if (!Array.isArray(exported) || exported.length === 0) return [routePath]
   return exported.map((value: StaticPathValue) => staticPathToRoute(pattern, value))
+}
+
+const SOURCE_EXTENSIONS = ['.tsx', '.ts', '.jsx', '.js'] as const
+
+async function resolveSourceImport(
+  fromFile: string,
+  specifier: string,
+): Promise<string | undefined> {
+  if (!specifier.startsWith('.')) return undefined
+  const base = resolve(dirname(fromFile), specifier)
+  const candidates = [
+    base,
+    ...SOURCE_EXTENSIONS.map((extension) => `${base}${extension}`),
+    ...SOURCE_EXTENSIONS.map((extension) => join(base, `index${extension}`)),
+  ]
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate
+  }
+  return undefined
+}
+
+async function collectSourceModules(entry: string): Promise<readonly string[]> {
+  const visited = new Set<string>()
+  const ordered: string[] = []
+  const visit = async (file: string): Promise<void> => {
+    const normalized = resolve(file)
+    if (visited.has(normalized)) return
+    visited.add(normalized)
+    ordered.push(normalized)
+    const source = await readFile(normalized, 'utf8')
+    const imports = new Set<string>()
+    const importPattern = /(?:import|export)\\s+(?:[\\s\\S]*?\\sfrom\\s+)?['\"](\\.[^'\"]+)['\"]/g
+    for (const match of source.matchAll(importPattern)) {
+      const specifier = match[1]
+      if (specifier) imports.add(specifier)
+    }
+    for (const specifier of imports) {
+      const imported = await resolveSourceImport(normalized, specifier)
+      if (imported) await visit(imported)
+    }
+  }
+  await visit(entry)
+  return ordered
 }
 
 async function buildArtifacts(root: string): Promise<BuildManifest> {
@@ -358,11 +696,85 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     return module
   }
 
+  async function discoverLayouts(route: string): Promise<readonly string[]> {
+    const routeParts = route.replace(/\\/g, '/').split('/')
+    const directories = routeParts.slice(0, -1)
+    const candidates: string[] = []
+    for (let index = 0; index <= directories.length; index += 1) {
+      const directory = directories.slice(0, index).join('/')
+      for (const stem of ['_layout', 'layout']) {
+        for (const extension of SOURCE_EXTENSIONS) {
+          const relativePath = [directory, `${stem}${extension}`].filter(Boolean).join('/')
+          if (existsSync(join(routeRoot, relativePath))) {
+            candidates.push(relativePath)
+            break
+          }
+        }
+        if (candidates.at(-1)?.startsWith([directory, stem].filter(Boolean).join('/'))) break
+      }
+    }
+    return candidates
+  }
+
+  async function applyLayouts(
+    route: string,
+    child: Child,
+    props: Readonly<Record<string, unknown>> = {},
+  ): Promise<Child> {
+    let current = child
+    const layouts = await discoverLayouts(route)
+    for (const layout of layouts) {
+      const module = await loadServerModule(layout)
+      const Layout = module.default
+      if (typeof Layout === 'function') current = await Layout({ ...props, children: current })
+    }
+    return current
+  }
+
+  async function resolveInheritedSeo(
+    route: string,
+    module: RouteModule,
+    pathname: string,
+  ): Promise<SeoMetadata | undefined> {
+    const inherited: Partial<SeoMetadata> = {}
+    let inheritedOpenGraph: SeoMetadata['openGraph'] | undefined
+    for (const layout of await discoverLayouts(route)) {
+      const layoutModule = await loadServerModule(layout)
+      if (layoutModule.metadata) {
+        Object.assign(inherited, layoutModule.metadata)
+        inheritedOpenGraph = {
+          ...inheritedOpenGraph,
+          ...layoutModule.metadata.openGraph,
+        }
+      }
+    }
+    const legacy = resolveSeo(module.seo, pathname)
+    const own = module.metadata ?? {}
+    const merged: Partial<SeoMetadata> = {
+      ...inherited,
+      ...(legacy ?? {}),
+      ...own,
+      ...(inheritedOpenGraph || legacy?.openGraph || own.openGraph
+        ? {
+            openGraph: {
+              ...inheritedOpenGraph,
+              ...legacy?.openGraph,
+              ...own.openGraph,
+            },
+          }
+        : {}),
+    }
+    if (typeof merged.title !== 'string' || merged.title.trim().length === 0) return undefined
+    return withCanonical(merged as SeoMetadata, pathname, siteOrigin)
+  }
+
   const records: BuildRouteRecord[] = []
   const feedItems: Array<{ title: string; link: string; description?: string }> = []
   const cssAssets = new Set<string>()
+  const emittedChunks = new Set<string>()
   let hasInteractiveRoute = false
   let hasBindingRoute = false
+  let hasFormRoute = false
   const minifiedBootstrap = (
     await transformWithEsbuild(RESUMABILITY_BOOTSTRAP, BOOTSTRAP_FILE, {
       loader: 'js',
@@ -373,8 +785,28 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
 
   for (const route of routes) {
     const sourcePath = join(routeRoot, route)
-    const source = await readFile(sourcePath, 'utf8')
-    const transformed = await transformNexisSource(source, sourcePath)
+    const sourceModules = await collectSourceModules(sourcePath)
+    const transformedModules = await Promise.all(
+      sourceModules.map(async (modulePath) => ({
+        modulePath,
+        result: await transformNexisSource(await readFile(modulePath, 'utf8'), modulePath),
+      })),
+    )
+    const direct = transformedModules.find((entry) => entry.modulePath === resolve(sourcePath))
+    if (!direct) throw new Error(`Nexis build could not transform route ${route}.`)
+    const routeChunks = new Map<string, (typeof direct.result.chunks)[number]>()
+    const routeCss = new Set<string>()
+    const routeBindings = transformedModules.flatMap((entry) => entry.result.bindings)
+    for (const entry of transformedModules) {
+      for (const chunk of entry.result.chunks) routeChunks.set(chunk.fileName, chunk)
+      for (const css of entry.result.css) routeCss.add(css)
+    }
+    const transformed = {
+      ...direct.result,
+      chunks: [...routeChunks.values()],
+      css: [...routeCss],
+      bindings: routeBindings,
+    }
     const outputName = route.replace(/\\/g, '/').replace(/\.(tsx|jsx|ts|js)$/, '.js')
     await mkdir(join(serverRoot, outputName, '..'), { recursive: true })
     await writeFile(join(serverRoot, outputName), transformed.code, 'utf8')
@@ -384,11 +816,14 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
         loader: 'js',
         minify: true,
       })
-      await writeFile(join(chunkRoot, chunk.fileName), minified.code, 'utf8')
+      if (!emittedChunks.has(chunk.fileName)) {
+        emittedChunks.add(chunk.fileName)
+        await writeFile(join(chunkRoot, chunk.fileName), minified.code, 'utf8')
+        const chunkClientPath = join(clientRoot, CHUNK_DIRECTORY, chunk.fileName)
+        await mkdir(join(clientRoot, CHUNK_DIRECTORY), { recursive: true })
+        await writeFile(chunkClientPath, minified.code, 'utf8')
+      }
       clientBytes += Buffer.byteLength(minified.code)
-      const chunkClientPath = join(clientRoot, CHUNK_DIRECTORY, chunk.fileName)
-      await mkdir(join(clientRoot, CHUNK_DIRECTORY), { recursive: true })
-      await writeFile(chunkClientPath, minified.code, 'utf8')
     }
     for (const css of transformed.css) cssAssets.add(css)
     const routeTemplate =
@@ -409,7 +844,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
       scriptsHtml += `<script type="module" src="/nexis-bindings.js"></script>`
     try {
       const mod = await loadServerModule(route)
-      let routeSeo = resolveSeo(mod.seo, routePath)
+      let routeSeo = await resolveInheritedSeo(route, mod, routePath)
       if (routeSeo) {
         if (routePath !== '/') {
           routeSeo = {
@@ -445,7 +880,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
       const Component = mod.default
       if (typeof Component === 'function') {
         const result = await Component({})
-        renderedHtml = renderToString(result)
+        renderedHtml = renderToString(await applyLayouts(route, result))
       } else if (Component) {
         renderedHtml = renderToString(Component)
       } else {
@@ -456,10 +891,16 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
       throw new Error(`SSR failed for ${routePath}: ${message}`, { cause: err })
     }
 
-    const html = routeTemplate
-      .replace('<!--nexis-head-outlet-->', headHtml)
-      .replace('<!--nexis-app-outlet-->', renderedHtml)
-      .replace('<!--nexis-scripts-outlet-->', scriptsHtml)
+    if (renderedHtml.includes('data-nx-form="progressive"')) {
+      hasFormRoute = true
+      scriptsHtml += `<script type="module" src="/nexis-forms.js"></script>`
+    }
+    const html = sanitizeDocument(
+      routeTemplate
+        .replace('<!--nexis-head-outlet-->', headHtml)
+        .replace('<!--nexis-app-outlet-->', renderedHtml)
+        .replace('<!--nexis-scripts-outlet-->', scriptsHtml),
+    )
 
     const outDir = routePath === '/' ? clientRoot : join(clientRoot, routePath.slice(1))
     await mkdir(outDir, { recursive: true })
@@ -500,8 +941,10 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
             typeof GeneratedComponent === 'function'
               ? await GeneratedComponent(generatedMatch?.params ?? {})
               : GeneratedComponent
-          const generatedRenderedHtml = renderToString(generatedResult)
-          let generatedSeo = resolveSeo(staticModule.seo, generatedPath)
+          const generatedRenderedHtml = renderToString(
+            await applyLayouts(route, generatedResult, generatedMatch?.params ?? {}),
+          )
+          let generatedSeo = await resolveInheritedSeo(route, staticModule, generatedPath)
           if (generatedSeo && !generatedSeo.image) {
             const og = await generateOgImage(
               {
@@ -528,10 +971,16 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
                   : {}),
               })
             : headHtml
-          const generatedHtml = routeTemplate
-            .replace('<!--nexis-head-outlet-->', generatedHead)
-            .replace('<!--nexis-app-outlet-->', generatedRenderedHtml)
-            .replace('<!--nexis-scripts-outlet-->', scriptsHtml)
+          const generatedScriptsHtml = generatedRenderedHtml.includes('data-nx-form="progressive"')
+            ? `${scriptsHtml}<script type="module" src="/nexis-forms.js"></script>`
+            : scriptsHtml
+          if (generatedRenderedHtml.includes('data-nx-form="progressive"')) hasFormRoute = true
+          const generatedHtml = sanitizeDocument(
+            routeTemplate
+              .replace('<!--nexis-head-outlet-->', generatedHead)
+              .replace('<!--nexis-app-outlet-->', generatedRenderedHtml)
+              .replace('<!--nexis-scripts-outlet-->', generatedScriptsHtml),
+          )
           const generatedDirectory = join(clientRoot, generatedPath.slice(1))
           await mkdir(generatedDirectory, { recursive: true })
           await writeFile(join(generatedDirectory, 'index.html'), generatedHtml, 'utf8')
@@ -553,6 +1002,16 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   if (hasInteractiveRoute) {
     await writeFile(join(outputRoot, BOOTSTRAP_FILE), minifiedBootstrap, 'utf8')
     await writeFile(join(clientRoot, BOOTSTRAP_FILE), minifiedBootstrap, 'utf8')
+  }
+  if (hasFormRoute) {
+    const minifiedForms = (
+      await transformWithEsbuild(RESUMABILITY_FORMS, 'nexis-forms.js', {
+        loader: 'js',
+        minify: true,
+      })
+    ).code
+    await writeFile(join(outputRoot, 'nexis-forms.js'), minifiedForms, 'utf8')
+    await writeFile(join(clientRoot, 'nexis-forms.js'), minifiedForms, 'utf8')
   }
   if (hasBindingRoute) {
     const minifiedBindings = (
@@ -674,9 +1133,26 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
     await server.listen()
     return `Nexis dev server running at ${server.resolvedUrls?.local?.[0] ?? 'local URL'}`
   }
-  if (parsed.command === 'start') {
+  if (parsed.command === 'start' || parsed.command === 'preview') {
     const server = await preview({ root, build: { outDir: 'dist/client' } })
     return `Nexis production server running at ${server.resolvedUrls?.local?.[0] ?? 'local URL'}`
+  }
+  if (parsed.command === 'generate') {
+    const [kind, name] = parsed.args
+    if (!kind || !name || !['route', 'component'].includes(kind))
+      throw new Error('Usage: nexis generate <route|component> <name>')
+    return `Created ${await scaffoldCliArtifact(root, kind, name)}`
+  }
+  if (parsed.command === 'add') {
+    const [kind, name] = parsed.args
+    if (kind !== 'action' || !name) throw new Error('Usage: nexis add action <name>')
+    return `Created ${await scaffoldCliArtifact(root, kind, name)}`
+  }
+  if (parsed.command === 'doctor') return diagnoseProject(root)
+  if (parsed.command === 'upgrade') return migrationReport(root)
+  if (parsed.command === 'test') {
+    const result = await execFileAsync('pnpm', ['test', ...parsed.args], { cwd: root })
+    return result.stdout.trim() || result.stderr.trim() || 'Nexis tests passed.'
   }
   if (parsed.command === 'serve') {
     const config = await readNexisConfig(root)
