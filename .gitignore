@@ -13,3 +13,5 @@ test-results/
 *.log
 .DS_Store
 my-nexis-app/
+docs/nexis-arabic-documentation.zip
+docs/nexis-english-documentation.zip

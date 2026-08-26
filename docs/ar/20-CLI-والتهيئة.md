@@ -1,0 +1,96 @@
+# 20 — CLI وملف التهيئة
+
+## أوامر CLI
+
+| الأمر              | الوظيفة                                 |
+| ------------------ | --------------------------------------- |
+| `nexis build`      | بناء routes وHTML والأصول والـ metadata |
+| `nexis serve`      | تشغيل production server على build جاهز  |
+| `nexis --help`     | عرض الأوامر والخيارات                   |
+| `create-nexis-app` | إنشاء مشروع جديد                        |
+
+استخدم scripts في `package.json` لتوحيد الخيارات داخل الفريق بدل تمرير flags مختلفة يدويًا في كل مرة.
+
+## ملف التهيئة
+
+يدعم المشروع `nexis.config.json` و`nexis.config.js` و`nexis.config.mjs` و`nexis.config.ts`. يجب أن يصدر الملف object configuration صالحًا.
+
+```ts
+import type { NexisBuildConfig } from '@mohammedaydan/cli'
+
+export default {
+  siteOrigin: 'https://example.com',
+  routesDir: './src/routes',
+  outputDir: './dist',
+  feed: {
+    title: 'Example',
+    description: 'Example updates',
+    language: 'ar',
+  },
+  redirects: [{ from: '/legacy', to: '/', status: 308 }],
+} satisfies NexisBuildConfig
+```
+
+استخدم `satisfies` حتى يراجع TypeScript الحقول دون فقدان أنواع القيم الحرفية.
+
+## القواعد الأمنية للتهيئة
+
+- JSON غير صالح يجب أن يفشل بوضوح.
+- لا تشغّل source configuration غير موثوق في CI.
+- لا تضع secrets في config التي تدخل Git.
+- تحقق من redirect targets محليًا وآمنًا.
+- اجعل `siteOrigin` صريحًا في كل deployment.
+
+## إعدادات feed
+
+تستخدم feed metadata لإخراج RSS وAtom. يجب أن يكون title وdescription غير فارغين، وlink وfeedUrl عناوين HTTP(S) صحيحة. تتوسع dynamic static routes في feed فقط إذا دخلت عملية build ضمن route records.
+
+## إعدادات redirects
+
+مثال آمن:
+
+```json
+{
+  "redirects": [{ "from": "/docs", "to": "/docs/architecture", "status": 308 }]
+}
+```
+
+لا تسمح بـ `javascript:` أو protocol غير HTTP(S)، ولا تستخدم redirect مفتوحًا من query parameter.
+
+## بيئات متعددة
+
+يمكن إنشاء config مختلفة للـ preview والإنتاج، لكن لا تجعل canonical وfeed وrobots تختلط بين البيئتين. استخدم متغيرات بيئة أو ملفات واضحة، وسجّل site origin في artifact.
+
+## خروج build
+
+راجع هذه الملفات بعد البناء:
+
+```text
+dist/client/index.html
+dist/client/nexis-manifest.json
+dist/client/sitemap.xml
+dist/client/robots.txt
+dist/client/feed.xml
+dist/client/atom.xml
+dist/nexis-redirects.json
+dist/client/og/
+dist/client/images/
+```
+
+## CI
+
+اقترح pipeline بهذا الترتيب:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm build
+pnpm typecheck
+pnpm test
+pnpm lint
+pnpm format:check
+pnpm audit --audit-level=high
+pnpm test:e2e
+pnpm bench:lighthouse
+```
+
+احفظ artifacts المهمة، ولا تنشر إذا كان build أو gate فاشلًا.
