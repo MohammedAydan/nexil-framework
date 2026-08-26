@@ -1,6 +1,7 @@
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, win32 } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { createProject, helpText, parseCommand, runCli } from './index'
 import { isContainedPath, parseScaffoldArgs, scaffoldProject } from './scaffold'
@@ -142,7 +143,7 @@ describe('Nexis CLI', () => {
   })
 
   it('builds the practical Tailwind and dynamic SSG fixture end to end', async () => {
-    const directory = join(process.cwd(), 'examples/practical-app')
+    const directory = fileURLToPath(new URL('../../../examples/practical-app', import.meta.url))
     await expect(runCli(['build'], directory)).resolves.toContain('build completed')
     const stylesheet = await readFile(join(directory, 'dist/client/assets/styles.css'), 'utf8')
     const html = await readFile(join(directory, 'dist/client/index.html'), 'utf8')
@@ -171,9 +172,10 @@ describe('Nexis CLI', () => {
     await expect(runCli(['check', '--budget'], directory)).resolves.toContain('checks passed')
     const manifest = JSON.parse(
       await readFile(join(directory, 'dist/nexis-manifest.json'), 'utf8'),
-    ) as { routes: Array<{ interactive: boolean; bootstrapGzipBytes: number }> }
-    expect(manifest.routes[0]?.interactive).toBe(true)
-    expect(manifest.routes[0]?.bootstrapGzipBytes).toBeGreaterThan(0)
+    ) as { routes: Array<{ source: string; interactive: boolean; bootstrapGzipBytes: number }> }
+    const indexRoute = manifest.routes.find((route) => route.source === 'index.tsx')
+    expect(indexRoute?.interactive).toBe(true)
+    expect(indexRoute?.bootstrapGzipBytes).toBeGreaterThan(0)
     expect(await readFile(join(directory, 'dist/nexis-bootstrap.js'), 'utf8')).toContain(
       'document.addEventListener',
     )

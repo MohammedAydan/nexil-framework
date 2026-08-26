@@ -1,0 +1,125 @@
+# 15 — API Reference
+
+This is a practical map of the public APIs. The installed TypeScript declarations and the `src/index.ts` files remain the authoritative reference for the exact release.
+
+## Core
+
+`@mohammedaydan/core` exposes RenderNode, ElementNode, Child, and related rendering types. Use it when implementing low-level renderers or adapters.
+
+## Renderer
+
+| API                             | Purpose                             |
+| ------------------------------- | ----------------------------------- |
+| `escapeHtml(value)`             | Escape HTML text and attributes     |
+| `renderElementOpening(node)`    | Render an opening tag               |
+| `renderElementClosing(node)`    | Render a closing tag                |
+| `renderChild(child)`            | Synchronous child rendering         |
+| `renderChildAsync(child)`       | Promise-aware child rendering       |
+| `renderToString(root)`          | Synchronous full HTML               |
+| `renderToStringAsync(root)`     | Asynchronous full HTML              |
+| `renderRoute(input)`            | Render a route by mode              |
+| `renderToStream(root, options)` | Incremental `ReadableStream` output |
+
+## Router
+
+| API                              | Purpose                                 |
+| -------------------------------- | --------------------------------------- |
+| `routeFromFile(file)`            | Convert a filename into a RouteRecord   |
+| `matchRoute(route, pathname)`    | Match a pathname and extract parameters |
+| `resolveRoute(routes, pathname)` | Select a route from a collection        |
+
+## Reactivity
+
+| API                       | Purpose                            |
+| ------------------------- | ---------------------------------- |
+| `state(initial)`          | Create a writable signal           |
+| `useState(initial)`       | Return a signal and setter tuple   |
+| `computed(fn)`            | Create a memoized derived signal   |
+| `effect(fn)`              | Create a tracked side effect       |
+| `watch(source, listener)` | Observe a value and listener       |
+| `batch(fn)`               | Group notifications                |
+| `untrack(fn)`             | Read without creating a dependency |
+| `createRoot(fn)`          | Create an owner and cleanup scope  |
+| `onCleanup(fn)`           | Register cleanup                   |
+
+Signals are callable, expose `get()` and readonly `value`, and provide `set`, `setValue`, `subscribe`, and `dispose`.
+
+## State
+
+| API                           | Purpose                                 |
+| ----------------------------- | --------------------------------------- |
+| `createStore(initial, scope)` | Create a serializable store             |
+| `store.value`                 | Underlying readable signal              |
+| `store.snapshot()`            | Clone the current state                 |
+| `store.set(update)`           | Apply a value or functional update      |
+| `store.select(selector)`      | Create a computed selector              |
+| `store.subscribe(listener)`   | Subscribe to changes                    |
+| `store.dispose()`             | Dispose the signal and selectors        |
+| `createStateRegistry()`       | Reuse stores by scope and validated key |
+
+## SEO
+
+| API                                      | Purpose                                      |
+| ---------------------------------------- | -------------------------------------------- |
+| `normalizeSeo(metadata)`                 | Validate and normalize metadata              |
+| `renderHead(metadata)`                   | Render title, meta, OG, Twitter, and JSON-LD |
+| `buildSitemap(entries)`                  | Build XML sitemap output                     |
+| `buildRobots(sitemapUrl, disallow)`      | Build robots.txt                             |
+| `deriveCanonical(origin, pathname)`      | Create a safe canonical URL                  |
+| `withCanonical(metadata, ...)`           | Add canonical metadata                       |
+| `generateFeed(items, options)`           | Generate RSS 2.0                             |
+| `generateAtomFeed(items, options)`       | Generate Atom                                |
+| `deriveBreadcrumbList(pathname, origin)` | Generate Breadcrumb JSON-LD                  |
+| `validateJsonLd(value)`                  | Validate supported JSON-LD shape             |
+
+## Server and data
+
+| API                                         | Purpose                            |
+| ------------------------------------------- | ---------------------------------- |
+| `createProductionServer(root, options)`     | Start the official Node server     |
+| `createProductionMiddleware(root, options)` | Create embeddable middleware       |
+| `createSecurityHeaders(nonce?)`             | Create security headers            |
+| `serializeCookie(name, value, options)`     | Serialize a cookie safely          |
+| `createDataContext(request)`                | Create request-scoped data context |
+
+## Actions
+
+`@mohammedaydan/actions` provides `action`, `assertTrustedOrigin`, typed action responses, request parsing, validation, endpoint options, and `createMemoryIdempotencyStore`. Use the durable-store contract for distributed production.
+
+## Vite plugin and Client
+
+| API                                | Purpose                                                             |
+| ---------------------------------- | ------------------------------------------------------------------- |
+| `nexis(options)`                   | Vite plugin                                                         |
+| `transformNexisSource(source, id)` | Analyze source and produce metadata                                 |
+| `classifyScopeCaptures(...)`       | Classify values, signals, stores, actions, and unsupported captures |
+| `serializeResumeState`             | Serialize bounded resume data                                       |
+| `deserializeResumeState`           | Deserialize resume data                                             |
+| `createHandlerReference`           | Create a lazy handler reference                                     |
+| `createScopeRegistry`              | Create a ScopeRef registry                                          |
+| `registerScopeSignal`              | Register a signal reference                                         |
+| `registerScopeStore`               | Register a store reference                                          |
+| `registerScopeAction`              | Register an action reference                                        |
+| `disposeScope`                     | Dispose one registered scope                                        |
+| `inspectScope`                     | Inspect active scope records                                        |
+
+## Media
+
+`buildImageVariants` creates WebP/AVIF variants and reports bytes and cache hits. `pictureMarkup` creates responsive picture markup. `imageAttributes` creates image attributes. `fontFace` emits a font-face rule. `cacheDir` enables optional persistent transform caching.
+
+## Telemetry
+
+| API                              | Purpose                                          |
+| -------------------------------- | ------------------------------------------------ |
+| `createTelemetry(options)`       | Create an optional telemetry client              |
+| `observeWebVitals(options)`      | Observe LCP, CLS, and INP                        |
+| `renderTelemetryScript(options)` | Render a script or an empty string when disabled |
+| `telemetryEventSchema`           | Document the event shape                         |
+
+## Edge packages
+
+`createDenoHandler`, `createDenoAdapterHandler`, and `serveDeno` target Deno. `createCloudflareHandler`, `createCloudflareAdapterHandler`, and `withCloudflareContext` target Cloudflare. Both use Fetch-native contracts and require application assets or a fallback handler.
+
+## CLI
+
+The CLI discovers routes, loads configuration, builds HTML and assets, generates feeds, sitemap, robots, redirect manifests, and OG cards, and writes the manifest. Prefer CLI commands and documented configuration over importing internal build helpers from application code.
