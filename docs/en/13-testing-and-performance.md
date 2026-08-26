@@ -31,16 +31,18 @@ git diff --check
 
 `test:deno:e2e` requires an actual `deno` executable. A Node strip-types fallback is not evidence that Deno itself ran.
 
-## Resumability tests
+## Resumability and binding tests
 
 In E2E, verify that:
 
-- No application handler runs during initial paint.
+- No application handler or binding effect runs during initial paint when the route is static.
 - Static routes request no JavaScript.
-- Bootstrap loads when interaction is needed.
-- The correct lazy chunk loads after interaction.
-- The visible state changes without a full navigation.
-- The browser console stays clean.
+- The event bootstrap loads only when an event boundary is present.
+- `nexis-bindings.js` is emitted and injected only for routes containing binding metadata.
+- A binding route preserves its SSR value before any interaction.
+- A Signal update mutates only the bound text node or scalar property; the component is not rerun and the page is not navigated.
+- The correct lazy event chunk loads after interaction when an event boundary is present.
+- The browser console stays clean and route cleanup disposes binding effects.
 
 ## Client budgets
 

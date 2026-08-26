@@ -5,8 +5,19 @@
 Start with the scripts in `package.json` and the CLI help for the installed release. Workspace scripts are the stable entry point for this repository.
 
 ```bash
-pnpm --help
-pnpm build --help
+# For the published scoped initializer, configure GitHub Packages when required.
+npm config set @mohammedaydan:registry https://npm.pkg.github.com
+pnpm dlx @mohammedaydan/create-nexis@latest my-app --yes --ts
+cd my-app
+pnpm install
+pnpm dev
+```
+
+For an existing project, inspect the installed CLI and use the repository scripts:
+
+```bash
+nexis --help
+pnpm build
 pnpm check:budget
 pnpm release:check
 ```
@@ -62,18 +73,23 @@ Never commit secrets or include them in generated HTML.
 After a build, inspect:
 
 ```text
-dist/client/
-├── index.html
-├── assets/
-├── images/
-├── manifest.json
-├── robots.txt
-├── sitemap.xml
-├── feed.xml
-└── atom.xml
+dist/
+├── client/
+│   ├── index.html
+│   ├── assets/
+│   ├── og/
+│   ├── nexis-manifest.json
+│   ├── nexis-bootstrap.js       # interactive routes only
+│   ├── nexis-bindings.js        # binding routes only
+│   ├── robots.txt
+│   ├── sitemap.xml
+│   ├── feed.xml
+│   └── atom.xml
+├── server/routes/                # generated SSR route modules
+└── nexis-chunks/                 # hashed lazy handler chunks
 ```
 
-Names can differ by release, so use the actual manifest and build logs as the source of truth.
+The current CLI writes `nexis-manifest.json`. `nexis-bootstrap.js` is emitted when an event boundary exists, while `nexis-bindings.js` is emitted only when transformed routes contain Signal binding metadata. Use the generated manifest and build logs as the release-specific source of truth.
 
 ## CI configuration
 

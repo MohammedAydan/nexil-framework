@@ -5,7 +5,8 @@ This chapter assembles the patterns from the previous guides into a small docume
 ## 1. Create the project
 
 ```bash
-pnpm create nexis my-docs
+npm config set @mohammedaydan:registry https://npm.pkg.github.com
+pnpm dlx @mohammedaydan/create-nexis@latest my-docs --yes --ts
 cd my-docs
 pnpm install
 ```
@@ -51,27 +52,28 @@ The heading, description, and link exist in the initial HTML. A visitor can read
 ## 4. Interactive search
 
 ```tsx
+import { state } from '@mohammedaydan/core'
+
 export function SearchBox({ initialQuery = '' }: { readonly initialQuery?: string }) {
   const query = state(initialQuery)
-  const open = state(false)
+  const searching = state(false)
 
   return (
-    <form action="/search" method="get" onSubmit$={() => open.set(true)}>
+    <form action="/search" method="get" onSubmit$={() => searching.set(true)}>
       <label for="q">Search</label>
-      <input
-        id="q"
-        name="q"
-        value={query.value}
-        onInput$={(event) => query.set((event.target as HTMLInputElement).value)}
-      />
-      <button type="submit">Search</button>
-      <p aria-live="polite">{open.value ? 'Searching…' : ''}</p>
+      <input id="q" name="q" bindValue$={query} aria-describedby="search-status" />
+      <button type="submit" bindDisabled$={searching}>
+        Search
+      </button>
+      <p id="search-status" aria-live="polite">
+        {searching() ? 'Searching…' : 'Enter a term'}
+      </p>
     </form>
   )
 }
 ```
 
-This is progressively enhanced: the native GET form still works, while the signal controls local feedback.
+The native GET form remains the fallback. `bindValue$` keeps the input property synchronized with the Signal, `bindDisabled$` updates only the button property, and the direct `{searching()}` read becomes a fine-grained text binding. No component rerender or virtual-DOM reconciliation is needed.
 
 ## 5. Article route
 

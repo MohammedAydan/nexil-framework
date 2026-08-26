@@ -37,17 +37,18 @@ A new user should read documents 01 through 06, then continue with 07 and 08 whe
 
 ## Core concepts
 
-Nexis is an HTML-first TypeScript framework built around SSR/SSG, progressive enhancement, and resumable interaction. A page is rendered on the server into useful HTML. Client JavaScript is emitted only for boundaries that require interaction. When an interaction occurs, the browser loads the smallest relevant chunk and resolves explicitly declared `ScopeRef` values rather than hydrating an entire application.
+Nexis is an HTML-first TypeScript framework built around SSR/SSG, progressive enhancement, resumable interaction, and fine-grained DOM reactivity. A page is rendered on the server into useful HTML. Client JavaScript is emitted only for boundaries that require interaction. When an interaction occurs, the browser loads the smallest relevant chunk and resolves explicitly declared `ScopeRef` values rather than hydrating an entire application. Direct Signal reads and explicit binding directives can update one text node or scalar DOM property through `effect()` without rerunning the component.
 
-| Concept           | Practical meaning                                            |
-| ----------------- | ------------------------------------------------------------ |
-| Route             | A page module under `src/routes` mapped to a URL             |
-| Render mode       | `static`, `server`, or `isr` output behavior                 |
-| ScopeRef          | A safe tagged reference to a value, signal, store, or action |
-| Lazy handler      | An event handler emitted into a separately loaded chunk      |
-| Action            | A server operation invoked through a typed endpoint          |
-| Production server | `@mohammedaydan/serve` serving the final build               |
-| Build artifact    | Generated HTML, CSS, JavaScript, media, and metadata         |
+| Concept           | Practical meaning                                                   |
+| ----------------- | ------------------------------------------------------------------- |
+| Route             | A page module under `src/routes` mapped to a URL                    |
+| Render mode       | `static`, `server`, or `isr` output behavior                        |
+| ScopeRef          | A safe tagged reference to a value, signal, store, or action        |
+| Lazy handler      | An event handler emitted into a separately loaded chunk             |
+| DOM binding       | A Signal subscription that updates one text node or scalar property |
+| Action            | A server operation invoked through a typed endpoint                 |
+| Production server | `@mohammedaydan/serve` serving the final build                      |
+| Build artifact    | Generated HTML, CSS, JavaScript, media, and metadata                |
 
 ## Example policy
 

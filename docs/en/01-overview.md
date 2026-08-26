@@ -8,7 +8,7 @@ This model fits marketing sites, blogs, documentation, dashboards, stores, produ
 
 ## Request lifecycle
 
-For an HTTP request, the Router selects a route, the Renderer receives the requested render mode, and the result becomes HTML. The Compiler records interaction boundaries and `ScopeRef` metadata. The CLI writes the final files. In the browser, a small bootstrap delegates events and loads the required chunk.
+For an HTTP request, the Router selects a route, the Renderer receives the requested render mode, and the result becomes HTML. The Compiler records interaction boundaries, binding markers, and `ScopeRef` metadata. The CLI writes the final files. In the browser, the event bootstrap delegates events and loads required chunks, while the isolated binding runtime subscribes Signals and updates only their target DOM nodes or properties.
 
 ```text
 Request
@@ -23,7 +23,9 @@ Router ──► Route module ──► Renderer ──► HTML + metadata
              static files, bootstrap, lazy chunks, assets
                                   │
                                   ▼
-Browser event ──► bootstrap ──► lazy chunk ──► handler
+Browser event ──► event bootstrap ──► lazy chunk ──► handler
+                   │
+                   └── binding runtime ──► Signal effect ──► target DOM node/property
 ```
 
 ## Main capabilities
@@ -32,6 +34,7 @@ Browser event ──► bootstrap ──► lazy chunk ──► handler
 | ------------------ | ------------------------------------------------------------------- |
 | SSR, SSG, and ISR  | Choose output behavior per page                                     |
 | Resumability       | Load interaction instead of hydrating the whole app                 |
+| Fine-grained DOM   | Update one text node or scalar property without rerendering         |
 | ScopeRef           | Transfer state and action references through a safe ABI             |
 | Typed actions      | Process forms with validation, origin checks, and replay protection |
 | File-based routing | Map `src/routes` modules to predictable URLs                        |
@@ -54,7 +57,7 @@ Do not begin with, “How do I make the entire page a client application?” Beg
 1. Which content must arrive as HTML?
 2. What is the smallest part that needs browser code?
 
-The smaller the interaction boundary, the more value you get from Nexis. Static content should remain JSX/HTML; buttons, search controls, and forms should own focused handlers.
+The smaller the interaction boundary, the more value you get from Nexis. Static content should remain JSX/HTML; buttons, search controls, forms, and individual bound properties should own focused client behavior.
 
 ## What Nexis does not do automatically
 

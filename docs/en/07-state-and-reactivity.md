@@ -116,9 +116,27 @@ When the store is disposed, its underlying signal and selector computeds must st
 
 Do not use a mutable singleton for private request data. Create state inside the request or render owner. Sharing a global signal between requests can leak one user’s data into another request.
 
-## Hydrationless state
+## Fine-grained DOM bindings without hydration
 
-A signal does not replace server HTML. If a title or price matters, render it during SSR first, then use a signal to update it after interaction.
+A Signal does not replace server HTML. Render important content during SSR first, then let a binding update the specific text node or scalar property after the Signal changes. Nexis does not rerun the component and does not reconcile a virtual tree for these updates.
+
+Direct reads are lowered automatically when the compiler can prove the target and dependency:
+
+```tsx
+const count = state(0)
+const disabled = state(false)
+
+return (
+  <section>
+    <output>{count()}</output>
+    <button bindDisabled$={disabled}>Save</button>
+  </section>
+)
+```
+
+Use explicit directives for predictable intent, especially when a value is not a direct Signal read or when the target is a scalar property. Supported directives are `bindText$`, `bindValue$`, `bindChecked$`, `bindDisabled$`, and `bindHidden$`. The runtime supports the corresponding `text`, `value`, `checked`, `disabled`, and `hidden` targets.
+
+The compiler serializes a stable scope reference and emits a `data-nx-bind="nx:signal:<id>#<target>"` marker. The binding runtime resolves the materialized Signal and installs an `effect()` subscription. The subscription mutates only the target node/property and is removed by the returned disposer or route-scope cleanup. Dynamic expressions such as `{count() + ' items'}` are intentionally not auto-lowered; use an explicit directive when that behavior is required.
 
 ## State checklist
 

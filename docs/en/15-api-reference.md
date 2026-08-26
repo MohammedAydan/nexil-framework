@@ -88,26 +88,39 @@ Signals are callable, expose `get()` and readonly `value`, and provide `set`, `s
 
 ## Vite plugin and Client
 
-| API                                 | Purpose                                                             |
-| ----------------------------------- | ------------------------------------------------------------------- |
-| `nexis(options)`                    | Vite plugin                                                         |
-| `transformNexisSource(source, id)`  | Extract lazy chunks and emit per-boundary `data-nx-scope` payloads  |
-| `classifyScopeCaptures(...)`        | Classify values, signals, stores, actions, and unsupported captures |
-| `RESUMABILITY_BOOTSTRAP`            | The delegated resumability runtime served as `nexis-bootstrap.js`   |
-| `bootstrapResumability(root, load)` | Bind boundaries in a DOM root; parity with the shipped bootstrap    |
-| `serializeResumeState`              | Serialize bounded resume data                                       |
-| `deserializeResumeState`            | Deserialize resume data                                             |
-| `createHandlerReference`            | Create a lazy handler reference                                     |
-| `createScopeRegistry`               | Create a ScopeRef registry                                          |
-| `registerScopeSignal`               | Register a signal reference                                         |
-| `registerScopeStore`                | Register a store reference                                          |
-| `registerScopeAction`               | Register an action reference                                        |
-| `disposeScope`                      | Dispose one registered scope                                        |
-| `inspectScope`                      | Inspect active scope records                                        |
+| API                                      | Purpose                                                             |
+| ---------------------------------------- | ------------------------------------------------------------------- |
+| `nexis(options)`                         | Vite plugin                                                         |
+| `transformNexisSource(source, id)`       | Extract lazy chunks and emit per-boundary `data-nx-scope` payloads  |
+| `classifyScopeCaptures(...)`             | Classify values, signals, stores, actions, and unsupported captures |
+| `RESUMABILITY_BOOTSTRAP`                 | The delegated resumability runtime served as `nexis-bootstrap.js`   |
+| `bootstrapResumability(root, load)`      | Bind boundaries in a DOM root; parity with the shipped bootstrap    |
+| `serializeResumeState`                   | Serialize bounded resume data                                       |
+| `deserializeResumeState`                 | Deserialize resume data                                             |
+| `createHandlerReference`                 | Create a lazy handler reference                                     |
+| `createScopeRegistry`                    | Create a ScopeRef registry                                          |
+| `registerScopeSignal`                    | Register a signal reference                                         |
+| `registerScopeStore`                     | Register a store reference                                          |
+| `registerScopeAction`                    | Register an action reference                                        |
+| `disposeScope`                           | Dispose one registered scope                                        |
+| `inspectScope`                           | Inspect active scope records                                        |
+| `bindSignalToDOM(scopeId, node, target)` | Bind a registered Signal or Store value to one DOM target           |
 
 Lazy handlers receive `{ element, event, scope }`. Signals, stores, and actions
 captured by a handler are materialized once per scope id and shared across every
 boundary that captures the same declaration.
+
+The compiler directives `bindText$`, `bindValue$`, `bindChecked$`, `bindDisabled$`, and `bindHidden$` create fine-grained DOM bindings. The client function has the following contract:
+
+```ts
+bindSignalToDOM(
+  scopeId: string,
+  node: Text | HTMLElement,
+  targetProperty: 'text' | 'value' | 'checked' | 'disabled' | 'hidden',
+): () => void
+```
+
+It resolves a registered `nx:signal:<id>` or `nx:store:<id>` reference, installs an `effect()`, applies the current value immediately, and returns a disposer. Binding updates mutate the target directly; they do not rerun a component or reconcile a virtual DOM. `nexis-bindings.js` is emitted only for routes whose transformed output contains binding metadata.
 
 ## Media
 

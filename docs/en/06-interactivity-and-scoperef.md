@@ -8,10 +8,43 @@ Traditional hydration reruns application code in the browser to discover events 
 SSR HTML
   + data-nx-on-click="chunk-id#handler"
   + data-nx-scope="..."
-  + nex-bootstrap.js
+  + nexis-bootstrap.js
+  + nexis-bindings.js (binding routes only)
         │
         └── click → import lazy chunk → resolve scope → execute handler
 ```
+
+## Fine-grained DOM bindings
+
+Nexis can update one text node or scalar DOM property directly from a Signal without rerunning the component or reconciling a virtual tree. Use a direct read for the conservative automatic path:
+
+```tsx
+const count = state(0)
+
+return <output>{count()}</output>
+```
+
+For an explicit target, use one of the compiler directives below:
+
+```tsx
+const name = state('Ada')
+const busy = state(false)
+
+return (
+  <form>
+    <input bindValue$={name} aria-label="Name" />
+    <button bindDisabled$={busy} type="submit">
+      Save {name()}
+    </button>
+  </form>
+)
+```
+
+The supported targets are `text`, `value`, `checked`, `disabled`, and `hidden`, exposed through `bindText$`, `bindValue$`, `bindChecked$`, `bindDisabled$`, and `bindHidden$`. The compiler preserves the SSR value, emits a stable `nx:signal:<id>#<target>` marker, and writes the marker beside the serialized scope declaration. On the client, the binding runtime materializes the registered Signal and installs an `effect()` that mutates only that target. The disposer removes the subscription and clears materialized scope state.
+
+Automatic lowering is deliberately conservative. Direct `{signal()}`, `{signal.value}`, and direct scalar-attribute reads are supported. An expression such as `{count() + ' items'}` is left as normal SSR output and emits a diagnostic recommending an explicit `bindText$`; the compiler does not guess a dependency graph for arbitrary expressions.
+
+A route containing only ordinary SSR markup does not receive `nexis-bindings.js`. The CLI and Vite plugin emit and inject the separate binding runtime only when transformed route metadata contains a binding.
 
 ## Writing a lazy handler
 
@@ -61,7 +94,7 @@ its scope id.
 
 ## The registry
 
-The client registry exposes operations such as `resolve`, `inspectScope`, `dispose`, and `disposeAll`. Do not keep global references forever; every route or boundary should own a clear lifetime.
+The client registry exposes operations such as `resolve`, `inspectScope`, `dispose`, and `disposeAll`. Binding subscriptions use the same scope ownership model. Do not keep global references forever; every route or boundary should own a clear lifetime.
 
 ```ts
 const registry = createScopeRegistry()

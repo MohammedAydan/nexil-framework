@@ -48,24 +48,35 @@ export function Card({ title, description, href }: CardProps) {
 An interactive component should be small and focused. Do not make an entire layout interactive because one button needs state. Extract the button into its own component and use a lazy handler.
 
 ```tsx
-import { state } from '@mohammedaydan/reactivity'
+import { state } from '@mohammedaydan/core'
 
 export function Counter() {
   const count = state(0)
   return (
-    <button
-      data-nx-state={count.value}
-      onClick$={() => {
-        count.set((previous) => previous + 1)
-      }}
-    >
-      Count: {count.value}
+    <button onClick$={() => count.set((previous) => previous + 1)} aria-label="Increment counter">
+      Count: {count()}
     </button>
   )
 }
 ```
 
-The `$` suffix signals that the behavior should be analyzed and emitted as a lazy chunk. Keep the handler small and pass values that can be classified and serialized.
+A direct Signal read such as `{count()}` or `{count.value}` is lowered to a fine-grained text binding. The component is not rerun and the DOM tree is not reconciled when the Signal changes. Use an explicit directive when the expression is intentionally more complex or when a scalar DOM property is the target:
+
+```tsx
+const name = state('Ada')
+const disabled = state(false)
+
+return (
+  <form>
+    <input bindValue$={name} aria-label="Name" />
+    <button bindDisabled$={disabled} type="submit">
+      Save {name()}
+    </button>
+  </form>
+)
+```
+
+The supported explicit targets are `bindText$`, `bindValue$`, `bindChecked$`, `bindDisabled$`, and `bindHidden$`. The `$` suffix on event props still signals a lazy handler chunk. Keep handlers small and capture only values that the compiler can classify and serialize.
 
 ## Props
 

@@ -1,93 +1,104 @@
-﻿# Nexis
+﻿# Nexis Framework
 
-**Nexis is an HTML-first, resumable TypeScript web framework.** Applications render useful HTML immediately and ship client JavaScript only when an interaction genuinely requires it. The framework is built on progressive enhancement, fine-grained reactivity, static CSS extraction, and Web Standard request/response contracts that run unchanged on Node.js and edge runtimes such as Cloudflare workerd and Deno.
+**Nexis is an HTML-first, resumable TypeScript framework for building server-rendered web applications.** It produces useful HTML first, keeps static routes free of route-specific client JavaScript, and loads interaction code only when a user reaches an interactive boundary. Nexis has no virtual DOM and does not hydrate or reconcile an entire component tree.
 
-> **HTML First â†’ Progressive Enhancement â†’ Resumable Fine-Grained Reactivity â†’ Client JS Only When Needed**
+> **HTML first → progressive enhancement → resumable interaction → fine-grained DOM updates**
 
----
+Nexis is designed for applications that need strong server rendering, small client boundaries, typed Web Standard interfaces, and deployment flexibility across Node.js and edge runtimes.
 
-## The four governing invariants
+## Current status
 
-These are release contracts, not defaults. They are enforced by the compiler (`nexis check --budget`), runtime tests, browser tests, and CI.
+The repository contains the v1.0.0 framework surface and its production verification fixtures. The main branch includes resumable event handlers, fine-grained Signal-to-DOM bindings, static CSS extraction, SSG/ISR/SSR/PPR rendering modes, media processing, SEO generation, server Actions, Node/Deno/Cloudflare adapters, telemetry primitives, and release-oriented quality gates.
 
-| #   | Invariant                  | Contract                                                                                                                 | Enforced by                                               |
-| --- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
-| 1   | **Static JavaScript**      | A route without resumable interaction ships **0 bytes** of client JavaScript.                                            | `DEFAULT_BUDGET.staticClientJsBytes = 0`                  |
-| 2   | **Interactive JavaScript** | Each interactive route stays below **15 KB gzipped** of route client code.                                               | `DEFAULT_BUDGET.interactiveClientJsGzipBytes = 15 * 1024` |
-| 3   | **Bootstrap runtime**      | The resumability bootstrap stays below **1 KB gzipped**.                                                                 | `DEFAULT_BUDGET.bootstrapGzipBytes = 1024`                |
-| 4   | **Web Vitals discipline**  | LCP < 2.5 s and CLS < 0.1 are operational targets; `<Image>`-style media pipelines prevent layout shift by construction. | Media pipeline + build gates                              |
+The detailed documentation is available in the [English documentation package](docs/en/README.md). The equivalent Arabic package is available at [docs/ar/README.md](docs/ar/README.md).
 
-Additional architectural commitments: rendering produces real HTML (no virtual DOM, no reconciliation), inline static style objects are extracted to a CSS artifact at build time, user/request state stays request-local, and all runtime boundaries use WHATWG `Request`/`Response`/`Headers`/streams plus Web Crypto-compatible semantics.
+## Why Nexis?
 
----
+Nexis separates server rendering from client interaction instead of treating every page as a browser application. A static route can ship HTML and CSS without application JavaScript. An interactive route declares a small boundary with a `$`-suffixed event or binding directive. The compiler extracts the boundary, serializes only supported references, and emits small assets that the browser loads when they are needed.
 
-## التوثيق العربي الكامل
+State changes use fine-grained Signals. A bound text node or scalar property is updated directly by an `effect()` subscription; the component function is not executed again, and no virtual-DOM tree is created or reconciled. Essential content still belongs in the initial server-rendered HTML so that the page remains useful before any script executes.
 
-للحصول على شرح مفصل لطريقة عمل الفريمورك، إنشاء المشاريع، الصفحات والمكونات، Resumability، الحالة، Actions، SEO، الوسائط، النشر، الاختبار، الأمان، ومرجع API، راجع [حزمة التوثيق العربية الكاملة](docs/ar/README.md).
+## Core contracts
 
-For the complete English documentation covering the same framework surface, see [the English documentation package](docs/en/README.md).
+These contracts are enforced by compiler tests, integration tests, runtime parity checks, browser tests, and CI budgets.
 
-## Quickstart
+| Contract                 | Meaning                                                                                                                | Verification surface                          |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| Static output            | A route without resumable interaction emits zero route-specific client JavaScript.                                     | CLI manifest, build tests, Playwright         |
+| Small interactive output | Interactive route code remains within the configured compressed budget.                                                | `pnpm check:budget`, CLI checks               |
+| Isolated runtimes        | `nexis-bootstrap.js` serves event resumability; `nexis-bindings.js` is emitted only for binding-enabled routes.        | CLI integration tests, E2E network assertions |
+| No full hydration        | Resumed handlers and bindings materialize their references without rerunning the component tree.                       | Client runtime and browser tests              |
+| Request isolation        | Request-specific values are created per request and are not shared through mutable module singletons.                  | Server and parity tests                       |
+| Web-standard boundaries  | Adapters use `Request`, `Response`, `Headers`, `ReadableStream`, and Web Crypto-compatible contracts where applicable. | Node, Deno, Cloudflare, and parity tests      |
 
-Initialize a project from **GitHub Packages** (the registry hosting every `@mohammedaydan/*` package):
+## Quick start
 
-```powershell
-# One-time: authenticate with a classic PAT that has read:packages
+Published scoped packages are hosted on GitHub Packages. If your environment does not already route the `@mohammedaydan` scope there, configure it before using the initializer. A token with package-read permission may be required for private or organization-controlled registry access.
+
+```bash
 npm config set @mohammedaydan:registry https://npm.pkg.github.com
-npm config set //npm.pkg.github.com/:_authToken $env:GITHUB_TOKEN
 ```
 
-Then scaffold with your favorite package manager:
+Create a TypeScript application with the current initializer:
 
 ```bash
-# pnpm
 pnpm dlx @mohammedaydan/create-nexis@latest my-nexis-app --yes --ts
-cd my-nexis-app && pnpm install && pnpm dev
+cd my-nexis-app
+pnpm install
+pnpm dev
 ```
 
+Equivalent npm and Yarn forms are:
+
 ```bash
-# npm
 npx --yes @mohammedaydan/create-nexis@latest my-nexis-app --yes --ts
-cd my-nexis-app && npm install && npm run dev
-```
-
-```bash
-# yarn
+# or
 yarn dlx @mohammedaydan/create-nexis@latest my-nexis-app --yes --ts
-cd my-nexis-app && yarn install && yarn dev
 ```
 
-The initializer also installs under its compatibility name, so both commands work after resolution:
+The initializer supports `--yes`, `--ts`, `--js`, `--tailwind`, and `--no-tailwind`. Inside an existing application, the CLI exposes the same project operations through `nexis create <name>`. The generated project includes route files, an HTML shell, TypeScript configuration, public assets, and package scripts for development and production builds.
 
-```bash
-npm exec --yes --package @mohammedaydan/create-nexis@latest -- create-nexis-app my-nexis-app --yes --ts
-pnpm dlx --package=@mohammedaydan/create-nexis@latest create-nexis-app my-nexis-app --yes --ts
-```
+> If package installation reports `ERR_PNPM_FETCH_404`, verify that the `@mohammedaydan` scope points to GitHub Packages and that the configured token can read the package. The unscoped `pnpm create nexis` form is not equivalent to the scoped GitHub Packages initializer.
 
-Inside an existing app, the CLI exposes the same engine: `nexis create <name> [--yes] [--ts|--js] [--tailwind]`.
+## Project structure
 
-Initializer flags: `--yes` (non-interactive), `--ts` / `--js`, `--tailwind` / `--no-tailwind`. Without `--yes`, the initializer prompts for language and Tailwind preference.
-
-> `ERR_PNPM_FETCH_404` means either the scope is not routed to GitHub Packages or your token lacks `read:packages`. The unscoped `pnpm create nexis` form resolves against npmjs and is not the GitHub Packages form.
-
-### What you get
+A small application commonly looks like this:
 
 ```text
 my-nexis-app/
-â”œâ”€â”€ src/
-â”‚   â”œâ”€â”€ routes/
-â”‚   â”‚   â”œâ”€â”€ layout.tsx         # Root layout shell
-â”‚   â”‚   â”œâ”€â”€ index.tsx          # Static home page â€” 0 KB client JS
-â”‚   â”‚   â””â”€â”€ counter.tsx        # Resumable interactive counter (onClick$)
-â”‚   â””â”€â”€ shared/types.ts
-â”œâ”€â”€ public/                    # Static assets served as-is
-â”œâ”€â”€ index.html                 # Application shell
-â”œâ”€â”€ package.json
-â”œâ”€â”€ tsconfig.json
-â””â”€â”€ README.md
+├── src/
+│   ├── routes/
+│   │   ├── layout.tsx
+│   │   ├── index.tsx
+│   │   └── counter.tsx
+│   └── styles.css
+├── public/
+├── index.html
+├── package.json
+├── tsconfig.json
+└── vite.config.ts
 ```
 
-TypeScript is native by construction â€” `jsx: "react-jsx"` with `jsxImportSource: "@mohammedaydan/core"`, strict mode, ES2022 targets:
+Routes are discovered under `src/routes/**/*.{tsx,jsx,ts,js}`. `layout.*` files are composition modules rather than standalone routes. The application shell should contain the Nexis outlet markers:
+
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <!--nexis-head-outlet-->
+  </head>
+  <body>
+    <div id="app"><!--nexis-app-outlet--></div>
+    <!--nexis-scripts-outlet-->
+  </body>
+</html>
+```
+
+The build replaces these markers with the route head, rendered HTML, and only the scripts required by the route. Do not place route content outside the outlets if it is expected to pass through the Nexis renderer.
+
+## JSX and TSX authoring
+
+Nexis uses JSX and TSX with its own runtime. Generated projects use `react-jsx` with `@mohammedaydan/jsx-runtime`; React is not required.
 
 ```json
 {
@@ -96,66 +107,40 @@ TypeScript is native by construction â€” `jsx: "react-jsx"` with `jsxImport
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
-    "jsxImportSource": "@mohammedaydan/core",
+    "jsxImportSource": "@mohammedaydan/jsx-runtime",
     "strict": true,
-    "skipLibCheck": true
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitReturns": true,
+    "exactOptionalPropertyTypes": true
   }
 }
 ```
 
-JavaScript projects (`--js`) are first-class: routes become `.jsx`, `allowJs` flips on, and every template has a JS variant.
-
-### Tailwind CSS and VS Code
-
-Create a project with `nexis create my-app --yes --ts --tailwind`. The scaffold installs Tailwind CSS 4 and its Vite integration, creates `src/styles.css` with `@import "tailwindcss"`, links the processed stylesheet from the HTML shell, and emits a Vite config that runs the Tailwind plugin during development and production builds.
-
-The generated `.vscode/extensions.json` recommends **Tailwind CSS IntelliSense**. The accompanying workspace settings teach the extension to inspect classes inside Nexis's `cx(...)` helper as well as normal `className` strings. Use `className` on any intrinsic element; Nexis normalizes it to the HTML `class` attribute during SSR, so Tailwind utilities are applied to the actual DOM.
-
-```tsx
-import { cx } from '@mohammedaydan/css'
-
-export default function Card({ featured }: { featured: boolean }) {
-  return (
-    <article className={cx('rounded-xl border p-6', featured && 'border-indigo-500 bg-indigo-50')}>
-      Tailwind utilities are scanned from TSX and merged safely.
-    </article>
-  )
-}
-```
-
-The `cx` helper accepts strings, arrays, and conditional object entries, then resolves conflicting utilities using Tailwind-aware precedence rules. This keeps component APIs composable without forcing consumers to hand-edit long class strings.
-
----
-
-## Authoring JSX and TSX
-
-JSX/TSX is Nexis's primary syntax. There is no React, no virtual DOM, and no reconciliation engine: components execute once on the server, produce HTML, and finish. Interactivity is declared as explicit lazy boundaries that the compiler extracts into hashed chunks loaded on demand.
-
-### Static server components (0 KB JS)
-
-A default-exported component that renders markup ships zero application JavaScript. The `seo` export feeds document metadata:
+A static route is an ordinary component that returns renderable children. Its HTML is produced on the server and it needs no client JavaScript:
 
 ```tsx
 export const seo = {
   title: 'Home | Nexis App',
-  description: 'Rendered server-side with zero client JavaScript overhead.',
+  description: 'A server-rendered page with no route-specific client JavaScript.',
 }
 
-export default async function HomePage() {
+export default function HomePage() {
   return (
     <main>
-      <h1>Hello Nexis</h1>
-      <p>This page arrives useful before any script runs.</p>
+      <h1>Welcome to Nexis</h1>
+      <p>This content is available before any client script runs.</p>
     </main>
   )
 }
 ```
 
-Async components are supported at the route boundary â€” data fetching can `await` directly inside the component body while the server renders.
+Components may be composed normally, and asynchronous route components may await server-side work before returning their children. Validate data at the boundary and keep private request data out of browser-visible markup.
 
-### Resumable interactive components (`onClick$`)
+## Resumable events
 
-Appending `$` to an event prop marks a **lazy interaction boundary**. The compiler extracts the expression into a content-hashed chunk (`chunk_<hash>.js`), rewrites the attribute to `data-nx-on-click="chunk_<hash>.js#handler_<hash>"`, and removes the code from the server response. On first click, the sub-kilobyte bootstrap imports that chunk and invokes the handler with `{ element }`.
+Append `$` to an event prop to declare a lazy interaction boundary. The compiler extracts the handler into a hashed chunk and writes a `data-nx-on-*` reference into the rendered HTML. The small event bootstrap delegates the event, imports the required chunk on first interaction, resolves serialized scope references, and invokes the handler.
 
 ```tsx
 export default function CounterPage() {
@@ -163,258 +148,295 @@ export default function CounterPage() {
     <main>
       <h1>Resumable counter</h1>
       <button
-        data-nx-state="0"
-        onClick$={({ element }: { element: HTMLElement }) => {
-          const next = Number(element.textContent || '0') + 1
-          element.textContent = String(next)
-          element.dataset.nxState = String(next)
+        type="button"
+        onClick$={({ element }: { readonly element: HTMLElement }) => {
+          const current = Number(element.dataset.count ?? '0')
+          const next = current + 1
+          element.dataset.count = String(next)
+          element.textContent = `Count: ${next}`
         }}
+        data-count="0"
       >
-        0
+        Count: 0
       </button>
     </main>
   )
 }
 ```
 
-What this page costs before the first click: **0 bytes** of application JavaScript. After a click: exactly one small chunk, cached forever.
+The handler is not executed during initial paint. The browser loads its lazy chunk only after interaction. Handlers receive `{ element, event, scope }` when those values are needed. Keep captured values serializable and do not capture database clients, secrets, DOM nodes, or class instances.
 
-For stateful logic inside handlers, import fine-grained signals from `@mohammedaydan/reactivity` (`state`, `computed`, `batch`) and synchronize the DOM explicitly â€” signals are plain primitives, not a reactivity-to-DOM binding layer.
+## Fine-grained Signal bindings
 
-### Compact authoring helpers
-
-Nexis keeps the low-level primitives available, but common code can now be written with less ceremony. Use `cx` to combine conditional Tailwind classes while resolving conflicting utilities, and use `useState` when a tuple is more readable than accessing `.set` directly:
+Nexis also supports direct Signal-to-DOM updates without manual `textContent` assignments and without component rerenders. Direct Signal reads are lowered conservatively:
 
 ```tsx
-import { useState } from '@mohammedaydan/core'
-import { cx } from '@mohammedaydan/css'
+import { state } from '@mohammedaydan/core'
 
-export default function Panel() {
-  const [open, setOpen] = useState(false)
+const count = state(0)
+
+export default function Status() {
+  return <output>{count()}</output>
+}
+```
+
+The compiler keeps the initial SSR value, emits a stable binding marker, and the browser subscribes the target through `effect()`. When `count.set(...)` runs, only the bound target is changed.
+
+Use explicit directives when the target is a DOM property or the intended binding should be unambiguous:
+
+```tsx
+import { state } from '@mohammedaydan/core'
+
+const name = state('Ada')
+const busy = state(false)
+const selected = state(false)
+
+export default function ProfileForm() {
   return (
-    <section className={cx('rounded-xl p-6', open() ? 'block' : 'hidden')}>
-      <button
-        className="rounded bg-indigo-600 px-3 py-2 text-white"
-        onClick$={({ event }) => {
-          event.preventDefault()
-          setOpen((value) => !value)
-        }}
-      >
-        Toggle panel
+    <form>
+      <input bindValue$={name} aria-label="Name" />
+      <input type="checkbox" bindChecked$={selected} aria-label="Selected" />
+      <button bindDisabled$={busy} type="submit">
+        Save {name()}
       </button>
-    </section>
+      <p bindHidden$={busy}>Ready</p>
+    </form>
   )
 }
 ```
 
-Any `on<Event>$` prop becomes a lazy boundary, not only `onClick$`. For example, `onInput$`, `onChange$`, `onSubmit$`, and keyboard events receive the original DOM event through `{ event }` and the target element through `{ element }`.
+The supported directives and runtime targets are:
 
-Server actions also support a concise form without sacrificing validation or authorization:
+| Directive       | Runtime target | Typical use                                     |
+| --------------- | -------------- | ----------------------------------------------- |
+| `bindText$`     | `text`         | Replace the target text content                 |
+| `bindValue$`    | `value`        | Synchronize an input, textarea, or select value |
+| `bindChecked$`  | `checked`      | Synchronize a checkbox or radio state           |
+| `bindDisabled$` | `disabled`     | Enable or disable a form control                |
+| `bindHidden$`   | `hidden`       | Toggle an element’s hidden property             |
+
+The public client primitive is:
 
 ```ts
-const saveProfile = action(
-  validateProfile,
-  async (_context, profile) => {
-    return persistProfile(profile)
-  },
-  authorizeProfile,
-)
+bindSignalToDOM(
+  scopeId: string,
+  node: Text | HTMLElement,
+  targetProperty: 'text' | 'value' | 'checked' | 'disabled' | 'hidden',
+): () => void
 ```
 
-The object form remains supported when named fields are clearer.
+It resolves a registered `nx:signal:<id>` or `nx:store:<id>`, applies the current value, installs an effect, and returns a disposer. The runtime mutates the target directly. It does not rerun the component and it does not perform virtual-DOM reconciliation.
 
-### Boundaries and guarantees
+Automatic lowering intentionally does not guess arbitrary dependency graphs. An expression such as `{count() + ' items'}` remains ordinary SSR output and emits a compiler diagnostic recommending an explicit directive. Use `bindText$` when a complex expression must be updated as one binding.
 
-- Handler expressions must be serializable (arrow functions closing over DOM-free values).
-- Server-only imports cannot leak into client modules â€” the compiler rejects them (`NEXIS_SERVER_IMPORT_IN_CLIENT`).
-- Secret-like environment access in shipped code is a hard error (`NEXIS_SECRET_EXPOSURE`).
-- Inline static style objects (`style={{ color: 'red' }}`) compile to hash-scoped CSS classes; dynamic styles do not exist by design.
+A route that contains only events receives `nexis-bootstrap.js`. A route that contains bindings receives the separate `nexis-bindings.js` runtime in addition to any required event bootstrap. Static routes receive neither runtime.
 
----
+## State and reactivity
 
-## Render modes
+Signals are callable for reads and expose a readonly `.value` getter. Update them with `.set(...)` or `.setValue(...)`; do not assign to `.value`.
 
-Routes choose how their HTML is produced and cached through `renderRoute` from `@mohammedaydan/renderer`. Four tempos cover the spectrum:
+```ts
+import { batch, computed, effect, state } from '@mohammedaydan/reactivity'
+
+const firstName = state('Ada')
+const lastName = state('Lovelace')
+const fullName = computed(() => `${firstName()} ${lastName()}`)
+
+const dispose = effect(() => {
+  console.log(fullName())
+})
+
+batch(() => {
+  firstName.set('Grace')
+  lastName.set('Hopper')
+})
+
+dispose()
+```
+
+Stores provide `value`, `snapshot()`, `set`, `select`, `subscribe`, and `dispose`. Keep route and user state request-local, give effects a clear owner, and dispose stores and bindings when their route or application lifetime ends. Do not use a mutable global signal for private request data.
+
+## Rendering modes
+
+`@mohammedaydan/renderer` provides four render modes through `renderRoute`:
+
+| Mode    | Configuration                          | Cache behavior                         | Appropriate use                              |
+| ------- | -------------------------------------- | -------------------------------------- | -------------------------------------------- |
+| Static  | `{ mode: 'static' }`                   | Public and immutable                   | Content that does not depend on a request    |
+| ISR     | `{ mode: 'isr', revalidate: seconds }` | Shared cache with bounded revalidation | Content that can be regenerated periodically |
+| Server  | `{ mode: 'server' }`                   | Private, no shared cache               | Request-specific or personalized content     |
+| Partial | `{ mode: 'partial' }`                  | Public shell with partial request work | Public pages with controlled dynamic regions |
 
 ```ts
 import { renderRoute } from '@mohammedaydan/renderer'
 
-const output = await renderRoute({
-  key: '/feed',
+const result = await renderRoute({
+  key: '/news',
   mode: { mode: 'isr', revalidate: 60 },
-  render: () => renderFeed(),
-  cache, // ISR requires an injected cache implementation
+  render: () => renderNewsPage(),
+  cache,
 })
 
-output.html // ready-to-serve HTML
-output.cacheControl // header value for this mode
-output.stale // true when stale-while-revalidate regenerated it
+result.html
+result.cacheControl
+result.stale
 ```
 
-| Mode    | Export shape                           | Cache-Control emitted | Use for                                        |
-| ------- | -------------------------------------- | --------------------- | ---------------------------------------------- |
-| **SSG** | `{ mode: 'static' }` _(default)_       | `public, immutable`   | Content that does not need a request to exist  |
-| **ISR** | `{ mode: 'isr', revalidate: seconds }` | `s-maxage=<seconds>`  | Freshness within a bounded regeneration window |
-| **SSR** | `{ mode: 'server' }`                   | `private, no-store`   | Personal or request-time data                  |
-| **PPR** | `{ mode: 'partial' }`                  | `public, max-age=0`   | A public shell with per-request partials       |
+ISR requires a cache implementation and validates the revalidation interval. Server-rendered output must not be placed in a shared cache unless the application has explicitly designed a safe variation strategy.
 
-ISR validates `revalidate` (1 second â€“ 365 days) and regenerates lazily: requests inside the window serve cached HTML instantly; the first request after expiry triggers regeneration and reports `stale: true`.
+## CSS and Tailwind
 
----
+Inline static style objects are extracted into CSS at build time. For Tailwind CSS 4, create the application with `--tailwind`; the scaffold adds `@tailwindcss/vite`, creates `src/styles.css`, and configures the generated Vite integration.
 
-## Media & SEO built in
+The `@mohammedaydan/css` package provides `cx` for composing class names:
 
-### Images without layout shift
+```tsx
+import { cx } from '@mohammedaydan/css'
 
-`@mohammedaydan/media` generates AVIF and WebP variants at multiple widths via sharp, returning everything needed for responsive `srcset` markup:
-
-```ts
-import { transformImage, imageAttributes } from '@mohammedaydan/media'
-
-const variants = await transformImage(sourceSvgOrBitmap, 'hero', [320, 640])
-// â†’ [{ format: 'webp' | 'avif', width, fileName, bytes }, ...]
+export function Card({ featured }: { readonly featured: boolean }) {
+  return (
+    <article className={cx('rounded-xl border p-6', featured && 'border-indigo-500')}>
+      Content
+    </article>
+  )
+}
 ```
 
-Because each variant carries explicit intrinsic dimensions, CLS from late-loading media is prevented by construction rather than patched afterward.
+Prefer semantic class names and accessible HTML. Test responsive behavior, keyboard navigation, focus visibility, color contrast, and RTL layouts where they apply.
 
-### Self-hosted fonts
+## Media and SEO
+
+The media package can generate WebP and AVIF variants, responsive `picture` markup, self-hosted font rules, and optional persistent transform caches:
 
 ```ts
-import { fontFace } from '@mohammedaydan/media'
+import { imageAttributes, transformImage } from '@mohammedaydan/media'
 
-fontFace({ family: 'Inter', weight: [400], source: '/assets/inter.woff2' })
-// â†’ @font-face rule with font-display: swap, self-hosted â€” no third-party requests
+const variants = await transformImage(source, 'hero', [320, 640, 1024])
+const attributes = imageAttributes({
+  src: variants[0]?.fileName ?? '/images/hero.webp',
+  alt: 'Product overview',
+  width: 1024,
+  height: 640,
+})
 ```
 
-`selfHostFont(url)` / `downloadFont(url)` fetch and materialize remote fonts into your asset tree; `imageAttributes()` produces sanitized attribute records for template use.
+Use intrinsic dimensions, meaningful alternative text, and responsive sources. Treat remote image and font URLs as untrusted input and validate the allowed origin policy before fetching.
 
-### Structured SEO
+The SEO package provides typed head output, canonical URLs, JSON-LD validation and escaping, breadcrumbs, sitemaps, robots.txt, RSS, Atom, and related metadata helpers:
 
 ```ts
-import { renderHead, buildSitemap, buildRobots } from '@mohammedaydan/seo'
+import { buildRobots, buildSitemap, renderHead } from '@mohammedaydan/seo'
 
-renderHead({
+const head = renderHead({
   title: 'Home | Nexis App',
-  description: 'â€¦',
+  description: 'A server-rendered Nexis application.',
   canonical: 'https://example.com/',
-  jsonLd: { '@type': 'Organization', name: 'Example' },
+  jsonLd: { '@type': 'WebSite', name: 'Example' },
 })
-// â†’ <title>, meta description, canonical link, og tags, JSON-LD script (injection-safe)
 
-buildSitemap([{ url: 'https://example.com/', priority: 1 }])
-buildRobots('https://example.com/sitemap.xml', ['/admin'])
+const sitemap = buildSitemap([{ url: 'https://example.com/' }])
+const robots = buildRobots('https://example.com/sitemap.xml', ['/admin'])
 ```
 
-JSON-LD is escaped against `</script>` injection; URLs are validated to http(s); sitemaps and robots.txt emit from typed entries.
+URLs are validated, JSON-LD is escaped for safe embedding in a script element, and generated metadata should be tested against the actual published route inventory.
 
----
+## Server and deployment
 
-## CLI reference
+The repository exposes Fetch-native adapters for Node.js, Deno, and Cloudflare. The Node production server is provided by `@mohammedaydan/serve`; edge packages provide Deno and Cloudflare handlers. Keep request and response behavior consistent across adapters and test cache headers for each render mode.
 
-Every project ships the `nexis` binary:
+Production deployment should include the built `dist` directory, generated route modules, route HTML, assets, lazy chunks, manifests, feed files, sitemap and robots artifacts, and the runtime assets required by interactive or binding-enabled routes. Trust forwarded host and protocol headers only when the deployment is behind a controlled proxy and the explicit trust setting is enabled.
 
-| Command                | Purpose                                                                                                                                                                                                                                       |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `nexis dev`            | Dev SSR middleware compiles `src/routes/*` per request through `renderToString`, injecting route HTML, SEO head, and the resumability bootstrap into the shell outlets (HMR-capable)                                                          |     |
-| `nexis build`          | Execute the SSR engine at build time: prerender per-route HTML to `dist/client/<route>/index.html`, emit server modules to `dist/server/routes/`, hashed handler chunks, the resumability bootstrap, extracted CSS, and `nexis-manifest.json` |
-| `nexis start`          | Serve a production build locally                                                                                                                                                                                                              |
-| `nexis check --budget` | Build, then enforce the three byte budgets per route; fails loudly with violation messages                                                                                                                                                    |
-| `nexis analyze`        | Report per-route output: client JS (gzipped), CSS bytes, interactive/static mode                                                                                                                                                              |
-| `nexis routes`         | List discovered routes from `src/routes`                                                                                                                                                                                                      |
-| `nexis create <name>`  | Scaffold a new project (same engine as this initializer)                                                                                                                                                                                      |
+Health checks, graceful shutdown, bounded request bodies, safe cookies, strict Origin validation for Actions, and secret management belong in the deployment configuration rather than in page components. Never place credentials in client code or generated HTML.
 
-Route discovery walks `src/routes/**/*.{tsx,jsx,ts,js}`; `layout.*` files are excluded from route emission. The application `index.html` is a pure shell: it must contain the `<!--nexis-head-outlet-->`, `<!--nexis-app-outlet-->`, and `<!--nexis-scripts-outlet-->` markers and no pre-baked body content - anything rendered there bypasses the engine.
+## CLI commands
 
----
+The installed `nexis` binary and repository scripts expose the framework workflow:
 
-## Architecture
+| Command                | Purpose                                                                                             |
+| ---------------------- | --------------------------------------------------------------------------------------------------- |
+| `nexis dev`            | Run the Vite development server with Nexis SSR middleware and hot updates                           |
+| `nexis build`          | Build route HTML, server modules, assets, lazy chunks, runtimes, feeds, redirects, and the manifest |
+| `nexis start`          | Serve a production build locally                                                                    |
+| `nexis serve`          | Serve built client output with route-aware production behavior                                      |
+| `nexis check --budget` | Run build and byte-budget checks                                                                    |
+| `nexis analyze`        | Report route output and client-size metrics                                                         |
+| `nexis routes`         | List discovered route files                                                                         |
+| `nexis create <name>`  | Scaffold an application                                                                             |
+
+A production build commonly contains:
 
 ```text
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚                      your application                       â”‚
-â”‚            src/routes/*.tsx  Â·  public assets               â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-                â”‚ nexis dev / build          â”‚
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â–¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â–¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚  @mohammedaydan/cli         â”‚  â”‚  @mohammedaydan/compiler   â”‚
-â”‚  (vite orchestration)       â”‚  â”‚  boundaries Â· budgets      â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-        â”‚             â”‚
-â”Œâ”€â”€â”€â”€â”€â”€â”€â–¼â”€â”€â”€â”€â”€â”€â” â”Œâ”€â”€â”€â”€â–¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚ vite-plugin  â”‚ â”‚ dist/server/routes (ESM)   â”‚
-â”‚ onClick$ â†’   â”‚ â”‚ dist/nexis-chunks/*.js     â”‚
-â”‚ lazy chunks  â”‚ â”‚ dist/nexis-bootstrap.js    â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜ â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-        â”‚
-â”Œâ”€â”€â”€â”€â”€â”€â”€â–¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚ core (JSX primitives) Â· renderer (modes/streams) Â·       â”‚
-â”‚ reactivity (signals) Â· seo Â· media Â· server Â· adapters   â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+dist/
+├── client/
+│   ├── index.html
+│   ├── assets/
+│   ├── og/
+│   ├── nexis-manifest.json
+│   ├── nexis-bootstrap.js       # event routes only
+│   ├── nexis-bindings.js        # binding routes only
+│   ├── robots.txt
+│   ├── sitemap.xml
+│   ├── feed.xml
+│   └── atom.xml
+├── server/routes/                # generated SSR modules
+└── nexis-chunks/                 # hashed lazy handlers
 ```
 
-**Package map**
+Exact generated files depend on the route inventory and configuration. Treat `nexis-manifest.json` and the build output as the source of truth for a particular release.
 
-| Package                       | Responsibility                                                                    |
-| ----------------------------- | --------------------------------------------------------------------------------- |
-| `@mohammedaydan/core`         | JSX element primitives, component types, request context                          |
-| `@mohammedaydan/jsx-runtime`  | Automatic JSX factory (`jsx`/`jsxs`/`Fragment`)                                   |
-| `@mohammedaydan/compiler`     | Import-boundary validation, secret detection, budget enforcement                  |
-| `@mohammedaydan/vite-plugin`  | `onClick$` extraction, dev middleware for bootstrap/chunks, static CSS extraction |
-| `@mohammedaydan/cli`          | `nexis` command surface and build pipeline                                        |
-| `@mohammedaydan/renderer`     | String/stream rendering, the four render modes                                    |
-| `@mohammedaydan/reactivity`   | Fine-grained signals: `state`, `computed`, `batch`                                |
-| `@mohammedaydan/state`        | Request-scoped state primitives                                                   |
-| `@mohammedaydan/server`       | HTTP server composition                                                           |
-| `@mohammedaydan/adapters`     | Node / Cloudflare / Deno adapter contracts                                        |
-| `@mohammedaydan/dev-server`   | Development serving utilities                                                     |
-| `@mohammedaydan/actions`      | Server actions                                                                    |
-| `@mohammedaydan/client`       | Client-side helpers for resumed islands                                           |
-| `@mohammedaydan/router`       | Route table primitives                                                            |
-| `@mohammedaydan/css`          | CSS extraction utilities                                                          |
-| `@mohammedaydan/media`        | Image variant pipeline, self-hosted fonts                                         |
-| `@mohammedaydan/seo`          | Head tags, JSON-LD, sitemaps, robots                                              |
-| `@mohammedaydan/create-nexis` | Project initializer (`create-nexis`, `create-nexis-app` bins)                     |
+## Package map
 
-All packages live under the `@mohammedaydan` scope on GitHub Packages and share the same version line.
+| Package                           | Responsibility                                                                              |
+| --------------------------------- | ------------------------------------------------------------------------------------------- |
+| `@mohammedaydan/core`             | Render nodes, component types, request context, and reactivity re-exports                   |
+| `@mohammedaydan/jsx-runtime`      | Automatic JSX runtime used by `react-jsx` projects                                          |
+| `@mohammedaydan/reactivity`       | Signals, computed values, effects, batching, roots, and cleanup                             |
+| `@mohammedaydan/state`            | Serializable stores, selectors, registries, and disposal                                    |
+| `@mohammedaydan/compiler`         | Boundary analysis, capture diagnostics, and byte-budget enforcement                         |
+| `@mohammedaydan/vite-plugin`      | JSX transformation, lazy chunks, ScopeRef metadata, binding markers, and development assets |
+| `@mohammedaydan/client`           | Scope materialization, delegated events, DOM binding runtime, and cleanup                   |
+| `@mohammedaydan/renderer`         | HTML/string/stream rendering and render modes                                               |
+| `@mohammedaydan/router`           | Route discovery, matching, parameters, and resolution                                       |
+| `@mohammedaydan/seo`              | Head tags, canonicals, JSON-LD, sitemap, robots, RSS, and Atom                              |
+| `@mohammedaydan/media`            | Image variants, responsive markup, fonts, and media caching                                 |
+| `@mohammedaydan/actions`          | Typed server Actions, validation, Origin checks, cookies, and idempotency                   |
+| `@mohammedaydan/server`           | Server composition and request-scoped data helpers                                          |
+| `@mohammedaydan/adapters`         | Node, Deno, Cloudflare, and Fetch adapter contracts                                         |
+| `@mohammedaydan/serve`            | Node production server and middleware                                                       |
+| `@mohammedaydan/serve-deno`       | Deno edge handler package                                                                   |
+| `@mohammedaydan/serve-cloudflare` | Cloudflare edge handler package                                                             |
+| `@mohammedaydan/telemetry`        | Optional Web Vitals and telemetry receiver primitives                                       |
+| `@mohammedaydan/cli`              | CLI orchestration and production build pipeline                                             |
+| `@mohammedaydan/create-nexis`     | Project initializer and compatibility initializer binaries                                  |
 
----
+## Verification workflow
 
-## Testing and release gates
+From the repository root, install dependencies and run the gates in a clean environment:
 
-```powershell
-pnpm install          # workspace install
-pnpm -r build         # compile every package
-pnpm typecheck        # tsc -b across project references
-pnpm lint             # eslint
-pnpm format:check     # prettier
-pnpm test             # vitest unit + integration
-pnpm test:e2e         # Playwright, real Chromium
-pnpm test:node-runtime   # Node adapter smoke
-pnpm test:edge           # Miniflare/workerd smoke
-pnpm test:deno           # Deno adapter smoke
-pnpm test:deno:e2e       # Deno render-mode + bootstrap spec
-pnpm security         # pnpm audit --audit-level high
-pnpm budget           # compiler budget suite
-pnpm publish:github:dry  # pack validation (no upload)
+```bash
+pnpm install
+pnpm build
+pnpm typecheck
+pnpm lint
+pnpm format:check
+pnpm test
+pnpm check:budget
+pnpm test:parity
+pnpm test:node-runtime
+pnpm test:edge
+pnpm test:e2e
+pnpm test:deno:e2e   # requires an actual Deno executable
+pnpm security
 ```
 
-Releases are tag-driven: pushing `v<version>` triggers the publishing workflow, which re-runs every gate, validates packed tarballs, publishes all non-private packages in dependency order using the workflow `GITHUB_TOKEN` (`contents: read`, `packages: write`), and finally verifies the initializer resolves from the registry.
+The repository’s Playwright suite verifies SSR output, no-JavaScript static routes, lazy event chunks, binding behavior, metadata, Actions, 404 responses, and showcase routes. Runtime parity tests compare Node and edge contracts. Local Lighthouse and benchmark results are controlled lab measurements; they are not field Web Vitals, production traffic measurements, search rankings, or CDN performance guarantees.
 
----
+## Documentation and contribution
 
-## Repository map
+Start with the [English documentation index](docs/en/README.md). The package contains focused guides for architecture, project creation, pages and components, routing, resumability, state, Actions, CSS, media, SEO, deployment, testing, security, API reference, troubleshooting, best practices, a complete application example, releases, CLI configuration, contribution, and terminology.
 
-```text
-packages/     one directory per published package
-examples/     basic-app, landing-page, blog, ecommerce, hello
-tests/
-  e2e/        Playwright specs + fixture builders + Deno runtime spec
-  parity/     cross-runtime smoke scripts (Node, workerd, Deno)
-  integration/security-isolation.test.ts
-docs/         architecture notes and ADRs
-.github/      quality.yml (per-push) Â· publish-packages.yml (tag-driven)
-```
+Before opening a pull request, run the relevant unit and integration tests, the complete typecheck, lint and formatting checks, the browser suite for runtime changes, and `git diff --check`. Keep commits focused, document compatibility changes, and never commit credentials or generated secrets.
 
-## Status
+## Security
 
-**v1.0.0.** Tailwind CSS, editor tooling, resumable events, and compact authoring helpers are supported alongside the existing runtime invariants. See `SECURITY.md` for reporting policy and credential handling.
+Review `SECURITY.md` for the vulnerability-reporting process and credential-handling guidance. Security reports should not include credentials or exploit details in public issues.
