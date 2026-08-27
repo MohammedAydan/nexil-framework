@@ -1,6 +1,20 @@
 # Nexis next: static asset delivery inventory
 
-> **Status: v1.2.0 is unreleased.** This document describes the intended package contents after `v1.1.0`. It does not describe an installable version until the release commit is tagged and GitHub Packages publishing has completed.
+> **Status: v1.3.0 is unreleased.** Nexis `v1.2.0` is published. This document describes the intended package contents after that tag and does not describe an installable version until the release commit is tagged and GitHub Packages publishing has completed.
+
+## Semantic Link navigation without a virtual DOM
+
+`@mohammedaydan/router` extends `Link` with a semantic `data-nx-link` marker while preserving a normal local absolute `href`. A Link remains an ordinary anchor for crawlers and JavaScript-disabled browsers. The build emits `nexis-navigation.js` only for routes whose rendered HTML contains that marker; `BuildRouteRecord.navigationGzipBytes` reports its per-route compressed cost, with `0` for routes without Link.
+
+The small delegated runtime accepts only unmodified primary same-origin clicks. It uses a normal HTML fetch, validates the framework-owned `#app` outlet, updates owned metadata, replaces that outlet directly, and integrates history, scroll restoration, bounded public prefetch, interrupted-request cancellation, bfcache cleanup, and optional View Transitions. It bypasses native escape hatches and falls back to ordinary navigation for any unsuccessful HTML response or incomplete document. It does not mount a client renderer, build a virtual tree, or diff a component hierarchy.
+
+Real-browser coverage proves the normal anchor fallback without JavaScript, direct outlet navigation without a document reload, History back behavior, public navigation fetch tagging, and a destination route that loads State Engine, lazy handler, and Signal-to-DOM binding behavior after a Link swap.
+
+## Explicit Context scopes
+
+`@mohammedaydan/core` now exposes `createContextScope`, `provideContext`, and `withContext` alongside the compatible `createContext` API. `Context.use()` is a concise alias for `useContext()`. `provideContext` derives a child scope rather than mutating its parent, and `createRequestContext` owns a new scope for every request. CLI SSR/SSG rendering passes that scope to routes and layouts as `context.scope`.
+
+`Provider` retains a synchronous structural convenience and rejects an async child rather than retaining an ambient value past `await`. Async code carries the scope explicitly. Context is dependency injection for an explicit lifetime; it does not persist or serialize a value, make a value client-private, or turn module state into request-safe data. Signals and Stores continue to update only explicitly bound DOM targets without component rerendering or VDOM reconciliation.
 
 ## Starter Engine and project templates
 

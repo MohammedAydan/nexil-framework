@@ -35,6 +35,18 @@ describe('Nexis performance budgets', () => {
     ).toThrow(/limit is 15360/)
   })
 
+  it('fails a Link route whose navigation runtime exceeds its 6KB gzip budget', () => {
+    expect(() =>
+      assertBudget({
+        route: '/docs',
+        interactive: false,
+        clientJsGzipBytes: 0,
+        bootstrapGzipBytes: 0,
+        navigationGzipBytes: 6 * 1024 + 1,
+      }),
+    ).toThrow(/Navigation runtime.*limit is 6144/)
+  })
+
   it('fails oversized bootstrap output and accepts a documented override', () => {
     expect(
       checkBudget({

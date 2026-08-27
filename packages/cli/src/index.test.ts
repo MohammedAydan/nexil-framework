@@ -290,6 +290,95 @@ export default function Home() { return <button onClick$={() => accountBalance.s
       await rm(parent, { recursive: true, force: true })
     }
   })
+
+  it('emits the direct navigation runtime only for routes that render Link', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-navigation-'))
+    try {
+      const staticDirectory = await createProject('navigation-static', parent)
+      await writeFile(
+        join(staticDirectory, 'src/routes/index.tsx'),
+        'export default function Home() { return <main>Static HTML</main> }\n',
+        'utf8',
+      )
+      await runCli(['build'], staticDirectory)
+      const staticHtml = await readFile(join(staticDirectory, 'dist/client/index.html'), 'utf8')
+      expect(staticHtml).not.toContain('/nexis-navigation.js')
+      const staticManifest = JSON.parse(
+        await readFile(join(staticDirectory, 'dist/nexis-manifest.json'), 'utf8'),
+      ) as { routes: Array<{ navigationGzipBytes: number }> }
+      expect(staticManifest.routes[0]?.navigationGzipBytes).toBe(0)
+      await expect(
+        readFile(join(staticDirectory, 'dist/client/nexis-navigation.js'), 'utf8'),
+      ).rejects.toThrow()
+
+      const linkDirectory = await createProject('navigation-link', parent)
+      await writeFile(
+        join(linkDirectory, 'src/routes/index.tsx'),
+        `import { Link } from '@mohammedaydan/router'
+export default function Home() { return <main><Link href="/about" prefetch="intent">About</Link></main> }
+`,
+        'utf8',
+      )
+      await writeFile(
+        join(linkDirectory, 'src/routes/about.tsx'),
+        'export default function About() { return <main>About Nexis</main> }\n',
+        'utf8',
+      )
+      await runCli(['build'], linkDirectory)
+      const linkHtml = await readFile(join(linkDirectory, 'dist/client/index.html'), 'utf8')
+      expect(linkHtml).toContain('href="/about"')
+      expect(linkHtml).toContain('data-nx-link="push"')
+      expect(linkHtml).toContain('data-nx-prefetch="intent"')
+      expect(linkHtml).toContain('/nexis-navigation.js')
+      expect(
+        await readFile(join(linkDirectory, 'dist/client/nexis-navigation.js'), 'utf8'),
+      ).toContain('history.pushState')
+      const linkManifest = JSON.parse(
+        await readFile(join(linkDirectory, 'dist/nexis-manifest.json'), 'utf8'),
+      ) as { routes: Array<{ route: string; navigationGzipBytes: number }> }
+      expect(
+        linkManifest.routes.find((route) => route.route === '/')?.navigationGzipBytes,
+      ).toBeGreaterThan(0)
+    } finally {
+      await rm(parent, { recursive: true, force: true })
+    }
+  })
+
+  it('creates an isolated ContextScope for each statically rendered Route and Layout', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-context-scope-'))
+    try {
+      const directory = await createProject('context-scope-app', parent)
+      await writeFile(
+        join(directory, 'src/routes/_layout.tsx'),
+        `import { createContext, provideContext } from '@mohammedaydan/core'
+const RequestIdentity = createContext('missing')
+export default function Layout({ children }: { children: unknown }, context?: { readonly requestId?: string; readonly scope?: unknown }) {
+  const scope = provideContext(context?.scope as never, RequestIdentity, context?.requestId ?? 'missing')
+  return <main data-request-context={RequestIdentity.use(scope)}>{children}</main>
+}
+`,
+        'utf8',
+      )
+      await writeFile(
+        join(directory, 'src/routes/index.tsx'),
+        'export default function Home() { return <h1>Home</h1> }\n',
+        'utf8',
+      )
+      await writeFile(
+        join(directory, 'src/routes/about.tsx'),
+        'export default function About() { return <h1>About</h1> }\n',
+        'utf8',
+      )
+      await runCli(['build'], directory)
+      const home = await readFile(join(directory, 'dist/client/index.html'), 'utf8')
+      const about = await readFile(join(directory, 'dist/client/about/index.html'), 'utf8')
+      expect(home).toContain('data-request-context="build:/"')
+      expect(about).toContain('data-request-context="build:/about"')
+      expect(about).not.toContain('data-request-context="build:/"')
+    } finally {
+      await rm(parent, { recursive: true, force: true })
+    }
+  })
 })
 
 it('generates routes, components, and actions with safe paths', async () => {

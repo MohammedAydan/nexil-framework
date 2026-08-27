@@ -2,6 +2,7 @@ export const DEFAULT_BUDGET = {
   staticClientJsBytes: 0,
   interactiveClientJsGzipBytes: 15 * 1024,
   bootstrapGzipBytes: 1024,
+  navigationGzipBytes: 6 * 1024,
 } as const
 
 export interface RouteBudgetInput {
@@ -9,12 +10,14 @@ export interface RouteBudgetInput {
   readonly interactive: boolean
   readonly clientJsGzipBytes: number
   readonly bootstrapGzipBytes: number
+  /** Optional because only routes that render Link emit the navigation runtime. */
+  readonly navigationGzipBytes?: number
   readonly overrideReason?: string
 }
 
 export interface BudgetViolation {
   readonly route: string
-  readonly metric: 'client-js' | 'bootstrap'
+  readonly metric: 'client-js' | 'bootstrap' | 'navigation'
   readonly actualBytes: number
   readonly limitBytes: number
   readonly message: string
@@ -48,6 +51,16 @@ export function checkBudget(input: RouteBudgetInput, budget = DEFAULT_BUDGET): B
       actualBytes: input.bootstrapGzipBytes,
       limitBytes: budget.bootstrapGzipBytes,
       message: `Bootstrap is ${input.bootstrapGzipBytes} bytes; limit is ${budget.bootstrapGzipBytes}.`,
+    })
+  }
+
+  if ((input.navigationGzipBytes ?? 0) > budget.navigationGzipBytes) {
+    violations.push({
+      route: input.route,
+      metric: 'navigation',
+      actualBytes: input.navigationGzipBytes ?? 0,
+      limitBytes: budget.navigationGzipBytes,
+      message: `Navigation runtime for ${input.route} is ${input.navigationGzipBytes} bytes; limit is ${budget.navigationGzipBytes}.`,
     })
   }
 

@@ -1,5 +1,6 @@
 import { element } from '@mohammedaydan/core'
 import type { Child, ElementNode } from '@mohammedaydan/core'
+export { NEXIS_NAVIGATION_RUNTIME } from './navigation.js'
 
 export interface RouteParam {
   readonly name: string
@@ -25,12 +26,23 @@ export interface RouteMatch {
 export interface LinkProps {
   readonly href: string
   readonly prefetch?: 'intent' | 'viewport' | 'none'
+  readonly replace?: boolean
+  readonly scroll?: boolean
+  readonly transition?: boolean
   readonly children?: Child | readonly Child[]
   readonly [key: string]: unknown
 }
 
 /** Render a framework-aware anchor. Prefetch intent/viewport is consumed by the client runtime. */
-export function Link({ href, prefetch = 'none', children, ...props }: LinkProps): ElementNode {
+export function Link({
+  href,
+  prefetch = 'none',
+  replace = false,
+  scroll = true,
+  transition = true,
+  children,
+  ...props
+}: LinkProps): ElementNode {
   if (!href.startsWith('/') || href.startsWith('//'))
     throw new TypeError('Nexis Link href must be an internal absolute path.')
   const linkChildren: Child[] =
@@ -41,7 +53,14 @@ export function Link({ href, prefetch = 'none', children, ...props }: LinkProps)
         : [children as Child]
   return element(
     'a',
-    { ...props, href, ...(prefetch !== 'none' ? { 'data-nx-prefetch': prefetch } : {}) },
+    {
+      ...props,
+      href,
+      'data-nx-link': replace ? 'replace' : 'push',
+      ...(prefetch !== 'none' ? { 'data-nx-prefetch': prefetch } : {}),
+      ...(scroll ? {} : { 'data-nx-scroll': 'false' }),
+      ...(transition ? {} : { 'data-nx-transition': 'false' }),
+    },
     ...linkChildren,
   )
 }

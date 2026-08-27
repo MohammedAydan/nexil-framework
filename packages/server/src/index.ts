@@ -1,4 +1,4 @@
-import type { RequestContext } from '@mohammedaydan/core'
+import { createRequestContext, type RequestContext } from '@mohammedaydan/core'
 
 export interface DataContext {
   readonly request: Request
@@ -125,5 +125,5 @@ export function createSecurityHeaders(nonce?: string): Headers {
 }
 
 export function requestContextFromData(context: DataContext, id: string): RequestContext {
-  return { request: context.request, id, values: new Map() }
+  return createRequestContext(context.request, id)
 }

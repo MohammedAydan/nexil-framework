@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
   createContext,
+  createContextScope,
   createRequestContext,
   element,
   ErrorBoundary,
   For,
   Form,
   isSerializable,
+  provideContext,
   Show,
   SubmitButton,
   Suspense,
@@ -52,6 +54,37 @@ describe('core nodes', () => {
     expect(context.useContext()).toBe('default')
   })
 
+  it('isolates explicit context scopes and supports concise reads without mutating parents', () => {
+    const session = createContext('guest')
+    const root = createContextScope()
+    const alice = provideContext(root, session, 'alice')
+    const bob = provideContext(root, session, 'bob')
+    const nested = provideContext(alice, session, 'admin')
+    expect(session.use(root)).toBe('guest')
+    expect(session.use(alice)).toBe('alice')
+    expect(session.useContext(bob)).toBe('bob')
+    expect(session.use(nested)).toBe('admin')
+    expect(session.use(alice)).toBe('alice')
+    expect(
+      session.Provider({
+        scope: alice,
+        value: 'owner',
+        children: () => text(session.use()),
+      }),
+    ).toEqual(text('owner'))
+    expect(session.use(alice)).toBe('alice')
+  })
+
+  it('rejects an async Provider child instead of leaking an implicit context across requests', () => {
+    const session = createContext('guest')
+    expect(() =>
+      session.Provider({
+        value: 'alice',
+        children: (() => Promise.resolve(text('late'))) as unknown as () => ReturnType<typeof text>,
+      }),
+    ).toThrow(/synchronously/)
+  })
+
   it('converts caught errors to a fallback child', () => {
     expect(
       ErrorBoundary({
@@ -95,5 +128,6 @@ describe('serialization and request context', () => {
     expect(first.values.get('request-id')).toBe('first')
     expect(second.values.size).toBe(0)
     expect(first.id).not.toBe(second.id)
+    expect(first.scope).not.toBe(second.scope)
   })
 })

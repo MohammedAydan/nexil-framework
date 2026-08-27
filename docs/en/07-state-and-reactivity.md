@@ -127,9 +127,47 @@ When the store is disposed, its underlying signal and selector computeds must st
 
 `createStateRegistry()` can create or reuse stores by scope and key. Use stable, validated keys and dispose the registry when the owning route or application lifetime ends.
 
+### Explicit browser-global Store across Link navigation
+
+Use `createStore(initial, 'global')` only for serializable, non-secret browser state that should survive a successful Nexis Link outlet replacement, such as a client-side theme preference or a temporary cart. A captured `global` Store reuses its browser registry entry after a Link swap; the default `local`, `shared`, `route`, and `layout` Store captures are cleared with the outgoing route bindings.
+
+```ts
+const preferences = createStore({ theme: 'light' as const }, 'global')
+```
+
+This is an explicit browser lifetime, not persistent storage. Reloading the document resets it unless the application separately persists and validates a safe value. It must not contain credentials, request-private data, or authorization decisions.
+
 ## SSR and state
 
-Do not use a mutable singleton for private request data. Create state inside the request or render owner. Sharing a global signal between requests can leak one user’s data into another request.
+Do not use a mutable singleton for private request data. Create state inside the request or render owner. Sharing a global signal between requests can leak one user’s data into another request. The browser-global Store option above never makes a server module singleton request-safe.
+
+## Context: explicit shared ownership
+
+`createContext(defaultValue)` is Nexis dependency injection, not a hidden global store. It can pass a Signal or Store through a small synchronous subtree without prop drilling. Use `context.use()` (or the compatible `context.useContext()`) to read the nearest Provider value.
+
+```tsx
+import { createContext, state } from '@mohammedaydan/core'
+
+const Theme = createContext(state<'light' | 'dark'>('light'))
+
+export function ThemeSection() {
+  const theme = state<'light' | 'dark'>('dark')
+  return Theme.Provider({
+    value: theme,
+    children: () => <button onClick$={() => Theme.use().set('light')}>Use light theme</button>,
+  })
+}
+```
+
+For SSR adapters, use the explicit `ContextScope` supplied as `context.scope` to a route or component, or create one with `createContextScope()`. `provideContext(scope, context, value)` returns a child scope and never mutates the parent. This makes independent request scopes testable and prevents a value intended for one request from becoming a process-wide default.
+
+```ts
+const requestScope = createContextScope()
+const userScope = provideContext(requestScope, CurrentUser, { id: 'u_42' })
+const user = CurrentUser.use(userScope)
+```
+
+`Provider` resolves children synchronously by design. Pass a scope explicitly to async work with `withContext(scope, context, value, run)` instead of expecting an ambient stack to survive `await`. A Context value is not automatically serialized, persisted, or private; do not put request secrets in a client-captured Signal or Store.
 
 ## Fine-grained DOM bindings without hydration
 

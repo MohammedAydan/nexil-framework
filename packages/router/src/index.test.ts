@@ -74,7 +74,17 @@ it('matches URLs while exposing query parameters and hash fragments', () => {
 it('renders safe internal links with prefetch metadata', () => {
   expect(Link({ href: '/docs', prefetch: 'intent', children: 'Docs' })).toMatchObject({
     tag: 'a',
-    props: { href: '/docs', 'data-nx-prefetch': 'intent' },
+    props: { href: '/docs', 'data-nx-link': 'push', 'data-nx-prefetch': 'intent' },
+  })
+  expect(
+    Link({ href: '/settings', replace: true, scroll: false, transition: false }),
+  ).toMatchObject({
+    props: {
+      href: '/settings',
+      'data-nx-link': 'replace',
+      'data-nx-scroll': 'false',
+      'data-nx-transition': 'false',
+    },
   })
   expect(() => Link({ href: 'https://example.com' })).toThrow(/internal/)
 })

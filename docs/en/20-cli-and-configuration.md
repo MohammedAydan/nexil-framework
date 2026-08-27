@@ -108,6 +108,7 @@ dist/
 │   ├── nexis-bootstrap.js       # interactive routes only
 │   ├── nexis-bindings.js        # binding routes only
 │   ├── nexis-forms.js           # progressive Form routes only
+│   ├── nexis-navigation.js      # semantic Link routes only
 │   ├── robots.txt
 │   ├── sitemap.xml
 │   ├── feed.xml
@@ -116,7 +117,7 @@ dist/
 └── nexis-chunks/                 # hashed lazy handler chunks
 ```
 
-The current CLI writes `nexis-manifest.json`. `nexis-bootstrap.js` is emitted when an event boundary exists, `nexis-bindings.js` when transformed routes contain binding metadata, and `nexis-forms.js` when a route contains a progressive `Form`. Use the generated manifest and build logs as the release-specific source of truth.
+The current CLI writes `nexis-manifest.json`. `nexis-bootstrap.js` is emitted when an event boundary exists, `nexis-bindings.js` when transformed routes contain binding metadata, `nexis-forms.js` when a route contains a progressive `Form`, and `nexis-navigation.js` only when rendered HTML contains semantic Link markup. `BuildRouteRecord.navigationGzipBytes` is `0` for other routes. `nexis check` enforces the 6 KiB gzip budget for a navigation runtime in addition to the existing route and bootstrap budgets. Use the generated manifest and build logs as the release-specific source of truth.
 
 ## CI configuration
 
@@ -130,4 +131,4 @@ Use a clean checkout and a frozen lockfile. Cache package-manager downloads, not
 - Make defaults safe for shared caching.
 - Fail the build on invalid SEO or redirect data.
 - Record configuration changes in release notes.
-- Keep generated runtime assumptions synchronized with `nexis-bootstrap.js`, `nexis-bindings.js`, and `nexis-forms.js`.
+- Keep generated runtime assumptions synchronized with `nexis-bootstrap.js`, `nexis-bindings.js`, `nexis-forms.js`, and `nexis-navigation.js`.
