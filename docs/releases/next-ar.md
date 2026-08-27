@@ -1,6 +1,20 @@
 # Nexis next: جرد أصول التسليم الثابتة
 
-> **الحالة: v1.2.0 غير منشور.** يصف هذا المستند محتوى الحزم المستهدف بعد tag `v1.1.0`. لا يمثل إصدارًا قابلًا للتثبيت حتى يتم tag لالتزام الإصدار وينتهي النشر إلى GitHub Packages.
+> **الحالة: v1.3.0 غير منشور.** إصدار Nexis `v1.2.0` منشور. يصف هذا المستند محتوى الحزم المستهدف بعد هذا tag، ولا يمثل إصدارًا قابلًا للتثبيت حتى يتم tag لالتزام الإصدار وينتهي النشر إلى GitHub Packages.
+
+## تنقل Link دلالي بلا Virtual DOM
+
+يوسع `@mohammedaydan/router` واجهة `Link` بعلامة `data-nx-link` دلالية مع الحفاظ على `href` محلي مطلق عادي. يبقى Link anchor عاديًا للـcrawlers والمتصفحات بلا JavaScript. يخرج البناء `nexis-navigation.js` فقط في Routes التي يحتوي HTML الناتج لها على هذه العلامة، ويسجل `BuildRouteRecord.navigationGzipBytes` تكلفته المضغوطة لكل route بقيمة `0` عند عدم وجود Link.
+
+يقبل runtime الصغير المفوض primary clicks غير المعدلة داخل same-origin فقط. يجلب مستند HTML عاديًا، ويتحقق من outlet المملوك للفريمورك `#app`، ويحدث metadata التي يملكها، ويستبدل outlet مباشرة، مع History وscroll restoration وprefetch عام محدود وإلغاء الطلبات المتقاطعة وتنظيف bfcache وView Transitions اختيارية. يحتفظ بمخارج المتصفح الطبيعية ويعود لتنقل عادي عندما تفشل استجابة HTML أو تكون غير مكتملة. لا يركب client renderer ولا ينشئ virtual tree ولا يعمل diff لمكونات.
+
+يثبت Playwright anchor fallback بلا JavaScript، والتنقل باستبدال outlet بلا document reload، وسلوك History back، ووسم navigation fetch العام، وأن route الوجهة يحمل State Engine وlazy handler وSignal-to-DOM binding بعد Link swap.
+
+## ContextScope صريح
+
+يصدر `@mohammedaydan/core` الآن `createContextScope` و`provideContext` و`withContext` بجانب `createContext` المتوافقة. تمثل `Context.use()` اختصارًا لـ`useContext()`. تُنشئ `provideContext` child scope ولا تعدل parent، وتملك `createRequestContext` scope جديدًا لكل طلب. يمرر CLI SSR/SSG هذا scope إلى Routes وLayouts كـ`context.scope`.
+
+يبقى `Provider` وسيلة تركيب متزامنة ويرفض child غير المتزامن بدل إبقاء قيمة ambient بعد `await`. يحمل async code الـscope صراحة. Context هو dependency injection لعمر واضح؛ لا يحفظ أو يسلسل قيمة، ولا يجعلها خاصة على العميل، ولا يجعل module state آمنة تلقائيًا للطلب. تظل Signals وStores تحدث فقط أهداف DOM المرتبطة صراحة من دون component rerendering أو Virtual DOM reconciliation.
 
 ## Starter Engine وقوالب المشاريع
 

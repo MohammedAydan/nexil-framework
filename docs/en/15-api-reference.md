@@ -4,7 +4,7 @@ This is a practical map of the public APIs. The installed TypeScript declaration
 
 ## Core
 
-`@mohammedaydan/core` exposes RenderNode, ElementNode, Child, and related rendering types, plus the authoring APIs used by routes: `component`, `text`, `element`, `For`, `Show`, `createContext`, `ErrorBoundary`, `Suspense`, `Form`, and `SubmitButton`. It also re-exports the reactivity toolkit (`state`, `useState`, `computed`, `effect`, `watch`, `batch`, `untrack`, `createRoot`, `onCleanup`, and `resource`). Import reactive primitives from core or from `@mohammedaydan/reactivity` directly; stores come from `@mohammedaydan/state`, which generated projects depend on by default.
+`@mohammedaydan/core` exposes RenderNode, ElementNode, Child, and related rendering types, plus the authoring APIs used by routes: `component`, `text`, `element`, `For`, `Show`, `createContext`, `createContextScope`, `provideContext`, `withContext`, `createRequestContext`, `ErrorBoundary`, `Suspense`, `Form`, and `SubmitButton`. Context is explicit dependency injection with a synchronous Provider convenience; use a request-owned `ContextScope` for async work. It also re-exports the reactivity toolkit (`state`, `useState`, `computed`, `effect`, `watch`, `batch`, `untrack`, `createRoot`, `onCleanup`, and `resource`). Import reactive primitives from core or from `@mohammedaydan/reactivity` directly; stores come from `@mohammedaydan/state`, which generated projects depend on by default.
 
 ## Renderer
 
@@ -22,13 +22,14 @@ This is a practical map of the public APIs. The installed TypeScript declaration
 
 ## Router
 
-| API                              | Purpose                                             |
-| -------------------------------- | --------------------------------------------------- |
-| `routeFromFile(file)`            | Convert a filename into a RouteRecord               |
-| `matchRoute(route, pathname)`    | Match a pathname and extract parameters             |
-| `resolveRoute(routes, pathname)` | Select a route from a collection                    |
-| `Link(props)`                    | Create a typed internal link with prefetch metadata |
-| `parseUrlParts(url)`             | Parse pathname, query, and hash parts               |
+| API                              | Purpose                                                                            |
+| -------------------------------- | ---------------------------------------------------------------------------------- |
+| `routeFromFile(file)`            | Convert a filename into a RouteRecord                                              |
+| `matchRoute(route, pathname)`    | Match a pathname and extract parameters                                            |
+| `resolveRoute(routes, pathname)` | Select a route from a collection                                                   |
+| `Link(props)`                    | Emit a typed semantic internal anchor and opt into delegated direct-DOM navigation |
+| `NEXIS_NAVIGATION_RUNTIME`       | Build-time runtime source emitted only for pages that render Link markup           |
+| `parseUrlParts(url)`             | Parse pathname, query, and hash parts                                              |
 
 ## Reactivity
 
@@ -149,7 +150,7 @@ bindSignalToDOM(
 ): () => void
 ```
 
-It resolves a registered `nx:signal:<id>` or `nx:store:<id>` reference, installs an `effect()`, applies the current value immediately, and returns a disposer. Binding updates mutate the target directly; they do not rerun a component or reconcile a virtual DOM. `nexis-bindings.js` is emitted only for routes whose transformed output contains binding metadata; `nexis-forms.js` is emitted only when a route contains a progressive `Form`.
+It resolves a registered `nx:signal:<id>` or `nx:store:<id>` reference, installs an `effect()`, applies the current value immediately, and returns a disposer. Binding updates mutate the target directly; they do not rerun a component or reconcile a virtual DOM. `nexis-bindings.js` is emitted only for routes whose transformed output contains binding metadata; `nexis-forms.js` is emitted only when a route contains a progressive `Form`; and `nexis-navigation.js` is emitted only when rendered HTML contains a semantic Link. `BuildRouteRecord.navigationGzipBytes` records the runtime cost per route as `0` when Link is absent.
 
 ## Media
 

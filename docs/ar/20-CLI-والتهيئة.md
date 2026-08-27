@@ -90,6 +90,7 @@ dist/client/nexis-state.js
 dist/client/nexis-bootstrap.js
 dist/client/nexis-bindings.js
 dist/client/nexis-forms.js
+dist/client/nexis-navigation.js  # Routes التي تحتوي Link دلالي فقط
 dist/client/sitemap.xml
 dist/client/robots.txt
 dist/client/feed.xml
@@ -98,6 +99,8 @@ dist/nexis-redirects.json
 dist/client/og/
 dist/client/images/
 ```
+
+يخرج `nexis-navigation.js` فقط عندما يحتوي HTML الناتج على `Link` دلالي، ويسجل `BuildRouteRecord.navigationGzipBytes` القيمة `0` في غير ذلك. يفرض `nexis check` ميزانية مستقلة قدرها 6 KiB gzip لـruntime التنقل بالإضافة إلى ميزانيات route وbootstrap الحالية. راجع الـmanifest الناتج وسجل البناء باعتبارهما مصدر حقيقة خاصًا بالإصدار.
 
 ## CI
 

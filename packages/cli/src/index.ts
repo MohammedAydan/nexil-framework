@@ -6,7 +6,7 @@ import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs
 import { dirname, extname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { build, createServer, transformWithEsbuild } from 'vite'
-import type { Child } from '@mohammedaydan/core'
+import { createRequestContext, type Child, type ComponentContext } from '@mohammedaydan/core'
 import { assertBudget } from '@mohammedaydan/compiler'
 import nexis, {
   externalizeScopeAttributes,
@@ -28,7 +28,7 @@ import {
   renderHead,
   withCanonical,
 } from '@mohammedaydan/seo'
-import { matchRoute, routeFromFile } from '@mohammedaydan/router'
+import { matchRoute, NEXIS_NAVIGATION_RUNTIME, routeFromFile } from '@mohammedaydan/router'
 import { nexisSSRPlugin } from '@mohammedaydan/dev-server'
 import { createServer as createProductionServer } from '@mohammedaydan/serve'
 import type { NexisConfig, RedirectRule } from '@mohammedaydan/serve'
@@ -40,7 +40,7 @@ const FRAMEWORK_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../.
 
 function workspaceAliases(): readonly { readonly find: string; readonly replacement: string }[] {
   if (!existsSync(join(FRAMEWORK_ROOT, 'pnpm-workspace.yaml'))) return []
-  const packages = ['core', 'jsx-runtime', 'reactivity']
+  const packages = ['core', 'jsx-runtime', 'reactivity', 'router', 'state']
   return packages.flatMap((name) => {
     const source = join(FRAMEWORK_ROOT, 'packages', name, 'src', 'index.ts')
     if (!existsSync(source)) return []
@@ -72,7 +72,12 @@ interface BuildOutputEntry {
 }
 
 interface RouteModule {
-  readonly default?: Child | ((props: Readonly<Record<string, unknown>>) => Child | Promise<Child>)
+  readonly default?:
+    | Child
+    | ((
+        props: Readonly<Record<string, unknown>>,
+        context?: ComponentContext,
+      ) => Child | Promise<Child>)
   readonly seo?: SeoMetadata | ((context: { readonly pathname: string }) => SeoMetadata)
   readonly metadata?: Partial<SeoMetadata>
   readonly render?: { readonly mode?: string }
@@ -385,6 +390,7 @@ interface BuildRouteRecord {
   readonly clientJsBytes: number
   readonly clientJsGzipBytes: number
   readonly bootstrapGzipBytes: number
+  readonly navigationGzipBytes: number
   readonly cssBytes: number
 }
 
@@ -1015,13 +1021,15 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     route: string,
     child: Child,
     props: Readonly<Record<string, unknown>> = {},
+    context?: ComponentContext,
   ): Promise<Child> {
     let current = child
     const layouts = await discoverLayouts(route)
     for (const layout of layouts) {
       const module = await loadServerModule(layout)
       const Layout = module.default
-      if (typeof Layout === 'function') current = await Layout({ ...props, children: current })
+      if (typeof Layout === 'function')
+        current = await Layout({ ...props, children: current }, context)
     }
     return current
   }
@@ -1063,6 +1071,14 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     return withCanonical(merged as SeoMetadata, pathname, siteOrigin)
   }
 
+  function createBuildComponentContext(pathname: string): ComponentContext {
+    const requestContext = createRequestContext(
+      new Request(new URL(pathname, siteOrigin).href),
+      `build:${pathname}`,
+    )
+    return { requestId: requestContext.id, scope: requestContext.scope }
+  }
+
   const records: BuildRouteRecord[] = []
   const feedItems: Array<{ title: string; link: string; description?: string }> = []
   const cssAssets = new Set<string>()
@@ -1071,6 +1087,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   let hasInteractiveRoute = false
   let hasBindingRoute = false
   let hasFormRoute = false
+  let hasNavigationRoute = false
   const minifiedBootstrap = (
     await transformWithEsbuild(RESUMABILITY_BOOTSTRAP_EXTERNAL, BOOTSTRAP_FILE, {
       loader: 'js',
@@ -1078,10 +1095,22 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     })
   ).code
   const bootstrapGzipBytes = gzipSync(Buffer.from(minifiedBootstrap)).byteLength
+  const minifiedNavigation = (
+    await transformWithEsbuild(NEXIS_NAVIGATION_RUNTIME, 'nexis-navigation.js', {
+      loader: 'js',
+      minify: true,
+    })
+  ).code
+  const navigationGzipBytes = gzipSync(Buffer.from(minifiedNavigation)).byteLength
 
   for (const route of routes) {
     const sourcePath = join(routeRoot, route)
-    const sourceModules = await collectSourceModules(sourcePath)
+    const sourceModules = [
+      ...new Set([
+        ...(await collectSourceModules(sourcePath)),
+        ...(await discoverLayouts(route)).map((layout) => resolve(join(routeRoot, layout))),
+      ]),
+    ]
     const transformedModules = await Promise.all(
       sourceModules.map(async (modulePath) => ({
         modulePath,
@@ -1179,8 +1208,9 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
       }
       const Component = mod.default
       if (typeof Component === 'function') {
-        const result = await Component({})
-        renderedHtml = renderToString(await applyLayouts(route, result))
+        const context = createBuildComponentContext(routePath)
+        const result = await Component({}, context)
+        renderedHtml = renderToString(await applyLayouts(route, result, {}, context))
       } else if (Component) {
         renderedHtml = renderToString(Component)
       } else {
@@ -1197,6 +1227,11 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
       externalScopePayloads.set(payload.key, payload)
     if (externalizedRenderedScopes.payloads.length > 0)
       scriptsHtml = `<script type="module" src="/${STATE_FILE}"></script>${scriptsHtml}`
+
+    if (renderedHtml.includes('data-nx-link')) {
+      hasNavigationRoute = true
+      scriptsHtml = `<script type="module" src="/nexis-navigation.js"></script>${scriptsHtml}`
+    }
 
     if (renderedHtml.includes('data-nx-form="progressive"')) {
       hasFormRoute = true
@@ -1224,6 +1259,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
           : gzipSync(Buffer.from([...transformed.chunks].map((chunk) => chunk.source).join('')))
               .byteLength,
       bootstrapGzipBytes: interactive ? bootstrapGzipBytes : 0,
+      navigationGzipBytes: renderedHtml.includes('data-nx-link') ? navigationGzipBytes : 0,
       cssBytes: Buffer.byteLength([...transformed.css].join('')),
     }
     records.push({
@@ -1244,12 +1280,18 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
           if (generatedPath === routePath) continue
           const generatedMatch = matchRoute(routeRecord, generatedPath)
           const GeneratedComponent = staticModule.default
+          const generatedContext = createBuildComponentContext(generatedPath)
           const generatedResult =
             typeof GeneratedComponent === 'function'
-              ? await GeneratedComponent(generatedMatch?.params ?? {})
+              ? await GeneratedComponent(generatedMatch?.params ?? {}, generatedContext)
               : GeneratedComponent
           const generatedRenderedHtml = renderToString(
-            await applyLayouts(route, generatedResult, generatedMatch?.params ?? {}),
+            await applyLayouts(
+              route,
+              generatedResult,
+              generatedMatch?.params ?? {},
+              generatedContext,
+            ),
           )
           let generatedSeo = await resolveInheritedSeo(route, staticModule, generatedPath)
           if (generatedSeo && !generatedSeo.image) {
@@ -1319,6 +1361,10 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     ).code
     await writeFile(join(outputRoot, 'nexis-forms.js'), minifiedForms, 'utf8')
     await writeFile(join(clientRoot, 'nexis-forms.js'), minifiedForms, 'utf8')
+  }
+  if (hasNavigationRoute) {
+    await writeFile(join(outputRoot, 'nexis-navigation.js'), minifiedNavigation, 'utf8')
+    await writeFile(join(clientRoot, 'nexis-navigation.js'), minifiedNavigation, 'utf8')
   }
   if (hasBindingRoute) {
     const minifiedBindings = (
@@ -1497,6 +1543,7 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
         interactive: route.interactive,
         clientJsGzipBytes: route.clientJsGzipBytes,
         bootstrapGzipBytes: route.bootstrapGzipBytes,
+        navigationGzipBytes: route.navigationGzipBytes,
       })
     }
     return 'Nexis checks passed.'

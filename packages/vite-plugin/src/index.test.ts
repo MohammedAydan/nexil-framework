@@ -119,6 +119,23 @@ const view = <button onClick$={({ element }) => { element.textContent = String(c
   expect(result.warnings.some((warning) => warning.includes('runtimeValue'))).toBe(true)
 })
 
+it('marks only an explicit global Store capture as persistent across Link outlet swaps', async () => {
+  const result = await transformNexisSource(
+    `import { createStore } from '@mohammedaydan/state'
+const preferences = createStore({ theme: 'light' }, 'global')
+const draft = createStore({ value: '' })
+export const view = <div><button onClick$={() => preferences.set({ theme: 'dark' })}>Theme</button><button onClick$={() => draft.set({ value: 'saved' })}>Draft</button></div>`,
+    '/app/src/routes/store-lifetime.tsx',
+    { scopeSerialization: 'external' },
+  )
+  expect(result.scopeCaptures).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ name: 'preferences', kind: 'store', lifetime: 'global' }),
+      expect.objectContaining({ name: 'draft', kind: 'store', lifetime: 'route' }),
+    ]),
+  )
+})
+
 it('emits a data-nx-scope payload with the serialized initial value', async () => {
   const result = await transformNexisSource(
     `import { state } from '@mohammedaydan/core'

@@ -33,6 +33,8 @@ export type RenderNode = ElementNode | TextNode | SuspenseNode
 
 export interface ComponentContext {
   readonly requestId?: string
+  /** Explicit request-owned context scope when an adapter supplies one. */
+  readonly scope?: ContextScope
 }
 
 export type Component<Props = Record<string, never>> = (
@@ -82,6 +84,20 @@ export interface RequestContext {
   readonly request: Request
   readonly id: string
   readonly values: Map<PropertyKey, unknown>
+  /** Isolated dependency-injection values for this request only. */
+  readonly scope: ContextScope
+}
+
+const CONTEXT_KEY = Symbol('nexis.context')
+
+export interface ContextScope {
+  readonly parent?: ContextScope
+  readonly values: Map<symbol, unknown>
+}
+
+/** Create an explicit Context lifetime. Never reuse a request scope across requests. */
+export function createContextScope(parent?: ContextScope): ContextScope {
+  return { ...(parent ? { parent } : {}), values: new Map() }
 }
 
 export function createRequestContext(
@@ -90,7 +106,7 @@ export function createRequestContext(
     ? globalThis.crypto.randomUUID()
     : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`,
 ): RequestContext {
-  return { request, id, values: new Map() }
+  return { request, id, values: new Map(), scope: createContextScope() }
 }
 
 export function component<Props>(fn: Component<Props>): Component<Props> {
@@ -99,6 +115,12 @@ export function component<Props>(fn: Component<Props>): Component<Props> {
 
 function resolveChild(value: Child | (() => Child)): Child {
   return typeof value === 'function' ? value() : value
+}
+
+function isPromiseLike(value: unknown): value is PromiseLike<unknown> {
+  return Boolean(
+    value && typeof value === 'object' && typeof (value as { then?: unknown }).then === 'function',
+  )
 }
 
 export interface ForProps<T> {
@@ -134,23 +156,70 @@ export interface Context<T> {
   readonly Provider: (props: {
     readonly value: T
     readonly children: Child | (() => Child)
+    /** Parent request or component scope. Omit only for synchronous structural composition. */
+    readonly scope?: ContextScope
   }) => Child
-  readonly useContext: () => T
+  readonly useContext: (scope?: ContextScope) => T
+  /** Concise alias for useContext. */
+  readonly use: (scope?: ContextScope) => T
+}
+
+let activeContextScope: ContextScope | undefined
+
+function readContextValue<T>(scope: ContextScope | undefined, key: symbol, fallback: T): T {
+  for (let current = scope; current; current = current.parent) {
+    if (current.values.has(key)) return current.values.get(key) as T
+  }
+  return fallback
+}
+
+/** Return a nested scope containing one value without mutating the parent request scope. */
+export function provideContext<T>(
+  scope: ContextScope,
+  context: Context<T>,
+  value: T,
+): ContextScope {
+  const next = createContextScope(scope)
+  next.values.set((context as ContextInternal<T>)[CONTEXT_KEY], value)
+  return next
+}
+
+/** Evaluate a synchronous computation in a child context scope. Async work must carry the scope explicitly. */
+export function withContext<T, Output>(
+  scope: ContextScope,
+  context: Context<T>,
+  value: T,
+  render: (scope: ContextScope) => Output,
+): Output {
+  return render(provideContext(scope, context, value))
+}
+
+interface ContextInternal<T> extends Context<T> {
+  readonly [CONTEXT_KEY]: symbol
 }
 
 export function createContext<T>(defaultValue: T): Context<T> {
-  const values: T[] = []
-  return {
-    Provider: ({ value, children }) => {
-      values.push(value)
+  const key = Symbol('nexis.context.value')
+  const context: ContextInternal<T> = {
+    [CONTEXT_KEY]: key,
+    Provider: ({ value, children, scope }) => {
+      const previous = activeContextScope
+      activeContextScope = provideContext(scope ?? previous ?? createContextScope(), context, value)
       try {
-        return resolveChild(children)
+        const result = resolveChild(children)
+        if (isPromiseLike(result))
+          throw new TypeError(
+            'Context.Provider children must resolve synchronously; pass ContextScope explicitly to async work.',
+          )
+        return result
       } finally {
-        values.pop()
+        activeContextScope = previous
       }
     },
-    useContext: () => values.at(-1) ?? defaultValue,
+    useContext: (scope) => readContextValue(scope ?? activeContextScope, key, defaultValue),
+    use: (scope) => readContextValue(scope ?? activeContextScope, key, defaultValue),
   }
+  return context
 }
 
 export interface ErrorBoundaryProps {

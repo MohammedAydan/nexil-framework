@@ -37,6 +37,7 @@ export interface LazyChunk {
 }
 
 export type ScopeCaptureKind = 'value' | 'signal' | 'store' | 'action' | 'unsupported'
+export type ScopeCaptureLifetime = 'route' | 'global'
 
 export type ScopeCaptureInitial =
   | string
@@ -55,6 +56,8 @@ export interface ScopeCapture {
   readonly initial?: ScopeCaptureInitial
   /** Local endpoint for action captures. */
   readonly endpoint?: string
+  /** Store lifetime after a Link outlet replacement; defaults to the route. */
+  readonly lifetime?: ScopeCaptureLifetime
 }
 
 export type DomBindingTarget =
@@ -260,6 +263,25 @@ function extractStaticInitial(source: string, name: string): ScopeCaptureInitial
   return initial
 }
 
+function extractStoreLifetime(source: string, name: string): ScopeCaptureLifetime {
+  const ast = parseSource(source, 'nexis-store-lifetime.tsx')
+  let lifetime: ScopeCaptureLifetime = 'route'
+  walk(ast, (node) => {
+    if (lifetime === 'global' || node.type !== 'VariableDeclarator') return
+    const declaration = node as AstNode & { readonly id?: AstNode; readonly init?: AstNode }
+    const id = declaration.id
+    if (id?.type !== 'Identifier' || astIdentifierName(id) !== name) return
+    const init = declaration.init as
+      (AstNode & { readonly callee?: AstNode; readonly arguments?: readonly AstNode[] }) | undefined
+    if (!init || init.type !== 'CallExpression' || astIdentifierName(init.callee) !== 'createStore')
+      return
+    const requested = init.arguments?.[1] as
+      { readonly type?: string; readonly value?: unknown } | undefined
+    if (requested?.type === 'StringLiteral' && requested.value === 'global') lifetime = 'global'
+  })
+  return lifetime
+}
+
 /** Extracts the first string-literal argument of an action declaration. */
 function extractStaticEndpoint(source: string, name: string): string | undefined {
   const compact = source.replace(/\s+/g, ' ')
@@ -304,7 +326,13 @@ function classifyScopeCaptures(source: string, names: readonly string[]): ScopeC
         })
         continue
       }
-      captures.push({ name, kind, id: `nx:${kind}:${hash(`${name}:${source}`)}`, initial })
+      captures.push({
+        name,
+        kind,
+        id: `nx:${kind}:${hash(`${name}:${source}`)}`,
+        initial,
+        ...(kind === 'store' ? { lifetime: extractStoreLifetime(source, name) } : {}),
+      })
       continue
     }
     if (kind === 'action') {

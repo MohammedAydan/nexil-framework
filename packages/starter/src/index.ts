@@ -67,6 +67,7 @@ function packageJson(options: ResolvedStarterOptions): string {
     '@mohammedaydan/jsx-runtime': options.dependencyVersion,
     '@mohammedaydan/media': options.dependencyVersion,
     '@mohammedaydan/reactivity': options.dependencyVersion,
+    '@mohammedaydan/router': options.dependencyVersion,
     '@mohammedaydan/security': options.dependencyVersion,
     '@mohammedaydan/seo': options.dependencyVersion,
     '@mohammedaydan/state': options.dependencyVersion,

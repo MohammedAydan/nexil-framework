@@ -4,7 +4,7 @@
 
 ## Core
 
-توفر `@mohammedaydan/core` أنواع RenderNode وElementNode وChild، وواجهات التأليف `For` و`Show` و`createContext` و`ErrorBoundary` و`Suspense` و`Form` و`SubmitButton`، إضافة إلى إعادة تصدير أدوات reactivity.
+توفر `@mohammedaydan/core` أنواع RenderNode وElementNode وChild، وواجهات التأليف `For` و`Show` و`createContext` و`createContextScope` و`provideContext` و`withContext` و`createRequestContext` و`ErrorBoundary` و`Suspense` و`Form` و`SubmitButton`، إضافة إلى إعادة تصدير أدوات reactivity. Context هو dependency injection صريح مع Provider متزامن للسهولة؛ استعمل `ContextScope` مملوكًا للطلب مع عمل async.
 
 ## Renderer
 
@@ -22,13 +22,14 @@
 
 ## Router
 
-| API                              | الاستخدام                       |
-| -------------------------------- | ------------------------------- |
-| `routeFromFile(file)`            | تحويل اسم الملف إلى RouteRecord |
-| `matchRoute(route, pathname)`    | مطابقة URL واستخراج params      |
-| `resolveRoute(routes, pathname)` | اختيار route من مجموعة          |
-| `Link(props)`                    | رابط داخلي typed مع prefetch    |
-| `parseUrlParts(url)`             | تحليل pathname وquery وhash     |
+| API                              | الاستخدام                                              |
+| -------------------------------- | ------------------------------------------------------ |
+| `routeFromFile(file)`            | تحويل اسم الملف إلى RouteRecord                        |
+| `matchRoute(route, pathname)`    | مطابقة URL واستخراج params                             |
+| `resolveRoute(routes, pathname)` | اختيار route من مجموعة                                 |
+| `Link(props)`                    | anchor داخلي دلالي typed مع navigation مباشر وprefetch |
+| `NEXIS_NAVIGATION_RUNTIME`       | مصدر runtime يخرجه البناء فقط للصفحات التي ترندر Link  |
+| `parseUrlParts(url)`             | تحليل pathname وquery وhash                            |
 
 ## Reactivity
 
@@ -135,4 +136,4 @@
 
 ## CLI
 
-CLI يكتشف routes، يركّب `_layout.*` بشكل متداخل، يقرأ config، يبني HTML وassets والـ lazy chunks والـ runtimes، يولد feeds وsitemap وrobots وredirect manifest وOG cards، ويكتب manifest. في v1.2.0 يدعم `create` القوالب `minimal` و`interactive` و`secure-node`، وتُصدر `nexis doctor --json` تقرير `DoctorReport` مُرقمًا. تصدّر الحزمة كذلك `diagnoseProject(root): Promise<DoctorReport>`. التقرير وسيلة مراجعة محلية وليس إثباتًا لسلامة proxy أو TLS أو CSP في البنية التحتية. استخدم CLI عبر scripts بدل استدعاء helpers الداخلية من التطبيق دون سبب.
+CLI يكتشف routes، يركّب `_layout.*` بشكل متداخل، يقرأ config، يبني HTML وassets والـ lazy chunks والـ runtimes، يولد feeds وsitemap وrobots وredirect manifest وOG cards، ويكتب manifest. `nexis-navigation.js` لا يخرج إلا لصفحات تحتوي Link و`BuildRouteRecord.navigationGzipBytes` يسجل تكلفته لكل route كـ`0` عند غياب Link. في v1.2.0 يدعم `create` القوالب `minimal` و`interactive` و`secure-node`، وتُصدر `nexis doctor --json` تقرير `DoctorReport` مُرقمًا. تصدّر الحزمة كذلك `diagnoseProject(root): Promise<DoctorReport>`. التقرير وسيلة مراجعة محلية وليس إثباتًا لسلامة proxy أو TLS أو CSP في البنية التحتية. استخدم CLI عبر scripts بدل استدعاء helpers الداخلية من التطبيق دون سبب.
