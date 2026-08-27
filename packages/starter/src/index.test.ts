@@ -7,7 +7,6 @@ describe('Nexis starter engine', () => {
       projectName: 'northstar',
       template: 'interactive',
       language: 'ts',
-      dependencyVersion: '^1.2.0',
     })
     const paths = files.map((file) => file.path)
     expect(paths).toEqual(
@@ -16,7 +15,7 @@ describe('Nexis starter engine', () => {
     expect(files.find((file) => file.path === 'src/routes/index.tsx')?.content).toContain(
       'onClick$',
     )
-    expect(files.find((file) => file.path === 'package.json')?.content).toContain('^1.2.0')
+    expect(files.find((file) => file.path === 'package.json')?.content).toContain('^1.3.1')
     expect(files.every((file) => !file.content.includes('ghp_'))).toBe(true)
   })
 

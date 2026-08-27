@@ -1,6 +1,6 @@
 # Nexis Framework Documentation
 
-This directory contains the complete English documentation for Nexis Framework `1.3.0`. It is written for developers who need to understand the framework internally, build production applications, test them, optimize them, secure them, and deploy them.
+This directory contains the complete English documentation for Nexis Framework `1.3.1`. It is written for developers who need to understand the framework internally, build production applications, test them, optimize them, secure them, and deploy them.
 
 > This documentation describes the behavior implemented in the current repository. When using another version, verify the exact TypeScript declarations and generated `.d.ts` files for that version.
 
@@ -32,7 +32,8 @@ This directory contains the complete English documentation for Nexis Framework `
 | Learn the terminology                          | [22-glossary.md](./22-glossary.md)                                                             |
 | Add sessions, authorization, and middleware    | [23-security-authentication-and-middleware.md](./23-security-authentication-and-middleware.md) |
 | Read the v1.1.0 release and migration guide    | [v1.1.0 release notes](../releases/v1.1.0.md)                                                  |
-| Review v1.3.0 release scope and migration      | [next release notes](../releases/next.md)                                                      |
+| Review v1.3.0 Link and Context release         | [v1.3.0 release notes](../releases/v1.3.0.md)                                                  |
+| Review the v1.3.1 Starter correction           | [next release notes](../releases/next.md)                                                      |
 
 ## Recommended reading paths
 
@@ -71,4 +72,5 @@ The examples use TypeScript and JSX. Adjust paths to match your application. Nev
 - [Telemetry README](../../packages/telemetry/README.md)
 - [Showcase report](../../examples/nexis-showcase/SHOWCASE-REPORT.md)
 - [v1.1.0 release and migration guide](../releases/v1.1.0.md)
-- [v1.3.0 release scope and migration notes](../releases/next.md)
+- [v1.3.0 Link and Context release notes](../releases/v1.3.0.md)
+- [v1.3.1 Starter correction notes](../releases/next.md)

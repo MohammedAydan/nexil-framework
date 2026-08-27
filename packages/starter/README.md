@@ -12,7 +12,7 @@ const files = createStarterFiles({
   template: 'interactive',
   language: 'ts',
   tailwind: false,
-  dependencyVersion: '^1.2.0',
+  dependencyVersion: '^1.3.1',
 })
 ```
 
