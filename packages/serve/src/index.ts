@@ -9,6 +9,16 @@ import {
 import { createMemoryIdempotencyStore, handleActionRequest } from '@mohammedaydan/actions'
 import type { IdempotencyStore, ServerAction } from '@mohammedaydan/actions'
 
+export interface SecurityHeadersOptions {
+  /** A reviewed Content-Security-Policy string for this application. CSP is opt-in because script/style requirements are app-specific. */
+  readonly contentSecurityPolicy?: string
+  /** Enable only when this server is reached exclusively through a trusted HTTPS-terminating proxy. */
+  readonly strictTransportSecurity?: string
+  readonly referrerPolicy?: string
+  readonly permissionsPolicy?: string
+  readonly frameOptions?: 'DENY' | 'SAMEORIGIN'
+}
+
 export interface ProductionServerOptions {
   readonly host?: string
   readonly port?: number
@@ -20,6 +30,10 @@ export interface ProductionServerOptions {
   readonly idempotency?: IdempotencyStore
   /** Runs before Nexis route and Action handling for app-level guards and instrumentation. */
   readonly middleware?: readonly ProductionRequestHandler[]
+  /** Opt-in security response headers applied to routes, assets, redirects, telemetry, and Actions. */
+  readonly securityHeaders?: SecurityHeadersOptions
+  /** Honor x-forwarded-proto and x-forwarded-host only behind a known, trusted reverse proxy. */
+  readonly trustProxy?: boolean
   readonly cacheControl?: {
     readonly html?: string
     readonly assets?: string
@@ -97,6 +111,52 @@ export function composeMiddleware(
   }
 }
 
+function safeHeaderValue(name: string, value: string): string {
+  if (/\r|\n/.test(value)) throw new TypeError(`${name} must not contain CR or LF.`)
+  return value
+}
+
+/**
+ * Create app-wide hardening middleware. CSP and HSTS are deliberately opt-in because
+ * each application must review its script/style policy and TLS termination boundary.
+ */
+export function createSecurityHeaders(
+  options: SecurityHeadersOptions = {},
+): ProductionRequestHandler {
+  const headers: Readonly<Record<string, string>> = {
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': options.frameOptions ?? 'DENY',
+    'Referrer-Policy': safeHeaderValue(
+      'Referrer-Policy',
+      options.referrerPolicy ?? 'strict-origin-when-cross-origin',
+    ),
+    'Permissions-Policy': safeHeaderValue(
+      'Permissions-Policy',
+      options.permissionsPolicy ?? 'camera=(), microphone=(), geolocation=()',
+    ),
+    ...(options.contentSecurityPolicy
+      ? {
+          'Content-Security-Policy': safeHeaderValue(
+            'Content-Security-Policy',
+            options.contentSecurityPolicy,
+          ),
+        }
+      : {}),
+    ...(options.strictTransportSecurity
+      ? {
+          'Strict-Transport-Security': safeHeaderValue(
+            'Strict-Transport-Security',
+            options.strictTransportSecurity,
+          ),
+        }
+      : {}),
+  }
+  return async (_request, response, next) => {
+    for (const [name, value] of Object.entries(headers)) response.setHeader(name, value)
+    await next?.()
+  }
+}
+
 const MIME_TYPES: Readonly<Record<string, string>> = {
   '.avif': 'image/avif',
   '.css': 'text/css; charset=utf-8',
@@ -160,7 +220,27 @@ function setCommonHeaders(
   response.setHeader('X-Content-Type-Options', 'nosniff')
 }
 
-async function requestFromNode(request: IncomingMessage): Promise<Request> {
+function firstForwardedHeader(
+  request: IncomingMessage,
+  name: 'x-forwarded-proto' | 'x-forwarded-host',
+): string | undefined {
+  const value = request.headers[name]
+  const first = (Array.isArray(value) ? value[0] : value)?.split(',')[0]?.trim()
+  return first || undefined
+}
+
+function trustedForwardedHost(request: IncomingMessage): string | undefined {
+  const candidate = firstForwardedHeader(request, 'x-forwarded-host')
+  if (!candidate) return undefined
+  try {
+    const parsed = new URL(`http://${candidate}`)
+    return parsed.host === candidate ? candidate : undefined
+  } catch {
+    return undefined
+  }
+}
+
+async function requestFromNode(request: IncomingMessage, trustProxy = false): Promise<Request> {
   const chunks: Buffer[] = []
   for await (const chunk of request) {
     chunks.push(Buffer.from(chunk))
@@ -174,7 +254,13 @@ async function requestFromNode(request: IncomingMessage): Promise<Request> {
   const method = request.method ?? 'GET'
   const init: RequestInit = { method, headers }
   if (method !== 'GET' && method !== 'HEAD') init.body = Buffer.concat(chunks)
-  return new Request(`http://${request.headers.host ?? 'localhost'}${request.url ?? '/'}`, init)
+  const forwardedProto = trustProxy ? firstForwardedHeader(request, 'x-forwarded-proto') : undefined
+  const protocol = forwardedProto === 'https' || forwardedProto === 'http' ? forwardedProto : 'http'
+  const host = trustProxy ? trustedForwardedHost(request) : undefined
+  return new Request(
+    `${protocol}://${host ?? request.headers.host ?? 'localhost'}${request.url ?? '/'}`,
+    init,
+  )
 }
 
 async function findAction(
@@ -211,7 +297,11 @@ export function createMiddleware(
   const idempotency = options.idempotency ?? createMemoryIdempotencyStore()
   const htmlCache = options.cacheControl?.html ?? 'public, max-age=0, must-revalidate'
   const assetCache = options.cacheControl?.assets ?? 'public, max-age=31536000, immutable'
+  const securityHeaders = options.securityHeaders
+    ? createSecurityHeaders(options.securityHeaders)
+    : undefined
   return async (request, response, next) => {
+    await securityHeaders?.(request, response)
     const pathname = pathnameFromRequest(request)
     const method = request.method ?? 'GET'
     const telemetryEndpoint = options.telemetry?.endpoint ?? '/__nexis/telemetry'
@@ -263,7 +353,7 @@ export function createMiddleware(
         return
       }
       try {
-        const actionRequest = await requestFromNode(request)
+        const actionRequest = await requestFromNode(request, options.trustProxy ?? false)
         const actionResponse = await handleActionRequest(actionRequest, action, {
           allowedOrigins: options.actionOrigins ?? [],
           idempotency,

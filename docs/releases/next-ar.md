@@ -2,6 +2,25 @@
 
 > **الحالة: غير منشور.** هذا المستند يصف تغييرات موجودة على `main` بعد tag `v1.1.0`. لا يمثل إصدار حزمة يمكن تثبيته حتى يُحدد إصدار جديد ويُنشر رسميًا.
 
+## حواجز أمان الإنتاج الاختيارية
+
+تُصدر `@mohammedaydan/serve` الآن `createSecurityHeaders(options?)`، ويقبل
+`ProductionServerOptions` الخاص بـ Node الخيارين `securityHeaders` و`trustProxy`.
+تفعيل `securityHeaders` يطبق `nosniff` وحماية الإطار `DENY` و
+`strict-origin-when-cross-origin` وpermissions policy مقيّدة على assets وredirects
+وtelemetry والأخطاء وردود Actions في خادم Node. CSP وHSTS خياران صريحان عمدًا، وتُرفض
+القيم التي تحوي CR/LF.
+
+قيمة `trustProxy` الافتراضية هي `false`. عند تفعيله صراحةً خلف proxy يزيل forwarded
+headers القادمة من العميل، تعيد Actions بناء URL العام من أول protocol وhost صالحين
+حتى تقارن trusted Origin بأصل HTTPS الخارجي. هذا لا يجعل forwarded headers موثوقة في
+خادم مكشوف مباشرة للإنترنت.
+
+يتحقق اختبار التكامل الإنتاجي من وصول headers الاختيارية ورفض إعداد CR/LF ورفض
+Action من Origin عابر غير موثوق، ومن الفرق بين proxy المعطل والمفعل عند إعادة بناء
+URL. لا يثبت ذلك سلوك CSP في browser أو cookies على HTTPS حقيقي أو CSRF-token
+validation في التطبيق أو rate limiting أو صحة تنظيف headers داخل proxy للنشر.
+
 ## ظهور أصول البناء داخل `nexis analyze`
 
 أصبح `nexis analyze` يكمل تقرير JavaScript وCSS لكل Route بجرد للأصول الثابتة الخارجة من `dist/client`. يعرض عدد الملفات غير HTML، وإجمالي حجمها، وحجم الصور، وأكبر خمسة ملفات.

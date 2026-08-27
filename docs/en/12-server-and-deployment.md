@@ -38,6 +38,13 @@ const app = createServer('./dist/client', {
   host: process.env.HOST ?? '0.0.0.0',
   port: Number(process.env.PORT ?? 3000),
   redirects: [{ from: '/docs', to: '/docs/architecture', status: 308 }],
+  // Set true only when the reverse proxy removes client forwarded headers.
+  trustProxy: process.env.DEPLOYMENT_TRUST_PROXY === 'true',
+  securityHeaders: {
+    contentSecurityPolicy: "default-src 'self'; base-uri 'self'; frame-ancestors 'none'",
+    // Add only when this process is exclusively reached through trusted HTTPS termination.
+    strictTransportSecurity: 'max-age=31536000; includeSubDomains',
+  },
 })
 
 await app.listen()
@@ -93,9 +100,27 @@ Respect the runtime’s CPU, response-size, and storage limits instead of copyin
 
 Declare local, validated redirects with an allowed status. Do not accept `https://evil.test` or unsafe protocols. Test redirects with `redirect: 'manual'` so the real `308` response is visible.
 
+## Response security headers
+
+`securityHeaders` is explicit opt-in on the Node production server. When enabled, it
+sets `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
+`Referrer-Policy: strict-origin-when-cross-origin`, and a restrictive
+`Permissions-Policy` for every Node response, including assets, redirects,
+telemetry, errors, and Actions. Override the three policy defaults only after review.
+
+`contentSecurityPolicy` and `strictTransportSecurity` are intentionally opt-in.
+Review CSP against the application’s actual scripts, styles, images, connections, and
+embedding requirements. Send HSTS only when TLS termination is understood and every
+reachable hostname is ready for HTTPS. Header values containing CR or LF are rejected.
+
 ## Proxy trust
 
-Enable `NEXIS_TRUST_PROXY=1` only behind a trusted reverse proxy. The proxy must remove client-supplied forwarded headers and write its own trusted values. If the application is directly internet-facing, do not enable this flag.
+Set `trustProxy: true` only behind a trusted reverse proxy. The proxy must remove
+client-supplied forwarded headers and write its own trusted values. With this option,
+the production Action transport uses the first validated `x-forwarded-proto` and
+`x-forwarded-host` to reconstruct the public request URL for Origin evaluation. By
+default those headers are ignored. If the application is directly internet-facing, do
+not enable this option.
 
 ## Caching
 
@@ -132,5 +157,6 @@ Before exposing traffic:
 2. Run typecheck, tests, lint, and format checks.
 3. Check sitemap, robots, RSS, and Atom.
 4. Check redirects, 404, 405, and HEAD.
-5. Verify Origin and Idempotency behavior.
-6. Monitor the first release and keep a rollback artifact ready.
+5. Verify Origin and Idempotency behavior, including a rejected cross-origin Action.
+6. Review CSP in a browser and validate cookie behavior over real HTTPS.
+7. Monitor the first release and keep a rollback artifact ready.

@@ -85,7 +85,7 @@ Signals are callable, expose `get()` and readonly `value`, and provide `set`, `s
 | `createMiddleware(root, options)`       | Create embeddable route middleware                |
 | `composeMiddleware(...handlers)`        | Compose application and Nexis handlers in order   |
 | `defineConfig(config)`                  | Define optional typed Nexis project configuration |
-| `createSecurityHeaders(nonce?)`         | Create security headers                           |
+| `createSecurityHeaders(options?)`       | Create opt-in Node security-header middleware     |
 | `serializeCookie(name, value, options)` | Serialize a cookie safely                         |
 | `createDataContext(request)`            | Create request-scoped data context                |
 | `defineLoader(loader)`                  | Create a typed request loader                     |
@@ -96,6 +96,13 @@ Signals are callable, expose `get()` and readonly `value`, and provide `set`, `s
 ## Actions
 
 `@mohammedaydan/actions` provides `action`, `assertTrustedOrigin`, typed action responses, request parsing, validation, endpoint options, and `createMemoryIdempotencyStore`. Use the durable-store contract for distributed production.
+
+`ProductionServerOptions` accepts `securityHeaders?: SecurityHeadersOptions` and
+`trustProxy?: boolean`. `SecurityHeadersOptions` supports reviewed overrides for
+`frameOptions`, `referrerPolicy`, and `permissionsPolicy`, plus opt-in
+`contentSecurityPolicy` and `strictTransportSecurity`. Do not enable `trustProxy`
+unless a controlled proxy sanitizes forwarded headers; do not send HSTS unless the TLS
+termination boundary is known.
 
 ## Security
 

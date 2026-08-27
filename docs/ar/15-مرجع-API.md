@@ -74,21 +74,29 @@
 
 ## Server
 
-| API                                         | الاستخدام              |
-| ------------------------------------------- | ---------------------- |
-| `createProductionServer(root, options)`     | Node production server |
-| `createProductionMiddleware(root, options)` | middleware قابل للدمج  |
-| `createSecurityHeaders(nonce?)`             | security headers       |
-| `serializeCookie(name, value, options)`     | Set-Cookie آمن         |
-| `createDataContext(request)`                | request-scoped context |
-| `defineLoader(loader)`                      | typed route loader     |
-| `parseCookies(requestOrHeader)`             | فك cookies بأمان       |
-| `getCookie(request, name)`                  | قراءة cookie واحدة     |
-| `notFound(message?)`                        | Response بحالة 404     |
+| API                                     | الاستخدام                          |
+| --------------------------------------- | ---------------------------------- |
+| `createServer(root, options)`           | Node production server             |
+| `createMiddleware(root, options)`       | middleware قابل للدمج              |
+| `composeMiddleware(...handlers)`        | تركيب middleware بالترتيب          |
+| `createSecurityHeaders(options?)`       | middleware لرؤوس حماية Node opt-in |
+| `serializeCookie(name, value, options)` | Set-Cookie آمن                     |
+| `createDataContext(request)`            | request-scoped context             |
+| `defineLoader(loader)`                  | typed route loader                 |
+| `parseCookies(requestOrHeader)`         | فك cookies بأمان                   |
+| `getCookie(request, name)`              | قراءة cookie واحدة                 |
+| `notFound(message?)`                    | Response بحالة 404                 |
 
 ## Actions
 
 راجع `@mohammedaydan/actions` لتعريف Action handlers، validation، origin policy، idempotency، typed envelopes، وparsing JSON/form/multipart.
+
+يدعم `ProductionServerOptions` الخيارين `securityHeaders?: SecurityHeadersOptions`
+و`trustProxy?: boolean`. تشمل `SecurityHeadersOptions` مراجع مخصصة لـ
+`frameOptions` و`referrerPolicy` و`permissionsPolicy`، إضافة إلى
+`contentSecurityPolicy` و`strictTransportSecurity` كخيارات opt-in. لا تفعّل
+`trustProxy` إلا عندما ينظف proxy مضبوط headers، ولا ترسل HSTS إلا إذا كانت حدود TLS
+معلومة.
 
 ## Vite plugin
 
