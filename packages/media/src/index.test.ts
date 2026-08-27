@@ -4,8 +4,10 @@ import {
   clearImageTransformCache,
   fontFace,
   imageAttributes,
+  imageVariantFileBase,
   pictureMarkup,
   selfHostFont,
+  staticImageVariantPath,
   transformImage,
 } from './index'
 
@@ -50,6 +52,23 @@ describe('image pipeline', () => {
     expect(picture.html).toContain('type="image/avif"')
     expect(picture.html).toContain('alt="Hero"')
     expect(picture.html).toContain('sizes="100vw"')
+  })
+
+  it('renders stable static paths for build-generated variants', () => {
+    const picture = pictureMarkup({
+      src: '/images/hero.banner.png',
+      width: 1200,
+      height: 630,
+      alt: 'Hero',
+      widths: [640],
+      staticVariants: true,
+    })
+    expect(imageVariantFileBase('/images/hero.banner.png')).toBe('hero-banner-png')
+    expect(staticImageVariantPath('/images/hero.banner.png', 640, 'avif')).toBe(
+      '/images/hero-banner-png-640.avif',
+    )
+    expect(picture.html).toContain('/images/hero-banner-png-640.avif 640w')
+    expect(picture.html).not.toContain('?format=avif')
   })
 
   it('generates WebP and AVIF variants at requested widths', async () => {

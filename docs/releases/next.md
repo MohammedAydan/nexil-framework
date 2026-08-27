@@ -15,18 +15,32 @@ Largest assets:
 
 The build adds a non-blocking advisory to image files of 256 KiB or larger. The advisory directs developers toward responsive AVIF/WebP variants, an accurate `sizes` attribute, intrinsic dimensions, and lazy loading for non-critical images. It deliberately does not fail a build because content, viewport, LCP role, and CDN behavior determine whether a size is appropriate.
 
+## Opt-in static image pipeline
+
+Applications can now set `media.images.transform` in `nexis.config.*` to transform public PNG, JPEG, and SVG files during `nexis build`. Nexis keeps the original public image and emits static AVIF and WebP variants at configured widths. Variants are stored beside their source path in `dist/client`; a copy of the build record is written to `nexis-media.json`.
+
+```ts
+import { defineConfig } from '@mohammedaydan/serve'
+
+export default defineConfig({
+  media: { images: { transform: true, widths: [320, 640, 960, 1280] } },
+})
+```
+
+The default disk cache is `.nexis/media-cache`. It is disposable, stays within the project root, and must be ignored by source control. `Image` and `pictureMarkup` accept `staticVariants` when a route should reference the emitted files instead of query-based image URLs. Existing applications remain unchanged unless they enable the configuration and choose static markup.
+
 ## Compatibility and verification
 
 The build manifest keeps version `1`. The new `assets` field is optional, so artifacts created before this follow-up continue to be readable by the CLI. The existing route budget output remains unchanged; the asset section is appended after it.
 
-Verification covers the CLI build and analysis flow with a 300 KiB public PNG fixture. The test asserts that the output and build manifest report the asset, its image byte total, and the advisory. Run the complete release gate before assigning a package version:
+Verification covers the CLI build and analysis flow with a 300 KiB public PNG fixture. It also builds a configured public SVG twice, verifying non-empty AVIF/WebP output and persistent cache hits on the second build. Run the complete release gate before assigning a package version:
 
 ```bash
 pnpm format:check
 pnpm check
-pnpm pack:check
+pnpm release:check
 ```
 
 ## Scope boundaries
 
-This feature inventories the **emitted build artifact** only. It does not measure transfer compression, responsive source selection, browser decode cost, CDN caching, or field Core Web Vitals. Use browser tooling and real-user monitoring to validate those factors on the deployed site.
+The image pipeline transforms local public files only; it does not fetch remote URLs, automatically rewrite arbitrary HTML, delete source assets, or prove transfer compression, browser decode cost, CDN caching, or field Core Web Vitals. Use browser tooling and real-user monitoring to validate those factors on the deployed site.

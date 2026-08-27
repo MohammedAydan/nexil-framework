@@ -6,6 +6,7 @@
     "@mohammedaydan/compiler": "workspace:*",
     "@mohammedaydan/core": "workspace:*",
     "@mohammedaydan/dev-server": "workspace:*",
+    "@mohammedaydan/media": "workspace:*",
     "@mohammedaydan/renderer": "workspace:*",
     "@mohammedaydan/og-image": "workspace:*",
     "@mohammedaydan/serve": "workspace:*",

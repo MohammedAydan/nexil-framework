@@ -31,6 +31,16 @@ export interface NexisConfig {
   readonly app?: {
     readonly origin?: string
   }
+  readonly media?: {
+    readonly images?: {
+      /** Transform supported public PNG and JPEG files into static AVIF/WebP variants during build. */
+      readonly transform?: boolean
+      /** Responsive widths emitted for every configured source image. */
+      readonly widths?: readonly number[]
+      /** Relative cache location retained between builds. Defaults to .nexis/media-cache. */
+      readonly cacheDir?: string
+    }
+  }
   readonly server?: ProductionServerOptions
   readonly redirects?: readonly RedirectRule[]
   readonly feed?: {
