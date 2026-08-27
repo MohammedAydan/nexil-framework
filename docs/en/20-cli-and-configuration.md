@@ -22,12 +22,23 @@ nexis generate route account/settings
 nexis generate component Button
 nexis add action saveProfile
 nexis doctor
+nexis doctor --json
 pnpm build
 pnpm check:budget
 pnpm release:check
 ```
 
-The v1.1 CLI also provides `generate route`, `generate component`, `add action`, `doctor`, `preview`, `test`, and `upgrade`. The exact flags are versioned; do not copy an option from an unrelated release without checking `nexis --help` and the installed declarations.
+The v1.2 CLI also provides `generate route`, `generate component`, `add action`, `doctor`, `preview`, `test`, and `upgrade`. Create accepts `--template minimal|interactive|secure-node`; `doctor --json` emits a versioned report for CI. The exact flags are versioned; do not copy an option from an unrelated release without checking `nexis --help` and the installed declarations.
+
+## Machine-readable diagnostics
+
+Use `nexis doctor --json` when CI, a project generator, or an editor integration must consume a stable report. The v1 report has a `status` of `ok`, `warn`, or `error`, and checks for the package manifest, lifecycle scripts, routes directory, HTML outlets, Nexis configuration, trusted-proxy intent, and explicit security-header configuration.
+
+```bash
+nexis doctor --json > nexis-doctor.json
+```
+
+Warnings are review prompts, not proof that a deployment is unsafe. In particular, enabling `trustProxy` requires a proxy that overwrites forwarded headers; no local CLI check can prove that infrastructure behavior.
 
 ## Typical workflow
 
@@ -93,6 +104,7 @@ dist/
 │   ├── assets/
 │   ├── og/
 │   ├── nexis-manifest.json
+│   ├── nexis-state.js           # opaque ScopeRef payloads, when captures exist
 │   ├── nexis-bootstrap.js       # interactive routes only
 │   ├── nexis-bindings.js        # binding routes only
 │   ├── nexis-forms.js           # progressive Form routes only

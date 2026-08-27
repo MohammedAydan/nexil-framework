@@ -7,7 +7,8 @@ Traditional hydration reruns application code in the browser to discover events 
 ```text
 SSR HTML
   + data-nx-on-click="chunk-id#handler"
-  + data-nx-scope="..."
+  + data-nx-scope="nx:scope:<opaque-key>"
+  + nexis-state.js (only when captured browser state is needed)
   + nexis-bootstrap.js
   + nexis-bindings.js (binding routes only)
   + nexis-forms.js (progressive Form routes only)
@@ -81,8 +82,9 @@ A simple serializable `postId` may be included in scope. A database connection, 
 ## Automatic scope serialization
 
 You do not write `data-nx-scope` by hand. When a lazy handler captures a signal,
-store, or action, the compiler serializes the declaration next to the event
-reference so the browser can materialize it on first interaction:
+store, or action, production builds replace the named inline payload with an opaque
+scope key and write the browser-required payload to `nexis-state.js`, loaded before
+the resumability runtime. The browser resolves that key on first interaction:
 
 ```tsx
 const count = state(0) // ✅ JSON-literal initial — serialized into the page
@@ -92,6 +94,13 @@ const items = state(load()) // ⚠️ unsupported capture diagnostic at build ti
 Captures require a statically serializable initial value. Multiple handlers
 capturing the same declaration share one live instance in the browser, keyed by
 its scope id.
+
+This reduces document-source verbosity and avoids exposing capture names, kinds,
+stable IDs, and initial values directly in the initial HTML. It is **not encryption**
+or authorization: a browser can fetch `nexis-state.js`, so captured values remain
+public browser data. Never capture secrets, private profiles, credentials, or
+request-only information. Inline JSON ScopeRefs remain supported for manually
+authored and compatibility boundaries.
 
 ## Scope deduplication
 

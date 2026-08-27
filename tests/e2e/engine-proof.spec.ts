@@ -59,6 +59,15 @@ test.beforeAll(async () => {
   if (!html.includes('data-nx-on-click') && !html.includes('on:click')) {
     throw new Error('Build output missing resumability attributes')
   }
+  if (!/data-nx-scope="nx:scope:[a-f0-9]{12}"/.test(html)) {
+    throw new Error('Build output did not externalize resumability scope metadata')
+  }
+  if (html.includes('&quot;initial&quot;') || html.includes('"initial"')) {
+    throw new Error('Build output still contains inline resumability initial values')
+  }
+  if (!html.includes('src="/nexis-state.js"')) {
+    throw new Error('Build output is missing the external state runtime')
+  }
 
   // Start preview server for E2E browser testing
   const vitePreview = await preview({
@@ -124,6 +133,11 @@ test('engine proof: counter has serialized resumable attributes', async ({ page 
   const qOnClick = await button.getAttribute('on:click')
   const attr = onClickAttr || qOnClick || ''
   expect(attr).toMatch(/chunk_[a-f0-9]+\.js#handler_[a-f0-9]+/)
+  await expect(button).toHaveAttribute('data-nx-scope', /^nx:scope:[a-f0-9]{12}$/)
+  const html = await page.content()
+  expect(html).not.toContain('&quot;initial&quot;')
+  const stateResponse = await page.request.get('http://127.0.0.1:4317/nexis-state.js')
+  expect(stateResponse.ok()).toBe(true)
 })
 
 test('engine proof: clicking counter updates without hydration', async ({ page }) => {

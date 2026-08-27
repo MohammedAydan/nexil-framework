@@ -240,6 +240,9 @@ importers:
       '@mohammedaydan/serve':
         specifier: workspace:*
         version: link:../serve
+      '@mohammedaydan/starter':
+        specifier: workspace:*
+        version: link:../starter
       '@mohammedaydan/vite-plugin':
         specifier: workspace:*
         version: link:../vite-plugin
@@ -264,9 +267,17 @@ importers:
         specifier: workspace:*
         version: link:../reactivity
 
-  packages/create-nexis: {}
+  packages/create-nexis:
+    dependencies:
+      '@mohammedaydan/starter':
+        specifier: workspace:*
+        version: link:../starter
 
-  packages/create-nexis-app: {}
+  packages/create-nexis-app:
+    dependencies:
+      '@mohammedaydan/starter':
+        specifier: workspace:*
+        version: link:../starter
 
   packages/css:
     dependencies:
@@ -379,6 +390,8 @@ importers:
       '@mohammedaydan/core':
         specifier: workspace:*
         version: link:../core
+
+  packages/starter: {}
 
   packages/state:
     dependencies:

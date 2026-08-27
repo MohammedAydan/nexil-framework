@@ -7,7 +7,8 @@
 ```text
 SSR HTML
   + data-nx-on-click="chunk-id#handler"
-  + data-nx-scope="..."
+  + data-nx-scope="nx:scope:<opaque-key>"
+  + nexis-state.js (فقط عند الحاجة إلى state قابلة للاستئناف)
   + nexis-bootstrap.js
   + nexis-bindings.js (binding routes only)
   + nexis-forms.js (progressive Form routes only)
@@ -20,6 +21,12 @@ SSR HTML
 يمكن لـ Nexis تحديث عقدة نصية أو خاصية DOM مباشرة من Signal دون إعادة تشغيل component. القراءة المباشرة مثل `{count()}` تُحلل تلقائيًا عندما تكون القيمة قابلة للاستعادة. كما تدعم التوجيهات `bindText$` و`bindValue$` و`bindChecked$` و`bindDisabled$` و`bindHidden$` و`bindClass$` و`bindStyle$` و`bindHref$` و`bindSrc$` و`bindAriaLabel$`.
 
 تستخدم v1.1.0 تحليل AST للقيم الابتدائية، وتجمع التعبيرات المتساوية في lazy chunk واحد، وترفع حمولات `data-nx-scope` المتطابقة إلى أقرب سلف مشترك. لذلك لا تكتب `data-nx-scope` ولا تستدعِ `serializeScopeRefs()` يدويًا داخل route.
+
+## State payload في production
+
+في v1.2.0، عندما يلتقط Handler إشارة أو Store أو Action، يستبدل بناء production الحمولة المسمّاة في HTML بمفتاح scope معتم، ويضع الحمولة الضرورية للمتصفح في `nexis-state.js` قبل runtime الاستئناف. يستمر Nexis في تحليل AST للقيمة الابتدائية ويجمع التعبيرات المتساوية في lazy chunk واحد؛ لا تكتب `data-nx-scope` ولا تستدعِ `serializeScopeRefs()` يدويًا داخل route.
+
+هذا يقلل ظهور أسماء captures و`kind` و`id` والقيم الابتدائية في مصدر HTML. لكنه **ليس تشفيرًا ولا تفويضًا**: يمكن للمتصفح تنزيل `nexis-state.js`، ولذلك تبقى بيانات capture عامة للعميل. لا تلتقط secrets أو credentials أو ملف user خاص أو بيانات مرتبطة بطلب واحد. تبقى حمولات ScopeRef بصيغة JSON داخلية مدعومة للتوافق وللحدود المكتوبة يدويًا.
 
 ## كتابة Handler lazy
 

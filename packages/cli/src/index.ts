@@ -9,11 +9,13 @@ import { build, createServer, transformWithEsbuild } from 'vite'
 import type { Child } from '@mohammedaydan/core'
 import { assertBudget } from '@mohammedaydan/compiler'
 import nexis, {
-  RESUMABILITY_BINDINGS,
-  RESUMABILITY_BOOTSTRAP,
+  externalizeScopeAttributes,
+  RESUMABILITY_BINDINGS_EXTERNAL,
+  RESUMABILITY_BOOTSTRAP_EXTERNAL,
   RESUMABILITY_FORMS,
   transformNexisSource,
 } from '@mohammedaydan/vite-plugin'
+import type { ExternalScopePayload } from '@mohammedaydan/vite-plugin'
 import { escapeHtml, renderToString } from '@mohammedaydan/renderer'
 import { generateOgImage } from '@mohammedaydan/og-image'
 import { buildImageVariants, imageVariantFileBase } from '@mohammedaydan/media'
@@ -128,6 +130,21 @@ export interface ParsedCommand {
   readonly args: readonly string[]
 }
 
+export type DoctorLevel = 'ok' | 'warn' | 'error'
+
+export interface DoctorCheck {
+  readonly code: string
+  readonly level: DoctorLevel
+  readonly message: string
+}
+
+export interface DoctorReport {
+  readonly version: 1
+  readonly root: string
+  readonly status: DoctorLevel
+  readonly checks: readonly DoctorCheck[]
+}
+
 const commands = new Set<NexisCommand>([
   'create',
   'dev',
@@ -161,7 +178,7 @@ export function helpText(): string {
     '',
     'Commands:',
     '  create <name>  Create a zero-config Nexis application',
-    '                 Flags: --yes --ts --js --tailwind',
+    '                 Flags: --yes --ts --js --tailwind --template minimal|interactive|secure-node',
     '  dev            Start the development server',
     '                 Env: NEXIS_HOST, NEXIS_PORT, NEXIS_ALLOW_ALL_HOSTS=1',
     '  build          Build SSG/ISR/SSR bundles',
@@ -175,6 +192,7 @@ export function helpText(): string {
     '  generate component <name>  Scaffold a component',
     '  add action <name>           Scaffold a server action',
     '  doctor         Diagnose common project configuration issues',
+    '                 Flag: --json for a stable CI-readable report',
     '  upgrade        Report deprecated APIs and migration suggestions',
     '  test           Run the project test script',
   ].join('\n')
@@ -239,25 +257,100 @@ async function scaffoldCliArtifact(root: string, kind: string, name: string): Pr
   throw new Error(`Unknown generator kind: ${kind}`)
 }
 
-async function diagnoseProject(root: string): Promise<string> {
-  const checks: string[] = []
-  const routes = join(root, 'src', 'routes')
-  checks.push(
-    existsSync(join(root, 'package.json')) ? 'ok package.json' : 'error missing package.json',
-  )
-  checks.push(existsSync(routes) ? 'ok src/routes' : 'error missing src/routes')
-  checks.push(
-    existsSync(join(root, 'index.html'))
-      ? 'ok index.html'
-      : 'warn missing index.html (fallback template will be used)',
-  )
-  try {
-    await readNexisConfig(root)
-    checks.push('ok Nexis configuration')
-  } catch (error) {
-    checks.push(`error configuration: ${error instanceof Error ? error.message : String(error)}`)
+export async function diagnoseProject(root: string): Promise<DoctorReport> {
+  const checks: DoctorCheck[] = []
+  const add = (code: string, level: DoctorLevel, message: string): void => {
+    checks.push({ code, level, message })
   }
-  return checks.join('\\n')
+  const routes = join(root, 'src', 'routes')
+  const packageFile = join(root, 'package.json')
+  if (!existsSync(packageFile)) add('package-json', 'error', 'Missing package.json.')
+  else {
+    try {
+      const manifest = JSON.parse(await readFile(packageFile, 'utf8')) as {
+        readonly scripts?: Record<string, unknown>
+        readonly dependencies?: Record<string, unknown>
+      }
+      add('package-json', 'ok', 'package.json is readable.')
+      if (manifest.scripts?.dev && manifest.scripts?.build && manifest.scripts?.start)
+        add('lifecycle-scripts', 'ok', 'dev, build, and start scripts are present.')
+      else
+        add(
+          'lifecycle-scripts',
+          'warn',
+          'Expected dev, build, and start scripts were not all found.',
+        )
+      if (typeof manifest.dependencies?.['@mohammedaydan/cli'] === 'string')
+        add('nexis-cli', 'ok', 'A Nexis CLI dependency is configured.')
+      else add('nexis-cli', 'warn', 'No @mohammedaydan/cli dependency was found.')
+    } catch {
+      add('package-json', 'error', 'package.json is not valid JSON.')
+    }
+  }
+  add(
+    'routes-directory',
+    existsSync(routes) ? 'ok' : 'error',
+    existsSync(routes) ? 'src/routes exists.' : 'Missing src/routes.',
+  )
+  add(
+    'html-shell',
+    existsSync(join(root, 'index.html')) ? 'ok' : 'warn',
+    existsSync(join(root, 'index.html'))
+      ? 'index.html exists.'
+      : 'Missing index.html; the fallback template will be used.',
+  )
+  if (existsSync(join(root, 'index.html'))) {
+    const shell = await readFile(join(root, 'index.html'), 'utf8')
+    const hasOutlets =
+      shell.includes('<!--nexis-app-outlet-->') && shell.includes('<!--nexis-head-outlet-->')
+    add(
+      'html-outlets',
+      hasOutlets ? 'ok' : 'warn',
+      hasOutlets
+        ? 'The HTML shell includes Nexis application and head outlets.'
+        : 'The HTML shell is missing one or more Nexis outlets.',
+    )
+  }
+  try {
+    const config = await readNexisConfig(root)
+    add('nexis-config', 'ok', 'Nexis configuration is readable.')
+    if (config.server?.trustProxy === true)
+      add(
+        'trusted-proxy',
+        'warn',
+        'trustProxy is enabled; use it only behind a proxy that overwrites forwarded headers.',
+      )
+    else
+      add(
+        'trusted-proxy',
+        'ok',
+        'Forwarded headers are ignored unless trustProxy is explicitly enabled.',
+      )
+    if (config.server?.securityHeaders)
+      add('security-headers', 'ok', 'Production security headers are configured explicitly.')
+    else
+      add(
+        'security-headers',
+        'warn',
+        'No production securityHeaders configuration was found; review createSecurityHeaders for Node deployments.',
+      )
+  } catch (error) {
+    add(
+      'nexis-config',
+      'error',
+      `Configuration error: ${error instanceof Error ? error.message : String(error)}`,
+    )
+  }
+  const status = checks.some((check) => check.level === 'error')
+    ? 'error'
+    : checks.some((check) => check.level === 'warn')
+      ? 'warn'
+      : 'ok'
+  return { version: 1, root, status, checks }
+}
+
+function formatDoctorReport(report: DoctorReport): string {
+  return report.checks.map((check) => `${check.level} ${check.code}: ${check.message}`).join('\n')
 }
 
 async function migrationReport(root: string): Promise<string> {
@@ -556,6 +649,7 @@ async function discoverRoutes(directory: string, root: string): Promise<string[]
 }
 
 const BOOTSTRAP_FILE = 'nexis-bootstrap.js'
+const STATE_FILE = 'nexis-state.js'
 const CHUNK_DIRECTORY = 'nexis-chunks'
 
 function injectStylesheetLink(template: string, href: string): string {
@@ -973,11 +1067,12 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   const feedItems: Array<{ title: string; link: string; description?: string }> = []
   const cssAssets = new Set<string>()
   const emittedChunks = new Set<string>()
+  const externalScopePayloads = new Map<string, ExternalScopePayload>()
   let hasInteractiveRoute = false
   let hasBindingRoute = false
   let hasFormRoute = false
   const minifiedBootstrap = (
-    await transformWithEsbuild(RESUMABILITY_BOOTSTRAP, BOOTSTRAP_FILE, {
+    await transformWithEsbuild(RESUMABILITY_BOOTSTRAP_EXTERNAL, BOOTSTRAP_FILE, {
       loader: 'js',
       minify: true,
     })
@@ -990,7 +1085,9 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     const transformedModules = await Promise.all(
       sourceModules.map(async (modulePath) => ({
         modulePath,
-        result: await transformNexisSource(await readFile(modulePath, 'utf8'), modulePath),
+        result: await transformNexisSource(await readFile(modulePath, 'utf8'), modulePath, {
+          scopeSerialization: 'external',
+        }),
       })),
     )
     const direct = transformedModules.find((entry) => entry.modulePath === resolve(sourcePath))
@@ -1001,6 +1098,8 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     for (const entry of transformedModules) {
       for (const chunk of entry.result.chunks) routeChunks.set(chunk.fileName, chunk)
       for (const css of entry.result.css) routeCss.add(css)
+      for (const payload of entry.result.externalScopePayloads ?? [])
+        externalScopePayloads.set(payload.key, payload)
     }
     const transformed = {
       ...direct.result,
@@ -1091,6 +1190,13 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
       const message = err instanceof Error ? err.message : String(err)
       throw new Error(`SSR failed for ${routePath}: ${message}`, { cause: err })
     }
+
+    const externalizedRenderedScopes = externalizeScopeAttributes(renderedHtml, sourcePath)
+    renderedHtml = externalizedRenderedScopes.code
+    for (const payload of externalizedRenderedScopes.payloads)
+      externalScopePayloads.set(payload.key, payload)
+    if (externalizedRenderedScopes.payloads.length > 0)
+      scriptsHtml = `<script type="module" src="/${STATE_FILE}"></script>${scriptsHtml}`
 
     if (renderedHtml.includes('data-nx-form="progressive"')) {
       hasFormRoute = true
@@ -1216,13 +1322,27 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   }
   if (hasBindingRoute) {
     const minifiedBindings = (
-      await transformWithEsbuild(RESUMABILITY_BINDINGS, 'nexis-bindings.js', {
+      await transformWithEsbuild(RESUMABILITY_BINDINGS_EXTERNAL, 'nexis-bindings.js', {
         loader: 'js',
         minify: true,
       })
     ).code
     await writeFile(join(outputRoot, 'nexis-bindings.js'), minifiedBindings, 'utf8')
     await writeFile(join(clientRoot, 'nexis-bindings.js'), minifiedBindings, 'utf8')
+  }
+  if (externalScopePayloads.size > 0) {
+    const payload = Object.fromEntries(
+      [...externalScopePayloads].map(([key, entry]) => [key, entry.payload]),
+    )
+    const stateSource = `globalThis.__nexisScopeSeeds=Object.assign(globalThis.__nexisScopeSeeds||{},${JSON.stringify(payload)});\n`
+    const minifiedState = (
+      await transformWithEsbuild(stateSource, STATE_FILE, {
+        loader: 'js',
+        minify: true,
+      })
+    ).code
+    await writeFile(join(outputRoot, STATE_FILE), minifiedState, 'utf8')
+    await writeFile(join(clientRoot, STATE_FILE), minifiedState, 'utf8')
   }
   const sitemap = buildSitemap(
     records.map((record) => ({
@@ -1341,7 +1461,10 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
   if (parsed.command === 'help') return helpText()
   if (parsed.command === 'create') {
     const { name, options } = parseScaffoldArgs(parsed.args)
-    if (!name) throw new Error('Usage: nexis create <name> [--yes] [--ts|--js] [--tailwind]')
+    if (!name)
+      throw new Error(
+        'Usage: nexis create <name> [--yes] [--ts|--js] [--tailwind] [--template minimal|interactive|secure-node]',
+      )
     return `Created ${(await scaffoldProject(name, cwd, options)).directory}`
   }
 
@@ -1405,7 +1528,14 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
     if (kind !== 'action' || !name) throw new Error('Usage: nexis add action <name>')
     return `Created ${await scaffoldCliArtifact(root, kind, name)}`
   }
-  if (parsed.command === 'doctor') return diagnoseProject(root)
+  if (parsed.command === 'doctor') {
+    if (parsed.args.some((argument) => argument !== '--json'))
+      throw new Error('Usage: nexis doctor [--json]')
+    const report = await diagnoseProject(root)
+    return parsed.args.includes('--json')
+      ? `${JSON.stringify(report, null, 2)}\n`
+      : formatDoctorReport(report)
+  }
   if (parsed.command === 'upgrade') return migrationReport(root)
   if (parsed.command === 'test') {
     const result = await execFileAsync('pnpm', ['test', ...parsed.args], { cwd: root })

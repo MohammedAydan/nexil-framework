@@ -100,19 +100,25 @@
 
 ## Vite plugin
 
-| API                                      | الاستخدام                                   |
-| ---------------------------------------- | ------------------------------------------- |
-| `nexis(options)`                         | Vite plugin                                 |
-| `transformNexisSource(source, id)`       | تحليل source وإنتاج metadata                |
-| `classifyScopeCaptures(...)`             | تصنيف value/signal/store/action/unsupported |
-| `RESUMABILITY_BOOTSTRAP`                 | bootstrap الأساسي                           |
-| `RESUMABILITY_FORMS`                     | runtime للنماذج التدريجية                   |
-| `enhanceForms(options)`                  | تحسين Form مع native fallback               |
-| `bindSignalToDOM(scopeId, node, target)` | ربط Signal بهدف DOM                         |
+| API                                          | الاستخدام                                                                                      |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `nexis(options)`                             | Vite plugin                                                                                    |
+| `transformNexisSource(source, id, options?)` | تحليل source؛ وخيار `scopeSerialization: 'external'` ينتج مفاتيح ScopeRef معتمة وحمولات خارجية |
+| `externalizeScopeAttributes(html, id)`       | استبدال ScopeRef المضمنة في HTML بمفاتيح معتمة وإرجاع الحمولات الخارجية                        |
+| `classifyScopeCaptures(...)`                 | تصنيف value/signal/store/action/unsupported                                                    |
+| `RESUMABILITY_BOOTSTRAP`                     | bootstrap الأساسي                                                                              |
+| `RESUMABILITY_BOOTSTRAP_EXTERNAL`            | runtime production لحل مفاتيح ScopeRef من `nexis-state.js`                                     |
+| `RESUMABILITY_FORMS`                         | runtime للنماذج التدريجية                                                                      |
+| `enhanceForms(options)`                      | تحسين Form مع native fallback                                                                  |
+| `bindSignalToDOM(scopeId, node, target)`     | ربط Signal بهدف DOM                                                                            |
 
 ## Media
 
 `buildImageVariants` يبني WebP/AVIF ويعيد metadata عن bytes وcache hit. `pictureMarkup` يبني markup responsive. `cacheDir` يفعّل cache persistent اختياري.
+
+## Starter Engine
+
+تصدّر `@mohammedaydan/starter` القيم `STARTER_TEMPLATES` و`resolveStarterOptions` و`createStarterFiles(options)`. واجهة الجذر portable وتعيد سجلات typed من الشكل `{ path, content }` فقط. ويصدّر `@mohammedaydan/starter/node` كذلك `parseScaffoldArgs()` و`scaffoldProject()` لاستخدام CLI الذي يكتب فعليًا على نظام الملفات.
 
 ## Telemetry
 
@@ -129,4 +135,4 @@
 
 ## CLI
 
-CLI يكتشف routes، يركّب `_layout.*` بشكل متداخل، يقرأ config، يبني HTML وassets والـ lazy chunks والـ runtimes، يولد feeds وsitemap وrobots وredirect manifest وOG cards، ويكتب manifest. في v1.1.0 أضيفت أوامر `preview` و`generate route` و`generate component` و`add action` و`doctor` و`test` و`upgrade`. استخدم CLI عبر scripts بدل استدعاء helpers الداخلية من التطبيق دون سبب.
+CLI يكتشف routes، يركّب `_layout.*` بشكل متداخل، يقرأ config، يبني HTML وassets والـ lazy chunks والـ runtimes، يولد feeds وsitemap وrobots وredirect manifest وOG cards، ويكتب manifest. في v1.2.0 يدعم `create` القوالب `minimal` و`interactive` و`secure-node`، وتُصدر `nexis doctor --json` تقرير `DoctorReport` مُرقمًا. تصدّر الحزمة كذلك `diagnoseProject(root): Promise<DoctorReport>`. التقرير وسيلة مراجعة محلية وليس إثباتًا لسلامة proxy أو TLS أو CSP في البنية التحتية. استخدم CLI عبر scripts بدل استدعاء helpers الداخلية من التطبيق دون سبب.

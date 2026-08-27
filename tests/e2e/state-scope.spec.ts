@@ -8,9 +8,9 @@ test.describe.configure({ mode: 'serial' })
 test.setTimeout(180_000)
 
 // Proves the documented state model end to end: a route-level signal captured
-// by a lazy handler must serialize into data-nx-scope at build time, materialize
-// into a live signal in the browser on first interaction, and persist across
-// subsequent clicks without any hydration pass.
+// by a lazy handler must use an opaque data-nx-scope key at build time, materialize
+// from the generated state runtime in the browser on first interaction, and persist
+// across subsequent clicks without any hydration pass.
 
 const ROUTE_SOURCE = `import { component, state } from '@mohammedaydan/core'
 
@@ -61,11 +61,14 @@ test.beforeAll(async () => {
   await runCli(['build'], appDir)
 
   const html = await readFile(join(appDir, 'dist', 'client', 'index.html'), 'utf8')
-  if (!html.includes('data-nx-scope=')) {
-    throw new Error('Build output missing serialized scope payload for captured signal')
+  if (!/data-nx-scope="nx:scope:[a-f0-9]{12}"/.test(html)) {
+    throw new Error('Build output missing opaque scope key for captured signal')
   }
-  if (!/nx:signal:[a-f0-9]+/.test(html)) {
-    throw new Error('Build output missing signal scope reference id')
+  if (html.includes('&quot;initial&quot;') || html.includes('"initial"')) {
+    throw new Error('Build output exposes inline initial state metadata')
+  }
+  if (!html.includes('src="/nexis-state.js"')) {
+    throw new Error('Build output missing external state runtime')
   }
   if (!html.includes('data-nx-bind=') || !html.includes('#text')) {
     throw new Error('Build output missing automatic Signal text binding')
@@ -101,6 +104,12 @@ test('captured signal resumes lazily and persists across clicks', async ({ page 
 
   await page.goto('http://127.0.0.1:4319/')
   await expect(page.getByText('Rendered via Nexis SSR Engine')).toBeVisible()
+  await expect(page.locator('#scope-value')).toHaveAttribute(
+    'data-nx-scope',
+    /^nx:scope:[a-f0-9]{12}$/,
+  )
+  const stateResponse = await page.request.get('http://127.0.0.1:4319/nexis-state.js')
+  expect(stateResponse.ok()).toBe(true)
 
   // Resumability contract: nothing interactive has loaded before interaction.
   expect(chunkRequests).toHaveLength(0)

@@ -144,7 +144,7 @@ describe('Nexis CLI', () => {
         dependencies: { '@mohammedaydan/cli': string }
         nexis: { source: string; registry: string }
       }
-      expect(packageJson.dependencies['@mohammedaydan/cli']).toBe('^1.0.0')
+      expect(packageJson.dependencies['@mohammedaydan/cli']).toBe('^1.2.0')
       expect(packageJson.nexis).toEqual({
         routeExtension: 'tsx',
         source: 'github-packages',
@@ -264,6 +264,32 @@ describe('Nexis CLI', () => {
       'document.addEventListener',
     )
   })
+
+  it('moves resumability state metadata out of generated HTML', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-external-state-'))
+    try {
+      const directory = await createProject('external-state-app', parent)
+      await writeFile(
+        join(directory, 'src/routes/index.tsx'),
+        `import { state } from '@mohammedaydan/core'
+const accountBalance = state(1200)
+export default function Home() { return <button onClick$={() => accountBalance.set((value) => value + 1)}>{accountBalance()}</button> }
+`,
+        'utf8',
+      )
+      await runCli(['build'], directory)
+      const html = await readFile(join(directory, 'dist/client/index.html'), 'utf8')
+      expect(html).toMatch(/data-nx-scope="nx:scope:[a-f0-9]{12}"/)
+      expect(html).not.toContain('accountBalance')
+      expect(html).not.toContain('&quot;initial&quot;')
+      expect(html).toContain('<script type="module" src="/nexis-state.js"></script>')
+      const stateRuntime = await readFile(join(directory, 'dist/client/nexis-state.js'), 'utf8')
+      expect(stateRuntime).toContain('accountBalance')
+      expect(stateRuntime).toContain('1200')
+    } finally {
+      await rm(parent, { recursive: true, force: true })
+    }
+  })
 })
 
 it('generates routes, components, and actions with safe paths', async () => {
@@ -282,7 +308,16 @@ it('generates routes, components, and actions with safe paths', async () => {
     await expect(runCli(['generate', 'route', '../escape'], directory)).rejects.toThrow(
       /safe relative/,
     )
-    await expect(runCli(['doctor'], directory)).resolves.toContain('ok package.json')
+    await expect(runCli(['doctor'], directory)).resolves.toContain('ok package-json:')
+    const report = JSON.parse(await runCli(['doctor', '--json'], directory)) as {
+      version: number
+      status: string
+      checks: Array<{ code: string; level: string }>
+    }
+    expect(report.version).toBe(1)
+    expect(report.checks).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: 'package-json', level: 'ok' })]),
+    )
   } finally {
     await rm(parent, { recursive: true, force: true })
   }

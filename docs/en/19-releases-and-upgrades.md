@@ -60,6 +60,14 @@ When moving from v1.0.0 to v1.1.0, rename preferred composition modules to `_lay
 
 Use `Form` and `SubmitButton` for native-first forms. Add an action `endpoint` when passing an action reference to `Form`, and keep server-side validation, authorization, Origin, CSRF, and idempotency checks in place.
 
+## v1.2.0 migration
+
+Upgrade the coordinated Nexis packages to `1.2.0` in one dependency update, regenerate the lockfile, and perform a clean build. In particular, do not mix an old `@mohammedaydan/cli` or `@mohammedaydan/vite-plugin` with a v1.2.0 generated artifact: production interactive pages now use opaque `data-nx-scope` keys plus conditional `nexis-state.js`.
+
+After upgrading, rebuild from source, confirm static routes emit no state runtime, and use Playwright to verify an interactive route loads `nexis-state.js`, preserves opaque scope keys in the browser DOM, and resumes both handlers and bindings. The public state asset is not secret storage; remove any sensitive capture rather than relying on the new HTML representation.
+
+Project creation may now select `minimal`, `interactive`, or `secure-node` with `--template`. Existing default initializer behavior remains `interactive`. Run `nexis doctor --json` in CI if you want a versioned project-configuration report, while treating its warnings as review prompts rather than infrastructure attestations.
+
 ## Generated files
 
 Never edit generated client chunks or manifests as a fix. Change source or configuration, rebuild, and review the diff. Check that static routes remain static and that interactive routes have valid handler references.

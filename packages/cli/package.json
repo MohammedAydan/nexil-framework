@@ -1,6 +1,6 @@
 {
   "name": "@mohammedaydan/cli",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "module",
   "dependencies": {
     "@mohammedaydan/compiler": "workspace:*",
@@ -10,6 +10,7 @@
     "@mohammedaydan/renderer": "workspace:*",
     "@mohammedaydan/og-image": "workspace:*",
     "@mohammedaydan/serve": "workspace:*",
+    "@mohammedaydan/starter": "workspace:*",
     "@mohammedaydan/router": "workspace:*",
     "@mohammedaydan/seo": "workspace:*",
     "@mohammedaydan/vite-plugin": "workspace:*",
