@@ -6,6 +6,7 @@ import {
   composeMiddleware,
   createMiddleware,
   createProductionServer,
+  createSecurityHeaders,
   createServer,
 } from './index.js'
 
@@ -90,6 +91,88 @@ describe('official production server', () => {
       await app.close()
       await rm(root, { recursive: true, force: true })
     }
+  })
+
+  it('applies opt-in security headers and trusts forwarded identity only when configured', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'nexis-serve-security-'))
+    const serverDir = join(root, 'server')
+    await mkdir(serverDir, { recursive: true })
+    await writeFile(join(root, 'index.html'), '<h1>home</h1>')
+    await writeFile(
+      join(serverDir, 'labs.js'),
+      'export const actions = { inspect: { execute: async (context) => ({ url: context.request.url }) } }\n',
+    )
+    const launch = async (trustProxy: boolean) => {
+      const app = createServer(root, {
+        host: '127.0.0.1',
+        port: 0,
+        serverDir,
+        trustProxy,
+        actionOrigins: ['https://portal.example'],
+        securityHeaders: {
+          contentSecurityPolicy: "default-src 'self'",
+          strictTransportSecurity: 'max-age=31536000; includeSubDomains',
+        },
+      })
+      await app.listen()
+      const address = app.server.address()
+      if (!address || typeof address === 'string') throw new Error('Missing test server address.')
+      return { app, base: `http://127.0.0.1:${address.port}` }
+    }
+    try {
+      const untrusted = await launch(false)
+      try {
+        const response = await fetch(`${untrusted.base}/__nexis/actions/labs/inspect`, {
+          method: 'POST',
+          headers: {
+            Origin: 'https://portal.example',
+            'x-forwarded-proto': 'https',
+            'x-forwarded-host': 'portal.example',
+          },
+          body: '{}',
+        })
+        expect(response.status).toBe(200)
+        expect(((await response.json()) as { data: { url: string } }).data.url).toMatch(
+          /^http:\/\/127\.0\.0\.1:/,
+        )
+      } finally {
+        await untrusted.app.close()
+      }
+
+      const trusted = await launch(true)
+      try {
+        const forbidden = await fetch(`${trusted.base}/__nexis/actions/labs/inspect`, {
+          method: 'POST',
+          headers: { Origin: 'https://attacker.example' },
+          body: '{}',
+        })
+        expect(forbidden.status).toBe(403)
+        const response = await fetch(`${trusted.base}/__nexis/actions/labs/inspect`, {
+          method: 'POST',
+          headers: {
+            Origin: 'https://portal.example',
+            'x-forwarded-proto': 'https',
+            'x-forwarded-host': 'portal.example',
+          },
+          body: '{}',
+        })
+        expect(response.status).toBe(200)
+        expect(response.headers.get('content-security-policy')).toBe("default-src 'self'")
+        expect(response.headers.get('strict-transport-security')).toContain('max-age=31536000')
+        expect(response.headers.get('x-frame-options')).toBe('DENY')
+        expect(response.headers.get('referrer-policy')).toBe('strict-origin-when-cross-origin')
+        expect(((await response.json()) as { data: { url: string } }).data.url).toBe(
+          'https://portal.example/__nexis/actions/labs/inspect',
+        )
+      } finally {
+        await trusted.app.close()
+      }
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
+    expect(() =>
+      createSecurityHeaders({ contentSecurityPolicy: "default-src 'self'\nX-Test: 1" }),
+    ).toThrow(/CR or LF/)
   })
 
   it('serves routes, assets, 404 documents, HEAD, 405, and cache headers', async () => {

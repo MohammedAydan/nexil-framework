@@ -26,11 +26,22 @@ When a server fetches a user-provided URL, allow only HTTP(S), restrict hosts, b
 
 ## Actions and CSRF
 
-Origin checks are important but do not replace authorization. After validating the origin, verify the session, role, and resource ownership. Use CSRF tokens or SameSite cookies according to the threat model, especially for sensitive mutations.
+Origin checks are important but do not replace authorization. Nexis Actions reject a
+malformed or untrusted supplied `Origin`; a missing Origin remains compatible with
+non-browser callers and therefore is not a complete CSRF defense by itself. After
+validating the origin, verify the session, role, and resource ownership. Use CSRF
+tokens and SameSite cookies according to the threat model, especially for sensitive
+mutations. The `Form` token header is a transport affordance; applications must
+implement and test the server-side token policy they require.
 
 ## Proxy headers
 
-Trust `x-forwarded-proto` and `x-forwarded-host` only when a trusted proxy removes client values and writes its own. `NEXIS_TRUST_PROXY=1` is opt-in and should not be enabled on a directly exposed application.
+For the Node production server, `trustProxy: true` is opt-in. It trusts only the first
+validated `x-forwarded-proto` (`http` or `https`) and `x-forwarded-host` when
+reconstructing Action request URLs. Trust it only when a trusted proxy removes client
+values and writes its own; never enable it on a directly exposed application. The
+development server’s `NEXIS_TRUST_PROXY=1` remains a local-development setting, not a
+deployment policy.
 
 ## Cookies
 
@@ -44,7 +55,17 @@ Use `SameSite=Strict` when appropriate, and set path and expiration explicitly. 
 
 ## Security headers
 
-Use `createSecurityHeaders` or an equivalent deployment policy for Content-Type, CSP, Referrer-Policy, and X-Content-Type-Options as appropriate. Start a new CSP in report-only mode and tighten it after reviewing required assets.
+Pass `securityHeaders` to `createServer` or compose the exported
+`createSecurityHeaders(options)` helper. Its reviewed defaults are `nosniff`,
+`X-Frame-Options: DENY`, `strict-origin-when-cross-origin`, and denial of camera,
+microphone, and geolocation. CSP and HSTS remain opt-in. Header values with CR or LF
+are rejected to prevent response-splitting configuration mistakes. Start a new CSP in
+report-only mode where deployment infrastructure supports it, then tighten it after
+reviewing required assets.
+
+The Node integration suite exercises header application, CR/LF rejection, rejected
+cross-origin Actions, and proxy reconstruction. It is not proof of a browser CSP
+rollout or HTTPS cookie behavior; test those against the deployed application.
 
 ## Secrets
 

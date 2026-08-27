@@ -2,6 +2,27 @@
 
 > **Status: unreleased.** This document describes changes on `main` after the `v1.1.0` tag. It does not describe an installable package version until a later release is tagged and published.
 
+## Opt-in production security guards
+
+`@mohammedaydan/serve` now exports `createSecurityHeaders(options?)`, and the
+Node `ProductionServerOptions` accepts `securityHeaders` and `trustProxy`.
+Enabling `securityHeaders` applies `nosniff`, `DENY` frame protection,
+`strict-origin-when-cross-origin`, and a restrictive permissions policy across the
+Node server’s assets, redirects, telemetry, errors, and Action responses. CSP and
+HSTS are deliberately explicit options; CR/LF values are rejected.
+
+`trustProxy` defaults to `false`. When explicitly enabled behind a proxy that
+removes client-provided forwarded headers, Actions reconstruct their public URL
+from the first validated forwarded protocol and host so trusted-Origin comparison
+uses the external HTTPS origin. This does not authorize forwarded headers on a
+directly exposed server.
+
+The production integration coverage verifies opt-in header delivery, rejection of
+CR/LF configuration, an untrusted cross-origin Action rejection, and fail-closed
+versus enabled proxy reconstruction. It does **not** prove browser CSP behavior,
+real-HTTPS cookie behavior, application CSRF-token validation, rate limiting, or
+the correctness of a deployment proxy’s header sanitization.
+
 ## Static asset visibility in `nexis analyze`
 
 `nexis analyze` now supplements its per-route JavaScript and CSS report with a static asset inventory from `dist/client`. It lists the number of non-HTML files, their total bytes, the image subtotal, and the five largest emitted assets.
