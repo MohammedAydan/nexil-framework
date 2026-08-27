@@ -58,6 +58,19 @@ Static route        → 0 route-specific JS
 Interactive route  → bootstrap + smallest lazy chunk
 ```
 
+## Static asset inventory
+
+Run `nexis analyze` after `nexis build` to inspect emitted delivery assets alongside route JavaScript budgets. The command reports the non-HTML file count, total bytes, image subtotal, and five largest emitted files. Image files of at least 256 KiB receive a build-time advisory. The advisory is intentionally non-blocking because an appropriate threshold depends on the route, content, and image role.
+
+```text
+Static asset delivery
+18 files  612.4 KiB total  430.1 KiB images
+Largest assets:
+  /hero.png  420.0 KiB  image  warning: consider AVIF/WebP variants, `sizes`, and lazy loading when below the fold
+```
+
+Prefer responsive AVIF/WebP variants with a suitable fallback, explicit dimensions, and `sizes`. Mark only the visible LCP image as high priority. Images below the initial viewport should normally use lazy loading. Inspect the deployed route in a browser and a real CDN environment before turning any advisory into a release-blocking policy.
+
 ## Astro comparison
 
 `bench:compare` compares equivalent routes rather than summing every chunk in the entire site. The baseline should have comparable HTML, interaction, and assets. Store the measured file list in the artifact so the result can be audited.

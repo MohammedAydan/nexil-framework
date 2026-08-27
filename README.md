@@ -366,6 +366,8 @@ const attributes = imageAttributes({
 
 Use intrinsic dimensions, meaningful alternative text, and responsive sources. Treat remote image and font URLs as untrusted input and validate the allowed origin policy before fetching.
 
+After a build, `nexis analyze` also inventories emitted non-HTML assets. It reports the total delivery size, image subtotal, and five largest files. Images at or above 256 KiB receive an advisory to generate AVIF/WebP variants and use correct responsive loading. This is a build-time delivery guard, not a substitute for field Core Web Vitals or real CDN measurements.
+
 The SEO package provides typed head output, canonical URLs, JSON-LD validation and escaping, breadcrumbs, sitemaps, robots.txt, RSS, Atom, and related metadata helpers:
 
 ```ts
@@ -420,7 +422,7 @@ The installed `nexis` binary and repository scripts expose the framework workflo
 | `nexis start`                     | Serve the built artifact with route-aware Nexis production behavior                                              |
 | `nexis serve`                     | Compatibility alias for `nexis start`                                                                            |
 | `nexis check --budget`            | Run build and byte-budget checks                                                                                 |
-| `nexis analyze`                   | Report route output and client-size metrics                                                                      |
+| `nexis analyze`                   | Report route output, client-size metrics, static-asset totals, and the largest emitted assets                    |
 | `nexis routes`                    | List discovered route files                                                                                      |
 | `nexis create <name>`             | Scaffold an application                                                                                          |
 | `nexis preview`                   | Compatibility alias for `nexis start`                                                                            |

@@ -2,8 +2,8 @@ import { gzipSync } from 'node:zlib'
 import { existsSync } from 'node:fs'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
-import { copyFile, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
-import { dirname, join, relative, resolve, sep } from 'node:path'
+import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
+import { dirname, extname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { build, createServer, transformWithEsbuild } from 'vite'
 import type { Child } from '@mohammedaydan/core'
@@ -294,9 +294,25 @@ interface BuildRouteRecord {
   readonly cssBytes: number
 }
 
+type AssetCategory = 'image' | 'font' | 'script' | 'style' | 'other'
+
+interface BuildAssetRecord {
+  readonly path: string
+  readonly bytes: number
+  readonly category: AssetCategory
+}
+
+interface BuildAssetSummary {
+  readonly count: number
+  readonly totalBytes: number
+  readonly imageBytes: number
+  readonly largest: readonly BuildAssetRecord[]
+}
+
 interface BuildManifest {
   readonly version: 1
   readonly routes: readonly BuildRouteRecord[]
+  readonly assets?: BuildAssetSummary
 }
 
 async function readNexisConfig(root: string): Promise<NexisConfig> {
@@ -343,6 +359,88 @@ async function copyPublicDirectory(source: string, target: string): Promise<void
     await mkdir(dirname(to), { recursive: true })
     await copyFile(from, to)
   }
+}
+
+function assetCategory(file: string): AssetCategory | undefined {
+  switch (extname(file).toLowerCase()) {
+    case '.html':
+      return undefined
+    case '.avif':
+    case '.gif':
+    case '.jpeg':
+    case '.jpg':
+    case '.png':
+    case '.svg':
+    case '.webp':
+      return 'image'
+    case '.woff':
+    case '.woff2':
+      return 'font'
+    case '.js':
+    case '.mjs':
+      return 'script'
+    case '.css':
+      return 'style'
+    default:
+      return 'other'
+  }
+}
+
+async function summarizeBuiltAssets(root: string): Promise<BuildAssetSummary> {
+  const assets: BuildAssetRecord[] = []
+  const visit = async (directory: string): Promise<void> => {
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      const file = join(directory, entry.name)
+      if (entry.isDirectory()) {
+        await visit(file)
+        continue
+      }
+      if (!entry.isFile()) continue
+      const category = assetCategory(file)
+      if (!category) continue
+      const details = await stat(file)
+      assets.push({
+        path: `/${relative(root, file).split(sep).join('/')}`,
+        bytes: details.size,
+        category,
+      })
+    }
+  }
+  await visit(root)
+  const sorted = [...assets].sort((left, right) => right.bytes - left.bytes)
+  return {
+    count: assets.length,
+    totalBytes: assets.reduce((total, asset) => total + asset.bytes, 0),
+    imageBytes: assets
+      .filter((asset) => asset.category === 'image')
+      .reduce((total, asset) => total + asset.bytes, 0),
+    largest: sorted.slice(0, 5),
+  }
+}
+
+function formatAssetBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MiB`
+}
+
+function assetAnalysisLines(summary: BuildAssetSummary | undefined): readonly string[] {
+  if (!summary) return []
+  const lines = [
+    '',
+    'Static asset delivery',
+    `${summary.count} files  ${formatAssetBytes(summary.totalBytes)} total  ${formatAssetBytes(summary.imageBytes)} images`,
+  ]
+  if (summary.largest.length === 0) return lines
+  lines.push('Largest assets:')
+  for (const asset of summary.largest) {
+    const warning =
+      asset.category === 'image' && asset.bytes >= 256 * 1024
+        ? '  warning: consider AVIF/WebP variants, `sizes`, and lazy loading when below the fold'
+        : ''
+    lines.push(`  ${asset.path}  ${formatAssetBytes(asset.bytes)}  ${asset.category}${warning}`)
+  }
+  return lines
 }
 
 async function discoverRoutes(directory: string, root: string): Promise<string[]> {
@@ -1063,7 +1161,12 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     buildRobots(`${siteOrigin.replace(/\/$/, '')}/sitemap.xml`),
     'utf8',
   )
-  const manifest: BuildManifest = { version: 1, routes: records }
+  await copyPublicDirectory(join(root, 'public'), clientRoot)
+  const manifest: BuildManifest = {
+    version: 1,
+    routes: records,
+    assets: await summarizeBuiltAssets(clientRoot),
+  }
   await writeFile(
     join(outputRoot, 'nexis-manifest.json'),
     `${JSON.stringify(manifest, null, 2)}\n`,
@@ -1074,7 +1177,6 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     `${JSON.stringify(manifest, null, 2)}\n`,
     'utf8',
   )
-  await copyPublicDirectory(join(root, 'public'), clientRoot)
   return manifest
 }
 
@@ -1146,6 +1248,7 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
         (route) =>
           `${route.route.padEnd(29)} ${String(route.clientJsGzipBytes).padStart(8)} ${String(route.cssBytes).padStart(10)}   ${route.interactive ? 'interactive' : 'static'}`,
       ),
+      ...assetAnalysisLines(manifest.assets),
     ].join('\n')
   }
   if (parsed.command === 'build') {
