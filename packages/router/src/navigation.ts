@@ -8,8 +8,9 @@ export const NEXIS_NAVIGATION_RUNTIME = String.raw`
   if (globalThis.__nexisNavigationInstalled) return
   globalThis.__nexisNavigationInstalled = true
 
-  const cache = new Map()
-  const cacheLimit = 12
+	const cache = new Map()
+	const prefetchedAnchors = new WeakSet()
+	const cacheLimit = 12
   const headSelectors = [
     'meta[name="description"]',
     'meta[name="robots"]',
@@ -104,10 +105,13 @@ export const NEXIS_NAVIGATION_RUNTIME = String.raw`
       location.assign(url)
     }
   }
-  const prefetch = (anchor) => {
-    const url = new URL(anchor.href, location.href)
-    if (sameOrigin(url)) readDocument(url, undefined, true).catch(() => {})
-  }
+	const prefetch = (anchor) => {
+		if (prefetchedAnchors.has(anchor)) return
+		prefetchedAnchors.add(anchor)
+		const url = new URL(anchor.href, location.href)
+		if (!sameOrigin(url)) return
+		readDocument(url, undefined, true).catch(() => prefetchedAnchors.delete(anchor))
+	}
   const findLink = (event) => event.target instanceof Element ? event.target.closest('a[data-nx-link]') : null
 
   document.addEventListener('click', (event) => {

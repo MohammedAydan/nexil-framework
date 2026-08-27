@@ -68,6 +68,14 @@ After upgrading, rebuild from source, confirm static routes emit no state runtim
 
 Project creation may now select `minimal`, `interactive`, or `secure-node` with `--template`. Existing default initializer behavior remains `interactive`. Run `nexis doctor --json` in CI if you want a versioned project-configuration report, while treating its warnings as review prompts rather than infrastructure attestations.
 
+## v1.3.0 migration
+
+Upgrade the coordinated Nexis package set to `1.3.0` in one dependency update, including `@mohammedaydan/seo`, regenerate the lockfile, remove the previous generated `dist` output, and build again. Do not mix a v1.2 CLI, Router, Vite plugin, or resumability runtime with a v1.3 production artifact.
+
+Use `Link` for eligible internal navigation where a direct `#app` outlet replacement is useful. Keep its `href` valid without JavaScript and keep every destination independently correct as SSR/SSG HTML. The runtime keeps hash-only, modified, middle-click, external, `target`, `download`, and `rel="external"` links native; a failed fetch, non-HTML response, or incomplete destination also becomes ordinary navigation. Treat `prefetch` as a bounded public session-memory hint, not a data cache: `private` and `no-store` responses are never retained.
+
+`createContextScope`, `provideContext`, and `withContext` provide request-safe explicit dependency injection during SSR/SSG. Pass the scope explicitly through async work. Context does not serialize client state or make a value browser-private. If state must survive an eligible Link navigation in one browser document, declare `createStore(initial, 'global')`; it remains public browser state, resets on a document reload, and must never contain secrets.
+
 ## Generated files
 
 Never edit generated client chunks or manifests as a fix. Change source or configuration, rebuild, and review the diff. Check that static routes remain static and that interactive routes have valid handler references.
