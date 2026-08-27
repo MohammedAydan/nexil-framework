@@ -76,6 +76,10 @@ Use `Link` for eligible internal navigation where a direct `#app` outlet replace
 
 `createContextScope`, `provideContext`, and `withContext` provide request-safe explicit dependency injection during SSR/SSG. Pass the scope explicitly through async work. Context does not serialize client state or make a value browser-private. If state must survive an eligible Link navigation in one browser document, declare `createStore(initial, 'global')`; it remains public browser state, resets on a document reload, and must never contain secrets.
 
+## v1.3.1 migration
+
+Upgrade the coordinated Nexis packages to `1.3.1` together and regenerate the lockfile. This patch changes Starter's default generated dependency range from `^1.2.0` to `^1.3.1`; it does not require source changes in an existing application deliberately pinned to `1.3.0`.
+
 ## Generated files
 
 Never edit generated client chunks or manifests as a fix. Change source or configuration, rebuild, and review the diff. Check that static routes remain static and that interactive routes have valid handler references.

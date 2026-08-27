@@ -1,6 +1,6 @@
 # Link and Context architecture decision
 
-> **Status: v1.3.0 release candidate.** The foundational Link and Context work merged through [PR #16](https://github.com/MohammedAydan/nexis-framework/pull/16). This record defines the deliberately narrow contract, including the v1.3.0 prefetch-deduplication regression repair. It is not an installable v1.3.0 release until its release pull request passes CI, is merged, tagged, and published.
+> **Status: released in v1.3.0.** The foundational Link and Context work merged through [PR #16](https://github.com/MohammedAydan/nexis-framework/pull/16), and the v1.3.0 release passed its quality and package-publication workflows. This record defines the deliberately narrow contract, including the prefetch-deduplication regression repair. The subsequent v1.3.1 patch corrects Starter's default dependency pin only; it does not change this contract.
 
 ## Problem and current baseline
 
@@ -32,7 +32,7 @@ The synchronous `Provider` convenience is valid only for synchronous child resol
 
 The build emits the navigation runtime only if output contains `data-nx-link`. Existing delegated resumability events continue working after an outlet swap. A build aggregates opaque ScopeRef payloads into one common `nexis-state.js` asset, which is loaded before its relevant runtime; opaque scope keys remain opaque in the live DOM. The bindings runtime exposes a narrow refresh/dispose hook so an outlet replacement removes old Signal subscriptions before binding the incoming subtree. The progressive Form event listener remains delegated and does not need a per-page reinstallation.
 
-## Evidence required before v1.3.0 release
+## Evidence recorded for v1.3.0
 
 | Area                 | Local evidence before review                                                                                                                                                            |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

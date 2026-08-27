@@ -17,7 +17,7 @@
 | `nexis --help`                    | عرض الأوامر والخيارات                   |
 | `create-nexis-app`                | إنشاء مشروع جديد                        |
 
-استخدم scripts في `package.json` لتوحيد الخيارات داخل الفريق بدل تمرير flags مختلفة يدويًا في كل مرة. في v1.3.0 يقبل `create` الخيار `--template minimal|interactive|secure-node`، ويصدر `doctor --json` تقريرًا versioned. استخدم `_layout.*` للتخطيطات المتداخلة؛ تبقى `layout.*` مدعومة للتوافق، ولا تتحول route groups إلى أجزاء من URL.
+استخدم scripts في `package.json` لتوحيد الخيارات داخل الفريق بدل تمرير flags مختلفة يدويًا في كل مرة. في v1.3.1 يقبل `create` الخيار `--template minimal|interactive|secure-node`، ويصدر `doctor --json` تقريرًا versioned. استخدم `_layout.*` للتخطيطات المتداخلة؛ تبقى `layout.*` مدعومة للتوافق، ولا تتحول route groups إلى أجزاء من URL.
 
 ## تشخيص قابل للاستهلاك الآلي
 

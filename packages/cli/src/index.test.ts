@@ -144,7 +144,7 @@ describe('Nexis CLI', () => {
         dependencies: { '@mohammedaydan/cli': string }
         nexis: { source: string; registry: string }
       }
-      expect(packageJson.dependencies['@mohammedaydan/cli']).toBe('^1.2.0')
+      expect(packageJson.dependencies['@mohammedaydan/cli']).toBe('^1.3.1')
       expect(packageJson.nexis).toEqual({
         routeExtension: 'tsx',
         source: 'github-packages',
