@@ -1,4 +1,4 @@
-# Nexis next: جرد أصول التسليم الثابتة
+# Nexis v1.3.0: تنقل Link وContextScope صريح
 
 > **الحالة: v1.3.0 غير منشور.** إصدار Nexis `v1.2.0` منشور. يصف هذا المستند محتوى الحزم المستهدف بعد هذا tag، ولا يمثل إصدارًا قابلًا للتثبيت حتى يتم tag لالتزام الإصدار وينتهي النشر إلى GitHub Packages.
 
@@ -6,9 +6,9 @@
 
 يوسع `@mohammedaydan/router` واجهة `Link` بعلامة `data-nx-link` دلالية مع الحفاظ على `href` محلي مطلق عادي. يبقى Link anchor عاديًا للـcrawlers والمتصفحات بلا JavaScript. يخرج البناء `nexis-navigation.js` فقط في Routes التي يحتوي HTML الناتج لها على هذه العلامة، ويسجل `BuildRouteRecord.navigationGzipBytes` تكلفته المضغوطة لكل route بقيمة `0` عند عدم وجود Link.
 
-يقبل runtime الصغير المفوض primary clicks غير المعدلة داخل same-origin فقط. يجلب مستند HTML عاديًا، ويتحقق من outlet المملوك للفريمورك `#app`، ويحدث metadata التي يملكها، ويستبدل outlet مباشرة، مع History وscroll restoration وprefetch عام محدود وإلغاء الطلبات المتقاطعة وتنظيف bfcache وView Transitions اختيارية. يحتفظ بمخارج المتصفح الطبيعية ويعود لتنقل عادي عندما تفشل استجابة HTML أو تكون غير مكتملة. لا يركب client renderer ولا ينشئ virtual tree ولا يعمل diff لمكونات.
+يقبل runtime الصغير المفوض primary clicks غير المعدلة داخل same-origin فقط. يجلب مستند HTML عاديًا، ويتحقق من outlet المملوك للفريمورك `#app`، ويحدث metadata التي يملكها، ويستبدل outlet مباشرة، مع History وscroll restoration وprefetch عام محدود وإلغاء الطلبات المتقاطعة وتنظيف bfcache وView Transitions اختيارية. يُمنع تكرار prefetch الناجح للـanchor نفسه، وتُعاد استجابة عامة قابلة للتخزين من cache ذاكرة الجلسة المحدود، أما `private` و`no-store` فلا يُحتفظ بهما ويُجلبان من جديد عند الزيارة. يحتفظ بمخارج المتصفح الطبيعية ويعود لتنقل عادي عندما تفشل استجابة HTML أو تكون غير مكتملة. لا يركب client renderer ولا ينشئ virtual tree ولا يعمل diff لمكونات.
 
-يثبت Playwright anchor fallback بلا JavaScript، والتنقل باستبدال outlet بلا document reload، وسلوك History back، ووسم navigation fetch العام، وأن route الوجهة يحمل State Engine وlazy handler وSignal-to-DOM binding بعد Link swap.
+يثبت Playwright anchor fallback بلا JavaScript، والتنقل باستبدال outlet بلا document reload، وسلوك History back/forward ومخارج hash وanchor الطبيعية، ووسم navigation fetch العام، وإلغاء الطلب المتأخر، وfallback لرد غير HTML، وتنظيف bfcache، وإعادة استخدام prefetch القابل للتخزين مع إعادة جلب `no-store`، وأن route الوجهة يحمل State Engine وlazy handler وSignal-to-DOM binding بعد Link swap.
 
 ## ContextScope صريح
 
@@ -23,7 +23,7 @@
 يدعم المنشئ وCLI الآن اختيار `--template` مستقرًا:
 
 ```bash
-pnpm dlx @mohammedaydan/create-nexis@1.2.0 portal --yes --ts --template secure-node
+pnpm dlx @mohammedaydan/create-nexis@1.3.0 portal --yes --ts --template secure-node
 nexis create landing --template minimal --yes
 ```
 
@@ -89,7 +89,7 @@ export default defineConfig({
 
 ## التوافق والتحقق
 
-يبقى إصدار build manifest هو `1`. يظل حقل `assets` اختياريًا، لذلك تظل artifacts الأقدم قابلة للقراءة. `nexis-state.js` مشروط ولا يؤثر في Routes الثابتة. ولأن ناتج production ينسق الآن بين CLI وVite plugin وruntime الاستئناف، حدّث مجموعة حزم v1.2.0 المتطابقة معًا ولا تثبت CLI قديمًا إلى جانب plugin جديد أو تخلط الملفات المولدة مع build سابق.
+يبقى إصدار build manifest هو `1`. يظل حقل `assets` اختياريًا، لذلك تظل artifacts الأقدم قابلة للقراءة. `nexis-state.js` مشروط ولا يؤثر في Routes الثابتة. ولأن ناتج production ينسق الآن بين CLI وVite plugin وRouter وruntime الاستئناف، حدّث مجموعة حزم v1.3.0 المتطابقة معًا ولا تثبت CLI قديمًا إلى جانب plugin جديد أو تخلط الملفات المولدة مع build سابق.
 
 يغطي الاختبار مشروعًا يحتوي صورة PNG عامة بحجم 300 KiB، ويتحقق من ظهور الأصل وحجم الصور والتنبيه في الـmanifest ومخرجات التحليل. ويشغّل أيضًا SVG عامًا مهيأً للتحويل مرتين، ليتحقق من AVIF/WebP غير الفارغة وcache hits الدائمة في البناء الثاني. وتغطي الاختبارات المركزة ملفات Starter Engine portable وscaffold Node الآمن وعقد `doctor --json` وHTML state المعتم واستئناف handler في متصفح حقيقي وSignal bindings في متصفح حقيقي. قبل tag الإصدار شغّل بوابة الإصدار الكاملة:
 

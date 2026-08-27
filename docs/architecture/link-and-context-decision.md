@@ -1,16 +1,16 @@
-# Link and shared-state architecture decision
+# Link and Context architecture decision
 
-> **Status: implemented locally; pending code review and CI.** This record defines the deliberately narrow Link and Context contract implemented after source, production, browser, size, and scope-isolation tests passed locally. It is not an installable release until a future version is merged, tagged, and published.
+> **Status: v1.3.0 release candidate.** The foundational Link and Context work merged through [PR #16](https://github.com/MohammedAydan/nexis-framework/pull/16). This record defines the deliberately narrow contract, including the v1.3.0 prefetch-deduplication regression repair. It is not an installable v1.3.0 release until its release pull request passes CI, is merged, tagged, and published.
 
 ## Problem and current baseline
 
-`@mohammedaydan/router` already renders `Link` as a semantic internal `<a href>` and exposes a `data-nx-prefetch` hint. No production navigation runtime consumes that hint yet, so an ordinary link follows native full-document navigation. `@mohammedaydan/core` already exposes `createContext`, but its process-local value stack is synchronous and must not be described as an async SSR request-isolation mechanism.
+`@mohammedaydan/router` renders `Link` as a semantic internal `<a href>`, adds the `data-nx-link` marker, and exposes a `data-nx-prefetch` hint. The conditional browser runtime consumes those markers only as a progressive enhancement; an ordinary link still follows native full-document navigation when JavaScript is unavailable or the request is ineligible. `@mohammedaydan/core` exposes `createContext` and explicit `ContextScope` helpers; its synchronous Provider convenience must not be described as a general async ambient request-isolation mechanism.
 
 The framework must add useful in-app navigation and dependency injection without introducing a virtual tree, reconciliation pass, synthetic event layer, or a client-side rendering requirement for SSR/SSG pages.
 
 ## Link contract
 
-`Link` remains an anchor in all output modes. It will retain its `href`, support only local absolute paths, and add an explicit `data-nx-link` marker that opts a page into a small delegated navigation runtime. With JavaScript unavailable, malformed, delayed, or deliberately bypassed, browsers continue normal anchor navigation and crawlers continue receiving complete server-rendered documents.
+`Link` remains an anchor in all output modes. It retains its `href`, supports only local absolute paths, and adds an explicit `data-nx-link` marker that opts a page into a small delegated navigation runtime. With JavaScript unavailable, malformed, delayed, or deliberately bypassed, browsers continue normal anchor navigation and crawlers continue receiving complete server-rendered documents.
 
 The runtime will intercept only an unmodified primary click on a same-origin marked anchor. It must bypass modified clicks, middle clicks, `target` links, `download`, `rel="external"`, hash-only navigation, external origins, previously prevented events, and unsupported response types. Any failed fetch, missing `#app` outlet, non-success response, or navigation interruption falls back to `location.assign()` rather than presenting partial or stale content.
 
@@ -24,15 +24,15 @@ Signals and stores remain the state update mechanism. They notify only subscribe
 
 An explicitly captured `createStore(initial, 'global')` keeps its serializable browser entry across successful Link outlet replacements within the current document. Other captured Store lifetimes are disposed with the outgoing route bindings. This is not server-global state, session persistence, data privacy, or request isolation; refresh clears it unless an application deliberately persists and validates safe public data.
 
-The public target API keeps `createContext(defaultValue)` and offers a concise `use()` alias alongside the existing `useContext()`. `Provider` remains a structural function that scopes a value for its child computation. A new explicit `ContextScope` contract will be introduced for adapters and tests, allowing a caller to create a scope, derive a nested scope, and execute a computation against that scope without a process-global stack.
+The public API keeps `createContext(defaultValue)` and offers a concise `use()` alias alongside the existing `useContext()`. `Provider` remains a structural function that scopes a value for its child computation. The explicit `ContextScope` contract allows an adapter or test to create a scope, derive a nested scope, and execute a computation against that scope without a process-global stack.
 
-The synchronous `Provider` convenience is valid only for synchronous child resolution. Async SSR must run through a request-owned context scope supplied by the renderer or server adapter. In Node, adapter integration may use `AsyncLocalStorage` internally; this implementation detail must not leak into browser bundles or be required by edge runtimes. Edge adapters must receive the equivalent isolated scope explicitly. No request-private context value may be serialized to a browser boundary.
+The synchronous `Provider` convenience is valid only for synchronous child resolution. Async SSR must run through a request-owned context scope supplied by the renderer or server adapter. Current CLI SSR/SSG wiring creates and passes that scope explicitly; other adapters must pass an equivalent isolated scope explicitly. No request-private context value may be serialized to a browser boundary.
 
 ## Runtime coordination
 
 The build emits the navigation runtime only if output contains `data-nx-link`. Existing delegated resumability events continue working after an outlet swap. A build aggregates opaque ScopeRef payloads into one common `nexis-state.js` asset, which is loaded before its relevant runtime; opaque scope keys remain opaque in the live DOM. The bindings runtime exposes a narrow refresh/dispose hook so an outlet replacement removes old Signal subscriptions before binding the incoming subtree. The progressive Form event listener remains delegated and does not need a per-page reinstallation.
 
-## Required evidence before merge
+## Evidence required before v1.3.0 release
 
 | Area                 | Local evidence before review                                                                                                                                                            |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

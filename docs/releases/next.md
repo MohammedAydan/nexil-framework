@@ -1,4 +1,4 @@
-# Nexis next: static asset delivery inventory
+# Nexis v1.3.0: Link navigation and explicit Context scopes
 
 > **Status: v1.3.0 is unreleased.** Nexis `v1.2.0` is published. This document describes the intended package contents after that tag and does not describe an installable version until the release commit is tagged and GitHub Packages publishing has completed.
 
@@ -6,9 +6,9 @@
 
 `@mohammedaydan/router` extends `Link` with a semantic `data-nx-link` marker while preserving a normal local absolute `href`. A Link remains an ordinary anchor for crawlers and JavaScript-disabled browsers. The build emits `nexis-navigation.js` only for routes whose rendered HTML contains that marker; `BuildRouteRecord.navigationGzipBytes` reports its per-route compressed cost, with `0` for routes without Link.
 
-The small delegated runtime accepts only unmodified primary same-origin clicks. It uses a normal HTML fetch, validates the framework-owned `#app` outlet, updates owned metadata, replaces that outlet directly, and integrates history, scroll restoration, bounded public prefetch, interrupted-request cancellation, bfcache cleanup, and optional View Transitions. It bypasses native escape hatches and falls back to ordinary navigation for any unsuccessful HTML response or incomplete document. It does not mount a client renderer, build a virtual tree, or diff a component hierarchy.
+The small delegated runtime accepts only unmodified primary same-origin clicks. It uses a normal HTML fetch, validates the framework-owned `#app` outlet, updates owned metadata, replaces that outlet directly, and integrates history, scroll restoration, bounded public prefetch, interrupted-request cancellation, bfcache cleanup, and optional View Transitions. It bypasses native escape hatches and falls back to ordinary navigation for any unsuccessful HTML response or incomplete document. A successful prefetch is deduplicated per anchor, cacheable responses are reused in the bounded session-memory cache, and `private` or `no-store` responses are fetched again on visit. It does not mount a client renderer, build a virtual tree, or diff a component hierarchy.
 
-Real-browser coverage proves the normal anchor fallback without JavaScript, direct outlet navigation without a document reload, History back behavior, public navigation fetch tagging, and a destination route that loads State Engine, lazy handler, and Signal-to-DOM binding behavior after a Link swap.
+Real-browser coverage proves the normal anchor fallback without JavaScript, direct outlet navigation without a document reload, back/forward History behavior, hash and native escape-hatch bypasses, public navigation fetch tagging, stale-request cancellation, non-HTML fallback, bfcache cleanup, cacheable-prefetch reuse, `no-store` refetching, and a destination route that loads State Engine, lazy handler, and Signal-to-DOM binding behavior after a Link swap.
 
 ## Explicit Context scopes
 
@@ -27,7 +27,7 @@ and `nexis create`.
 The initializer and CLI now support a stable `--template` choice:
 
 ```bash
-pnpm dlx @mohammedaydan/create-nexis@1.2.0 portal --yes --ts --template secure-node
+pnpm dlx @mohammedaydan/create-nexis@1.3.0 portal --yes --ts --template secure-node
 nexis create landing --template minimal --yes
 ```
 
@@ -113,7 +113,7 @@ The default disk cache is `.nexis/media-cache`. It is disposable, stays within t
 
 ## Compatibility and verification
 
-The build manifest keeps version `1`. The `assets` field remains optional, so older artifacts continue to be readable by the CLI. `nexis-state.js` is conditional and has no effect on static routes. Because generated production output now coordinates the CLI, Vite plugin, and resumability runtime, upgrade the matching v1.2.0 package set together; do not pin an old CLI beside a new plugin or mix its generated files with a previous build.
+The build manifest keeps version `1`. The `assets` field remains optional, so older artifacts continue to be readable by the CLI. `nexis-state.js` is conditional and has no effect on static routes. Because generated production output now coordinates the CLI, Vite plugin, Router, and resumability runtime, upgrade the matching v1.3.0 package set together; do not pin an old CLI beside a new plugin or mix its generated files with a previous build.
 
 Verification covers the CLI build and analysis flow with a 300 KiB public PNG fixture. It also builds a configured public SVG twice, verifying non-empty AVIF/WebP output and persistent cache hits on the second build. Focused tests cover the portable starter files, safe Node scaffolding, the new `doctor --json` contract, opaque state HTML, real browser handler resumption, and real browser Signal bindings. Run the complete release gate before tagging the package version:
 

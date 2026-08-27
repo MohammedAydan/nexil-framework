@@ -30,7 +30,7 @@ export default function Layout({ children }: { children: unknown }) {
     `import { Link } from '@mohammedaydan/router'
 export const metadata = { title: 'Nexis home', description: 'Link navigation proof home' }
 export default function Home() {
-  return <main><h1>Nexis home</h1><Link href="/about" prefetch="intent" id="about-link">Read about Nexis</Link><a data-nx-link="push" href="#home-anchor" id="hash-link">Skip to anchor</a><a data-nx-link="push" href="/about" id="middle-link">Open with middle button</a><a data-nx-link="push" href="/about" target="_blank" id="target-link">Open in new tab</a><a data-nx-link="push" href="/about" download id="download-link">Download route</a><a data-nx-link="push" href="https://example.com/" id="external-link">External route</a><h2 id="home-anchor">Home anchor</h2><div style={{ height: '1600px' }} /></main>
+  return <main><h1>Nexis home</h1><Link href="/about" prefetch="intent" id="about-link">Read about Nexis</Link><Link href="/no-store" prefetch="intent" id="no-store-link">Read no-store response</Link><a data-nx-link="push" href="#home-anchor" id="hash-link">Skip to anchor</a><a data-nx-link="push" href="/about" id="middle-link">Open with middle button</a><a data-nx-link="push" href="/about" target="_blank" id="target-link">Open in new tab</a><a data-nx-link="push" href="/about" download id="download-link">Download route</a><a data-nx-link="push" href="https://example.com/" id="external-link">External route</a><h2 id="home-anchor">Home anchor</h2><div style={{ height: '1600px' }} /></main>
 }
 `,
     'utf8',
@@ -219,4 +219,37 @@ test('an explicit browser-global Store survives a Link outlet replacement', asyn
   await expect(page).toHaveURL('http://127.0.0.1:4321/about')
   await page.locator('#global-read').click()
   await expect(page.locator('#global-read')).toHaveText('1')
+})
+
+test('Link prefetch caches only cacheable HTML documents', async ({ page }) => {
+  const requests: string[] = []
+  page.on('request', (request) => {
+    if (request.headers()['x-nexis-navigation'] === '1') requests.push(request.url())
+  })
+  await page.goto('http://127.0.0.1:4321/')
+  requests.length = 0
+
+  await page.locator('#about-link').hover()
+  await expect.poll(() => requests.filter((url) => url.endsWith('/about')).length).toBe(1)
+  await page.locator('#about-link').click()
+  await expect(page).toHaveURL('http://127.0.0.1:4321/about')
+  expect(requests.filter((url) => url.endsWith('/about'))).toHaveLength(1)
+
+  await page.goto('http://127.0.0.1:4321/')
+  requests.length = 0
+  let responseCount = 0
+  await page.route('**/no-store', (route) => {
+    responseCount += 1
+    return route.fulfill({
+      contentType: 'text/html',
+      headers: { 'Cache-Control': 'no-store' },
+      body: `<!doctype html><title>No store</title><main id="app"><h1>No-store response ${responseCount}</h1></main>`,
+    })
+  })
+  await page.locator('#no-store-link').hover()
+  await expect.poll(() => responseCount).toBe(1)
+  await page.locator('#no-store-link').click()
+  await expect(page).toHaveURL('http://127.0.0.1:4321/no-store')
+  await expect(page.getByRole('heading', { name: 'No-store response 2' })).toBeVisible()
+  expect(responseCount).toBe(2)
 })
