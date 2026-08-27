@@ -110,28 +110,34 @@ termination boundary is known.
 
 ## Vite plugin and Client
 
-| API                                      | Purpose                                                             |
-| ---------------------------------------- | ------------------------------------------------------------------- |
-| `nexis(options)`                         | Vite plugin                                                         |
-| `transformNexisSource(source, id)`       | Extract lazy chunks and emit per-boundary `data-nx-scope` payloads  |
-| `classifyScopeCaptures(...)`             | Classify values, signals, stores, actions, and unsupported captures |
-| `RESUMABILITY_BOOTSTRAP`                 | The delegated resumability runtime served as `nexis-bootstrap.js`   |
-| `bootstrapResumability(root, load)`      | Bind boundaries in a DOM root; parity with the shipped bootstrap    |
-| `serializeResumeState`                   | Serialize bounded resume data                                       |
-| `deserializeResumeState`                 | Deserialize resume data                                             |
-| `createHandlerReference`                 | Create a lazy handler reference                                     |
-| `createScopeRegistry`                    | Create a ScopeRef registry                                          |
-| `registerScopeSignal`                    | Register a signal reference                                         |
-| `registerScopeStore`                     | Register a store reference                                          |
-| `registerScopeAction`                    | Register an action reference                                        |
-| `disposeScope`                           | Dispose one registered scope                                        |
-| `inspectScope`                           | Inspect active scope records                                        |
-| `bindSignalToDOM(scopeId, node, target)` | Bind a registered Signal or Store value to one DOM target           |
-| `enhanceForms(options)`                  | Enhance `Form` nodes while preserving native fallback               |
+| API                                          | Purpose                                                                                               |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `nexis(options)`                             | Vite plugin                                                                                           |
+| `transformNexisSource(source, id, options?)` | Extract lazy chunks; `{ scopeSerialization: 'external' }` emits opaque scope keys and payload records |
+| `externalizeScopeAttributes(html, id)`       | Replace inline ScopeRef HTML attributes with opaque keys and return external payloads                 |
+| `classifyScopeCaptures(...)`                 | Classify values, signals, stores, actions, and unsupported captures                                   |
+| `RESUMABILITY_BOOTSTRAP`                     | The delegated resumability runtime served as `nexis-bootstrap.js`                                     |
+| `RESUMABILITY_BOOTSTRAP_EXTERNAL`            | Production runtime that resolves opaque ScopeRef keys from `nexis-state.js`                           |
+| `bootstrapResumability(root, load)`          | Bind boundaries in a DOM root; parity with the shipped bootstrap                                      |
+| `serializeResumeState`                       | Serialize bounded resume data                                                                         |
+| `deserializeResumeState`                     | Deserialize resume data                                                                               |
+| `createHandlerReference`                     | Create a lazy handler reference                                                                       |
+| `createScopeRegistry`                        | Create a ScopeRef registry                                                                            |
+| `registerScopeSignal`                        | Register a signal reference                                                                           |
+| `registerScopeStore`                         | Register a store reference                                                                            |
+| `registerScopeAction`                        | Register an action reference                                                                          |
+| `disposeScope`                               | Dispose one registered scope                                                                          |
+| `inspectScope`                               | Inspect active scope records                                                                          |
+| `bindSignalToDOM(scopeId, node, target)`     | Bind a registered Signal or Store value to one DOM target                                             |
+| `enhanceForms(options)`                      | Enhance `Form` nodes while preserving native fallback                                                 |
 
 Lazy handlers receive `{ element, event, scope }`. Signals, stores, and actions
 captured by a handler are materialized once per scope id and shared across every
 boundary that captures the same declaration.
+
+`@mohammedaydan/starter` exports `STARTER_TEMPLATES`, `resolveStarterOptions`, and `createStarterFiles(options)`. Its root API is portable and returns only typed `{ path, content }` records. `@mohammedaydan/starter/node` additionally exports `parseScaffoldArgs()` and `scaffoldProject()` for filesystem-backed CLIs.
+
+`@mohammedaydan/cli` exports `diagnoseProject(root): Promise<DoctorReport>`. The command form `nexis doctor --json` serializes that versioned report. Its checks and status are a local configuration review aid, not an attestation of proxy, TLS, CSP, or other deployment controls.
 
 The compiler directives `bindText$`, `bindValue$`, `bindChecked$`, `bindDisabled$`, `bindHidden$`, `bindClass$`, `bindStyle$`, `bindHref$`, `bindSrc$`, and `bindAriaLabel$` create fine-grained DOM bindings. The client function has the following contract:
 

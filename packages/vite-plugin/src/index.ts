@@ -6,11 +6,19 @@ import { transformWithEsbuild } from 'vite'
 import type { Plugin } from 'vite'
 import { findSecretExposure, validateImport } from '@mohammedaydan/compiler'
 import { RESUMABILITY_BINDINGS, RESUMABILITY_BOOTSTRAP, RESUMABILITY_FORMS } from './bootstrap.js'
+import { RESUMABILITY_BOOTSTRAP_EXTERNAL } from './external-bootstrap.js'
+import { RESUMABILITY_BINDINGS_EXTERNAL } from './external-bindings.js'
 
 const traverse = ((traverseModule as unknown as { default?: typeof traverseModule }).default ??
   traverseModule) as typeof traverseModule
 
-export { RESUMABILITY_BINDINGS, RESUMABILITY_BOOTSTRAP, RESUMABILITY_FORMS }
+export {
+  RESUMABILITY_BINDINGS,
+  RESUMABILITY_BINDINGS_EXTERNAL,
+  RESUMABILITY_BOOTSTRAP,
+  RESUMABILITY_BOOTSTRAP_EXTERNAL,
+  RESUMABILITY_FORMS,
+}
 
 interface AstNode {
   readonly type?: string
@@ -75,8 +83,21 @@ export interface NexisTransformResult {
   readonly chunks: readonly LazyChunk[]
   readonly css: readonly string[]
   readonly scopeCaptures: readonly ScopeCapture[]
+  /** Scope payloads moved out of HTML when scopeSerialization is external. */
+  readonly externalScopePayloads: readonly ExternalScopePayload[]
   readonly bindings: readonly DomBinding[]
   readonly warnings: readonly string[]
+}
+
+export interface ExternalScopePayload {
+  /** Opaque HTML token that resolves to this payload in the generated runtime asset. */
+  readonly key: string
+  readonly payload: Readonly<Record<string, ScopeCapture>>
+}
+
+export interface NexisTransformOptions {
+  /** Keep ScopeRefs inline for dev compatibility, or externalize them during a production build. */
+  readonly scopeSerialization?: 'inline' | 'external'
 }
 
 function hash(value: string): string {
@@ -427,6 +448,35 @@ function mergeScopeAttributes(code: string): string {
   })
 }
 
+function decodeJsonAttribute(value: string): string {
+  return value.replace(/&quot;/g, '"').replace(/&amp;/g, '&')
+}
+
+/**
+ * Replace inline ScopeRef attributes in rendered HTML with opaque keys and return
+ * the payloads for a separate generated runtime asset. The payload remains public
+ * browser data; it is moved out of the document source rather than treated as a secret.
+ */
+export function externalizeScopeAttributes(
+  code: string,
+  id: string,
+): { readonly code: string; readonly payloads: readonly ExternalScopePayload[] } {
+  const payloads = new Map<string, ExternalScopePayload>()
+  const externalized = code.replace(/data-nx-scope="([^"]*)"/g, (attribute, encoded: string) => {
+    try {
+      const parsed = JSON.parse(decodeJsonAttribute(encoded))
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return attribute
+      const payload = parsed as Record<string, ScopeCapture>
+      const key = `nx:scope:${hash(`${normalizeIdForHash(id)}:${JSON.stringify(payload)}`)}`
+      payloads.set(key, { key, payload })
+      return `data-nx-scope="${key}"`
+    } catch {
+      return attribute
+    }
+  })
+  return { code: externalized, payloads: [...payloads.values()] }
+}
+
 function mergeBindingAttributes(code: string): string {
   let merged = code
   let previous = ''
@@ -541,6 +591,7 @@ function parseSource(source: string, id: string): AstNode {
 export async function transformNexisSource(
   source: string,
   id: string,
+  options: NexisTransformOptions = {},
 ): Promise<NexisTransformResult> {
   const ast = parseSource(source, id)
   const moduleDiagnostics: string[] = []
@@ -886,12 +937,20 @@ export async function transformNexisSource(
     magic.appendLeft(range.offset, range.attribute)
   }
 
+  const mergedCode = mergeScopeAttributes(
+    mergeBindingAttributes(mergeEventAttributes(magic.toString())),
+  )
+  const externalizedScopes =
+    options.scopeSerialization === 'external'
+      ? externalizeScopeAttributes(mergedCode, id)
+      : { code: mergedCode, payloads: [] }
   return {
-    code: mergeScopeAttributes(mergeBindingAttributes(mergeEventAttributes(magic.toString()))),
+    code: externalizedScopes.code,
     map: magic.generateMap({ hires: true }),
     chunks,
     css: extractStaticCss(source, id),
     scopeCaptures,
+    externalScopePayloads: externalizedScopes.payloads,
     bindings,
     warnings,
   }

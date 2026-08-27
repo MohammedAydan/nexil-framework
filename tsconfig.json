@@ -17,6 +17,7 @@
     { "path": "./packages/actions" },
     { "path": "./packages/state" },
     { "path": "./packages/adapters" },
+    { "path": "./packages/starter" },
     { "path": "./packages/cli" },
     { "path": "./packages/create-nexis" },
     { "path": "./packages/create-nexis-app" },

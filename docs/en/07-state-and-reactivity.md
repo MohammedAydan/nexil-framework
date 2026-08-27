@@ -40,9 +40,10 @@ Nexis detects computed re-entry and emits a descriptive cycle error instead of l
 
 ### Signals captured by lazy handlers
 
-When an `onClick$` handler closes over a signal or store, the compiler serializes
-the declaration into `data-nx-scope` so the browser can materialize it on first
-interaction. This requires a **JSON-literal initial value**:
+When an `onClick$` handler closes over a signal or store, the production compiler
+puts an opaque key in `data-nx-scope` and stores the corresponding browser payload
+in `nexis-state.js` so the browser can materialize it on first interaction. This
+requires a **JSON-literal initial value**:
 
 ```ts
 const count = state(0) // ✅ serialized into the page
@@ -53,6 +54,11 @@ Captures that cannot be serialized produce an explicit `unsupported` warning at
 build time instead of failing silently at click time. Multiple handlers capturing
 the same declaration share one live signal instance in the browser, keyed by its
 scope id.
+
+The external state asset reduces metadata visible in the document source, but its
+contents are still delivered to the browser and therefore public. Treat scope capture
+as a client-data boundary, not a secret store. The compiler's secret-exposure checks
+and request-local ownership rules remain mandatory.
 
 ## Async resources
 

@@ -11,12 +11,23 @@
 | `nexis generate component <name>` | إنشاء component بأمان                   |
 | `nexis add action <name>`         | إنشاء server action scaffold            |
 | `nexis doctor`                    | فحص config وshell وroute structure      |
+| `nexis doctor --json`             | تقرير تشخيصي versioned للاستهلاك في CI  |
 | `nexis test`                      | تشغيل workflow الاختبارات               |
 | `nexis upgrade`                   | فحص متطلبات الترقية                     |
 | `nexis --help`                    | عرض الأوامر والخيارات                   |
 | `create-nexis-app`                | إنشاء مشروع جديد                        |
 
-استخدم scripts في `package.json` لتوحيد الخيارات داخل الفريق بدل تمرير flags مختلفة يدويًا في كل مرة. في v1.1.0 استخدم `_layout.*` للتخطيطات المتداخلة؛ تبقى `layout.*` مدعومة للتوافق، ولا تتحول route groups إلى أجزاء من URL.
+استخدم scripts في `package.json` لتوحيد الخيارات داخل الفريق بدل تمرير flags مختلفة يدويًا في كل مرة. في v1.2.0 يقبل `create` الخيار `--template minimal|interactive|secure-node`، ويصدر `doctor --json` تقريرًا versioned. استخدم `_layout.*` للتخطيطات المتداخلة؛ تبقى `layout.*` مدعومة للتوافق، ولا تتحول route groups إلى أجزاء من URL.
+
+## تشخيص قابل للاستهلاك الآلي
+
+استخدم `nexis doctor --json` عندما تحتاج CI أو مولد مشروع أو تكامل editor إلى تقرير ثابت. يحتوي إصدار التقرير `1` على حالة `ok` أو `warn` أو `error` وفحوصات لـ package manifest وscripts lifecycle ومجلد routes وHTML outlets وNexis config ونية trusted proxy وإعدادات security headers الصريحة.
+
+```bash
+nexis doctor --json > nexis-doctor.json
+```
+
+التحذير دعوة للمراجعة وليس دليلًا على أن الاستضافة آمنة أو غير آمنة. خصوصًا عند تفعيل `trustProxy`، لا يستطيع فحص CLI إثبات أن proxy في البنية التحتية يستبدل forwarded headers فعلًا.
 
 ## ملف التهيئة
 
@@ -75,6 +86,7 @@ export default {
 ```text
 dist/client/index.html
 dist/client/nexis-manifest.json
+dist/client/nexis-state.js
 dist/client/nexis-bootstrap.js
 dist/client/nexis-bindings.js
 dist/client/nexis-forms.js

@@ -138,6 +138,28 @@ export const view = <button onClick$={() => count.set((c) => c + 1)}>+</button>`
   expect(chunkSource).toContain('scope.count.set')
 })
 
+it('externalizes resumability metadata behind an opaque HTML scope key', async () => {
+  const result = await transformNexisSource(
+    `import { state } from '@mohammedaydan/core'
+const accountBalance = state(1200)
+export const view = <button onClick$={() => accountBalance.set((value) => value + 1)}>+</button>`,
+    '/app/src/routes/external-scope.tsx',
+    { scopeSerialization: 'external' },
+  )
+  const scopeAttribute = /data-nx-scope="([^"]+)"/.exec(result.code)?.[1] ?? ''
+  expect(scopeAttribute).toMatch(/^nx:scope:[a-f0-9]{12}$/)
+  expect(scopeAttribute).not.toContain('accountBalance')
+  expect(scopeAttribute).not.toContain('&quot;initial&quot;')
+  expect(result.externalScopePayloads).toEqual([
+    expect.objectContaining({
+      key: expect.stringMatching(/^nx:scope:[a-f0-9]{12}$/),
+      payload: {
+        accountBalance: expect.objectContaining({ kind: 'signal', initial: 1200 }),
+      },
+    }),
+  ])
+})
+
 it('classifies useState tuple declarations as signal captures', async () => {
   const result = await transformNexisSource(
     `import { useState } from '@mohammedaydan/core'

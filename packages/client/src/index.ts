@@ -150,6 +150,24 @@ function parseHandlerAttribute(value: string, eventName?: string): MaterializedR
   return references
 }
 
+type ScopeSeedMap = Readonly<Record<string, Readonly<Record<string, ScopeRef>>>>
+
+function parseScopePayload(raw: string | null): Readonly<Record<string, ScopeRef>> | undefined {
+  if (!raw) return undefined
+  if (raw.startsWith('nx:scope:')) {
+    const seeds = (globalThis as typeof globalThis & { __nexisScopeSeeds?: ScopeSeedMap })
+      .__nexisScopeSeeds
+    return seeds?.[raw]
+  }
+  try {
+    const parsed: unknown = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return undefined
+    return parsed as Readonly<Record<string, ScopeRef>>
+  } catch {
+    return undefined
+  }
+}
+
 /**
  * Resolves a boundary's serialized ScopeRefs into live browser objects,
  * caching signal/store/action instances by reference ID so every boundary
@@ -160,16 +178,10 @@ function materializeScope(
   cache: Map<string, unknown>,
 ): Record<string, unknown> {
   const raw = element.getAttribute('data-nx-scope')
-  if (!raw) return {}
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(raw)
-  } catch {
-    return {}
-  }
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {}
+  const parsed = parseScopePayload(raw)
+  if (!parsed) return {}
   const scope: Record<string, unknown> = {}
-  for (const [name, ref] of Object.entries(parsed as Record<string, ScopeRef>)) {
+  for (const [name, ref] of Object.entries(parsed)) {
     if (!ref || typeof ref.kind !== 'string') continue
     if (ref.kind === 'value') {
       scope[name] = (ref as ScopeRefValue).data
@@ -345,16 +357,10 @@ function resolveMaterializedBinding(
   const owner = scopeOwner(element)
   if (!owner) return undefined
   const raw = owner.getAttribute('data-nx-scope')
-  if (!raw) return undefined
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(raw)
-  } catch {
-    return undefined
-  }
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return undefined
+  const parsed = parseScopePayload(raw)
+  if (!parsed) return undefined
   const scope = materializeScope(owner, cache)
-  for (const [name, ref] of Object.entries(parsed as Record<string, ScopeRef>)) {
+  for (const [name, ref] of Object.entries(parsed)) {
     if (ref && 'id' in ref && ref.id === scopeId) {
       const value = scope[name]
       if (isBindingSignal(value)) return value
