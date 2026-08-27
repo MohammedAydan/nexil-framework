@@ -80,6 +80,39 @@ describe('Nexis CLI', () => {
     }
   })
 
+  it('emits cached AVIF and WebP public-image variants when configured', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-media-'))
+    try {
+      const directory = await createProject('media-app', parent)
+      await mkdir(join(directory, 'public'), { recursive: true })
+      await writeFile(
+        join(directory, 'public', 'hero.svg'),
+        '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect width="20" height="20" fill="green" /></svg>',
+      )
+      await writeFile(
+        join(directory, 'nexis.config.mjs'),
+        'export default { media: { images: { transform: true, widths: [16] } } }\n',
+        'utf8',
+      )
+      await runCli(['build'], directory)
+      expect(
+        (await readFile(join(directory, 'dist/client/hero-svg-16.avif'))).byteLength,
+      ).toBeGreaterThan(0)
+      expect(
+        (await readFile(join(directory, 'dist/client/hero-svg-16.webp'))).byteLength,
+      ).toBeGreaterThan(0)
+      await runCli(['build'], directory)
+      const manifest = JSON.parse(
+        await readFile(join(directory, 'dist/nexis-manifest.json'), 'utf8'),
+      ) as { media?: { images: Array<{ variants: Array<{ cacheHit: boolean }> }> } }
+      expect(manifest.media?.images[0]?.variants).toHaveLength(2)
+      expect(manifest.media?.images[0]?.variants.every((variant) => variant.cacheHit)).toBe(true)
+      expect(await runCli(['analyze'], directory)).toContain('Generated image variants')
+    } finally {
+      await rm(parent, { recursive: true, force: true })
+    }
+  })
+
   it('uses local workspace dependencies when scaffolded inside the repository', async () => {
     const parent = await mkdtemp(join(process.cwd(), '.nexis-scaffold-test-'))
     try {

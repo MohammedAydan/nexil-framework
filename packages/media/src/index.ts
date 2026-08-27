@@ -17,6 +17,8 @@ export interface ImageProps {
 export interface PictureProps extends ImageProps {
   readonly widths?: readonly number[]
   readonly formats?: readonly ('avif' | 'webp')[]
+  /** Use static files emitted by the optional Nexis build image pipeline instead of query URLs. */
+  readonly staticVariants?: boolean
 }
 
 export interface PictureMarkup {
@@ -34,18 +36,73 @@ function escapeAttribute(value: string): string {
   )
 }
 
+function staticImageSource(src: string): { readonly directory: string; readonly fileBase: string } {
+  if (!src.startsWith('/') || src.startsWith('//'))
+    throw new TypeError('Nexis Image src must be a local absolute path.')
+  const suffix = [src.indexOf('?'), src.indexOf('#')].filter((index) => index >= 0).sort()[0]
+  const pathname = suffix === undefined ? src : src.slice(0, suffix)
+  const slash = pathname.lastIndexOf('/')
+  const dot = pathname.lastIndexOf('.')
+  if (dot <= slash + 1 || dot === pathname.length - 1)
+    throw new TypeError('Nexis static image variants require a file extension.')
+  const name = pathname.slice(slash + 1, dot).replace(/[^a-zA-Z0-9_-]/g, '-')
+  const extension = pathname
+    .slice(dot + 1)
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+  if (!name || !extension)
+    throw new TypeError('Nexis static image variants require a safe file name.')
+  return { directory: pathname.slice(0, slash + 1), fileBase: `${name}-${extension}` }
+}
+
+/** Return the stable file base used by the Nexis static image build pipeline. */
+export function imageVariantFileBase(src: string): string {
+  return staticImageSource(src).fileBase
+}
+
+/** Return the static URL for an AVIF or WebP variant emitted by the Nexis image pipeline. */
+export function staticImageVariantPath(
+  src: string,
+  width: number,
+  format: 'avif' | 'webp',
+): string {
+  if (!Number.isInteger(width) || width < 1)
+    throw new TypeError('Nexis static image variant width must be a positive integer.')
+  const source = staticImageSource(src)
+  return `${source.directory}${source.fileBase}-${width}.${format}`
+}
+
+function responsiveFallback(props: PictureProps, widths: readonly number[]): ImageAttributes {
+  const fallback = imageAttributes(props, widths)
+  if (!props.staticVariants) return fallback
+  return {
+    ...fallback,
+    srcset: widths.map((width) => `${props.src} ${width}w`).join(', '),
+  }
+}
+
+function responsiveSourceSet(
+  props: PictureProps,
+  widths: readonly number[],
+  format: 'avif' | 'webp',
+): string {
+  return widths
+    .map((width) => {
+      const source = props.staticVariants
+        ? staticImageVariantPath(props.src, width, format)
+        : `${props.src}${props.src.includes('?') ? '&' : '?'}format=${format}&w=${width}`
+      return `${source} ${width}w`
+    })
+    .join(', ')
+}
+
 export function pictureMarkup(props: PictureProps): PictureMarkup {
   const widths = [...(props.widths ?? [320, 640, 960, 1280])]
   const formats = [...(props.formats ?? ['avif', 'webp'])]
-  const fallback = imageAttributes(props, widths)
+  const fallback = responsiveFallback(props, widths)
   const sources = formats.map((format) => ({
     type: `image/${format}`,
-    srcset: widths
-      .map(
-        (width) =>
-          `${props.src}${props.src.includes('?') ? '&' : '?'}format=${format}&w=${width} ${width}w`,
-      )
-      .join(', '),
+    srcset: responsiveSourceSet(props, widths, format),
   }))
   const sourceMarkup = sources
     .map(
@@ -71,7 +128,7 @@ export interface ImageAttributes {
 
 export function imageAttributes(
   props: ImageProps,
-  widths = [320, 640, 960, 1280, 1920],
+  widths: readonly number[] = [320, 640, 960, 1280, 1920],
 ): ImageAttributes {
   if (!props.src.startsWith('/') || props.src.startsWith('//'))
     throw new TypeError('Nexis Image src must be a local absolute path.')
@@ -106,6 +163,7 @@ export function imageAttributes(
 export interface ImageComponentProps extends ImageProps {
   readonly widths?: readonly number[]
   readonly formats?: readonly ('avif' | 'webp')[]
+  readonly staticVariants?: boolean
   readonly className?: string
 }
 
@@ -113,16 +171,11 @@ export interface ImageComponentProps extends ImageProps {
 export function Image(props: ImageComponentProps): ElementNode {
   const widths = [...(props.widths ?? [320, 640, 960, 1280])]
   const formats = [...(props.formats ?? ['avif', 'webp'])]
-  const fallback = imageAttributes(props, widths)
+  const fallback = responsiveFallback(props, widths)
   const sources = formats.map((format) =>
     element('source', {
       type: `image/${format}`,
-      srcSet: widths
-        .map(
-          (width) =>
-            `${props.src}${props.src.includes('?') ? '&' : '?'}format=${format}&w=${width} ${width}w`,
-        )
-        .join(', '),
+      srcSet: responsiveSourceSet(props, widths, format),
       ...(props.sizes ? { sizes: props.sizes } : {}),
     }),
   )
@@ -315,7 +368,11 @@ export async function buildImageVariants(
   if (!/^[a-zA-Z0-9_-]+$/.test(options.fileBase)) throw new TypeError('Invalid image file base.')
   const widths = [...(options.widths ?? [320, 640, 960])]
   const source = new Uint8Array(await readFile(options.sourcePath))
-  const key = createHash('sha256').update(source).update(JSON.stringify(widths)).digest('hex')
+  const key = createHash('sha256')
+    .update(source)
+    .update(options.fileBase)
+    .update(JSON.stringify(widths))
+    .digest('hex')
   const diskCacheDir = options.cacheDir
   const diskManifest = diskCacheDir ? join(diskCacheDir, `${key}.json`) : undefined
   let variants = imageBuildCache.get(key)

@@ -12,6 +12,7 @@
     { "path": "../vite-plugin" },
     { "path": "../compiler" },
     { "path": "../dev-server" },
+    { "path": "../media" },
     { "path": "../serve" }
   ]
 }

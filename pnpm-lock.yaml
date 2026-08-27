@@ -222,6 +222,9 @@ importers:
       '@mohammedaydan/dev-server':
         specifier: workspace:*
         version: link:../dev-server
+      '@mohammedaydan/media':
+        specifier: workspace:*
+        version: link:../media
       '@mohammedaydan/og-image':
         specifier: workspace:*
         version: link:../og-image

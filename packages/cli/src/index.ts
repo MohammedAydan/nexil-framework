@@ -16,6 +16,7 @@ import nexis, {
 } from '@mohammedaydan/vite-plugin'
 import { escapeHtml, renderToString } from '@mohammedaydan/renderer'
 import { generateOgImage } from '@mohammedaydan/og-image'
+import { buildImageVariants, imageVariantFileBase } from '@mohammedaydan/media'
 import {
   buildRobots,
   buildSitemap,
@@ -309,10 +310,27 @@ interface BuildAssetSummary {
   readonly largest: readonly BuildAssetRecord[]
 }
 
+interface BuildMediaImageRecord {
+  readonly source: string
+  readonly variants: readonly {
+    readonly format: 'avif' | 'webp'
+    readonly width: number
+    readonly path: string
+    readonly bytes: number
+    readonly cacheHit: boolean
+  }[]
+}
+
+interface BuildMediaSummary {
+  readonly version: 1
+  readonly images: readonly BuildMediaImageRecord[]
+}
+
 interface BuildManifest {
   readonly version: 1
   readonly routes: readonly BuildRouteRecord[]
   readonly assets?: BuildAssetSummary
+  readonly media?: BuildMediaSummary
 }
 
 async function readNexisConfig(root: string): Promise<NexisConfig> {
@@ -359,6 +377,70 @@ async function copyPublicDirectory(source: string, target: string): Promise<void
     await mkdir(dirname(to), { recursive: true })
     await copyFile(from, to)
   }
+}
+
+const TRANSFORMABLE_IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.svg'])
+
+async function discoverPublicImages(root: string): Promise<readonly string[]> {
+  if (!existsSync(root)) return []
+  const files: string[] = []
+  const visit = async (directory: string): Promise<void> => {
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      const file = join(directory, entry.name)
+      if (entry.isDirectory()) await visit(file)
+      else if (entry.isFile() && TRANSFORMABLE_IMAGE_EXTENSIONS.has(extname(file).toLowerCase()))
+        files.push(file)
+    }
+  }
+  await visit(root)
+  return files.sort()
+}
+
+function mediaWidths(widths: readonly number[] | undefined): readonly number[] {
+  const values = widths ?? [320, 640, 960, 1280]
+  const unique = [...new Set(values)]
+  if (unique.length === 0 || unique.some((width) => !Number.isInteger(width) || width < 1))
+    throw new TypeError('Nexis media image widths must be positive integers.')
+  return unique.sort((left, right) => left - right)
+}
+
+async function buildConfiguredPublicImages(
+  root: string,
+  clientRoot: string,
+  config: NexisConfig,
+): Promise<BuildMediaSummary | undefined> {
+  const imageConfig = config.media?.images
+  if (!imageConfig?.transform) return undefined
+  const publicRoot = join(root, 'public')
+  const cacheDir = resolve(root, imageConfig.cacheDir ?? '.nexis/media-cache')
+  if (relative(root, cacheDir).startsWith('..'))
+    throw new TypeError('Nexis media cacheDir must remain inside the project root.')
+  const widths = mediaWidths(imageConfig.widths)
+  const images: BuildMediaImageRecord[] = []
+  for (const sourcePath of await discoverPublicImages(publicRoot)) {
+    const relativeSource = relative(publicRoot, sourcePath).split(sep).join('/')
+    const publicPath = `/${relativeSource}`
+    const relativeDirectory = dirname(relativeSource)
+    const targetDir = join(clientRoot, relativeDirectory)
+    const variants = await buildImageVariants({
+      sourcePath,
+      outputDir: targetDir,
+      fileBase: imageVariantFileBase(publicPath),
+      widths,
+      cacheDir,
+    })
+    images.push({
+      source: publicPath,
+      variants: variants.map((variant) => ({
+        format: variant.format,
+        width: variant.width,
+        path: `/${[relativeDirectory, variant.fileName].filter((part) => part !== '.').join('/')}`,
+        bytes: variant.bytes,
+        cacheHit: variant.cacheHit,
+      })),
+    })
+  }
+  return { version: 1, images }
 }
 
 function assetCategory(file: string): AssetCategory | undefined {
@@ -441,6 +523,20 @@ function assetAnalysisLines(summary: BuildAssetSummary | undefined): readonly st
     lines.push(`  ${asset.path}  ${formatAssetBytes(asset.bytes)}  ${asset.category}${warning}`)
   }
   return lines
+}
+
+function mediaAnalysisLines(summary: BuildMediaSummary | undefined): readonly string[] {
+  if (!summary) return []
+  const variantCount = summary.images.reduce((total, image) => total + image.variants.length, 0)
+  const cacheHits = summary.images.reduce(
+    (total, image) => total + image.variants.filter((variant) => variant.cacheHit).length,
+    0,
+  )
+  return [
+    '',
+    'Generated image variants',
+    `${summary.images.length} source images  ${variantCount} AVIF/WebP variants  ${cacheHits} cache hits`,
+  ]
 }
 
 async function discoverRoutes(directory: string, root: string): Promise<string[]> {
@@ -1162,10 +1258,12 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     'utf8',
   )
   await copyPublicDirectory(join(root, 'public'), clientRoot)
+  const media = await buildConfiguredPublicImages(root, clientRoot, config)
   const manifest: BuildManifest = {
     version: 1,
     routes: records,
     assets: await summarizeBuiltAssets(clientRoot),
+    ...(media ? { media } : {}),
   }
   await writeFile(
     join(outputRoot, 'nexis-manifest.json'),
@@ -1177,6 +1275,18 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     `${JSON.stringify(manifest, null, 2)}\n`,
     'utf8',
   )
+  if (media) {
+    await writeFile(
+      join(outputRoot, 'nexis-media.json'),
+      `${JSON.stringify(media, null, 2)}\n`,
+      'utf8',
+    )
+    await writeFile(
+      join(clientRoot, 'nexis-media.json'),
+      `${JSON.stringify(media, null, 2)}\n`,
+      'utf8',
+    )
+  }
   return manifest
 }
 
@@ -1249,6 +1359,7 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
           `${route.route.padEnd(29)} ${String(route.clientJsGzipBytes).padStart(8)} ${String(route.cssBytes).padStart(10)}   ${route.interactive ? 'interactive' : 'static'}`,
       ),
       ...assetAnalysisLines(manifest.assets),
+      ...mediaAnalysisLines(manifest.media),
     ].join('\n')
   }
   if (parsed.command === 'build') {

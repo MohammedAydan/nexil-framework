@@ -2,19 +2,26 @@
 
 ## The media pipeline
 
-`@mohammedaydan/media` builds image variants at multiple widths and formats using a content-addressed cache. The showcase produces WebP and AVIF at widths 320 and 640 and records the output in a media manifest.
+`@mohammedaydan/media` builds image variants at multiple widths and formats using a content-addressed cache. Nexis can run this pipeline automatically for public PNG, JPEG, and SVG files during `nexis build`, but it remains opt-in so existing applications keep their current output until they choose it.
 
 ```ts
-const result = await buildImageVariants({
-  source: './public/hero.jpg',
-  outputDir: './dist/client/images',
-  widths: [320, 640],
-  formats: ['webp', 'avif'],
-  cacheDir: './.cache/nexis-media',
+// nexis.config.ts
+import { defineConfig } from '@mohammedaydan/serve'
+
+export default defineConfig({
+  media: {
+    images: {
+      transform: true,
+      widths: [320, 640, 960, 1280],
+      cacheDir: '.nexis/media-cache',
+    },
+  },
 })
 ```
 
-Read the installed declaration in `packages/media/src/index.ts` for the exact options in the version you use.
+The build copies the original public file, emits AVIF and WebP variants beside it, persists reusable transform data beneath `.nexis/media-cache`, and writes `nexis-media.json` to both `dist/` and `dist/client/`. Add `.nexis/` to `.gitignore`; the cache is disposable and not a source artifact.
+
+For `public/images/hero.jpg`, the generated variants include `/images/hero-jpg-320.avif`, `/images/hero-jpg-320.webp`, `/images/hero-jpg-640.avif`, and so on. The exact result and cache state appear in `nexis analyze`.
 
 ## Picture markup
 
@@ -36,11 +43,36 @@ Use `<picture>` with AVIF first, WebP second, and a fallback `<img>`. The image 
 
 Use `loading="eager"` and `fetchpriority="high"` only for the real LCP image. Do not make every image eager.
 
+When using the build-generated static files, prefer the `Image` component with `staticVariants`. It uses the same stable file naming contract as `nexis build`:
+
+```tsx
+import { Image } from '@mohammedaydan/media'
+
+export default function Hero() {
+  return (
+    <Image
+      src="/images/hero.jpg"
+      width={1280}
+      height={720}
+      alt="The product workspace"
+      widths={[640, 960, 1280]}
+      sizes="(max-width: 760px) 100vw, 56vw"
+      priority
+      staticVariants
+    />
+  )
+}
+```
+
+`staticVariants` is explicit. It does not rewrite ordinary `<img>` or manually authored `<picture>` markup, so applications can adopt the pipeline route by route and retain control over fallbacks.
+
 ## Caching
 
 The in-memory cache is fast but disappears after a process restart. `cacheDir` allows build results to be reused across processes. The cache must be disposable and should not be treated as source of truth.
 
 Include source bytes, width, format, and transform settings in the cache key. If quality settings are not part of the key, a build may reuse an outdated result.
+
+Nexis includes the source bytes, file base, and requested widths in its cache key. Delete `.nexis/media-cache` to force a full rebuild; do not deploy this cache directory.
 
 ## Remote images
 
