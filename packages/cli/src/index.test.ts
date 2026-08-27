@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, win32 } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -54,6 +54,27 @@ describe('Nexis CLI', () => {
       await runCli(['build'], directory)
       const html = await readFile(join(directory, 'dist/client/index.html'), 'utf8')
       expect(html).toContain('https://configured.example.test/')
+    } finally {
+      await rm(parent, { recursive: true, force: true })
+    }
+  })
+
+  it('reports oversized static images in the production asset inventory', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-assets-'))
+    try {
+      const directory = await createProject('asset-app', parent)
+      await mkdir(join(directory, 'public'), { recursive: true })
+      await writeFile(join(directory, 'public', 'hero.png'), new Uint8Array(300 * 1024))
+      await runCli(['build'], directory)
+      const analysis = await runCli(['analyze'], directory)
+      expect(analysis).toContain('Static asset delivery')
+      expect(analysis).toContain('/hero.png')
+      expect(analysis).toContain('warning: consider AVIF/WebP variants')
+      const manifest = JSON.parse(
+        await readFile(join(directory, 'dist', 'nexis-manifest.json'), 'utf8'),
+      ) as { assets?: { count: number; imageBytes: number } }
+      expect(manifest.assets?.count).toBeGreaterThan(0)
+      expect(manifest.assets?.imageBytes).toBeGreaterThanOrEqual(300 * 1024)
     } finally {
       await rm(parent, { recursive: true, force: true })
     }

@@ -32,6 +32,7 @@ This directory contains the complete English documentation for Nexis Framework `
 | Learn the terminology                          | [22-glossary.md](./22-glossary.md)                                                             |
 | Add sessions, authorization, and middleware    | [23-security-authentication-and-middleware.md](./23-security-authentication-and-middleware.md) |
 | Read the v1.1.0 release and migration guide    | [v1.1.0 release notes](../releases/v1.1.0.md)                                                  |
+| Review unreleased framework follow-ups         | [next release notes](../releases/next.md)                                                      |
 
 ## Recommended reading paths
 
@@ -70,3 +71,4 @@ The examples use TypeScript and JSX. Adjust paths to match your application. Nev
 - [Telemetry README](../../packages/telemetry/README.md)
 - [Showcase report](../../examples/nexis-showcase/SHOWCASE-REPORT.md)
 - [v1.1.0 release and migration guide](../releases/v1.1.0.md)
+- [Unreleased static asset delivery follow-up](../releases/next.md)
