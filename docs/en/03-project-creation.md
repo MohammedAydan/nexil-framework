@@ -33,6 +33,21 @@ nexil create my-site --yes --ts
 
 Do not mix an old generated `dist` directory with a new CLI version. Recreate a disposable project or reinstall dependencies from the target release.
 
+## CLI options and error handling
+
+`create-nexil` is hardened for scripting and interactive use:
+
+```bash
+create-nexil --help          # usage, templates, examples (exit 0)
+create-nexil --version       # prints 0.0.1 (exit 0)
+create-nexil my-app --dry-run --template minimal --js  # lists files, writes nothing (exit 0)
+create-nexil my-app --yes --ts --template secure-node --tailwind
+```
+
+Flags: `--yes`/`-y` (skip prompts), `--ts`/`--js` (mutually exclusive), `--tailwind`/`--no-tailwind`, `--template minimal|interactive|secure-node` (also `--template=<name>`), `--dry-run` (no FS), `--help`/`-h`, `--version`/`-v`. Unknown flags, missing `<project-name>`, invalid names, or non-empty destinations exit `1` with a concise `Error: <reason>` on `stderr` (no stack trace). System errors (`EACCES`, `ENOSPC`, `EEXIST` race) are reported as `Error: <message> (permission denied)` etc., and a partially created directory is removed where safe (only if this invocation created it and it was empty before).
+
+Project names must be `1–64` chars, start with a letter, `[a-zA-Z0-9_-]` — `my-nexil-app`, `portal` are valid; `../escape`, `my/app`, `1bad`, `node_modules`, or `>64` chars are rejected. Destination must be contained by the parent directory (no `..` traversal or absolute escape) and must be empty; existing non-empty directories are rejected without deletion.
+
 ## Starter templates
 
 The v1.3.1 initializer provides intentionally different starting points while preserving `interactive` as the default template.
