@@ -17,8 +17,7 @@
     "vite": "^7.3.6"
   },
   "bin": {
-    "nexil": "dist/bin.js",
-    "nexis": "dist/bin.js"
+    "nexil": "dist/bin.js"
   },
   "exports": {
     ".": {

@@ -1,14 +1,21 @@
 # create-nexil
 
-The official Nexil project initializer. After the package is published to GitHub Packages, configure the `@nexil` scope and use:
+The official Nexil project initializer (`@nexil/create-nexil`, bin `create-nexil` / `create-nexil-app`). Published to the public npm registry (`https://registry.npmjs.org/`) — no registry token required.
 
 ```bash
-pnpm dlx @nexil/create-nexil my-nexil-app --yes --ts
+pnpm dlx @nexil/create-nexil@1.0.0 my-nexil-app --yes --ts
+# or
+npx --yes @nexil/create-nexil@1.0.0 my-nexil-app --yes --ts
+yarn dlx @nexil/create-nexil@1.0.0 my-nexil-app --yes --ts
+npm create @nexil/nexil@1.0.0 my-nexil-app -- --yes --ts
+pnpm create @nexil/nexil@1.0.0 my-nexil-app -- --yes --ts
+# inside a Nexil workspace or with @nexil/cli installed:
+nexil create my-nexil-app --yes --ts
 ```
 
-The initializer is published to GitHub Packages as `@nexil/create-nexil`. Configure `@nexil:registry=https://registry.npmjs.org/` and a classic token with `read:packages` before using it. It also supports `--js`, `--tailwind`, and `--no-tailwind`.
+Flags: `--yes` / `-y`, `--ts` / `--js`, `--tailwind` / `--no-tailwind`, `--template minimal|interactive|secure-node`.
 
-For a repository checkout before GitHub Packages publication, build the package and invoke its generated binary directly:
+For a local checkout before publishing, build and invoke the binary directly:
 
 ```bash
 pnpm --filter @nexil/create-nexil build

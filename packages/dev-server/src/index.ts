@@ -63,13 +63,9 @@ export async function nodeRequest(request: IncomingMessage): Promise<Request> {
   const init: RequestInit = { method, headers }
   if (method !== 'GET' && method !== 'HEAD') init.body = Buffer.concat(chunks)
   const forwardedProto =
-    (process.env.NEXIL_TRUST_PROXY ?? process.env.NEXIS_TRUST_PROXY) === '1'
-      ? request.headers['x-forwarded-proto']
-      : undefined
+    process.env.NEXIL_TRUST_PROXY === '1' ? request.headers['x-forwarded-proto'] : undefined
   const forwardedHost =
-    (process.env.NEXIL_TRUST_PROXY ?? process.env.NEXIS_TRUST_PROXY) === '1'
-      ? request.headers['x-forwarded-host']
-      : undefined
+    process.env.NEXIL_TRUST_PROXY === '1' ? request.headers['x-forwarded-host'] : undefined
   const proto =
     (Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto)?.split(',')[0]?.trim() ||
     'http'
@@ -390,10 +386,7 @@ export function nexilSSRPlugin(root: string): Plugin {
             return next(error)
           }
 
-          const siteOrigin =
-            process.env.NEXIL_SITE_ORIGIN ??
-            process.env.NEXIS_SITE_ORIGIN ??
-            'https://nexil-showcase.example'
+          const siteOrigin = process.env.NEXIL_SITE_ORIGIN ?? 'https://nexil-showcase.example'
           const seo = await resolveInheritedSeo(
             server,
             root,

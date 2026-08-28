@@ -11,13 +11,24 @@ pnpm --version
 
 ## Create a project
 
-The supported initializer is `@nexil/create-nexil`. Use the published CLI or the workspace package when developing the framework itself.
+The supported initializer is `@nexil/create-nexil` (bin `create-nexil`, alias `create-nexil-app`). Use the published package from the npm registry. The initializer is tested against `pnpm dlx`, `npx`, `npm create`, `pnpm create`, and `nexil create`.
 
 ```bash
 pnpm dlx @nexil/create-nexil@1.0.0 my-site --yes --ts
 cd my-site
 pnpm install
 pnpm dev
+```
+
+Other equivalent invocations:
+
+```bash
+npx --yes @nexil/create-nexil@1.0.0 my-site --yes --ts
+yarn dlx @nexil/create-nexil@1.0.0 my-site --yes --ts
+npm create @nexil/nexil@1.0.0 my-site -- --yes --ts
+pnpm create @nexil/nexil@1.0.0 my-site -- --yes --ts
+# from a Nexil workspace or after `pnpm add -g @nexil/cli`:
+nexil create my-site --yes --ts
 ```
 
 Do not mix an old generated `dist` directory with a new CLI version. Recreate a disposable project or reinstall dependencies from the target release.

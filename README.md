@@ -51,12 +51,15 @@ pnpm install
 pnpm dev
 ```
 
-Equivalent npm and Yarn forms are:
+Equivalent forms (all create the same `my-nexil-app` via `@nexil/create-nexil`):
 
 ```bash
 npx --yes @nexil/create-nexil@1.0.0 my-nexil-app --yes --ts
-# or
 yarn dlx @nexil/create-nexil@1.0.0 my-nexil-app --yes --ts
+npm create @nexil/nexil@1.0.0 my-nexil-app -- --yes --ts
+pnpm create @nexil/nexil@1.0.0 my-nexil-app -- --yes --ts
+# inside an existing Nexil workspace or after installing @nexil/cli:
+nexil create my-nexil-app --yes --ts
 ```
 
 The initializer supports `--yes`, `--ts`, `--js`, `--tailwind`, and `--no-tailwind`. Inside an existing application, the CLI exposes the same project operations through `nexil create <name>`. The generated project includes route files, an HTML shell, TypeScript configuration, public assets, and package scripts for development and production builds.

@@ -171,4 +171,3 @@ export const NEXIL_NAVIGATION_RUNTIME = String.raw`
   })
 })()
 `
-export const nexil_NAVIGATION_RUNTIME = NEXIL_NAVIGATION_RUNTIME

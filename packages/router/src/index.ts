@@ -1,8 +1,6 @@
 import { element } from '@nexil/core'
 import type { Child, ElementNode } from '@nexil/core'
 export { NEXIL_NAVIGATION_RUNTIME } from './navigation.js'
-// Compat alias for pre-rename imports
-export { NEXIL_NAVIGATION_RUNTIME as nexil_NAVIGATION_RUNTIME } from './navigation.js'
 
 export interface RouteParam {
   readonly name: string

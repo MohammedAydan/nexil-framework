@@ -917,11 +917,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   if (routes.length === 0) throw new Error(`No routes found in ${routeRoot}.`)
   const outputRoot = join(root, 'dist')
   const config = await readNexilConfig(root)
-  const siteOrigin =
-    process.env.NEXIL_SITE_ORIGIN ??
-    process.env.NEXIS_SITE_ORIGIN ??
-    config.app?.origin ??
-    'http://localhost:4173'
+  const siteOrigin = process.env.NEXIL_SITE_ORIGIN ?? config.app?.origin ?? 'http://localhost:4173'
   const resolveSeo = (seo: RouteModule['seo'], pathname: string): SeoMetadata | undefined => {
     if (!seo) return undefined
     const metadata = typeof seo === 'function' ? seo({ pathname }) : seo
@@ -1471,7 +1467,7 @@ async function readManifest(root: string): Promise<BuildManifest> {
 }
 
 function configuredPort(config: NexilConfig): number {
-  const environmentPort = (process.env.NEXIL_PORT ?? process.env.NEXIS_PORT)?.trim()
+  const environmentPort = process.env.NEXIL_PORT?.trim()
   const raw = environmentPort || config.server?.port
   if (raw === undefined) return 4173
   const port = typeof raw === 'number' ? raw : Number(raw)
@@ -1486,9 +1482,9 @@ async function startProduction(root: string): Promise<string> {
     throw new Error('No production build found. Run `pnpm build` before `pnpm start`.')
   const config = await readNexilConfig(root)
   const serverConfig = config.server ?? {}
-  const host = process.env.NEXIL_HOST ?? process.env.NEXIS_HOST ?? serverConfig.host ?? '0.0.0.0'
+  const host = process.env.NEXIL_HOST ?? serverConfig.host ?? '0.0.0.0'
   const port = configuredPort(config)
-  const environmentOrigins = process.env.NEXIL_ACTION_ORIGINS ?? process.env.NEXIS_ACTION_ORIGINS
+  const environmentOrigins = process.env.NEXIL_ACTION_ORIGINS
   const actionOrigins = environmentOrigins
     ? environmentOrigins
         .split(',')
@@ -1554,8 +1550,8 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
     return 'Nexil checks passed.'
   }
   if (parsed.command === 'dev') {
-    const hostEnv = process.env.NEXIL_HOST ?? process.env.NEXIS_HOST
-    const portEnv = process.env.NEXIL_PORT ?? process.env.NEXIS_PORT
+    const hostEnv = process.env.NEXIL_HOST
+    const portEnv = process.env.NEXIL_PORT
     const server = await createServer({
       root,
       server: {
