@@ -31,13 +31,14 @@ This directory contains the complete English documentation for Nexis Framework `
 | Contribute to the framework                    | [21-contributing.md](./21-contributing.md)                                                     |
 | Learn the terminology                          | [22-glossary.md](./22-glossary.md)                                                             |
 | Add sessions, authorization, and middleware    | [23-security-authentication-and-middleware.md](./23-security-authentication-and-middleware.md) |
+| Build a complete production application        | [24-production-workbench.md](./24-production-workbench.md)                                     |
 | Read the v1.1.0 release and migration guide    | [v1.1.0 release notes](../releases/v1.1.0.md)                                                  |
 | Review v1.3.0 Link and Context release         | [v1.3.0 release notes](../releases/v1.3.0.md)                                                  |
 | Review the v1.3.1 Starter correction           | [next release notes](../releases/next.md)                                                      |
 
 ## Recommended reading paths
 
-A new user should read documents 01 through 06, then continue with 07 and 08 when state or forms are required. Read 11 and 12 before deploying. A framework contributor should begin with 02, then read 05, 06, 12, 13, and 15.
+A new user should start with [24-production-workbench.md](./24-production-workbench.md) and follow its stages in order; each stage points to the normative detailed guide when a contract needs deeper treatment. Alternatively, read documents 01 through 06, then continue with 07 and 08 when state or forms are required. Read 11 and 12 before deploying. A framework contributor should begin with 02, then read 05, 06, 12, 13, and 15.
 
 ## Core concepts
 
@@ -71,6 +72,8 @@ The examples use TypeScript and JSX. Adjust paths to match your application. Nev
 - [Production server README](../../packages/serve/README.md)
 - [Telemetry README](../../packages/telemetry/README.md)
 - [Showcase report](../../examples/nexis-showcase/SHOWCASE-REPORT.md)
+- [Practical documentation curriculum](../architecture/practical-documentation-curriculum.md)
+- [Nexis Workbench production path](./24-production-workbench.md)
 - [v1.1.0 release and migration guide](../releases/v1.1.0.md)
 - [v1.3.0 Link and Context release notes](../releases/v1.3.0.md)
 - [v1.3.1 Starter correction notes](../releases/next.md)

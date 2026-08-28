@@ -108,3 +108,7 @@ const feed = generateFeed(items, {
 | Lighthouse  | SEO يحقق gate المحدد                     |
 
 لا يعني Lighthouse المحلي أن Google فهرس الموقع أو أن traffic تحسن. هذه قياسات هندسية فقط.
+
+## مختبر Workbench
+
+ابنِ مثال Workbench التنفيذي بالأمر `pnpm --filter @mohammedaydan/example-nexis-workbench build`. افحص `sitemap.xml` و`robots.txt` و`feed.xml` و`atom.xml` الناتجة وhead لكل route قبل نقل النمط لخدمة عامة. عيّن `NEXIS_SITE_ORIGIN` إنتاجيًّا مطلقًا خاصًا بك أثناء build التحقق؛ لا تنسخ hostname مثال أو preview إلى canonical.
