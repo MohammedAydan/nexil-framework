@@ -18,6 +18,7 @@ export const NEXIS_NAVIGATION_RUNTIME = String.raw`
     'meta[name^="twitter:"]',
     'link[rel="canonical"]',
     'link[rel="alternate"]',
+    'link[rel="stylesheet"][data-nx-route-style]',
   ]
   let controller
   let activeUrl = location.href

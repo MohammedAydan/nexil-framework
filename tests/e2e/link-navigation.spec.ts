@@ -1,4 +1,4 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, test } from '@playwright/test'
@@ -42,12 +42,27 @@ import { state } from '@mohammedaydan/core'
 const visits = state(0)
 export const metadata = { title: 'About Nexis', description: 'Navigation proof route' }
 export default function About() {
-  return <main><h1>About Nexis</h1><output id="visit-count">{visits()}</output><button id="visit-button" onClick$={() => visits.set((value) => value + 1)}>Count visit</button><Link href="/" id="home-link">Return home</Link></main>
+  return <main><h1 className="route-style-target">About Nexis</h1><output id="visit-count">{visits()}</output><button id="visit-button" onClick$={() => visits.set((value) => value + 1)}>Count visit</button><Link href="/" id="home-link">Return home</Link></main>
 }
 `,
     'utf8',
   )
   await runCli(['build'], appDir)
+  const aboutHtmlPath = join(appDir, 'dist/client/about/index.html')
+  const aboutHtml = await readFile(aboutHtmlPath, 'utf8')
+  await writeFile(
+    aboutHtmlPath,
+    aboutHtml.replace(
+      '</head>',
+      '<link rel="stylesheet" href="/about.css" data-nx-route-style>\n</head>',
+    ),
+    'utf8',
+  )
+  await writeFile(
+    join(appDir, 'dist/client/about.css'),
+    '.route-style-target { color: rgb(1, 2, 3); }',
+    'utf8',
+  )
   server = createServer(join(appDir, 'dist/client'), { port: 4321, host: '127.0.0.1' })
   await server.listen()
 })
@@ -78,6 +93,12 @@ test('Link swaps server-rendered outlet without a full document reload and suppo
   await expect.poll(() => page.evaluate(() => scrollY)).toBe(0)
   await expect(page).toHaveTitle('About Nexis')
   await expect(page.getByRole('heading', { name: 'About Nexis' })).toBeVisible()
+  await expect(page.locator('link[data-nx-route-style]')).toHaveAttribute('href', '/about.css')
+  await expect
+    .poll(() =>
+      page.locator('.route-style-target').evaluate((element) => getComputedStyle(element).color),
+    )
+    .toBe('rgb(1, 2, 3)')
   await expect(page.locator('#visit-count')).toHaveText('0')
   await page.locator('#visit-button').click()
   await expect(page.locator('#visit-count')).toHaveText('1')
@@ -91,6 +112,7 @@ test('Link swaps server-rendered outlet without a full document reload and suppo
     .toBe('preserved')
   await page.goBack()
   await expect(page).toHaveURL('http://127.0.0.1:4321/')
+  await expect(page.locator('link[data-nx-route-style]')).toHaveCount(0)
   await expect(page.getByRole('heading', { name: 'Nexis home' })).toBeVisible()
   await expect(page).toHaveTitle('Nexis home')
   await page.goForward()

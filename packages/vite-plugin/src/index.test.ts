@@ -120,6 +120,24 @@ export default component(() => {
   expect(result.warnings.some((warning) => warning.includes('increment'))).toBe(false)
 })
 
+it('supports the multiline named handler shape used by the public example', async () => {
+  const result = await transformNexisSource(
+    `import { component, state } from '@mohammedaydan/core'
+export default component(() => {
+  const count = state(0)
+  const increment = () => {
+    count.set(count() + 1)
+  }
+  return <button onClick$={increment}>Increment</button>
+})`,
+    '/app/src/routes/public-handler.tsx',
+  )
+
+  const chunk = result.chunks[0]?.source ?? ''
+  expect(chunk).toContain('scope.count.set(scope.count() + 1)')
+  expect(chunk).not.toContain('scope.increment')
+})
+
 it('lowers a named local function declaration through its body and captures its Signal', async () => {
   const result = await transformNexisSource(
     `import { component, state } from '@mohammedaydan/core'

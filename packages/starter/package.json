@@ -1,6 +1,6 @@
 {
   "name": "@mohammedaydan/starter",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "Typed, portable Nexis starter project templates",
   "type": "module",
   "exports": {
