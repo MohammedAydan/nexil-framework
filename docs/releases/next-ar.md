@@ -11,7 +11,7 @@
 حدّث حزم Nexis المتناسقة إلى `1.3.2` معًا، وجدّد lockfile، وابنِ من `dist` نظيف. لا تحتاج الـHandlers المكتوبة داخل الحدث إلى migration. يمكنك استبدالها بتعريف محلي مسمّى مباشر عند تحسين الوضوح، بشرط أن تبقى كل captures ضمن قيم ScopeRef المدعومة.
 
 ```bash
-pnpm dlx @mohammedaydan/create-nexis@1.3.2 portal --yes --ts
+pnpm dlx @nexis/create-nexis@1.3.2 portal --yes --ts
 pnpm install
 pnpm build
 ```

@@ -1,4 +1,4 @@
-import { component } from '@mohammedaydan/core'
+import { component } from '@nexis/core'
 
 export const staticPaths = ['architecture', 'resumability', 'performance']
 export const seo = ({ pathname = '/docs/architecture' }: { pathname?: string } = {}) => ({

@@ -16,7 +16,7 @@ describe('Nexis starter engine', () => {
     expect(interactive).toContain('onClick$')
     expect(interactive).toContain('const increment =')
     expect(interactive).toContain('onClick$={increment}')
-    expect(files.find((file) => file.path === 'package.json')?.content).toContain('^1.3.2')
+    expect(files.find((file) => file.path === 'package.json')?.content).toContain('^1.0.0')
     expect(files.every((file) => !file.content.includes('ghp_'))).toBe(true)
   })
 

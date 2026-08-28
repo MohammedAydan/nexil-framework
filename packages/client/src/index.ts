@@ -1,6 +1,6 @@
-import type { Serializable } from '@mohammedaydan/core'
-import { isSerializable } from '@mohammedaydan/core'
-import { effect, state } from '@mohammedaydan/reactivity'
+import type { Serializable } from '@nexis/core'
+import { isSerializable } from '@nexis/core'
+import { effect, state } from '@nexis/reactivity'
 
 export const RESUME_FORMAT_VERSION = 1 as const
 export const MAX_RESUME_DEPTH = 8

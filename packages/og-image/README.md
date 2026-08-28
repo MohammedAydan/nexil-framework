@@ -1,4 +1,4 @@
-# @mohammedaydan/og-image
+# @nexis/og-image
 
 Build-time Open Graph image generation for Nexis applications. `renderOgImageSvg` creates an escaped deterministic SVG card, while `generateOgImage` rasterizes it to PNG and stores it under a content-addressed filename. Reusing the same inputs returns a disk-cache hit without rerasterizing.
 

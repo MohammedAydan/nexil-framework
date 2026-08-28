@@ -1,5 +1,5 @@
-import { getCookie, serializeCookie } from '@mohammedaydan/server'
-import type { CookieOptions } from '@mohammedaydan/server'
+import { getCookie, serializeCookie } from '@nexis/server'
+import type { CookieOptions } from '@nexis/server'
 
 /** The minimum identity information needed for framework-level access checks. */
 export interface Principal {

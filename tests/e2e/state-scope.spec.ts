@@ -12,7 +12,7 @@ test.setTimeout(180_000)
 // from the generated state runtime in the browser on first interaction, and persist
 // across subsequent clicks without any hydration pass.
 
-const ROUTE_SOURCE = `import { component, state } from '@mohammedaydan/core'
+const ROUTE_SOURCE = `import { component, state } from '@nexis/core'
 
 export const seo = { title: 'Scope State Proof', description: 'Resumable closure state' }
 

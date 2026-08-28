@@ -4,7 +4,7 @@
 
 ## Core
 
-توفر `@mohammedaydan/core` أنواع RenderNode وElementNode وChild، وواجهات التأليف `For` و`Show` و`createContext` و`createContextScope` و`provideContext` و`withContext` و`createRequestContext` و`ErrorBoundary` و`Suspense` و`Form` و`SubmitButton`، إضافة إلى إعادة تصدير أدوات reactivity. Context هو dependency injection صريح مع Provider متزامن للسهولة؛ استعمل `ContextScope` مملوكًا للطلب مع عمل async.
+توفر `@nexis/core` أنواع RenderNode وElementNode وChild، وواجهات التأليف `For` و`Show` و`createContext` و`createContextScope` و`provideContext` و`withContext` و`createRequestContext` و`ErrorBoundary` و`Suspense` و`Form` و`SubmitButton`، إضافة إلى إعادة تصدير أدوات reactivity. Context هو dependency injection صريح مع Provider متزامن للسهولة؛ استعمل `ContextScope` مملوكًا للطلب مع عمل async.
 
 ## Renderer
 
@@ -90,7 +90,7 @@
 
 ## Actions
 
-راجع `@mohammedaydan/actions` لتعريف Action handlers، validation، origin policy، idempotency، typed envelopes، وparsing JSON/form/multipart.
+راجع `@nexis/actions` لتعريف Action handlers، validation، origin policy، idempotency، typed envelopes، وparsing JSON/form/multipart.
 
 يدعم `ProductionServerOptions` الخيارين `securityHeaders?: SecurityHeadersOptions`
 و`trustProxy?: boolean`. تشمل `SecurityHeadersOptions` مراجع مخصصة لـ
@@ -119,7 +119,7 @@
 
 ## Starter Engine
 
-تصدّر `@mohammedaydan/starter` القيم `STARTER_TEMPLATES` و`resolveStarterOptions` و`createStarterFiles(options)`. واجهة الجذر portable وتعيد سجلات typed من الشكل `{ path, content }` فقط. ويصدّر `@mohammedaydan/starter/node` كذلك `parseScaffoldArgs()` و`scaffoldProject()` لاستخدام CLI الذي يكتب فعليًا على نظام الملفات.
+تصدّر `@nexis/starter` القيم `STARTER_TEMPLATES` و`resolveStarterOptions` و`createStarterFiles(options)`. واجهة الجذر portable وتعيد سجلات typed من الشكل `{ path, content }` فقط. ويصدّر `@nexis/starter/node` كذلك `parseScaffoldArgs()` و`scaffoldProject()` لاستخدام CLI الذي يكتب فعليًا على نظام الملفات.
 
 ## Telemetry
 

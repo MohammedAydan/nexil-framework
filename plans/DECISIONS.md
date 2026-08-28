@@ -13,17 +13,17 @@
 - **Date:** 2026-08-25
 - **Status:** Accepted
 - **Context:** `packages/create-nexis-app` is a byte-identical duplicate of `packages/create-nexis` except bin name. Publishing both confuses consumers.
-- **Decision:** Keep `@mohammedaydan/create-nexis` as the single public initializer. Mark `@mohammedaydan/create-nexis-app` `"private": true` (build still runs; never published) and update its README to point at create-nexis. Update root README accordingly.
+- **Decision:** Keep `@nexis/create-nexis` as the single public initializer. Mark `@nexis/create-nexis-app` `"private": true` (build still runs; never published) and update its README to point at create-nexis. Update root README accordingly.
 - **Alternatives considered:** Publish both (confusing); delete the package (loses history/reference).
 - **Consequences:** One canonical scaffold command; no accidental duplicate publication.
-- **Amendment (GA):** The `create-nexis-app` NAME survives as a second bin on `@mohammedaydan/create-nexis` (`npm exec --package @mohammedaydan/create-nexis -- create-nexis-app â€¦`), satisfying initializer-name compatibility without a duplicate package.
+- **Amendment (GA):** The `create-nexis-app` NAME survives as a second bin on `@nexis/create-nexis` (`npm exec --package @nexis/create-nexis -- create-nexis-app â€¦`), satisfying initializer-name compatibility without a duplicate package.
 
 ## ADR-003: Secure registry configuration strategy
 
 - **Date:** 2026-08-25
 - **Status:** Accepted
 - **Context:** Repo needs scopeâ†’GitHub Packages routing locally and in CI without committing secrets.
-- **Decision:** Commit project `.npmrc` containing ONLY `@mohammedaydan:registry=https://npm.pkg.github.com`. Auth comes from user-level `.npmrc` or `${GITHUB_TOKEN}`/`${NODE_AUTH_TOKEN}` env vars. CI writes an isolated npmrc from GITHUB_TOKEN into runner temp.
+- **Decision:** Commit project `.npmrc` containing ONLY `@nexis:registry=https://registry.npmjs.org/`. Auth comes from user-level `.npmrc` or `${GITHUB_TOKEN}`/`${NODE_AUTH_TOKEN}` env vars. CI writes an isolated npmrc from GITHUB_TOKEN into runner temp.
 - **Consequences:** No credential can leak via the repo; local dev keeps working via existing user config.
 
 ## ADR-004: Tag-driven release workflow
@@ -55,7 +55,7 @@
 - **Date:** 2026-08-25
 - **Status:** Accepted
 - **Context:** Audit found the "ghost static file" bypass: scaffolded `index.html` carried a full pre-baked landing page, so `nexis dev`/`start` displayed static markup while `src/routes/index.tsx` was never parsed or rendered â€” the renderer, JSX runtime, signals, and resumability serializer were all bypassed.
-- **Decision:** (1) Templates ship a minimal shell containing only `<!--nexis-head-outlet-->`, `<!--nexis-app-outlet-->`, `<!--nexis-scripts-outlet-->`. (2) `@mohammedaydan/dev-server` exports `nexisSSRPlugin(root)`: a Vite SSR middleware that matches requests via `@mohammedaydan/router`, loads route modules through `ssrLoadModule`, renders via `@mohammedaydan/renderer`'s `renderToString`, injects SEO head via `renderHead`, and injects the resumability bootstrap when `data-nx-on-click` is present. (3) `nexis build` executes the same engine at build time, prerendering per-route HTML into `dist/client/<route>/index.html` plus mirrored preview roots. (4) `core` re-exports `component`/`state`/`computed`/`batch` (signals from `@mohammedaydan/reactivity`) so templates can use the documented API surface.
+- **Decision:** (1) Templates ship a minimal shell containing only `<!--nexis-head-outlet-->`, `<!--nexis-app-outlet-->`, `<!--nexis-scripts-outlet-->`. (2) `@nexis/dev-server` exports `nexisSSRPlugin(root)`: a Vite SSR middleware that matches requests via `@nexis/router`, loads route modules through `ssrLoadModule`, renders via `@nexis/renderer`'s `renderToString`, injects SEO head via `renderHead`, and injects the resumability bootstrap when `data-nx-on-click` is present. (3) `nexis build` executes the same engine at build time, prerendering per-route HTML into `dist/client/<route>/index.html` plus mirrored preview roots. (4) `core` re-exports `component`/`state`/`computed`/`batch` (signals from `@nexis/reactivity`) so templates can use the documented API surface.
 - **Alternatives considered:** keeping the marketing HTML as the served shell (rejected: it is precisely the bypass); separate dev HTTP server inside dev-server (rejected: duplicates Vite, breaks HMR).
 - **Consequences:** JSX runtime and signals execute during every render path; handler chunks resolve to real emitted files (chunk hashes normalized across transform/build contexts); interactive proof is enforced by `tests/e2e/engine-proof.spec.ts`.
 

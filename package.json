@@ -1,6 +1,6 @@
 {
   "name": "nexis",
-  "version": "1.3.3",
+  "version": "1.0.0",
   "private": true,
   "description": "HTML-first, resumable TypeScript web framework",
   "license": "MIT",
@@ -27,14 +27,16 @@
     "test:deno:e2e": "deno run --allow-read --allow-env tests/e2e/deno-runtime.spec.ts",
     "typecheck": "tsc -b",
     "security": "pnpm audit --audit-level high",
-    "budget": "pnpm --filter @mohammedaydan/compiler test:budget",
+    "budget": "pnpm --filter @nexis/compiler test:budget",
     "check:budget": "pnpm budget",
     "bench:compare": "node examples/nexis-showcase/benchmarks/compare-astro.mjs",
     "bench:lighthouse": "node examples/nexis-showcase/benchmarks/run-lighthouse.mjs",
-    "bench:production": "pnpm --filter @mohammedaydan/example-nexis-showcase build && pnpm --filter @mohammedaydan/example-nexis-showcase bench",
+    "bench:production": "pnpm --filter @nexis/example-nexis-showcase build && pnpm --filter @nexis/example-nexis-showcase bench",
     "publish:github": "pnpm -C packages publish -r --no-git-checks --access public",
     "publish:github:dry": "pnpm -C packages publish -r --no-git-checks --dry-run --access public",
-    "release:check": "pnpm -C packages publish -r --no-git-checks --dry-run --tag next --access public"
+    "release:check": "pnpm -C packages publish -r --no-git-checks --dry-run --tag next --access public",
+    "publish:npm": "pnpm -r publish --access public --registry https://registry.npmjs.org/",
+    "publish:npm:dry": "pnpm -r publish --dry-run --access public --registry https://registry.npmjs.org/"
   },
   "devDependencies": {
     "@babel/parser": "^7.29.8",

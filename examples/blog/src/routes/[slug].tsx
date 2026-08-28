@@ -1,7 +1,7 @@
-/** @jsxImportSource @mohammedaydan/jsx-runtime */
+/** @jsxImportSource @nexis/jsx-runtime */
 
 import { z } from 'zod'
-import { element } from '@mohammedaydan/core'
+import { element } from '@nexis/core'
 
 export const render = { mode: 'isr' as const, revalidate: 60 }
 

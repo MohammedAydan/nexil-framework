@@ -4,22 +4,22 @@
 
 Nexis is organized as focused packages. Each package owns a specific responsibility, which allows individual layers to be tested without running an entire application.
 
-| Layer       | Package                      | Responsibility                                          |
-| ----------- | ---------------------------- | ------------------------------------------------------- |
-| Core        | `@mohammedaydan/core`        | RenderNode, Child, and Element types                    |
-| Routing     | `@mohammedaydan/router`      | Route records and URL matching                          |
-| Rendering   | `@mohammedaydan/renderer`    | Convert RenderNodes into HTML or streams                |
-| Reactivity  | `@mohammedaydan/reactivity`  | Signals, computed values, effects, batching, cleanup    |
-| State       | `@mohammedaydan/state`       | Stores, selectors, and state registries                 |
-| Client      | `@mohammedaydan/client`      | ScopeRef registry and resume state                      |
-| Compiler    | `@mohammedaydan/compiler`    | JavaScript and interaction budgets                      |
-| Vite plugin | `@mohammedaydan/vite-plugin` | Source analysis, Bootstrap, and lazy chunks             |
-| CLI         | `@mohammedaydan/cli`         | Route discovery and build output                        |
-| Server      | `@mohammedaydan/serve`       | Official production server                              |
-| Actions     | `@mohammedaydan/actions`     | Validation, origin policy, execution, replay protection |
-| SEO         | `@mohammedaydan/seo`         | Head, sitemap, feeds, and JSON-LD                       |
-| Media       | `@mohammedaydan/media`       | Image variants, picture markup, and caching             |
-| Telemetry   | `@mohammedaydan/telemetry`   | Low-cardinality events and optional Web Vitals          |
+| Layer       | Package              | Responsibility                                          |
+| ----------- | -------------------- | ------------------------------------------------------- |
+| Core        | `@nexis/core`        | RenderNode, Child, and Element types                    |
+| Routing     | `@nexis/router`      | Route records and URL matching                          |
+| Rendering   | `@nexis/renderer`    | Convert RenderNodes into HTML or streams                |
+| Reactivity  | `@nexis/reactivity`  | Signals, computed values, effects, batching, cleanup    |
+| State       | `@nexis/state`       | Stores, selectors, and state registries                 |
+| Client      | `@nexis/client`      | ScopeRef registry and resume state                      |
+| Compiler    | `@nexis/compiler`    | JavaScript and interaction budgets                      |
+| Vite plugin | `@nexis/vite-plugin` | Source analysis, Bootstrap, and lazy chunks             |
+| CLI         | `@nexis/cli`         | Route discovery and build output                        |
+| Server      | `@nexis/serve`       | Official production server                              |
+| Actions     | `@nexis/actions`     | Validation, origin policy, execution, replay protection |
+| SEO         | `@nexis/seo`         | Head, sitemap, feeds, and JSON-LD                       |
+| Media       | `@nexis/media`       | Image variants, picture markup, and caching             |
+| Telemetry   | `@nexis/telemetry`   | Low-cardinality events and optional Web Vitals          |
 
 ## Development stage
 
@@ -42,7 +42,7 @@ During development, the Vite dev server runs the application. The Vite plugin di
 
 ## Request processing
 
-In production, `@mohammedaydan/serve` receives a request and maps it to `dist/client`:
+In production, `@nexis/serve` receives a request and maps it to `dist/client`:
 
 - `/` and nested routes resolve to generated `index.html` files.
 - Static assets receive the correct MIME type and immutable caching when fingerprinted.
@@ -58,7 +58,7 @@ In production, `@mohammedaydan/serve` receives a request and maps it to `dist/cl
 The Renderer does not require a DOM. It works with abstract values such as text, elements, arrays, and promises. This allows the same rendering contract to run in Node, Deno, and edge environments.
 
 ```ts
-import { renderToStringAsync } from '@mohammedaydan/renderer'
+import { renderToStringAsync } from '@nexis/renderer'
 
 const html = await renderToStringAsync({
   type: 'main',

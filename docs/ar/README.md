@@ -51,8 +51,8 @@ Nexis هو فريمورك TypeScript يركز على **HTML أولًا**، و**S
 | ScopeRef          | تمثيل آمن وموسوم لقيمة أو Signal أو Store أو Action قابلة للاستعادة |
 | Lazy handler      | معالج تفاعل يُبنى في chunk منفصل ويُحمّل عند الحاجة                 |
 | Action            | وظيفة خادمية تُستدعى عبر endpoint آمن من نموذج أو عميل              |
-| Production server | خادم `@mohammedaydan/serve` الذي يخدم build النهائي                 |
-| Security package  | أدوات `@mohammedaydan/security` للجلسات والتفويض                    |
+| Production server | خادم `@nexis/serve` الذي يخدم build النهائي                         |
+| Security package  | أدوات `@nexis/security` للجلسات والتفويض                            |
 | Build artifact    | ملفات HTML وCSS وJavaScript والوسائط الناتجة من عملية البناء        |
 
 ## سياسة الأمثلة

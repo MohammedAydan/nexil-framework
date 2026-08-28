@@ -114,4 +114,4 @@ A local Lighthouse result does not prove indexing or traffic. These are engineer
 
 ## Workbench lab
 
-Build the executable Workbench with `pnpm --filter @mohammedaydan/example-nexis-workbench build`. Inspect its generated `sitemap.xml`, `robots.txt`, `feed.xml`, `atom.xml`, and the route HTML head before using the patterns in a public service. Set your own absolute production `NEXIS_SITE_ORIGIN` during the verification build; never copy an example or preview hostname into a canonical field.
+Build the executable Workbench with `pnpm --filter @nexis/example-nexis-workbench build`. Inspect its generated `sitemap.xml`, `robots.txt`, `feed.xml`, `atom.xml`, and the route HTML head before using the patterns in a public service. Set your own absolute production `NEXIS_SITE_ORIGIN` during the verification build; never copy an example or preview hostname into a canonical field.

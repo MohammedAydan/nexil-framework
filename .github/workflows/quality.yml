@@ -47,8 +47,8 @@ jobs:
       - name: Build workspace
         run: pnpm build
 
-      - name: GitHub Packages dry run
-        run: pnpm publish:github:dry
+      - name: npm dry run
+        run: pnpm publish:npm:dry
 
       - name: Typecheck
         run: pnpm typecheck

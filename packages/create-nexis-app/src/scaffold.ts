@@ -3,11 +3,11 @@
   isContainedPath,
   parseScaffoldArgs,
   scaffoldProject,
-} from '@mohammedaydan/starter/node'
+} from '@nexis/starter/node'
 export type {
   PathOperations,
   ResolvedScaffoldOptions,
   ScaffoldLanguage,
   ScaffoldOptions,
   ScaffoldTemplate,
-} from '@mohammedaydan/starter/node'
+} from '@nexis/starter/node'

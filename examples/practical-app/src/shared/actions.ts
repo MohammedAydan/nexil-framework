@@ -1,4 +1,4 @@
-import { action } from '@mohammedaydan/actions'
+import { action } from '@nexis/actions'
 
 export const saveMessage = action(
   (input: unknown) => {

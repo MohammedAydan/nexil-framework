@@ -1,4 +1,4 @@
-import { component } from '@mohammedaydan/core'
+import { component } from '@nexis/core'
 
 export const seo = {
   title: 'Nexis Features — Runtime surface area',
@@ -14,55 +14,55 @@ const features = [
     '01',
     'Core nodes',
     'Validated element and text nodes, safe serialization, request context, and component contracts.',
-    '@mohammedaydan/core',
+    '@nexis/core',
   ],
   [
     '02',
     'Fine-grained reactivity',
     'Signals, computed values, batching, effects, scopes, untracking, and explicit disposal.',
-    '@mohammedaydan/reactivity',
+    '@nexis/reactivity',
   ],
   [
     '03',
     'File routing',
     'Static, dynamic, optional catch-all, encoded segments, and static path expansion from src/routes.',
-    '@mohammedaydan/router',
+    '@nexis/router',
   ],
   [
     '04',
     'HTML rendering',
     'Escaped text and attributes, safe URLs, style serialization, async children, streams, and render modes.',
-    '@mohammedaydan/renderer',
+    '@nexis/renderer',
   ],
   [
     '05',
     'Boundary compiler',
     'Lazy dollar-event extraction, lexical capture rewriting, static CSS extraction, and client/server checks.',
-    '@mohammedaydan/compiler + vite-plugin',
+    '@nexis/compiler + vite-plugin',
   ],
   [
     '06',
     'SEO engine',
     'Head tags, canonical and OpenGraph URLs, JSON-LD, sitemap XML, robots directives, and validation.',
-    '@mohammedaydan/seo',
+    '@nexis/seo',
   ],
   [
     '07',
     'Media pipeline',
     'Responsive image attributes, font-face generation, safe remote font downloading, and image transforms.',
-    '@mohammedaydan/media',
+    '@nexis/media',
   ],
   [
     '08',
     'Server and actions',
     'Request data deduplication, cookies, security headers, trusted origins, idempotency, and validated actions.',
-    '@mohammedaydan/server + actions',
+    '@nexis/server + actions',
   ],
   [
     '09',
     'Adapters',
     'Portable handler shape and declared capability matrix for Node, Cloudflare, and Deno runtimes.',
-    '@mohammedaydan/adapters',
+    '@nexis/adapters',
   ],
 ]
 

@@ -1,4 +1,4 @@
-# @mohammedaydan/serve-cloudflare
+# @nexis/serve-cloudflare
 
 Fetch-native Cloudflare handler helpers for Nexis. `createCloudflareHandler` checks an injected `env.ASSETS`-compatible `fetch` service first and delegates asset misses to the Nexis route handler. When no handler can serve a request, it returns a cache-safe 404.
 

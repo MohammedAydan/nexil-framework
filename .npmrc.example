@@ -1,2 +1,4 @@
-@mohammedaydan:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+@nexis:registry=https://registry.npmjs.org/
+# No auth needed for install. For publish:
+# npm login
+# or: //registry.npmjs.org/:_authToken=${NPM_TOKEN}

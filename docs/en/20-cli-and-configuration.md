@@ -6,8 +6,8 @@ Start with the scripts in `package.json` and the CLI help for the installed rele
 
 ```bash
 # For the published scoped initializer, configure GitHub Packages when required.
-npm config set @mohammedaydan:registry https://npm.pkg.github.com
-pnpm dlx @mohammedaydan/create-nexis@latest my-app --yes --ts
+npm config set @nexis:registry https://registry.npmjs.org/
+pnpm dlx @nexis/create-nexis@1.0.0 my-app --yes --ts
 cd my-app
 pnpm install
 pnpm dev
@@ -59,10 +59,10 @@ The build discovers route files under the configured source directory, recursive
 
 ## Rendering configuration
 
-Configuration is optional. Import `defineConfig` from `@mohammedaydan/serve` only when overriding defaults such as the public origin, server port, redirects, feed metadata, cache policy, or Action origin policy. Keep configuration narrowly typed and avoid undocumented fields.
+Configuration is optional. Import `defineConfig` from `@nexis/serve` only when overriding defaults such as the public origin, server port, redirects, feed metadata, cache policy, or Action origin policy. Keep configuration narrowly typed and avoid undocumented fields.
 
 ```ts
-import { defineConfig } from '@mohammedaydan/serve'
+import { defineConfig } from '@nexis/serve'
 
 export default defineConfig({
   app: { origin: 'https://app.example.com' },

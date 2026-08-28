@@ -29,6 +29,6 @@
 
 ## Key Conventions
 
-- Scope: `@mohammedaydan/*`; registry `https://npm.pkg.github.com`
+- Scope: `@nexis/*`; registry `https://registry.npmjs.org/`
 - Build: `tsc -p tsconfig.json` per package; root scripts use pnpm filters only (cross-platform)
 - E2E build helpers live in `tests/e2e/*.mjs` and must use `fileURLToPath(import.meta.url)`

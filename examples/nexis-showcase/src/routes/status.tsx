@@ -1,6 +1,6 @@
-import { component } from '@mohammedaydan/core'
-import { createSecurityHeaders } from '@mohammedaydan/server'
-import { renderTelemetryScript } from '@mohammedaydan/telemetry'
+import { component } from '@nexis/core'
+import { createSecurityHeaders } from '@nexis/server'
+import { renderTelemetryScript } from '@nexis/telemetry'
 
 export const seo = {
   title: 'Nexis Showcase Status — Runtime health',

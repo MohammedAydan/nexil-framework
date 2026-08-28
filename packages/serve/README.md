@@ -1,4 +1,4 @@
-# @mohammedaydan/serve
+# @nexis/serve
 
 The Nexis production server serves the generated `dist/client` directory with framework route semantics instead of SPA fallback behavior. It maps `/` and nested routes to generated `index.html` files, returns the framework 404 document for missing paths, supports `GET` and `HEAD`, rejects other methods with `405`, and applies immutable caching to assets and revalidation caching to HTML.
 
@@ -12,7 +12,7 @@ pnpm start
 `nexis start` is the route-aware production server. `nexis serve` and `nexis preview` remain aliases for compatibility.
 
 ```ts
-import { createServer } from '@mohammedaydan/serve'
+import { createServer } from '@nexis/serve'
 
 const app = createServer('./dist/client', { port: 4173 })
 await app.listen()
@@ -21,7 +21,7 @@ await app.listen()
 Use `createMiddleware()` when embedding Nexis in a Node server and `composeMiddleware()` to add request IDs, sessions, rate limits, or application guards before route handling.
 
 ```ts
-import { composeMiddleware, createMiddleware } from '@mohammedaydan/serve'
+import { composeMiddleware, createMiddleware } from '@nexis/serve'
 
 const app = createMiddleware('./dist/client')
 const handler = composeMiddleware(requestIdMiddleware, sessionMiddleware, app)

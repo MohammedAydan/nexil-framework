@@ -18,10 +18,10 @@
 
 ## 0. أنشئ المشروع بأمان
 
-هيئ صلاحية نطاق `@mohammedaydan` في بيئة المستخدم أو CI. لا تضع registry token في المستودع أو في `.npmrc` المتتبع. أنشئ المشروع بالإصدار الحالي وثبّت lockfile الناتج من تثبيتك أنت.
+هيئ صلاحية نطاق `@nexis` في بيئة المستخدم أو CI. لا تضع registry token في المستودع أو في `.npmrc` المتتبع. أنشئ المشروع بالإصدار الحالي وثبّت lockfile الناتج من تثبيتك أنت.
 
 ```bash
-pnpm dlx @mohammedaydan/create-nexis@1.3.1 nexis-workbench --yes --ts --template interactive
+pnpm dlx @nexis/create-nexis@1.0.0 nexis-workbench --yes --ts --template interactive
 cd nexis-workbench
 pnpm install
 pnpm dev
@@ -42,7 +42,7 @@ pnpm check
 
 ```tsx
 // src/routes/_layout.tsx
-import { Link } from '@mohammedaydan/router'
+import { Link } from '@nexis/router'
 
 export default function WorkbenchLayout({ children }: { readonly children: unknown }) {
   return (
@@ -104,7 +104,7 @@ export function getArticle(slug: string) {
 
 ```tsx
 // src/routes/articles/[slug].tsx
-import { notFound } from '@mohammedaydan/server'
+import { notFound } from '@nexis/server'
 import { getArticle, articles } from '../../lib/articles'
 
 export async function getStaticPaths() {
@@ -130,7 +130,7 @@ export default function Article({ slug }: { readonly slug?: string }) {
 استخدم `Link` فقط عندما يفيد الانتقال المباشر same-origin مع استبدال اختياري لـ`#app`. يخرج anchor عاديًا مع `data-nx-link`؛ ولا يصنع virtual router أو client component tree.
 
 ```tsx
-import { Link } from '@mohammedaydan/router'
+import { Link } from '@nexis/router'
 
 export function ArticleNavigation() {
   return (
@@ -157,7 +157,7 @@ export function ArticleNavigation() {
 
 ```tsx
 // src/components/ArticleFilter.tsx
-import { state } from '@mohammedaydan/core'
+import { state } from '@nexis/core'
 
 export function ArticleFilter() {
   const active = state(false)
@@ -181,8 +181,8 @@ export function ArticleFilter() {
 Context يمنع prop drilling، وليس store عالميًا للمتصفح أو آلية async ambient context. استخدم ContextScope في عمل SSR/SSG الذي يمر عبر async boundary.
 
 ```tsx
-import { createContext, createContextScope, provideContext, state } from '@mohammedaydan/core'
-import { createStore } from '@mohammedaydan/state'
+import { createContext, createContextScope, provideContext, state } from '@nexis/core'
+import { createStore } from '@nexis/state'
 
 const Locale = createContext('en')
 const requestScope = createContextScope()
@@ -230,7 +230,7 @@ import {
   assertTrustedOrigin,
   createMemoryIdempotencyStore,
   handleActionRequest,
-} from '@mohammedaydan/actions'
+} from '@nexis/actions'
 
 const idempotency = createMemoryIdempotencyStore()
 
@@ -271,12 +271,7 @@ export function postSupport(request: Request) {
 
 ```ts
 // src/server/session.ts
-import {
-  createSession,
-  requireAccess,
-  requirePermission,
-  type SessionStore,
-} from '@mohammedaydan/security'
+import { createSession, requireAccess, requirePermission, type SessionStore } from '@nexis/security'
 
 interface WorkbenchUser {
   readonly id: string
@@ -332,7 +327,7 @@ pnpm build
 pnpm start
 ```
 
-في Node استخدم `nexis start` المولد أو `@mohammedaydan/serve`. استعمل Deno أو Cloudflare adapter عندما يكون runtime Fetch-native هو هدف النشر الحقيقي. عرّف `siteOrigin` وredirects وcache وheaders وtrusted-proxy في config مراجع. فعّل trust للـproxy فقط عندما ينظف forwarded headers ويعيد بناءها بأمان.
+في Node استخدم `nexis start` المولد أو `@nexis/serve`. استعمل Deno أو Cloudflare adapter عندما يكون runtime Fetch-native هو هدف النشر الحقيقي. عرّف `siteOrigin` وredirects وcache وheaders وtrusted-proxy في config مراجع. فعّل trust للـproxy فقط عندما ينظف forwarded headers ويعيد بناءها بأمان.
 
 | المجال     | فحص Production                                                                                      |
 | ---------- | --------------------------------------------------------------------------------------------------- |

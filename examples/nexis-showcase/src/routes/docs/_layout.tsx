@@ -1,4 +1,4 @@
-import type { Child } from '@mohammedaydan/core'
+import type { Child } from '@nexis/core'
 
 export const metadata = {
   titleTemplate: '%s · Docs · Nexis',

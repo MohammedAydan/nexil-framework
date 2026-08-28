@@ -34,7 +34,7 @@ nexis doctor --json > nexis-doctor.json
 يدعم المشروع `nexis.config.json` و`nexis.config.js` و`nexis.config.mjs` و`nexis.config.ts`. يجب أن يصدر الملف object configuration صالحًا.
 
 ```ts
-import type { NexisBuildConfig } from '@mohammedaydan/cli'
+import type { NexisBuildConfig } from '@nexis/cli'
 
 export default {
   siteOrigin: 'https://example.com',

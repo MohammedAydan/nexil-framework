@@ -88,7 +88,7 @@ describe('Nexis Vite transform', () => {
 
 it('allows component$ state to flow through the automatic ScopeRef capture path', async () => {
   const result = await transformNexisSource(
-    `import { component$, state } from '@mohammedaydan/core'
+    `import { component$, state } from '@nexis/core'
 const view = component$(() => { const count = state(0); return <button onClick$={() => count.set(count() + 1)}>{count()}</button> })`,
     '/app/src/routes/component.tsx',
   )
@@ -100,7 +100,7 @@ const view = component$(() => { const count = state(0); return <button onClick$=
 
 it('lowers a named local resumable handler through its body and captures its Signal', async () => {
   const result = await transformNexisSource(
-    `import { component, state } from '@mohammedaydan/core'
+    `import { component, state } from '@nexis/core'
 export default component(() => {
   const count = state(0)
   const increment = () => count.set(count() + 1)
@@ -122,7 +122,7 @@ export default component(() => {
 
 it('supports the multiline named handler shape used by the public example', async () => {
   const result = await transformNexisSource(
-    `import { component, state } from '@mohammedaydan/core'
+    `import { component, state } from '@nexis/core'
 export default component(() => {
   const count = state(0)
   const increment = () => {
@@ -140,7 +140,7 @@ export default component(() => {
 
 it('lowers a named local function declaration through its body and captures its Signal', async () => {
   const result = await transformNexisSource(
-    `import { component, state } from '@mohammedaydan/core'
+    `import { component, state } from '@nexis/core'
 export default component(() => {
   const count = state(0)
   function increment() { count.set((current) => current + 1) }
@@ -161,7 +161,7 @@ export default component(() => {
 
 it('classifies live signal captures and warns for unsupported closures', async () => {
   const result = await transformNexisSource(
-    `import { state } from '@mohammedaydan/core'
+    `import { state } from '@nexis/core'
 const count = state(0)
 const runtimeValue = new Date()
 const view = <button onClick$={({ element }) => { element.textContent = String(count()) + runtimeValue.toISOString() }}>+</button>`,
@@ -182,7 +182,7 @@ const view = <button onClick$={({ element }) => { element.textContent = String(c
 
 it('marks only an explicit global Store capture as persistent across Link outlet swaps', async () => {
   const result = await transformNexisSource(
-    `import { createStore } from '@mohammedaydan/state'
+    `import { createStore } from '@nexis/state'
 const preferences = createStore({ theme: 'light' }, 'global')
 const draft = createStore({ value: '' })
 export const view = <div><button onClick$={() => preferences.set({ theme: 'dark' })}>Theme</button><button onClick$={() => draft.set({ value: 'saved' })}>Draft</button></div>`,
@@ -199,7 +199,7 @@ export const view = <div><button onClick$={() => preferences.set({ theme: 'dark'
 
 it('emits a data-nx-scope payload with the serialized initial value', async () => {
   const result = await transformNexisSource(
-    `import { state } from '@mohammedaydan/core'
+    `import { state } from '@nexis/core'
 const count = state(0)
 export const view = <button onClick$={() => count.set((c) => c + 1)}>+</button>`,
     '/app/src/routes/live.tsx',
@@ -218,7 +218,7 @@ export const view = <button onClick$={() => count.set((c) => c + 1)}>+</button>`
 
 it('externalizes resumability metadata behind an opaque HTML scope key', async () => {
   const result = await transformNexisSource(
-    `import { state } from '@mohammedaydan/core'
+    `import { state } from '@nexis/core'
 const accountBalance = state(1200)
 export const view = <button onClick$={() => accountBalance.set((value) => value + 1)}>+</button>`,
     '/app/src/routes/external-scope.tsx',
@@ -240,7 +240,7 @@ export const view = <button onClick$={() => accountBalance.set((value) => value 
 
 it('classifies useState tuple declarations as signal captures', async () => {
   const result = await transformNexisSource(
-    `import { useState } from '@mohammedaydan/core'
+    `import { useState } from '@nexis/core'
 const [count, setCount] = useState(7)
 export const view = <button onClick$={() => setCount(count + 1)}>+</button>`,
     '/app/src/routes/tuple.tsx',
@@ -255,7 +255,7 @@ export const view = <button onClick$={() => setCount(count + 1)}>+</button>`,
 
 it('downgrades non-literal signal initializers to unsupported diagnostics', async () => {
   const result = await transformNexisSource(
-    `import { state } from '@mohammedaydan/core'
+    `import { state } from '@nexis/core'
 const items = state([1, 2, 3].map((n) => n * 2))
 export const view = <button onClick$={() => items.set([])}>clear</button>`,
     '/app/src/routes/dynamic.tsx',
@@ -275,7 +275,7 @@ export const view = <button onClick$={() => items.set([])}>clear</button>`,
 
 it('lowers explicit bindText$ into a ScopeRef DOM binding', async () => {
   const result = await transformNexisSource(
-    `import { state } from '@mohammedaydan/core'
+    `import { state } from '@nexis/core'
 const count = state(0)
 export const view = <button bindText$={count} onClick$={() => count.set((value) => value + 1)}>{count()}</button>`,
     '/app/src/routes/bind-text.tsx',
@@ -291,7 +291,7 @@ export const view = <button bindText$={count} onClick$={() => count.set((value) 
 
 it('lowers explicit scalar property bindings and removes authoring-only props', async () => {
   const result = await transformNexisSource(
-    `import { state } from '@mohammedaydan/core'
+    `import { state } from '@nexis/core'
 const disabled = state(false)
 export const view = <button bindDisabled$={disabled} disabled={disabled()}>Save</button>`,
     '/app/src/routes/bind-disabled.tsx',
@@ -305,7 +305,7 @@ export const view = <button bindDisabled$={disabled} disabled={disabled()}>Save<
 
 it('automatically binds a direct Signal child read without a component rerender', async () => {
   const result = await transformNexisSource(
-    `import { state } from '@mohammedaydan/core'
+    `import { state } from '@nexis/core'
 const count = state(0)
 export const view = <output>{count()}</output>`,
     '/app/src/routes/auto-bind.tsx',
@@ -319,7 +319,7 @@ export const view = <output>{count()}</output>`,
 
 it('does not auto-bind derived or structurally ambiguous JSX expressions', async () => {
   const result = await transformNexisSource(
-    `import { state } from '@mohammedaydan/core'
+    `import { state } from '@nexis/core'
 const count = state(0)
 export const view = <output>{count() + ' items'}</output>`,
     '/app/src/routes/ambiguous-bind.tsx',
@@ -331,7 +331,7 @@ export const view = <output>{count() + ' items'}</output>`,
 
 it('automatically binds a direct Signal value property read', async () => {
   const result = await transformNexisSource(
-    `import { state } from '@mohammedaydan/core'
+    `import { state } from '@nexis/core'
 const disabled = state(false)
 export const view = <button disabled={disabled.value}>{disabled.value ? 'Disabled' : 'Save'}</button>`,
     '/app/src/routes/auto-value-bind.tsx',
@@ -345,7 +345,7 @@ export const view = <button disabled={disabled.value}>{disabled.value ? 'Disable
 
 it('extracts single-quoted and nested literal signal initializers with the AST evaluator', async () => {
   const result = await transformNexisSource(
-    `import { state } from '@mohammedaydan/core'
+    `import { state } from '@nexis/core'
 const label = state('hello')
 const settings = state({ theme: 'dark', flags: [true, false] })
 export const view = <button onClick$={() => label.set('world')}>{label()}</button>`,
@@ -368,7 +368,7 @@ export const view = <div><button onClick$={() => count.set((value) => value + 1)
 
 it('wraps direct signal expressions in mixed text interpolations', async () => {
   const result = await transformNexisSource(
-    `import { state } from '@mohammedaydan/core'
+    `import { state } from '@nexis/core'
 const count = state(0)
 export const view = <span>Items: {count()}</span>`,
     '/app/src/routes/interpolation.tsx',

@@ -2,7 +2,7 @@
 
 ## Goal
 
-Make the monorepo build cleanly on Windows, publish the public `@mohammedaydan/*` packages to GitHub Packages, and prove `pnpm dlx @mohammedaydan/create-nexis` scaffolds an app that installs/builds/runs from published packages only.
+Make the monorepo build cleanly on Windows, publish the public `@nexis/*` packages to GitHub Packages, and prove `pnpm dlx @nexis/create-nexis` scaffolds an app that installs/builds/runs from published packages only.
 
 ## Acceptance Criteria
 
@@ -12,7 +12,7 @@ Make the monorepo build cleanly on Windows, publish the public `@mohammedaydan/*
 - [ ] Public package list identified and documented; internal/duplicate package kept private
 - [ ] Tarballs inspected: correct files, no workspace:* leaks, valid exports
 - [ ] All public packages published to GitHub Packages in dependency-safe order
-- [ ] `npm view @mohammedaydan/create-nexis version --registry=https://npm.pkg.github.com` returns version
+- [ ] `npm view @nexis/create-nexis version --registry=https://registry.npmjs.org/` returns version
 - [ ] Fresh scaffold OUTSIDE repo installs, builds, starts, serves expected HTML
 - [ ] No local paths / workspace refs in generated consumer
 - [ ] Tag-driven GitHub Actions publish workflow committed

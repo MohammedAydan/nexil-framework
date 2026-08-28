@@ -1,4 +1,4 @@
-import type { Child, RenderNode } from '@mohammedaydan/core'
+import type { Child, RenderNode } from '@nexis/core'
 import {
   escapeHtml,
   isVoidElement,

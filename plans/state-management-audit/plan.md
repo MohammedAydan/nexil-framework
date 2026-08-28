@@ -16,8 +16,8 @@ audit — without breaking any existing behavior, API, or test.
    `unsupported` diagnostics — never silent undefined crashes.
 4. Computeds created inside effects stay reactive after the effect re-runs.
 5. `effect`, `watch`, `untrack`, `createRoot`, `onCleanup` importable from
-   `@mohammedaydan/core`.
-6. Generated apps can `import { createStore } from '@mohammedaydan/state'`
+   `@nexis/core`.
+6. Generated apps can `import { createStore } from '@nexis/state'`
    without manual dependency edits.
 7. All existing gates stay green: build, typecheck, unit (135+), e2e (13+),
    format, budget checks.
@@ -31,7 +31,7 @@ audit — without breaking any existing behavior, API, or test.
 - reactivity: remove the cleanup-hoisting block in `computed` finally (stale-dep
   root cause).
 - core: widen reactivity re-export surface.
-- create-nexis (+cli/create-nexis-app copies): add `@mohammedaydan/state` dep.
+- create-nexis (+cli/create-nexis-app copies): add `@nexis/state` dep.
 - client: unify exported `bootstrapResumability` with the shipped contract
   (unified attrs + scope materialization via global registry); dispose-on-overwrite
   in ScopeRegistry.register.

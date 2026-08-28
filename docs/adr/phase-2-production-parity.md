@@ -16,7 +16,7 @@ Actions are exposed as `POST /__nexis/actions/<route>/<name>`. The transport acc
 
 ## Production serving and runtime parity
 
-`@mohammedaydan/serve` is the official Node-compatible static server. It maps generated route directories to `index.html`, serves a framework 404 document, supports `GET` and `HEAD`, rejects other methods with `405`, prevents traversal, and applies revalidation caching to HTML and immutable caching to hashed assets. The CLI `nexis serve` command uses this package. Node, Cloudflare-style, and Deno-style adapters continue to expose the same request/response contract. Stream rendering is bounded, cancellation-aware, and byte-identical to buffered rendering.
+`@nexis/serve` is the official Node-compatible static server. It maps generated route directories to `index.html`, serves a framework 404 document, supports `GET` and `HEAD`, rejects other methods with `405`, prevents traversal, and applies revalidation caching to HTML and immutable caching to hashed assets. The CLI `nexis serve` command uses this package. Node, Cloudflare-style, and Deno-style adapters continue to expose the same request/response contract. Stream rendering is bounded, cancellation-aware, and byte-identical to buffered rendering.
 
 ## Media, telemetry, and SEO
 

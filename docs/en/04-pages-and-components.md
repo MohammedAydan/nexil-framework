@@ -48,7 +48,7 @@ export function Card({ title, description, href }: CardProps) {
 An interactive component should be small and focused. Do not make an entire layout interactive because one button needs state. Extract the button into its own component and use a lazy handler.
 
 ```tsx
-import { state } from '@mohammedaydan/core'
+import { state } from '@nexis/core'
 
 export function Counter() {
   const count = state(0)

@@ -1,5 +1,5 @@
-import { createCloudflareAdapter } from '@mohammedaydan/adapters'
-import type { NexisHandler } from '@mohammedaydan/adapters'
+import { createCloudflareAdapter } from '@nexis/adapters'
+import type { NexisHandler } from '@nexis/adapters'
 
 export interface CloudflareAssets {
   readonly fetch: (request: Request) => Response | Promise<Response>

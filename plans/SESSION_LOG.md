@@ -51,7 +51,7 @@
   - Recursive publish filter never matched in npm scripts on Windows
     (single quotes not stripped by cmd). Replaced with `pnpm -C packages publish -r`.
   - Excluded compiled `*.test.*` from tarballs via `files` negation in all 18 manifests.
-  - Marked `@mohammedaydan/create-nexis-app` private (byte-identical legacy duplicate
+  - Marked `@nexis/create-nexis-app` private (byte-identical legacy duplicate
     of create-nexis); README points to canonical initializer.
   - Added project `.npmrc` (scope routing only, no credentials).
 - Published 18 packages to GitHub Packages at v0.1.0; republished
@@ -59,7 +59,7 @@
 - Scaffold improvements (both cli and create-nexis copies): standalone apps now get
   `pnpm.onlyBuiltDependencies` and a `start` script.
 - End-to-end consumer validation outside the repo via
-  `pnpm dlx @mohammedaydan/create-nexis@latest`: scaffold â†’ install â†’ build â†’ dev (HTTP 200)
+  `pnpm dlx @nexis/create-nexis@1.0.0`: scaffold â†’ install â†’ build â†’ dev (HTTP 200)
   â†’ start (HTTP 200); no workspace/local leaks in package.json or pnpm-lock.yaml.
 - New tag-driven `.github/workflows/publish-packages.yml` with gates and tarball validation.
 - SECURITY.md: credential handling + compromised-token revocation policy.
@@ -164,7 +164,7 @@ For a release: bump package versions, tag `v<version>`, push tag.
 - reactivity: removed cleanup hoisting in computed - fixed permanently stale
   derivations when created inside re-running effects.
 - core: full reactive surface re-exported (effect/watch/untrack/createRoot/
-  onCleanup). Scaffold depends on @mohammedaydan/state for createStore.
+  onCleanup). Scaffold depends on @nexis/state for createStore.
 - client: bootstrapResumability parity with shipped bootstrap ({element,event,
   scope}, unified attrs, registry-cached materialization); register() disposes
   overwritten entries; minified shim gained value/subscribe.

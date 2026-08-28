@@ -3,7 +3,7 @@ name: Publish packages
 # Releases are deliberate and tag-driven: push a `v<version>` tag (e.g. v0.1.2)
 # after updating package versions. Every push of a new tag runs the full gate
 # suite, validates the packed tarballs, then publishes all non-private packages
-# under packages/* to GitHub Packages in dependency-safe (topological) order.
+# under packages/* to npm (https://registry.npmjs.org/) in dependency-safe (topological) order.
 
 on:
   push:
@@ -59,9 +59,9 @@ jobs:
 
       - name: Validate packed tarballs (dry run)
         run: |
-          pnpm publish:github:dry > pack-report.log 2>&1 || { cat pack-report.log; exit 1; }
+          pnpm publish:npm:dry > pack-report.log 2>&1 || { cat pack-report.log; exit 1; }
           sed -i 's/\x1b\[[0-9;]*m//g' pack-report.log
-          MATCHED=$(grep -cE '^\+ @mohammedaydan/' pack-report.log || true)
+          MATCHED=$(grep -cE '^\+ @nexis/' pack-report.log || true)
           echo "Packages matched: $MATCHED"
           if [ "$MATCHED" -lt 20 ]; then
             echo '::error::Dry run matched fewer packages than expected — aborting release'
@@ -79,23 +79,23 @@ jobs:
           fi
 
       # Isolated npm config keeps credentials out of the workspace and out of logs.
-      - name: Configure GitHub Packages authentication
+      - name: Configure npm authentication
         run: |
           {
-            echo "@mohammedaydan:registry=https://npm.pkg.github.com"
-            echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}"
+            echo "@nexis:registry=https://registry.npmjs.org"
+            echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}"
           } > "$RUNNER_TEMP/publish.npmrc"
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish public packages (dependency order)
-        run: pnpm publish:github
+        run: pnpm publish:npm
         env:
           NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/publish.npmrc
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Verify initializer is resolvable
-        run: npm view @mohammedaydan/create-nexis version --registry=https://npm.pkg.github.com
+        run: npm view @nexis/create-nexis version --registry=https://registry.npmjs.org
         env:
           NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/publish.npmrc
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

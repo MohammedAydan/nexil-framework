@@ -1,5 +1,5 @@
 {
-  "name": "@mohammedaydan/example-nexis-showcase",
+  "name": "@nexis/example-nexis-showcase",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -13,20 +13,20 @@
     "bench:lighthouse": "node ./benchmarks/run-lighthouse.mjs"
   },
   "dependencies": {
-    "@mohammedaydan/actions": "workspace:*",
-    "@mohammedaydan/adapters": "workspace:*",
-    "@mohammedaydan/client": "workspace:*",
-    "@mohammedaydan/cli": "workspace:*",
-    "@mohammedaydan/core": "workspace:*",
-    "@mohammedaydan/css": "workspace:*",
-    "@mohammedaydan/jsx-runtime": "workspace:*",
-    "@mohammedaydan/media": "workspace:*",
-    "@mohammedaydan/reactivity": "workspace:*",
-    "@mohammedaydan/seo": "workspace:*",
-    "@mohammedaydan/server": "workspace:*",
-    "@mohammedaydan/serve": "workspace:*",
-    "@mohammedaydan/state": "workspace:*",
-    "@mohammedaydan/telemetry": "workspace:*"
+    "@nexis/actions": "workspace:*",
+    "@nexis/adapters": "workspace:*",
+    "@nexis/client": "workspace:*",
+    "@nexis/cli": "workspace:*",
+    "@nexis/core": "workspace:*",
+    "@nexis/css": "workspace:*",
+    "@nexis/jsx-runtime": "workspace:*",
+    "@nexis/media": "workspace:*",
+    "@nexis/reactivity": "workspace:*",
+    "@nexis/seo": "workspace:*",
+    "@nexis/server": "workspace:*",
+    "@nexis/serve": "workspace:*",
+    "@nexis/state": "workspace:*",
+    "@nexis/telemetry": "workspace:*"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

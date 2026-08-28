@@ -1,4 +1,4 @@
-import { computed, state } from '@mohammedaydan/core'
+import { computed, state } from '@nexis/core'
 
 export function ArticleFilter() {
   const active = state(false)

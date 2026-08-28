@@ -1,4 +1,4 @@
-import { Link } from '@mohammedaydan/router'
+import { Link } from '@nexis/router'
 import { articles } from '../../lib/articles'
 
 export const seo = {

@@ -1,4 +1,4 @@
-import type { Child } from '@mohammedaydan/core'
+import type { Child } from '@nexis/core'
 import { renderToStringAsync } from './index.js'
 
 export type RenderMode =

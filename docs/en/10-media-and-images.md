@@ -2,11 +2,11 @@
 
 ## The media pipeline
 
-`@mohammedaydan/media` builds image variants at multiple widths and formats using a content-addressed cache. Nexis can run this pipeline automatically for public PNG, JPEG, and SVG files during `nexis build`, but it remains opt-in so existing applications keep their current output until they choose it.
+`@nexis/media` builds image variants at multiple widths and formats using a content-addressed cache. Nexis can run this pipeline automatically for public PNG, JPEG, and SVG files during `nexis build`, but it remains opt-in so existing applications keep their current output until they choose it.
 
 ```ts
 // nexis.config.ts
-import { defineConfig } from '@mohammedaydan/serve'
+import { defineConfig } from '@nexis/serve'
 
 export default defineConfig({
   media: {
@@ -46,7 +46,7 @@ Use `loading="eager"` and `fetchpriority="high"` only for the real LCP image. Do
 When using the build-generated static files, prefer the `Image` component with `staticVariants`. It uses the same stable file naming contract as `nexis build`:
 
 ```tsx
-import { Image } from '@mohammedaydan/media'
+import { Image } from '@nexis/media'
 
 export default function Hero() {
   return (
@@ -80,7 +80,7 @@ Do not turn a user-provided image URL into an unrestricted server-side fetch. Al
 
 ## OG images
 
-`@mohammedaydan/og-image` creates an escaped SVG and rasterizes it to PNG during the build. Titles and descriptions are escaped before entering the SVG, and output filenames are content-addressed.
+`@nexis/og-image` creates an escaped SVG and rasterizes it to PNG during the build. Titles and descriptions are escaped before entering the SVG, and output filenames are content-addressed.
 
 ```ts
 const card = await generateOgImage({

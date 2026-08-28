@@ -1,12 +1,12 @@
 {
-  "name": "@mohammedaydan/example-ecommerce",
+  "name": "@nexis/example-ecommerce",
   "private": true,
   "type": "module",
   "dependencies": {
-    "@mohammedaydan/actions": "workspace:*",
-    "@mohammedaydan/core": "workspace:*",
-    "@mohammedaydan/jsx-runtime": "workspace:*",
-    "@mohammedaydan/server": "workspace:*",
+    "@nexis/actions": "workspace:*",
+    "@nexis/core": "workspace:*",
+    "@nexis/jsx-runtime": "workspace:*",
+    "@nexis/server": "workspace:*",
     "axios": "^1.11.0",
     "drizzle-orm": "^0.45.2",
     "zod": "^4.1.0"

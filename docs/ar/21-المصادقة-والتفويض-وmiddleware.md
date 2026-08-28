@@ -1,13 +1,13 @@
 # الجلسات والمصادقة والتفويض وMiddleware
 
-يوفر `@mohammedaydan/security` بدائل صغيرة ومحددة لإدارة جلسات التطبيق والتحقق من الصلاحيات. لا يوفّر الحزمة مزود OAuth/OIDC أو شاشة دخول أو قاعدة بيانات للمستخدمين؛ هذه مسؤولية التطبيق أو مزود الهوية والبنية التحتية التي تختارها.
+يوفر `@nexis/security` بدائل صغيرة ومحددة لإدارة جلسات التطبيق والتحقق من الصلاحيات. لا يوفّر الحزمة مزود OAuth/OIDC أو شاشة دخول أو قاعدة بيانات للمستخدمين؛ هذه مسؤولية التطبيق أو مزود الهوية والبنية التحتية التي تختارها.
 
 ## جلسة تعتمد على التخزين الذي يملكه التطبيق
 
 أنشئ مخزن جلسات دائمًا أو موزعًا، ثم مرره إلى `createSession`. القيمة التي تصل إلى المتصفح هي معرف cookie مبهم، أما بيانات المستخدم فتظل لدى مخزن التطبيق.
 
 ```ts
-import { createSession } from '@mohammedaydan/security'
+import { createSession } from '@nexis/security'
 
 const session = createSession(sessionStore)
 ```
@@ -19,7 +19,7 @@ const session = createSession(sessionStore)
 استخدم `requireRole` أو `requirePermission` للحالات الثابتة، واستخدم `requireAccess` عندما تعتمد السياسة على المورد أو المستأجر أو ملكية السجل. يجب أن يظل الفحص داخل Action أو داخل طبقة تملك المورد، لا في الواجهة فقط ولا في Middleware وحده.
 
 ```ts
-import { requireAccess, requirePermission } from '@mohammedaydan/security'
+import { requireAccess, requirePermission } from '@nexis/security'
 
 requirePermission(actor, 'billing:write')
 await requireAccess(actor, invoice, (user, resource) => user.tenantId === resource.tenantId)
@@ -27,10 +27,10 @@ await requireAccess(actor, invoice, (user, resource) => user.tenantId === resour
 
 ## Middleware على خادم Node
 
-استخدم `createMiddleware` و`composeMiddleware` من `@mohammedaydan/serve` لتكوين سياسات عامة، مثل قراءة الجلسة وإرفاق السياق وفرض ترويسات الأمان. يجب استدعاء `next()` مرة واحدة على الأكثر. هذه الواجهة مبنية على `IncomingMessage` و`ServerResponse` الخاصة بـ Node؛ في بيئات Edge أو Deno أنشئ تكوينًا مكافئًا بمعالجات Fetch.
+استخدم `createMiddleware` و`composeMiddleware` من `@nexis/serve` لتكوين سياسات عامة، مثل قراءة الجلسة وإرفاق السياق وفرض ترويسات الأمان. يجب استدعاء `next()` مرة واحدة على الأكثر. هذه الواجهة مبنية على `IncomingMessage` و`ServerResponse` الخاصة بـ Node؛ في بيئات Edge أو Deno أنشئ تكوينًا مكافئًا بمعالجات Fetch.
 
 ```ts
-import { composeMiddleware, createMiddleware, createSecurityHeaders } from '@mohammedaydan/serve'
+import { composeMiddleware, createMiddleware, createSecurityHeaders } from '@nexis/serve'
 
 const middleware = composeMiddleware(
   createSecurityHeaders(),

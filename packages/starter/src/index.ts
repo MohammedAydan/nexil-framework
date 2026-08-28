@@ -47,7 +47,7 @@ export function resolveStarterOptions(options: StarterOptions): ResolvedStarterO
   const language = options.language ?? 'ts'
   if (language !== 'ts' && language !== 'js')
     throw new TypeError(`Unknown starter language: ${language}`)
-  const dependencyVersion = options.dependencyVersion ?? '^1.3.2'
+  const dependencyVersion = options.dependencyVersion ?? '^1.0.0'
   if (!/^\^?\d+\.\d+\.\d+$/.test(dependencyVersion) && dependencyVersion !== 'workspace:*')
     throw new TypeError('Starter dependencyVersion must be a semver range or workspace:*.')
   return {
@@ -61,16 +61,16 @@ export function resolveStarterOptions(options: StarterOptions): ResolvedStarterO
 
 function packageJson(options: ResolvedStarterOptions): string {
   const dependencies: Record<string, string> = {
-    '@mohammedaydan/cli': options.dependencyVersion,
-    '@mohammedaydan/core': options.dependencyVersion,
-    '@mohammedaydan/css': options.dependencyVersion,
-    '@mohammedaydan/jsx-runtime': options.dependencyVersion,
-    '@mohammedaydan/media': options.dependencyVersion,
-    '@mohammedaydan/reactivity': options.dependencyVersion,
-    '@mohammedaydan/router': options.dependencyVersion,
-    '@mohammedaydan/security': options.dependencyVersion,
-    '@mohammedaydan/seo': options.dependencyVersion,
-    '@mohammedaydan/state': options.dependencyVersion,
+    '@nexis/cli': options.dependencyVersion,
+    '@nexis/core': options.dependencyVersion,
+    '@nexis/css': options.dependencyVersion,
+    '@nexis/jsx-runtime': options.dependencyVersion,
+    '@nexis/media': options.dependencyVersion,
+    '@nexis/reactivity': options.dependencyVersion,
+    '@nexis/router': options.dependencyVersion,
+    '@nexis/security': options.dependencyVersion,
+    '@nexis/seo': options.dependencyVersion,
+    '@nexis/state': options.dependencyVersion,
   }
   const devDependencies: Record<string, string> = {
     typescript: '^5.8.0',
@@ -98,8 +98,8 @@ function packageJson(options: ResolvedStarterOptions): string {
       devDependencies,
       nexis: {
         routeExtension: options.language === 'ts' ? 'tsx' : 'jsx',
-        source: options.dependencyVersion === 'workspace:*' ? 'workspace' : 'github-packages',
-        registry: 'https://npm.pkg.github.com',
+        source: options.dependencyVersion === 'workspace:*' ? 'workspace' : 'npm',
+        registry: 'https://registry.npmjs.org/',
       },
       ...(options.dependencyVersion === 'workspace:*'
         ? {}
@@ -119,7 +119,7 @@ function tsconfig(options: ResolvedStarterOptions): string {
         module: 'ESNext',
         moduleResolution: 'Bundler',
         jsx: 'react-jsx',
-        jsxImportSource: '@mohammedaydan/jsx-runtime',
+        jsxImportSource: '@nexis/jsx-runtime',
         allowJs: options.language === 'js',
         strict: true,
         skipLibCheck: true,
@@ -156,7 +156,7 @@ a{color:inherit}.shell{width:min(72rem,100% - 2rem);margin:auto;padding:clamp(2r
 function routeSource(options: ResolvedStarterOptions): string {
   const typedEvent = options.language === 'ts' ? ': { element: HTMLElement }' : ''
   if (options.template === 'interactive') {
-    return `import { component, state } from '@mohammedaydan/core'
+    return `import { component, state } from '@nexis/core'
 
 export const seo = { title: '${options.projectName} — Nexis', description: 'An HTML-first Nexis starter with one resumable interaction boundary.' }
 
@@ -183,7 +183,7 @@ export default component(() => {
     options.template === 'secure-node'
       ? '<p>Security headers are configured explicitly in <code>nexis.config.ts</code>. Review CSP and trustProxy before deployment.</p>'
       : '<p>This project starts with useful server-rendered HTML and no client boundary.</p>'
-  return `import { component } from '@mohammedaydan/core'
+  return `import { component } from '@nexis/core'
 
 export const seo = { title: '${options.projectName} — Nexis', description: 'An HTML-first Nexis starter project.' }
 
@@ -199,7 +199,7 @@ export default component(() => (
 
 function secureConfig(options: ResolvedStarterOptions): string | undefined {
   if (options.template !== 'secure-node') return undefined
-  return `import { defineConfig } from '@mohammedaydan/serve'
+  return `import { defineConfig } from '@nexis/serve'
 
 export default defineConfig({
   server: {
@@ -214,7 +214,7 @@ export default defineConfig({
 
 function counterRouteSource(options: ResolvedStarterOptions): string | undefined {
   if (options.template !== 'interactive') return undefined
-  return `import { component, state } from '@mohammedaydan/core'
+  return `import { component, state } from '@nexis/core'
 
 export const seo = { title: 'Counter — ${options.projectName}', description: 'A focused resumable Nexis state boundary.' }
 
@@ -231,12 +231,12 @@ export function createStarterFiles(options: StarterOptions): readonly StarterFil
     { path: 'package.json', content: packageJson(resolved) },
     { path: 'index.html', content: SHELL_HTML },
     { path: 'tsconfig.json', content: tsconfig(resolved) },
-    { path: '.npmrc', content: '@mohammedaydan:registry=https://npm.pkg.github.com\n' },
+    { path: '.npmrc', content: '@nexis:registry=https://registry.npmjs.org/\n' },
     { path: 'public/styles.css', content: BASE_CSS },
     { path: `src/routes/index.${extension}`, content: routeSource(resolved) },
     {
       path: 'README.md',
-      content: `# ${resolved.projectName}\n\nCreated with the Nexis ${resolved.template} template.\n\n## Run\n\n\`\`\`bash\npnpm install\npnpm dev\n\`\`\`\n\nBefore deployment, run \`pnpm typecheck\`, \`pnpm check\`, and \`pnpm build\`. Configure a GitHub Packages token with \`read:packages\` in your local or deployment environment; never commit it.\n`,
+      content: `# ${resolved.projectName}\n\nCreated with the Nexis ${resolved.template} template.\n\n## Run\n\n\`\`\`bash\npnpm install\npnpm dev\n\`\`\`\n\nBefore deployment, run \`pnpm typecheck\`, \`pnpm check\`, and \`pnpm build\`. Configure a npm token with \`npm publish access\` in your local or deployment environment; never commit it.\n`,
     },
   ]
   const counter = counterRouteSource(resolved)

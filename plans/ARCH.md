@@ -6,7 +6,7 @@ Monorepo producing 19 scoped packages. Examples consume workspace deps locally; 
 
 ## Architecture Pattern
 
-pnpm workspace monorepo, package-per-directory, TypeScript compiled per-package (`tsc -p`), root `tsc -b` project references for typecheck. Vite-based dev/build tooling in `@mohammedaydan/cli`.
+pnpm workspace monorepo, package-per-directory, TypeScript compiled per-package (`tsc -p`), root `tsc -b` project references for typecheck. Vite-based dev/build tooling in `@nexis/cli`.
 
 ## Core Components
 
@@ -32,7 +32,7 @@ Tier 3: create-nexis (standalone bin)
 
 ## Data Flow
 
-User runs `pnpm dlx @mohammedaydan/create-nexis my-app --yes --ts` → scaffold writes package.json depending on published versions (^0.1.x) → user installs from GitHub Packages → `nexis dev/build` drives Vite + compiler.
+User runs `pnpm dlx @nexis/create-nexis my-app --yes --ts` → scaffold writes package.json depending on published versions (^0.1.x) → user installs from GitHub Packages → `nexis dev/build` drives Vite + compiler.
 
 ## Boundaries & Invariants
 

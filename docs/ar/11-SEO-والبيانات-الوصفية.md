@@ -111,4 +111,4 @@ const feed = generateFeed(items, {
 
 ## مختبر Workbench
 
-ابنِ مثال Workbench التنفيذي بالأمر `pnpm --filter @mohammedaydan/example-nexis-workbench build`. افحص `sitemap.xml` و`robots.txt` و`feed.xml` و`atom.xml` الناتجة وhead لكل route قبل نقل النمط لخدمة عامة. عيّن `NEXIS_SITE_ORIGIN` إنتاجيًّا مطلقًا خاصًا بك أثناء build التحقق؛ لا تنسخ hostname مثال أو preview إلى canonical.
+ابنِ مثال Workbench التنفيذي بالأمر `pnpm --filter @nexis/example-nexis-workbench build`. افحص `sitemap.xml` و`robots.txt` و`feed.xml` و`atom.xml` الناتجة وhead لكل route قبل نقل النمط لخدمة عامة. عيّن `NEXIS_SITE_ORIGIN` إنتاجيًّا مطلقًا خاصًا بك أثناء build التحقق؛ لا تنسخ hostname مثال أو preview إلى canonical.

@@ -5,8 +5,8 @@ This chapter assembles the patterns from the previous guides into a small docume
 ## 1. Create the project
 
 ```bash
-npm config set @mohammedaydan:registry https://npm.pkg.github.com
-pnpm dlx @mohammedaydan/create-nexis@latest my-docs --yes --ts
+npm config set @nexis:registry https://registry.npmjs.org/
+pnpm dlx @nexis/create-nexis@1.0.0 my-docs --yes --ts
 cd my-docs
 pnpm install
 ```
@@ -52,7 +52,7 @@ The heading, description, and link exist in the initial HTML. A visitor can read
 ## 4. Interactive search
 
 ```tsx
-import { state } from '@mohammedaydan/core'
+import { state } from '@nexis/core'
 
 export function SearchBox({ initialQuery = '' }: { readonly initialQuery?: string }) {
   const query = state(initialQuery)
@@ -148,7 +148,7 @@ pnpm test
 pnpm test:e2e
 ```
 
-For Node, run `@mohammedaydan/serve`. For Deno or Cloudflare, use the corresponding Fetch adapter. Set `NEXIS_TRUST_PROXY=1` only when the deployment has a trusted header-sanitizing proxy.
+For Node, run `@nexis/serve`. For Deno or Cloudflare, use the corresponding Fetch adapter. Set `NEXIS_TRUST_PROXY=1` only when the deployment has a trusted header-sanitizing proxy.
 
 ## 10. Verification matrix
 

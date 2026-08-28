@@ -1,4 +1,4 @@
-import type { DataContext } from '@mohammedaydan/server'
+import type { DataContext } from '@nexis/server'
 
 export interface ActionContext {
   readonly request: Request
@@ -194,7 +194,7 @@ export async function handleActionRequest<Input, Output>(
     const data = await serverAction.execute(
       {
         request,
-        data: options.data ?? (await import('@mohammedaydan/server')).createDataContext(request),
+        data: options.data ?? (await import('@nexis/server')).createDataContext(request),
       },
       input,
     )

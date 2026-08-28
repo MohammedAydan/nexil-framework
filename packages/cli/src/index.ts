@@ -6,19 +6,19 @@ import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs
 import { dirname, extname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { build, createServer, transformWithEsbuild } from 'vite'
-import { createRequestContext, type Child, type ComponentContext } from '@mohammedaydan/core'
-import { assertBudget } from '@mohammedaydan/compiler'
+import { createRequestContext, type Child, type ComponentContext } from '@nexis/core'
+import { assertBudget } from '@nexis/compiler'
 import nexis, {
   externalizeScopeAttributes,
   RESUMABILITY_BINDINGS_EXTERNAL,
   RESUMABILITY_BOOTSTRAP_EXTERNAL,
   RESUMABILITY_FORMS,
   transformNexisSource,
-} from '@mohammedaydan/vite-plugin'
-import type { ExternalScopePayload } from '@mohammedaydan/vite-plugin'
-import { escapeHtml, renderToString } from '@mohammedaydan/renderer'
-import { generateOgImage } from '@mohammedaydan/og-image'
-import { buildImageVariants, imageVariantFileBase } from '@mohammedaydan/media'
+} from '@nexis/vite-plugin'
+import type { ExternalScopePayload } from '@nexis/vite-plugin'
+import { escapeHtml, renderToString } from '@nexis/renderer'
+import { generateOgImage } from '@nexis/og-image'
+import { buildImageVariants, imageVariantFileBase } from '@nexis/media'
 import {
   buildRobots,
   buildSitemap,
@@ -27,12 +27,12 @@ import {
   generateFeed,
   renderHead,
   withCanonical,
-} from '@mohammedaydan/seo'
-import { matchRoute, NEXIS_NAVIGATION_RUNTIME, routeFromFile } from '@mohammedaydan/router'
-import { nexisSSRPlugin } from '@mohammedaydan/dev-server'
-import { createServer as createProductionServer } from '@mohammedaydan/serve'
-import type { NexisConfig, RedirectRule } from '@mohammedaydan/serve'
-import type { SeoMetadata } from '@mohammedaydan/seo'
+} from '@nexis/seo'
+import { matchRoute, NEXIS_NAVIGATION_RUNTIME, routeFromFile } from '@nexis/router'
+import { nexisSSRPlugin } from '@nexis/dev-server'
+import { createServer as createProductionServer } from '@nexis/serve'
+import type { NexisConfig, RedirectRule } from '@nexis/serve'
+import type { SeoMetadata } from '@nexis/seo'
 export { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 import { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 
@@ -47,17 +47,17 @@ function workspaceAliases(): readonly { readonly find: string; readonly replacem
     if (name === 'jsx-runtime') {
       return [
         {
-          find: '@mohammedaydan/jsx-runtime/jsx-dev-runtime',
+          find: '@nexis/jsx-runtime/jsx-dev-runtime',
           replacement: join(FRAMEWORK_ROOT, 'packages/jsx-runtime/src/jsx-runtime.ts'),
         },
         {
-          find: '@mohammedaydan/jsx-runtime/jsx-runtime',
+          find: '@nexis/jsx-runtime/jsx-runtime',
           replacement: join(FRAMEWORK_ROOT, 'packages/jsx-runtime/src/jsx-runtime.ts'),
         },
-        { find: '@mohammedaydan/jsx-runtime', replacement: source },
+        { find: '@nexis/jsx-runtime', replacement: source },
       ]
     }
-    return [{ find: `@mohammedaydan/${name}`, replacement: source }]
+    return [{ find: `@nexis/${name}`, replacement: source }]
   })
 }
 
@@ -254,7 +254,7 @@ async function scaffoldCliArtifact(root: string, kind: string, name: string): Pr
     await mkdir(dirname(file), { recursive: true })
     await writeFile(
       file,
-      `import { action } from '@mohammedaydan/actions'\n\nexport const ${normalized.split('/').at(-1)} = action({\n  validate: (input: unknown) => input,\n  async handle(_context, input) {\n    return { input }\n  },\n})\n`,
+      `import { action } from '@nexis/actions'\n\nexport const ${normalized.split('/').at(-1)} = action({\n  validate: (input: unknown) => input,\n  async handle(_context, input) {\n    return { input }\n  },\n})\n`,
       'utf8',
     )
     return relative(root, file).split(sep).join('/')
@@ -285,9 +285,9 @@ export async function diagnoseProject(root: string): Promise<DoctorReport> {
           'warn',
           'Expected dev, build, and start scripts were not all found.',
         )
-      if (typeof manifest.dependencies?.['@mohammedaydan/cli'] === 'string')
+      if (typeof manifest.dependencies?.['@nexis/cli'] === 'string')
         add('nexis-cli', 'ok', 'A Nexis CLI dependency is configured.')
-      else add('nexis-cli', 'warn', 'No @mohammedaydan/cli dependency was found.')
+      else add('nexis-cli', 'warn', 'No @nexis/cli dependency was found.')
     } catch {
       add('package-json', 'error', 'package.json is not valid JSON.')
     }

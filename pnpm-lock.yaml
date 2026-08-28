@@ -57,19 +57,19 @@ importers:
 
   examples/basic-app:
     dependencies:
-      '@mohammedaydan/media':
+      '@nexis/media':
         specifier: workspace:*
         version: link:../../packages/media
 
   examples/blog:
     dependencies:
-      '@mohammedaydan/core':
+      '@nexis/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@mohammedaydan/jsx-runtime':
+      '@nexis/jsx-runtime':
         specifier: workspace:*
         version: link:../../packages/jsx-runtime
-      '@mohammedaydan/seo':
+      '@nexis/seo':
         specifier: workspace:*
         version: link:../../packages/seo
       zod:
@@ -78,16 +78,16 @@ importers:
 
   examples/ecommerce:
     dependencies:
-      '@mohammedaydan/actions':
+      '@nexis/actions':
         specifier: workspace:*
         version: link:../../packages/actions
-      '@mohammedaydan/core':
+      '@nexis/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@mohammedaydan/jsx-runtime':
+      '@nexis/jsx-runtime':
         specifier: workspace:*
         version: link:../../packages/jsx-runtime
-      '@mohammedaydan/server':
+      '@nexis/server':
         specifier: workspace:*
         version: link:../../packages/server
       axios:
@@ -102,10 +102,10 @@ importers:
 
   examples/hello:
     dependencies:
-      '@mohammedaydan/core':
+      '@nexis/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@mohammedaydan/jsx-runtime':
+      '@nexis/jsx-runtime':
         specifier: workspace:*
         version: link:../../packages/jsx-runtime
 
@@ -113,46 +113,46 @@ importers:
 
   examples/nexis-showcase:
     dependencies:
-      '@mohammedaydan/actions':
+      '@nexis/actions':
         specifier: workspace:*
         version: link:../../packages/actions
-      '@mohammedaydan/adapters':
+      '@nexis/adapters':
         specifier: workspace:*
         version: link:../../packages/adapters
-      '@mohammedaydan/cli':
+      '@nexis/cli':
         specifier: workspace:*
         version: link:../../packages/cli
-      '@mohammedaydan/client':
+      '@nexis/client':
         specifier: workspace:*
         version: link:../../packages/client
-      '@mohammedaydan/core':
+      '@nexis/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@mohammedaydan/css':
+      '@nexis/css':
         specifier: workspace:*
         version: link:../../packages/css
-      '@mohammedaydan/jsx-runtime':
+      '@nexis/jsx-runtime':
         specifier: workspace:*
         version: link:../../packages/jsx-runtime
-      '@mohammedaydan/media':
+      '@nexis/media':
         specifier: workspace:*
         version: link:../../packages/media
-      '@mohammedaydan/reactivity':
+      '@nexis/reactivity':
         specifier: workspace:*
         version: link:../../packages/reactivity
-      '@mohammedaydan/seo':
+      '@nexis/seo':
         specifier: workspace:*
         version: link:../../packages/seo
-      '@mohammedaydan/serve':
+      '@nexis/serve':
         specifier: workspace:*
         version: link:../../packages/serve
-      '@mohammedaydan/server':
+      '@nexis/server':
         specifier: workspace:*
         version: link:../../packages/server
-      '@mohammedaydan/state':
+      '@nexis/state':
         specifier: workspace:*
         version: link:../../packages/state
-      '@mohammedaydan/telemetry':
+      '@nexis/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
     devDependencies:
@@ -171,34 +171,34 @@ importers:
 
   examples/nexis-workbench:
     dependencies:
-      '@mohammedaydan/actions':
+      '@nexis/actions':
         specifier: workspace:*
         version: link:../../packages/actions
-      '@mohammedaydan/cli':
+      '@nexis/cli':
         specifier: workspace:*
         version: link:../../packages/cli
-      '@mohammedaydan/core':
+      '@nexis/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@mohammedaydan/jsx-runtime':
+      '@nexis/jsx-runtime':
         specifier: workspace:*
         version: link:../../packages/jsx-runtime
-      '@mohammedaydan/reactivity':
+      '@nexis/reactivity':
         specifier: workspace:*
         version: link:../../packages/reactivity
-      '@mohammedaydan/router':
+      '@nexis/router':
         specifier: workspace:*
         version: link:../../packages/router
-      '@mohammedaydan/security':
+      '@nexis/security':
         specifier: workspace:*
         version: link:../../packages/security
-      '@mohammedaydan/seo':
+      '@nexis/seo':
         specifier: workspace:*
         version: link:../../packages/seo
-      '@mohammedaydan/server':
+      '@nexis/server':
         specifier: workspace:*
         version: link:../../packages/server
-      '@mohammedaydan/state':
+      '@nexis/state':
         specifier: workspace:*
         version: link:../../packages/state
     devDependencies:
@@ -214,25 +214,25 @@ importers:
 
   examples/practical-app:
     dependencies:
-      '@mohammedaydan/actions':
+      '@nexis/actions':
         specifier: workspace:*
         version: link:../../packages/actions
-      '@mohammedaydan/cli':
+      '@nexis/cli':
         specifier: workspace:*
         version: link:../../packages/cli
-      '@mohammedaydan/core':
+      '@nexis/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@mohammedaydan/css':
+      '@nexis/css':
         specifier: workspace:*
         version: link:../../packages/css
-      '@mohammedaydan/jsx-runtime':
+      '@nexis/jsx-runtime':
         specifier: workspace:*
         version: link:../../packages/jsx-runtime
-      '@mohammedaydan/reactivity':
+      '@nexis/reactivity':
         specifier: workspace:*
         version: link:../../packages/reactivity
-      '@mohammedaydan/seo':
+      '@nexis/seo':
         specifier: workspace:*
         version: link:../../packages/seo
     devDependencies:
@@ -248,7 +248,7 @@ importers:
 
   packages/actions:
     dependencies:
-      '@mohammedaydan/server':
+      '@nexis/server':
         specifier: workspace:*
         version: link:../server
 
@@ -256,37 +256,37 @@ importers:
 
   packages/cli:
     dependencies:
-      '@mohammedaydan/compiler':
+      '@nexis/compiler':
         specifier: workspace:*
         version: link:../compiler
-      '@mohammedaydan/core':
+      '@nexis/core':
         specifier: workspace:*
         version: link:../core
-      '@mohammedaydan/dev-server':
+      '@nexis/dev-server':
         specifier: workspace:*
         version: link:../dev-server
-      '@mohammedaydan/media':
+      '@nexis/media':
         specifier: workspace:*
         version: link:../media
-      '@mohammedaydan/og-image':
+      '@nexis/og-image':
         specifier: workspace:*
         version: link:../og-image
-      '@mohammedaydan/renderer':
+      '@nexis/renderer':
         specifier: workspace:*
         version: link:../renderer
-      '@mohammedaydan/router':
+      '@nexis/router':
         specifier: workspace:*
         version: link:../router
-      '@mohammedaydan/seo':
+      '@nexis/seo':
         specifier: workspace:*
         version: link:../seo
-      '@mohammedaydan/serve':
+      '@nexis/serve':
         specifier: workspace:*
         version: link:../serve
-      '@mohammedaydan/starter':
+      '@nexis/starter':
         specifier: workspace:*
         version: link:../starter
-      '@mohammedaydan/vite-plugin':
+      '@nexis/vite-plugin':
         specifier: workspace:*
         version: link:../vite-plugin
       vite:
@@ -295,10 +295,10 @@ importers:
 
   packages/client:
     dependencies:
-      '@mohammedaydan/core':
+      '@nexis/core':
         specifier: workspace:*
         version: link:../core
-      '@mohammedaydan/reactivity':
+      '@nexis/reactivity':
         specifier: workspace:*
         version: link:../reactivity
 
@@ -306,19 +306,19 @@ importers:
 
   packages/core:
     dependencies:
-      '@mohammedaydan/reactivity':
+      '@nexis/reactivity':
         specifier: workspace:*
         version: link:../reactivity
 
   packages/create-nexis:
     dependencies:
-      '@mohammedaydan/starter':
+      '@nexis/starter':
         specifier: workspace:*
         version: link:../starter
 
   packages/create-nexis-app:
     dependencies:
-      '@mohammedaydan/starter':
+      '@nexis/starter':
         specifier: workspace:*
         version: link:../starter
 
@@ -330,25 +330,25 @@ importers:
 
   packages/dev-server:
     dependencies:
-      '@mohammedaydan/actions':
+      '@nexis/actions':
         specifier: workspace:*
         version: link:../actions
-      '@mohammedaydan/adapters':
+      '@nexis/adapters':
         specifier: workspace:*
         version: link:../adapters
-      '@mohammedaydan/core':
+      '@nexis/core':
         specifier: workspace:*
         version: link:../core
-      '@mohammedaydan/renderer':
+      '@nexis/renderer':
         specifier: workspace:*
         version: link:../renderer
-      '@mohammedaydan/router':
+      '@nexis/router':
         specifier: workspace:*
         version: link:../router
-      '@mohammedaydan/seo':
+      '@nexis/seo':
         specifier: workspace:*
         version: link:../seo
-      '@mohammedaydan/vite-plugin':
+      '@nexis/vite-plugin':
         specifier: workspace:*
         version: link:../vite-plugin
       vite:
@@ -357,13 +357,13 @@ importers:
 
   packages/jsx-runtime:
     dependencies:
-      '@mohammedaydan/core':
+      '@nexis/core':
         specifier: workspace:*
         version: link:../core
 
   packages/media:
     dependencies:
-      '@mohammedaydan/core':
+      '@nexis/core':
         specifier: workspace:*
         version: link:../core
       sharp:
@@ -384,19 +384,19 @@ importers:
 
   packages/renderer:
     dependencies:
-      '@mohammedaydan/core':
+      '@nexis/core':
         specifier: workspace:*
         version: link:../core
 
   packages/router:
     dependencies:
-      '@mohammedaydan/core':
+      '@nexis/core':
         specifier: workspace:*
         version: link:../core
 
   packages/security:
     dependencies:
-      '@mohammedaydan/server':
+      '@nexis/server':
         specifier: workspace:*
         version: link:../server
 
@@ -404,13 +404,13 @@ importers:
 
   packages/serve:
     dependencies:
-      '@mohammedaydan/actions':
+      '@nexis/actions':
         specifier: workspace:*
         version: link:../actions
 
   packages/serve-cloudflare:
     dependencies:
-      '@mohammedaydan/adapters':
+      '@nexis/adapters':
         specifier: workspace:*
         version: link:../adapters
     devDependencies:
@@ -420,7 +420,7 @@ importers:
 
   packages/serve-deno:
     dependencies:
-      '@mohammedaydan/adapters':
+      '@nexis/adapters':
         specifier: workspace:*
         version: link:../adapters
     devDependencies:
@@ -430,7 +430,7 @@ importers:
 
   packages/server:
     dependencies:
-      '@mohammedaydan/core':
+      '@nexis/core':
         specifier: workspace:*
         version: link:../core
 
@@ -438,10 +438,10 @@ importers:
 
   packages/state:
     dependencies:
-      '@mohammedaydan/core':
+      '@nexis/core':
         specifier: workspace:*
         version: link:../core
-      '@mohammedaydan/reactivity':
+      '@nexis/reactivity':
         specifier: workspace:*
         version: link:../reactivity
 
@@ -455,7 +455,7 @@ importers:
       '@babel/traverse':
         specifier: ^7.29.8
         version: 7.29.8
-      '@mohammedaydan/compiler':
+      '@nexis/compiler':
         specifier: workspace:*
         version: link:../compiler
       magic-string:

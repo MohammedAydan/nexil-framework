@@ -1,15 +1,15 @@
-import { action, assertTrustedOrigin } from '@mohammedaydan/actions'
-import { adapterCapabilities } from '@mohammedaydan/adapters'
+import { action, assertTrustedOrigin } from '@nexis/actions'
+import { adapterCapabilities } from '@nexis/adapters'
 import {
   createHandlerReference,
   createResumeAttribute,
   deserializeResumeState,
   serializeResumeState,
-} from '@mohammedaydan/client'
-import { component, computed, Form, SubmitButton, state } from '@mohammedaydan/core'
-import { batch } from '@mohammedaydan/reactivity'
-import { createSecurityHeaders, serializeCookie } from '@mohammedaydan/server'
-import { createStateRegistry } from '@mohammedaydan/state'
+} from '@nexis/client'
+import { component, computed, Form, SubmitButton, state } from '@nexis/core'
+import { batch } from '@nexis/reactivity'
+import { createSecurityHeaders, serializeCookie } from '@nexis/server'
+import { createStateRegistry } from '@nexis/state'
 
 export const seo = {
   title: 'Nexis Labs — Runtime evaluation surface',

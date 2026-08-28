@@ -1,4 +1,4 @@
-import { Link } from '@mohammedaydan/router'
+import { Link } from '@nexis/router'
 
 export default function WorkbenchLayout({ children }: { readonly children: unknown }) {
   return (

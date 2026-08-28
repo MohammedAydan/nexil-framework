@@ -353,11 +353,11 @@ export {
   useState,
   resource,
   watch,
-} from '@mohammedaydan/reactivity'
+} from '@nexis/reactivity'
 export type {
   Signal,
   ReadableSignal,
   Unsubscribe,
   Resource,
   SignalOptions,
-} from '@mohammedaydan/reactivity'
+} from '@nexis/reactivity'

@@ -1,4 +1,4 @@
-import { Link } from '@mohammedaydan/router'
+import { Link } from '@nexis/router'
 import { ArticleFilter } from '../components/article-filter'
 
 export const seo = {

@@ -66,7 +66,7 @@ A production deployment must replace the default process-local idempotency store
 
 ## 5. Official production server and runtime parity
 
-`@mohammedaydan/serve` is now the supported route-aware Node server. It maps `/` and nested paths to generated `index.html` files, serves a built-in HTML 404 document or an application `404.html`, accepts `GET` and `HEAD`, rejects other methods with `405`, prevents traversal candidates, sets MIME types, and applies revalidation caching to HTML and immutable caching to assets. The CLI exposes this implementation through `nexis serve`; the showcase benchmark wrapper imports the package rather than carrying a bespoke server implementation.
+`@nexis/serve` is now the supported route-aware Node server. It maps `/` and nested paths to generated `index.html` files, serves a built-in HTML 404 document or an application `404.html`, accepts `GET` and `HEAD`, rejects other methods with `405`, prevents traversal candidates, sets MIME types, and applies revalidation caching to HTML and immutable caching to assets. The CLI exposes this implementation through `nexis serve`; the showcase benchmark wrapper imports the package rather than carrying a bespoke server implementation.
 
 The official server was exercised against the full built output. The final production benchmark confirms that all seven routes return 200, the unknown route returns a real HTML 404, `HEAD` and `405` behavior are covered by package tests, action transport works, and sitemap/robots files are served as dedicated endpoints.
 

@@ -1,5 +1,5 @@
-import { useState } from '@mohammedaydan/core'
-import { cn, cx } from '@mohammedaydan/css'
+import { useState } from '@nexis/core'
+import { cn, cx } from '@nexis/css'
 
 export const seo = {
   title: 'Nexis Practical Lab',

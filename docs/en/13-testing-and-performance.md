@@ -117,4 +117,4 @@ Every report should state the commit, Node, pnpm, and browser versions; the rout
 
 ## Workbench lab
 
-Start with `pnpm --filter @mohammedaydan/example-nexis-workbench verify`. Then add browser assertions for initial HTML, no-JavaScript anchors, Link history and bypasses, the first filter interaction, 404 handling, and native support-form submission. Keep those assertions separate from any provider-specific authentication or database tests, and record the environment alongside performance measurements.
+Start with `pnpm --filter @nexis/example-nexis-workbench verify`. Then add browser assertions for initial HTML, no-JavaScript anchors, Link history and bypasses, the first filter interaction, 404 handling, and native support-form submission. Keep those assertions separate from any provider-specific authentication or database tests, and record the environment alongside performance measurements.

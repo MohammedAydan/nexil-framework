@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createDataContext } from '@mohammedaydan/server'
+import { createDataContext } from '@nexis/server'
 import {
   action,
   assertIdempotent,

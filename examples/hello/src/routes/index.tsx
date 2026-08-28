@@ -1,6 +1,6 @@
-/** @jsxImportSource @mohammedaydan/jsx-runtime */
+/** @jsxImportSource @nexis/jsx-runtime */
 
-import { element } from '@mohammedaydan/core'
+import { element } from '@nexis/core'
 
 export const seo = { title: 'Hello Nexis' }
 

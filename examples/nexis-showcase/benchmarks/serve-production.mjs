@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { readFile } from 'node:fs/promises'
-import { createProductionServer } from '@mohammedaydan/serve'
+import { createProductionServer } from '@nexis/serve'
 
 const root = fileURLToPath(new URL('../dist/client', import.meta.url))
 const config = JSON.parse(await readFile(new URL('../nexis.config.json', import.meta.url), 'utf8'))

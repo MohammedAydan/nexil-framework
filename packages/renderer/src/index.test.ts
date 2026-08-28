@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { element, text } from '@mohammedaydan/core'
+import { element, text } from '@nexis/core'
 import { renderBindingMarker, renderToString } from './index'
 
 describe('renderToString', () => {

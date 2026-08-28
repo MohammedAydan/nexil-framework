@@ -120,9 +120,9 @@ describe('Nexis CLI', () => {
       const packageJson = JSON.parse(
         await readFile(join(result.directory, 'package.json'), 'utf8'),
       ) as {
-        dependencies: { '@mohammedaydan/cli': string }
+        dependencies: { '@nexis/cli': string }
       }
-      expect(packageJson.dependencies['@mohammedaydan/cli']).toBe('workspace:*')
+      expect(packageJson.dependencies['@nexis/cli']).toBe('workspace:*')
       expect(await readFile(join(result.directory, 'pnpm-workspace.yaml'), 'utf8')).toContain(
         'onlyBuiltDependencies:',
       )
@@ -141,17 +141,17 @@ describe('Nexis CLI', () => {
       const packageJson = JSON.parse(
         await readFile(join(result.directory, 'package.json'), 'utf8'),
       ) as {
-        dependencies: { '@mohammedaydan/cli': string }
+        dependencies: { '@nexis/cli': string }
         nexis: { source: string; registry: string }
       }
-      expect(packageJson.dependencies['@mohammedaydan/cli']).toBe('^1.3.1')
+      expect(packageJson.dependencies['@nexis/cli']).toBe('^1.0.0')
       expect(packageJson.nexis).toEqual({
         routeExtension: 'tsx',
-        source: 'github-packages',
-        registry: 'https://npm.pkg.github.com',
+        source: 'npm',
+        registry: 'https://registry.npmjs.org/',
       })
       expect(await readFile(join(result.directory, '.npmrc'), 'utf8')).toBe(
-        '@mohammedaydan:registry=https://npm.pkg.github.com\n',
+        '@nexis:registry=https://registry.npmjs.org/\n',
       )
     } finally {
       await rm(parent, { recursive: true, force: true })
@@ -206,7 +206,7 @@ describe('Nexis CLI', () => {
       'onClick$',
     )
     expect(await readFile(join(result.directory, 'tsconfig.json'), 'utf8')).toContain(
-      '"jsxImportSource": "@mohammedaydan/jsx-runtime"',
+      '"jsxImportSource": "@nexis/jsx-runtime"',
     )
     expect(await readFile(join(result.directory, 'tsconfig.json'), 'utf8')).toContain(
       '"allowJs": true',
@@ -271,7 +271,7 @@ describe('Nexis CLI', () => {
       const directory = await createProject('external-state-app', parent)
       await writeFile(
         join(directory, 'src/routes/index.tsx'),
-        `import { state } from '@mohammedaydan/core'
+        `import { state } from '@nexis/core'
 const accountBalance = state(1200)
 export default function Home() { return <button onClick$={() => accountBalance.set((value) => value + 1)}>{accountBalance()}</button> }
 `,
@@ -314,7 +314,7 @@ export default function Home() { return <button onClick$={() => accountBalance.s
       const linkDirectory = await createProject('navigation-link', parent)
       await writeFile(
         join(linkDirectory, 'src/routes/index.tsx'),
-        `import { Link } from '@mohammedaydan/router'
+        `import { Link } from '@nexis/router'
 export default function Home() { return <main><Link href="/about" prefetch="intent">About</Link></main> }
 `,
         'utf8',
@@ -350,7 +350,7 @@ export default function Home() { return <main><Link href="/about" prefetch="inte
       const directory = await createProject('context-scope-app', parent)
       await writeFile(
         join(directory, 'src/routes/_layout.tsx'),
-        `import { createContext, provideContext } from '@mohammedaydan/core'
+        `import { createContext, provideContext } from '@nexis/core'
 const RequestIdentity = createContext('missing')
 export default function Layout({ children }: { children: unknown }, context?: { readonly requestId?: string; readonly scope?: unknown }) {
   const scope = provideContext(context?.scope as never, RequestIdentity, context?.requestId ?? 'missing')
@@ -418,7 +418,7 @@ it('emits the automatic progressive-form runtime only for Form routes', async ()
     const directory = await createProject('forms-app', parent)
     await writeFile(
       join(directory, 'src/routes/index.tsx'),
-      `import { Form, SubmitButton } from '@mohammedaydan/core'\nexport default function Home() { return <Form action="/save"><input name="name" /><SubmitButton loadingText="Saving">Save</SubmitButton></Form> }\n`,
+      `import { Form, SubmitButton } from '@nexis/core'\nexport default function Home() { return <Form action="/save"><input name="name" /><SubmitButton loadingText="Saving">Save</SubmitButton></Form> }\n`,
       'utf8',
     )
     await runCli(['build'], directory)
@@ -452,7 +452,7 @@ it('isolates the binding runtime to binding-enabled routes', async () => {
     const bindingDirectory = await createProject('binding-app', parent)
     await writeFile(
       join(bindingDirectory, 'src/routes/index.tsx'),
-      `import { state } from '@mohammedaydan/core'
+      `import { state } from '@nexis/core'
 const count = state(0)
 export default function Home() { return <output>{count()}</output> }
 `,

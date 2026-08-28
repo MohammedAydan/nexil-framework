@@ -20,13 +20,13 @@ export default defineConfig({
   webServer: [
     {
       command:
-        'pnpm --filter @mohammedaydan/example-basic-app build && pnpm --filter @mohammedaydan/example-landing-page build && node tests/e2e/serve.mjs',
+        'pnpm --filter @nexis/example-basic-app build && pnpm --filter @nexis/example-landing-page build && node tests/e2e/serve.mjs',
       url: 'http://127.0.0.1:4173/tests/e2e/fixtures/resumability/index.html',
       reuseExistingServer: !process.env.CI,
       timeout: 30_000,
     },
     {
-      command: 'pnpm --filter @mohammedaydan/example-nexis-showcase dev',
+      command: 'pnpm --filter @nexis/example-nexis-showcase dev',
       url: 'http://127.0.0.1:5173/',
       reuseExistingServer: !process.env.CI,
       timeout: 30_000,

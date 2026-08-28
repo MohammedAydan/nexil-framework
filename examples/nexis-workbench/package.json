@@ -1,5 +1,5 @@
 {
-  "name": "@mohammedaydan/example-nexis-workbench",
+  "name": "@nexis/example-nexis-workbench",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -14,16 +14,16 @@
     "verify": "pnpm typecheck && pnpm test && pnpm check && pnpm build"
   },
   "dependencies": {
-    "@mohammedaydan/actions": "workspace:*",
-    "@mohammedaydan/cli": "workspace:*",
-    "@mohammedaydan/core": "workspace:*",
-    "@mohammedaydan/jsx-runtime": "workspace:*",
-    "@mohammedaydan/reactivity": "workspace:*",
-    "@mohammedaydan/router": "workspace:*",
-    "@mohammedaydan/security": "workspace:*",
-    "@mohammedaydan/seo": "workspace:*",
-    "@mohammedaydan/server": "workspace:*",
-    "@mohammedaydan/state": "workspace:*"
+    "@nexis/actions": "workspace:*",
+    "@nexis/cli": "workspace:*",
+    "@nexis/core": "workspace:*",
+    "@nexis/jsx-runtime": "workspace:*",
+    "@nexis/reactivity": "workspace:*",
+    "@nexis/router": "workspace:*",
+    "@nexis/security": "workspace:*",
+    "@nexis/seo": "workspace:*",
+    "@nexis/server": "workspace:*",
+    "@nexis/state": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.8.0",

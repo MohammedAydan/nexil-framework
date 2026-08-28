@@ -55,8 +55,8 @@ Nexis is an HTML-first TypeScript framework built around SSR/SSG, progressive en
 | Lazy handler      | An event handler emitted into a separately loaded chunk             |
 | DOM binding       | A Signal subscription that updates one text node or scalar property |
 | Action            | A server operation invoked through a typed endpoint                 |
-| Production server | `@mohammedaydan/serve` serving the final build                      |
-| Security package  | `@mohammedaydan/security` session and authorization primitives      |
+| Production server | `@nexis/serve` serving the final build                              |
+| Security package  | `@nexis/security` session and authorization primitives              |
 | Build artifact    | Generated HTML, CSS, JavaScript, media, and metadata                |
 
 ## Example policy

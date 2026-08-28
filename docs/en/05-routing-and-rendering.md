@@ -27,10 +27,10 @@ if (match) {
 
 ## Semantic `Link` navigation
 
-Import `Link` from `@mohammedaydan/router` when a route should opt into progressive same-origin navigation. The server and static build still emit an ordinary `<a href>`; therefore search engines, bookmarks, copied URLs, and browsers without JavaScript follow standard document navigation.
+Import `Link` from `@nexis/router` when a route should opt into progressive same-origin navigation. The server and static build still emit an ordinary `<a href>`; therefore search engines, bookmarks, copied URLs, and browsers without JavaScript follow standard document navigation.
 
 ```tsx
-import { Link } from '@mohammedaydan/router'
+import { Link } from '@nexis/router'
 
 export default function DocumentationIndex() {
   return (
@@ -144,4 +144,4 @@ Nexis v1.1.0 discovers `_layout.*` files recursively and composes them around ro
 
 ## Workbench lab
 
-The executable [`examples/nexis-workbench`](../../examples/nexis-workbench) contains an `_layout.tsx`, a static article index, and `articles/[slug].tsx` with `getStaticPaths()`. Run `pnpm --filter @mohammedaydan/example-nexis-workbench verify`, then inspect `dist/client/articles/first-boundary/index.html` and `dist/client/articles/release-check/index.html`. The same project uses semantic `Link` elements in its layout; disable JavaScript once to confirm that every link remains a normal document link.
+The executable [`examples/nexis-workbench`](../../examples/nexis-workbench) contains an `_layout.tsx`, a static article index, and `articles/[slug].tsx` with `getStaticPaths()`. Run `pnpm --filter @nexis/example-nexis-workbench verify`, then inspect `dist/client/articles/first-boundary/index.html` and `dist/client/articles/release-check/index.html`. The same project uses semantic `Link` elements in its layout; disable JavaScript once to confirm that every link remains a normal document link.

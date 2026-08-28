@@ -17,7 +17,7 @@ test.beforeAll(async () => {
   appDir = await createProject('link-app', parent)
   await writeFile(
     join(appDir, 'src/routes/_layout.tsx'),
-    `import { createStore } from '@mohammedaydan/state'
+    `import { createStore } from '@nexis/state'
 const navigationState = createStore({ visits: 0 }, 'global')
 export default function Layout({ children }: { children: unknown }) {
   return <section><header><button id="global-increment" onClick$={({ element }) => { navigationState.set((value) => ({ visits: value.visits + 1 })); element.setAttribute('data-applied', 'true') }}>Increase global</button><button id="global-read" onClick$={({ element }) => { element.textContent = String(navigationState.value().visits) }}>Read global</button></header>{children}</section>
@@ -27,7 +27,7 @@ export default function Layout({ children }: { children: unknown }) {
   )
   await writeFile(
     join(appDir, 'src/routes/index.tsx'),
-    `import { Link } from '@mohammedaydan/router'
+    `import { Link } from '@nexis/router'
 export const metadata = { title: 'Nexis home', description: 'Link navigation proof home' }
 export default function Home() {
   return <main><h1>Nexis home</h1><Link href="/about" prefetch="intent" id="about-link">Read about Nexis</Link><Link href="/no-store" prefetch="intent" id="no-store-link">Read no-store response</Link><a data-nx-link="push" href="#home-anchor" id="hash-link">Skip to anchor</a><a data-nx-link="push" href="/about" id="middle-link">Open with middle button</a><a data-nx-link="push" href="/about" target="_blank" id="target-link">Open in new tab</a><a data-nx-link="push" href="/about" download id="download-link">Download route</a><a data-nx-link="push" href="https://example.com/" id="external-link">External route</a><h2 id="home-anchor">Home anchor</h2><div style={{ height: '1600px' }} /></main>
@@ -37,8 +37,8 @@ export default function Home() {
   )
   await writeFile(
     join(appDir, 'src/routes/about.tsx'),
-    `import { Link } from '@mohammedaydan/router'
-import { state } from '@mohammedaydan/core'
+    `import { Link } from '@nexis/router'
+import { state } from '@nexis/core'
 const visits = state(0)
 export const metadata = { title: 'About Nexis', description: 'Navigation proof route' }
 export default function About() {

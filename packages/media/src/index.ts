@@ -2,8 +2,8 @@ import { isIP } from 'node:net'
 import { createHash } from 'node:crypto'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { element } from '@mohammedaydan/core'
-import type { ElementNode } from '@mohammedaydan/core'
+import { element } from '@nexis/core'
+import type { ElementNode } from '@nexis/core'
 
 export interface ImageProps {
   readonly src: string

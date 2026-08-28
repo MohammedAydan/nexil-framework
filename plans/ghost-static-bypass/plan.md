@@ -11,7 +11,7 @@ Scaffold templates shipped a full marketing page as `index.html`; CLI dev used p
 ## Fix shipped
 
 1. Templates reduced to outlet-only shell (`nexis-head/app/scripts-outlet`).
-2. `@mohammedaydan/dev-server` now exports `nexisSSRPlugin(root)`: Vite SSR middleware — router matching → `ssrLoadModule` → `renderToString` → SEO head injection → resumability bootstrap injection.
+2. `@nexis/dev-server` now exports `nexisSSRPlugin(root)`: Vite SSR middleware — router matching → `ssrLoadModule` → `renderToString` → SEO head injection → resumability bootstrap injection.
 3. `nexis dev` mounts `[nexis(transform), nexisSSRPlugin]`; `nexis build` runs the same engine at build time and prerenders every route to `dist/client/<route>/index.html` (+ mirrored preview roots), keeping server modules/chunks/bootstrap/manifest emission.
 4. `core` re-exports `component`, `state`, `computed`, `batch` (signals via new dependency on reactivity); core+jsx-runtime expose `./jsx-dev-runtime` with `jsxDEV` for Vite SSR dev transform.
 5. Chunk hashes normalized (`normalizeIdForHash`) so dev/build/preview reference identical emitted files.

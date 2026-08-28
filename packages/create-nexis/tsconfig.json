@@ -8,8 +8,8 @@
     "rootDir": "src",
     "baseUrl": ".",
     "paths": {
-      "@mohammedaydan/starter/node": ["../starter/src/node.ts"],
-      "@mohammedaydan/starter": ["../starter/src/index.ts"]
+      "@nexis/starter/node": ["../starter/src/node.ts"],
+      "@nexis/starter": ["../starter/src/index.ts"]
     }
   },
   "include": ["src/**/*.ts"],

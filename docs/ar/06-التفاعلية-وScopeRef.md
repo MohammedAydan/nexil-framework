@@ -94,7 +94,7 @@ const signal = registry.resolve('counter')
 registry.dispose('counter')
 ```
 
-استخدم الدوال الفعلية المصدرة من `@mohammedaydan/client`، ولا تبنِ نظام registry موازيًا.
+استخدم الدوال الفعلية المصدرة من `@nexis/client`، ولا تبنِ نظام registry موازيًا.
 
 ## لماذا لا تُنقل Closure عشوائيًا؟
 

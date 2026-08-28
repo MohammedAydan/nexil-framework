@@ -5,7 +5,7 @@
 - [x] 3. vite-plugin: harden minified bootstrap (shim .value/subscribe)
 - [x] 4. reactivity: fix computed cleanup hoisting (stale deps)
 - [x] 5. core: full reactivity re-exports
-- [x] 6. create-nexis: add @mohammedaydan/state dependency (sync 3 copies)
+- [x] 6. create-nexis: add @nexis/state dependency (sync 3 copies)
 - [x] 7. client: bootstrapResumability parity (scope arg, unified attrs)
 - [x] 8. client: ScopeRegistry.register disposes overwritten entries
 - [x] 9. Tests: reactivity regressions, plugin emission, client scope flow

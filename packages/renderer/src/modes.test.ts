@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { element } from '@mohammedaydan/core'
+import { element } from '@nexis/core'
 import { renderRoute } from './modes'
 
 describe('renderRoute', () => {

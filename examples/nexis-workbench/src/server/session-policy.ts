@@ -1,9 +1,4 @@
-import {
-  createSession,
-  requireAccess,
-  requirePermission,
-  type SessionStore,
-} from '@mohammedaydan/security'
+import { createSession, requireAccess, requirePermission, type SessionStore } from '@nexis/security'
 
 export interface WorkbenchUser {
   readonly id: string

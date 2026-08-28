@@ -1,4 +1,4 @@
-import { createRequestContext, type RequestContext } from '@mohammedaydan/core'
+import { createRequestContext, type RequestContext } from '@nexis/core'
 
 export interface DataContext {
   readonly request: Request

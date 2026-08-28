@@ -1,8 +1,8 @@
-/** @jsxImportSource @mohammedaydan/jsx-runtime */
+/** @jsxImportSource @nexis/jsx-runtime */
 
 import { z } from 'zod'
-import { action, assertTrustedOrigin } from '@mohammedaydan/actions'
-import { element } from '@mohammedaydan/core'
+import { action, assertTrustedOrigin } from '@nexis/actions'
+import { element } from '@nexis/core'
 import { getProduct } from '../../server/catalog.js'
 
 export const render = { mode: 'isr' as const, revalidate: 30 }

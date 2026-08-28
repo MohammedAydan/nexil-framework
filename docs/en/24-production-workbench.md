@@ -18,10 +18,10 @@ This chapter is a complete, practical path for an application built with Nexis `
 
 ## 0. Create the project safely
 
-Configure access to the `@mohammedaydan` package scope through your user or CI environment. Do not commit a registry token or paste it into `.npmrc`. Then use the current initializer and commit the lockfile produced by your own installation.
+Configure access to the `@nexis` package scope through your user or CI environment. Do not commit a registry token or paste it into `.npmrc`. Then use the current initializer and commit the lockfile produced by your own installation.
 
 ```bash
-pnpm dlx @mohammedaydan/create-nexis@1.3.1 nexis-workbench --yes --ts --template interactive
+pnpm dlx @nexis/create-nexis@1.0.0 nexis-workbench --yes --ts --template interactive
 cd nexis-workbench
 pnpm install
 pnpm dev
@@ -42,7 +42,7 @@ Create a layout that has semantic navigation and a main landmark. A layout rende
 
 ```tsx
 // src/routes/_layout.tsx
-import { Link } from '@mohammedaydan/router'
+import { Link } from '@nexis/router'
 
 export default function WorkbenchLayout({ children }: { readonly children: unknown }) {
   return (
@@ -104,7 +104,7 @@ export function getArticle(slug: string) {
 
 ```tsx
 // src/routes/articles/[slug].tsx
-import { notFound } from '@mohammedaydan/server'
+import { notFound } from '@nexis/server'
 import { getArticle, articles } from '../../lib/articles'
 
 export async function getStaticPaths() {
@@ -130,7 +130,7 @@ Do not let an unvalidated `slug` choose a filesystem path, database query, cache
 Use `Link` only when direct, same-origin page navigation benefits from an optional `#app` replacement. It emits a normal anchor with `data-nx-link`; it does not create a virtual router or client-side component tree.
 
 ```tsx
-import { Link } from '@mohammedaydan/router'
+import { Link } from '@nexis/router'
 
 export function ArticleNavigation() {
   return (
@@ -157,7 +157,7 @@ Use a Signal for local interactive state. Initial article content still renders 
 
 ```tsx
 // src/components/ArticleFilter.tsx
-import { state } from '@mohammedaydan/core'
+import { state } from '@nexis/core'
 
 export function ArticleFilter() {
   const active = state(false)
@@ -181,8 +181,8 @@ Capture only JSON-literal values, Signals, Stores, Actions, or supported ScopeRe
 Context avoids prop drilling; it is not a browser-global store or an asynchronous ambient context mechanism. Use a ContextScope for SSR/SSG work that crosses asynchronous boundaries.
 
 ```tsx
-import { createContext, createContextScope, provideContext, state } from '@mohammedaydan/core'
-import { createStore } from '@mohammedaydan/state'
+import { createContext, createContextScope, provideContext, state } from '@nexis/core'
+import { createStore } from '@nexis/state'
 
 const Locale = createContext('en')
 
@@ -231,7 +231,7 @@ import {
   assertTrustedOrigin,
   createMemoryIdempotencyStore,
   handleActionRequest,
-} from '@mohammedaydan/actions'
+} from '@nexis/actions'
 
 const idempotency = createMemoryIdempotencyStore()
 
@@ -272,12 +272,7 @@ Nexis can read an opaque session identifier and apply role or resource rules; it
 
 ```ts
 // src/server/session.ts
-import {
-  createSession,
-  requireAccess,
-  requirePermission,
-  type SessionStore,
-} from '@mohammedaydan/security'
+import { createSession, requireAccess, requirePermission, type SessionStore } from '@nexis/security'
 
 interface WorkbenchUser {
   readonly id: string
@@ -333,7 +328,7 @@ pnpm build
 pnpm start
 ```
 
-For Node, use the generated `nexis start` lifecycle or `@mohammedaydan/serve`. Use the Deno or Cloudflare adapter only when its Fetch-native runtime is the actual target. Set a public `siteOrigin`, define redirects, cache rules, header policy, and trusted-proxy behavior in reviewed configuration. Set proxy trust only when the proxy removes and reconstructs forwarded headers safely.
+For Node, use the generated `nexis start` lifecycle or `@nexis/serve`. Use the Deno or Cloudflare adapter only when its Fetch-native runtime is the actual target. Set a public `siteOrigin`, define redirects, cache rules, header policy, and trusted-proxy behavior in reviewed configuration. Set proxy trust only when the proxy removes and reconstructs forwarded headers safely.
 
 Your deployment checklist must include the following observable checks.
 

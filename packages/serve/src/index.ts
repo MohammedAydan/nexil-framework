@@ -6,8 +6,8 @@ import {
   type Server,
   type ServerResponse,
 } from 'node:http'
-import { createMemoryIdempotencyStore, handleActionRequest } from '@mohammedaydan/actions'
-import type { IdempotencyStore, ServerAction } from '@mohammedaydan/actions'
+import { createMemoryIdempotencyStore, handleActionRequest } from '@nexis/actions'
+import type { IdempotencyStore, ServerAction } from '@nexis/actions'
 
 export interface SecurityHeadersOptions {
   /** A reviewed Content-Security-Policy string for this application. CSP is opt-in because script/style requirements are app-specific. */

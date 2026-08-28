@@ -1,5 +1,5 @@
 {
-  "name": "@mohammedaydan/example-practical-app",
+  "name": "@nexis/example-practical-app",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -9,13 +9,13 @@
     "check": "node ../../packages/cli/dist/bin.js check --budget"
   },
   "dependencies": {
-    "@mohammedaydan/actions": "workspace:*",
-    "@mohammedaydan/cli": "workspace:*",
-    "@mohammedaydan/core": "workspace:*",
-    "@mohammedaydan/css": "workspace:*",
-    "@mohammedaydan/jsx-runtime": "workspace:*",
-    "@mohammedaydan/reactivity": "workspace:*",
-    "@mohammedaydan/seo": "workspace:*"
+    "@nexis/actions": "workspace:*",
+    "@nexis/cli": "workspace:*",
+    "@nexis/core": "workspace:*",
+    "@nexis/css": "workspace:*",
+    "@nexis/jsx-runtime": "workspace:*",
+    "@nexis/reactivity": "workspace:*",
+    "@nexis/seo": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.0",

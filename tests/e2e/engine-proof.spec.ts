@@ -32,7 +32,7 @@ test.beforeAll(async () => {
   const result = await scaffoldProject('engine-test', tempDir, { yes: true, language: 'ts' })
   const appDir = result.directory
 
-  // Install workspace dependencies (needed for Vite SSR to resolve @mohammedaydan/*)
+  // Install workspace dependencies (needed for Vite SSR to resolve @nexis/*)
   try {
     execSync('pnpm install --silent', { cwd: appDir, stdio: 'inherit', timeout: 90_000 })
   } catch {

@@ -1,10 +1,10 @@
 {
-  "name": "@mohammedaydan/example-hello",
+  "name": "@nexis/example-hello",
   "private": true,
   "type": "module",
   "dependencies": {
-    "@mohammedaydan/core": "workspace:*",
-    "@mohammedaydan/jsx-runtime": "workspace:*"
+    "@nexis/core": "workspace:*",
+    "@nexis/jsx-runtime": "workspace:*"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

@@ -19,8 +19,8 @@ Build a form that works without JavaScript first:
 For the standard path, replace the raw element with `Form` and `SubmitButton`. They retain native submission while marking the route for the generated `nexis-forms.js` runtime. Use `onSubmit$` only when the page needs custom result rendering; the native `action` and `method` remain the no-JavaScript fallback.
 
 ```tsx
-import { Form, SubmitButton } from '@mohammedaydan/core'
-import { action } from '@mohammedaydan/actions'
+import { Form, SubmitButton } from '@nexis/core'
+import { action } from '@nexis/actions'
 
 const contactAction = action({
   endpoint: '/__nexis/actions/contact/submit',

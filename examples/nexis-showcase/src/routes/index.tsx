@@ -1,22 +1,13 @@
-import { action, assertTrustedOrigin } from '@mohammedaydan/actions'
-import { adapterCapabilities, createNodeAdapter } from '@mohammedaydan/adapters'
-import {
-  createHandlerReference,
-  createResumeAttribute,
-  serializeResumeState,
-} from '@mohammedaydan/client'
-import { component, computed, state } from '@mohammedaydan/core'
-import { cn, extractStyle } from '@mohammedaydan/css'
-import { Image, imageAttributes, fontFace } from '@mohammedaydan/media'
-import { batch } from '@mohammedaydan/reactivity'
-import { buildRobots, buildSitemap } from '@mohammedaydan/seo'
-import { createStateRegistry } from '@mohammedaydan/state'
-import {
-  createDataContext,
-  createSecurityHeaders,
-  data,
-  serializeCookie,
-} from '@mohammedaydan/server'
+import { action, assertTrustedOrigin } from '@nexis/actions'
+import { adapterCapabilities, createNodeAdapter } from '@nexis/adapters'
+import { createHandlerReference, createResumeAttribute, serializeResumeState } from '@nexis/client'
+import { component, computed, state } from '@nexis/core'
+import { cn, extractStyle } from '@nexis/css'
+import { Image, imageAttributes, fontFace } from '@nexis/media'
+import { batch } from '@nexis/reactivity'
+import { buildRobots, buildSitemap } from '@nexis/seo'
+import { createStateRegistry } from '@nexis/state'
+import { createDataContext, createSecurityHeaders, data, serializeCookie } from '@nexis/server'
 
 export const seo = {
   title: 'Nexis Showcase — HTML-first, resumable applications',

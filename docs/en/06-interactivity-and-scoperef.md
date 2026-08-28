@@ -137,7 +137,7 @@ const signal = registry.resolve('counter')
 registry.dispose('counter')
 ```
 
-Use the actual exports from `@mohammedaydan/client`; do not create a parallel registry without a strong reason.
+Use the actual exports from `@nexis/client`; do not create a parallel registry without a strong reason.
 
 ## Why arbitrary closures are not transferred
 

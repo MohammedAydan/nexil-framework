@@ -1,4 +1,4 @@
-# @mohammedaydan/serve-deno
+# @nexis/serve-deno
 
 Fetch-native Deno handler helpers for Nexis. `createDenoHandler` serves an injected asset map with explicit MIME types, immutable cache headers, `GET`/`HEAD` support, and `405` responses for unsupported asset methods before delegating route and action requests to the application handler.
 

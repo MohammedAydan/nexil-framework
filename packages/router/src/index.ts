@@ -1,5 +1,5 @@
-import { element } from '@mohammedaydan/core'
-import type { Child, ElementNode } from '@mohammedaydan/core'
+import { element } from '@nexis/core'
+import type { Child, ElementNode } from '@nexis/core'
 export { NEXIS_NAVIGATION_RUNTIME } from './navigation.js'
 
 export interface RouteParam {

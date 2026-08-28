@@ -7,7 +7,7 @@ Nexis now provides a concise security surface for the parts a framework can safe
 Persist a session server-side and place only its opaque identifier in a secure cookie.
 
 ```ts
-import { createSession } from '@mohammedaydan/security'
+import { createSession } from '@nexis/security'
 
 const sessions = createSession(sessionStore)
 
@@ -24,7 +24,7 @@ The store must provide `find(id)` and `destroy(id)`. `createSession` emits `Secu
 Roles are coarse policy inputs; permissions are explicit capabilities; ownership and tenant checks belong to the application resource rule.
 
 ```ts
-import { requireAccess, requirePermission } from '@mohammedaydan/security'
+import { requireAccess, requirePermission } from '@nexis/security'
 
 const principal = await currentPrincipal(request)
 requirePermission(principal, 'invoice:approve')
@@ -42,8 +42,8 @@ Run authorization in the Action or server guard that owns the resource. Hiding a
 Actions remain the mutation boundary. Validation, origin policy, session resolution, authorization, ownership, CSRF policy, and idempotency have separate responsibilities.
 
 ```ts
-import { action } from '@mohammedaydan/actions'
-import { requirePermission } from '@mohammedaydan/security'
+import { action } from '@nexis/actions'
+import { requirePermission } from '@nexis/security'
 
 export const approveInvoice = action({
   validate: parseApprovalInput,
@@ -66,7 +66,7 @@ Use a durable idempotency store for retriable financial or externally visible op
 Use middleware for cross-cutting request work and let the final Nexis handler serve routes and Actions.
 
 ```ts
-import { composeMiddleware, createMiddleware } from '@mohammedaydan/serve'
+import { composeMiddleware, createMiddleware } from '@nexis/serve'
 
 const handler = composeMiddleware(
   requestIdMiddleware,

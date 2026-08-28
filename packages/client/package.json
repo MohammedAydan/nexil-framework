@@ -1,10 +1,10 @@
 {
-  "name": "@mohammedaydan/client",
-  "version": "1.3.3",
+  "name": "@nexis/client",
+  "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "@mohammedaydan/core": "workspace:*",
-    "@mohammedaydan/reactivity": "workspace:*"
+    "@nexis/core": "workspace:*",
+    "@nexis/reactivity": "workspace:*"
   },
   "exports": {
     ".": {
@@ -23,8 +23,8 @@
     "directory": "packages/client"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "files": [
     "dist",

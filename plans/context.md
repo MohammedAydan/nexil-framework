@@ -2,7 +2,7 @@
 
 ## Purpose
 
-HTML-first, resumable TypeScript web framework. Monorepo of scoped packages (`@mohammedaydan/*`) published to GitHub Packages, with a scaffolding CLI (`create-nexis`) that generates consumer apps.
+HTML-first, resumable TypeScript web framework. Monorepo of scoped packages (`@nexis/*`) published to GitHub Packages, with a scaffolding CLI (`create-nexis`) that generates consumer apps.
 
 ## Current Status
 
@@ -15,7 +15,7 @@ HTML-first, resumable TypeScript web framework. Monorepo of scoped packages (`@m
 - Must build/run on Windows PowerShell, Linux, macOS (no Unix-only shell in npm scripts)
 - No tokens/credentials ever committed
 - Generated apps must consume published packages only (no workspace leaks)
-- Registry: `https://npm.pkg.github.com` for scope `@mohammedaydan`
+- Registry: `https://registry.npmjs.org/` for scope `@nexis`
 - Prettier format gate is enforced in CI; run `pnpm exec prettier --write .` before committing new files
 
 ## Active Features

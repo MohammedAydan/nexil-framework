@@ -1,11 +1,11 @@
 {
-  "name": "@mohammedaydan/create-nexis-app",
-  "version": "1.2.0",
+  "name": "@nexis/create-nexis-app",
+  "version": "1.0.0",
   "private": true,
-  "description": "[Superseded by @mohammedaydan/create-nexis] Create a Nexis application",
+  "description": "[Superseded by @nexis/create-nexis] Create a Nexis application",
   "type": "module",
   "dependencies": {
-    "@mohammedaydan/starter": "workspace:*"
+    "@nexis/starter": "workspace:*"
   },
   "files": [
     "dist",
@@ -18,8 +18,8 @@
     "directory": "packages/create-nexis-app"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "bin": {
     "create-nexis-app": "dist/bin.js"

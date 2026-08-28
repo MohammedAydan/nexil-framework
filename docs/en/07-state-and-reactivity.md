@@ -146,7 +146,7 @@ Do not use a mutable singleton for private request data. Create state inside the
 `createContext(defaultValue)` is Nexis dependency injection, not a hidden global store. It can pass a Signal or Store through a small synchronous subtree without prop drilling. Use `context.use()` (or the compatible `context.useContext()`) to read the nearest Provider value.
 
 ```tsx
-import { createContext, state } from '@mohammedaydan/core'
+import { createContext, state } from '@nexis/core'
 
 const Theme = createContext(state<'light' | 'dark'>('light'))
 
@@ -207,4 +207,4 @@ When state crosses a lazy boundary, prefer compiler inference over manual ScopeR
 
 ## Workbench lab
 
-Run `pnpm --filter @mohammedaydan/example-nexis-workbench build` and inspect the home output and manifest. Its `ArticleFilter` is deliberately one Signal-driven boundary, so it is a small place to confirm the initial HTML, lazy interaction marker, and direct binding behavior. Extend it with the ContextScope test from this guide only after writing two independent scopes; do not turn the example's browser UI state into a module-level request singleton.
+Run `pnpm --filter @nexis/example-nexis-workbench build` and inspect the home output and manifest. Its `ArticleFilter` is deliberately one Signal-driven boundary, so it is a small place to confirm the initial HTML, lazy interaction marker, and direct binding behavior. Extend it with the ContextScope test from this guide only after writing two independent scopes; do not turn the example's browser UI state into a module-level request singleton.

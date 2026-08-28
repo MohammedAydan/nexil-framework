@@ -1,5 +1,5 @@
-import { createDenoAdapter } from '@mohammedaydan/adapters'
-import type { NexisHandler } from '@mohammedaydan/adapters'
+import { createDenoAdapter } from '@nexis/adapters'
+import type { NexisHandler } from '@nexis/adapters'
 
 export interface DenoAsset {
   readonly body: BodyInit

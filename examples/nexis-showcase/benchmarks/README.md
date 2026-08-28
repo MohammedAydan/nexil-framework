@@ -9,7 +9,7 @@ From the repository root, build the framework and showcase first:
 ```bash
 pnpm install --offline --no-frozen-lockfile
 pnpm build
-pnpm --filter @mohammedaydan/example-nexis-showcase build
+pnpm --filter @nexis/example-nexis-showcase build
 ```
 
 Run the complete GA sequence from the repository root:
@@ -20,7 +20,7 @@ pnpm build
 pnpm bench:compare
 pnpm bench:production
 pnpm bench:lighthouse
-pnpm --filter @mohammedaydan/example-nexis-showcase evaluate
+pnpm --filter @nexis/example-nexis-showcase evaluate
 pnpm test:parity
 pnpm check:budget
 pnpm test:node-runtime
@@ -28,7 +28,7 @@ pnpm test:edge
 pnpm test:e2e
 ```
 
-For an isolated manual production run, use `BENCH_PORT=4175 pnpm --filter @mohammedaydan/example-nexis-showcase bench`; the benchmark starts `benchmarks/serve-production.mjs`, which loads `nexis.config.json` and serves the official `@mohammedaydan/serve` implementation. `pnpm bench:lighthouse` starts its own clean production server when `LIGHTHOUSE_ORIGIN` is unavailable. Set `LIGHTHOUSE_USE_EXISTING=1` when intentionally auditing an already-running deployment. The browser-only evaluator and chart generation remain available from `examples/nexis-showcase`:
+For an isolated manual production run, use `BENCH_PORT=4175 pnpm --filter @nexis/example-nexis-showcase bench`; the benchmark starts `benchmarks/serve-production.mjs`, which loads `nexis.config.json` and serves the official `@nexis/serve` implementation. `pnpm bench:lighthouse` starts its own clean production server when `LIGHTHOUSE_ORIGIN` is unavailable. Set `LIGHTHOUSE_USE_EXISTING=1` when intentionally auditing an already-running deployment. The browser-only evaluator and chart generation remain available from `examples/nexis-showcase`:
 
 ```bash
 cd examples/nexis-showcase
