@@ -80,6 +80,10 @@ Use `Link` for eligible internal navigation where a direct `#app` outlet replace
 
 Upgrade the coordinated Nexis packages to `1.3.1` together and regenerate the lockfile. This patch changes Starter's default generated dependency range from `^1.2.0` to `^1.3.1`; it does not require source changes in an existing application deliberately pinned to `1.3.0`.
 
+## v1.3.2 migration
+
+Upgrade the coordinated package set to `1.3.2` together and rebuild generated output. This backward-compatible patch fixes direct local named event handlers such as `const increment = () => count.set(count() + 1); onClick$={increment}`. The compiler now resolves the local handler body before capture analysis, so captured Signals, Stores, and Actions are materialized in the lazy chunk rather than incorrectly trying to invoke an unavailable `scope.increment` value. Existing inline `onClick$={() => ...}` handlers remain supported without source changes.
+
 ## Generated files
 
 Never edit generated client chunks or manifests as a fix. Change source or configuration, rebuild, and review the diff. Check that static routes remain static and that interactive routes have valid handler references.

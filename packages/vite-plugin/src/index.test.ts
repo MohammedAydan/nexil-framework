@@ -98,6 +98,49 @@ const view = component$(() => { const count = state(0); return <button onClick$=
   )
 })
 
+it('lowers a named local resumable handler through its body and captures its Signal', async () => {
+  const result = await transformNexisSource(
+    `import { component, state } from '@mohammedaydan/core'
+export default component(() => {
+  const count = state(0)
+  const increment = () => count.set(count() + 1)
+  return <button onClick$={increment}>Increment</button>
+})`,
+    '/app/src/routes/named-handler.tsx',
+  )
+
+  const chunk = result.chunks[0]?.source ?? ''
+  expect(chunk).toContain('scope.count.set(scope.count() + 1)')
+  expect(chunk).not.toContain('scope.increment')
+  expect(result.scopeCaptures).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ name: 'count', kind: 'signal', initial: 0 }),
+    ]),
+  )
+  expect(result.warnings.some((warning) => warning.includes('increment'))).toBe(false)
+})
+
+it('lowers a named local function declaration through its body and captures its Signal', async () => {
+  const result = await transformNexisSource(
+    `import { component, state } from '@mohammedaydan/core'
+export default component(() => {
+  const count = state(0)
+  function increment() { count.set((current) => current + 1) }
+  return <button onClick$={increment}>Increment</button>
+})`,
+    '/app/src/routes/named-function-handler.tsx',
+  )
+
+  const chunk = result.chunks[0]?.source ?? ''
+  expect(chunk).toContain('scope.count.set')
+  expect(chunk).not.toContain('scope.increment')
+  expect(result.scopeCaptures).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ name: 'count', kind: 'signal', initial: 0 }),
+    ]),
+  )
+})
+
 it('classifies live signal captures and warns for unsupported closures', async () => {
   const result = await transformNexisSource(
     `import { state } from '@mohammedaydan/core'

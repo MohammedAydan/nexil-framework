@@ -49,6 +49,26 @@ export function LikeButton({ postId }: { readonly postId: string }) {
 
 إذا كان `postId` قيمة بسيطة قابلة للتسلسل، يمكن تضمينها في scope. أما قاعدة بيانات أو class instance أو closure يعتمد على موارد غير قابلة للنقل فلا يجب تمريره إلى العميل.
 
+### Handler محلي مسمّى
+
+يمكن تمرير Arrow function أو Function expression محلي مسمّى مباشرة إلى event prop. يحلّل Nexis جسم الدالة وقت البناء، ويصنّف القيم التي يغلق عليها، ثم ينتج lazy boundary نفسها التي ينتجها callback المكتوب داخل الحدث. بذلك يمكن تسمية نية التفاعل وإعادة استخدامها من دون Hydration للمكوّن كله.
+
+```tsx
+export default component(() => {
+  const count = state(0)
+  const increment = () => count.set((current) => current + 1)
+
+  return (
+    <section>
+      <output>{count()}</output>
+      <button onClick$={increment}>Increment</button>
+    </section>
+  )
+})
+```
+
+يجب أن يكون الـHandler identifier محليًا مباشرًا وأن يسبق تعريفه event prop. لا يسلّسل Nexis الدوال المستوردة أو تعبيرات handler المحسوبة عشوائيًا أو database client أو secrets أو class instances قابلة للتغيير. اجعل الـhelpers الخالصة داخل الـHandler، أو اجعل قيمها العامة captures صريحة؛ أما عمل الخادم فيبقى داخل Action.
+
 ## أنواع ScopeRef
 
 | النوع         | الاستخدام                                | ملاحظة                          |

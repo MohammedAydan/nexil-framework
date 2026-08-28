@@ -69,6 +69,26 @@ export function LikeButton({ postId }: { readonly postId: string }) {
 
 A simple serializable `postId` may be included in scope. A database connection, class instance, or closure that depends on non-transferable resources must remain server-side.
 
+### Named local handlers
+
+A named local arrow or function expression is supported when it is passed directly to an event prop. Nexis resolves its body at build time, classifies the values that body closes over, and emits the same lazy boundary as an inline callback. This is useful for readable, reusable event intent without whole-component hydration.
+
+```tsx
+export default component(() => {
+  const count = state(0)
+  const increment = () => count.set((current) => current + 1)
+
+  return (
+    <section>
+      <output>{count()}</output>
+      <button onClick$={increment}>Increment</button>
+    </section>
+  )
+})
+```
+
+The handler must be a direct local identifier whose declaration appears before the event prop. Nexis does not serialize imported functions, arbitrary computed handler expressions, database clients, secrets, or mutable class instances. Keep pure helpers inside the handler or make their required public values explicit captures; server-only work belongs in an Action.
+
 ## ScopeRef kinds
 
 | Kind          | Use                                            | Note                                                 |

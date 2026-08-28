@@ -47,7 +47,7 @@ export function resolveStarterOptions(options: StarterOptions): ResolvedStarterO
   const language = options.language ?? 'ts'
   if (language !== 'ts' && language !== 'js')
     throw new TypeError(`Unknown starter language: ${language}`)
-  const dependencyVersion = options.dependencyVersion ?? '^1.3.1'
+  const dependencyVersion = options.dependencyVersion ?? '^1.3.2'
   if (!/^\^?\d+\.\d+\.\d+$/.test(dependencyVersion) && dependencyVersion !== 'workspace:*')
     throw new TypeError('Starter dependencyVersion must be a semver range or workspace:*.')
   return {
@@ -160,15 +160,23 @@ function routeSource(options: ResolvedStarterOptions): string {
 
 export const seo = { title: '${options.projectName} — Nexis', description: 'An HTML-first Nexis starter with one resumable interaction boundary.' }
 
-const count = state(0)
+export default component(() => {
+  const count = state(0)
+  const increment = ({ element }${typedEvent}) => {
+    const next = count() + 1
+    count.set(next)
+    element.textContent = 'Count: ' + String(next)
+    element.setAttribute('aria-label', 'Incremented counter')
+  }
 
-export default component(() => (
-  <main className="shell">
-    <p className="eyebrow">NEXIS · INTERACTIVE STARTER</p>
-    <section className="hero"><h1>Ship HTML.<br />Wake only the button.</h1><p id="engine-stamp">Rendered via Nexis SSR Engine. This page is useful before JavaScript; the counter below is a focused resumable boundary.</p></section>
-    <section className="panel"><p className="eyebrow">STATE BOUNDARY</p><p><button id="counter-btn" className="button" onClick$={({ element }${typedEvent}) => { const next = count() + 1; count.set(next); element.textContent = 'Count: ' + String(next); element.setAttribute('aria-label', 'Incremented counter') }}>Count: 0</button></p></section>
-  </main>
-))
+  return (
+    <main className="shell">
+      <p className="eyebrow">NEXIS · INTERACTIVE STARTER</p>
+      <section className="hero"><h1>Ship HTML.<br />Wake only the button.</h1><p id="engine-stamp">Rendered via Nexis SSR Engine. This page is useful before JavaScript; the counter below is a focused resumable boundary.</p></section>
+      <section className="panel"><p className="eyebrow">STATE BOUNDARY</p><p><button id="counter-btn" className="button" onClick$={increment}>Count: 0</button></p></section>
+    </main>
+  )
+})
 `
   }
   const secureNote =
