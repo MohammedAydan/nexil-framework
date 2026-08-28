@@ -4,7 +4,7 @@ import traverseModule from '@babel/traverse'
 import MagicString from 'magic-string'
 import { transformWithEsbuild } from 'vite'
 import type { Plugin } from 'vite'
-import { findSecretExposure, validateImport } from '@nexis/compiler'
+import { findSecretExposure, validateImport } from '@nexil/compiler'
 import { RESUMABILITY_BINDINGS, RESUMABILITY_BOOTSTRAP, RESUMABILITY_FORMS } from './bootstrap.js'
 import { RESUMABILITY_BOOTSTRAP_EXTERNAL } from './external-bootstrap.js'
 import { RESUMABILITY_BINDINGS_EXTERNAL } from './external-bindings.js'
@@ -80,7 +80,7 @@ export interface DomBinding {
   readonly automatic: boolean
 }
 
-export interface NexisTransformResult {
+export interface NexilTransformResult {
   readonly code: string
   readonly map: ReturnType<MagicString['generateMap']>
   readonly chunks: readonly LazyChunk[]
@@ -98,7 +98,7 @@ export interface ExternalScopePayload {
   readonly payload: Readonly<Record<string, ScopeCapture>>
 }
 
-export interface NexisTransformOptions {
+export interface NexilTransformOptions {
   /** Keep ScopeRefs inline for dev compatibility, or externalize them during a production build. */
   readonly scopeSerialization?: 'inline' | 'external'
 }
@@ -403,7 +403,7 @@ function classifyScopeCaptures(source: string, names: readonly string[]): ScopeC
     captures.push({
       name,
       kind: 'unsupported',
-      reason: `Capture "${name}" is not a serializable Nexis signal, store, action, or plain value.`,
+      reason: `Capture "${name}" is not a serializable Nexil signal, store, action, or plain value.`,
     })
   }
   return captures
@@ -659,16 +659,16 @@ function parseSource(source: string, id: string): AstNode {
     }) as unknown as AstNode
   } catch (error) {
     throw new Error(
-      `Nexis compiler could not parse ${id}: ${error instanceof Error ? error.message : String(error)}`,
+      `Nexil compiler could not parse ${id}: ${error instanceof Error ? error.message : String(error)}`,
     )
   }
 }
 
-export async function transformNexisSource(
+export async function transformNexilSource(
   source: string,
   id: string,
-  options: NexisTransformOptions = {},
-): Promise<NexisTransformResult> {
+  options: NexilTransformOptions = {},
+): Promise<NexilTransformResult> {
   const ast = parseSource(source, id)
   const moduleDiagnostics: string[] = []
   const chunkSpecs: Array<{ fileName: string; exportName: string; expressionSource: string }> = []
@@ -1066,7 +1066,7 @@ export function nexis(options: { readonly root?: string } = {}): Plugin {
           const source = generatedChunks.get(chunkName)
           if (source === undefined) {
             response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' })
-            response.end(`Unknown Nexis chunk: ${chunkName}`)
+            response.end(`Unknown Nexil chunk: ${chunkName}`)
             return
           }
           response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' })
@@ -1078,7 +1078,7 @@ export function nexis(options: { readonly root?: string } = {}): Plugin {
     },
     async transform(source, id) {
       if (!/\.(tsx|jsx|ts|js)$/.test(id) || id.includes('/node_modules/')) return null
-      const result = await transformNexisSource(source, id)
+      const result = await transformNexilSource(source, id)
       hasBindings ||= result.bindings.length > 0
       for (const chunk of result.chunks) {
         const minified = await transformWithEsbuild(chunk.source, chunk.fileName, {

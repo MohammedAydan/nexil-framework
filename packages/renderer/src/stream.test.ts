@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { element, Suspense } from '@nexis/core'
+import { element, Suspense } from '@nexil/core'
 import { renderToString } from './index'
 import { renderToStream } from './stream'
 

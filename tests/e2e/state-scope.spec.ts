@@ -12,7 +12,7 @@ test.setTimeout(180_000)
 // from the generated state runtime in the browser on first interaction, and persist
 // across subsequent clicks without any hydration pass.
 
-const ROUTE_SOURCE = `import { component, state } from '@nexis/core'
+const ROUTE_SOURCE = `import { component, state } from '@nexil/core'
 
 export const seo = { title: 'Scope State Proof', description: 'Resumable closure state' }
 
@@ -23,7 +23,7 @@ export default component(() => {
   }
   return (
     <main className="scope-proof">
-      <h1 id="engine-stamp">Rendered via Nexis SSR Engine</h1>
+      <h1 id="engine-stamp">Rendered via Nexil SSR Engine</h1>
       <output id="scope-value">{count()}</output>
       <button
         id="scope-btn"
@@ -120,7 +120,7 @@ test('a named local handler resumes its captured signal lazily and persists acro
   })
 
   await page.goto('http://127.0.0.1:4319/')
-  await expect(page.getByText('Rendered via Nexis SSR Engine')).toBeVisible()
+  await expect(page.getByText('Rendered via Nexil SSR Engine')).toBeVisible()
   await expect(page.locator('#scope-value')).toHaveAttribute(
     'data-nx-scope',
     /^nx:scope:[a-f0-9]{12}$/,

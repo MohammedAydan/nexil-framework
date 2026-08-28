@@ -1,4 +1,4 @@
-import { notFound } from '@nexis/server'
+import { notFound } from '@nexil/server'
 import { getArticle, articles } from '../../lib/articles'
 
 export async function getStaticPaths() {

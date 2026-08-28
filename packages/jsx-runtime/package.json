@@ -1,9 +1,9 @@
 {
-  "name": "@nexis/jsx-runtime",
+  "name": "@nexil/jsx-runtime",
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "@nexis/core": "workspace:*"
+    "@nexil/core": "workspace:*"
   },
   "exports": {
     ".": {

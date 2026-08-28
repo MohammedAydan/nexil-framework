@@ -31,7 +31,7 @@ try {
 }
 
 const fontCss = fontFace({
-  family: 'Nexis Inter',
+  family: 'Nexil Inter',
   weight: [400],
   source: '/examples/basic-app/assets/inter.woff2',
 })

@@ -1,4 +1,4 @@
-# 21 — Contributing to Nexis Framework
+# 21 — Contributing to Nexil Framework
 
 ## Before you begin
 

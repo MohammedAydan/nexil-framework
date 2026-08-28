@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createDataContext } from '@nexis/server'
+import { createDataContext } from '@nexil/server'
 import {
   action,
   assertIdempotent,
@@ -44,7 +44,7 @@ describe('server actions', () => {
       (input: unknown) => String(input).trim(),
       (_context, input) => input.toUpperCase(),
     )
-    await expect(handler.execute(context, ' nexis ')).resolves.toBe('NEXIS')
+    await expect(handler.execute(context, ' nexis ')).resolves.toBe('NEXIL')
   })
 
   it('requires trusted origin for cross-origin state changes', () => {

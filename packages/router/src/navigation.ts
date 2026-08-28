@@ -1,5 +1,5 @@
 /**
- * Dependency-free client runtime for semantic Nexis Link anchors. It replaces
+ * Dependency-free client runtime for semantic Nexil Link anchors. It replaces
  * only the framework-owned #app outlet after successfully parsing a normal HTML
  * response; it neither mounts components nor diffs a virtual tree.
  */
@@ -40,11 +40,11 @@ export const NEXIS_NAVIGATION_RUNTIME = String.raw`
     if (cached) return cached
     const response = await fetch(url, {
       signal,
-      headers: { 'X-Nexis-Navigation': '1', Accept: 'text/html' },
+      headers: { 'X-Nexil-Navigation': '1', Accept: 'text/html' },
     })
     const contentType = response.headers.get('content-type') || ''
     if (!response.ok || !contentType.includes('text/html')) {
-      throw new Error('Nexis navigation response was not a successful HTML document.')
+      throw new Error('Nexil navigation response was not a successful HTML document.')
     }
     const html = await response.text()
     if (prefetch && !/private|no-store/i.test(response.headers.get('cache-control') || '')) {
@@ -70,7 +70,7 @@ export const NEXIS_NAVIGATION_RUNTIME = String.raw`
     const next = new DOMParser().parseFromString(html, 'text/html')
     const incoming = next.querySelector('#app')
     const current = document.querySelector('#app')
-    if (!incoming || !current) throw new Error('Nexis navigation document is missing #app.')
+    if (!incoming || !current) throw new Error('Nexil navigation document is missing #app.')
     await loadDestinationRuntime(next)
     const commit = () => {
       globalThis.__nexisDisposeBindings?.()

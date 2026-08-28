@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createCloudflareHandler } from './index'
 
 describe('Cloudflare edge handler', () => {
-  it('serves assets and falls back to the Nexis handler on asset 404', async () => {
+  it('serves assets and falls back to the Nexil handler on asset 404', async () => {
     const handler = createCloudflareHandler({
       assets: {
         fetch: (request) =>

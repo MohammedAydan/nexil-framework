@@ -6,16 +6,16 @@ import { generateOgImage, renderOgImageSvg } from './index'
 
 describe('OG image generation', () => {
   it('renders safe deterministic SVG text', () => {
-    const svg = renderOgImageSvg({ title: '<Nexis>', description: 'HTML & resumability' })
-    expect(svg).toContain('&lt;Nexis&gt;')
+    const svg = renderOgImageSvg({ title: '<Nexil>', description: 'HTML & resumability' })
+    expect(svg).toContain('&lt;Nexil&gt;')
     expect(svg).toContain('HTML &amp; resumability')
-    expect(svg).not.toContain('<Nexis>')
+    expect(svg).not.toContain('<Nexil>')
   })
 
   it('writes a PNG and returns a cache hit on the second generation', async () => {
     const root = await mkdtemp(join(tmpdir(), 'nexis-og-'))
     try {
-      const options = { title: 'Nexis', description: 'A fast framework' }
+      const options = { title: 'Nexil', description: 'A fast framework' }
       const first = await generateOgImage(options, root)
       const second = await generateOgImage(options, root)
       expect(first.cacheHit).toBe(false)

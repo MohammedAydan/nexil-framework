@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { readFile } from 'node:fs/promises'
-import { createProductionServer } from '@nexis/serve'
+import { createProductionServer } from '@nexil/serve'
 
 const root = fileURLToPath(new URL('../dist/client', import.meta.url))
 const config = JSON.parse(await readFile(new URL('../nexis.config.json', import.meta.url), 'utf8'))
@@ -17,4 +17,4 @@ const port =
   typeof address === 'object' && address
     ? address.port
     : Number(process.env.PORT ?? process.env.NEXIS_PORT ?? 4173)
-console.log(`Nexis official production server running at http://localhost:${port}/`)
+console.log(`Nexil official production server running at http://localhost:${port}/`)

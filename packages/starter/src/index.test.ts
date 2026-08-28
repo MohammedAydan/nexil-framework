@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createStarterFiles, resolveStarterOptions } from './index.js'
 
-describe('Nexis starter engine', () => {
+describe('Nexil starter engine', () => {
   it('creates portable interactive files without credentials or filesystem side effects', () => {
     const files = createStarterFiles({
       projectName: 'northstar',

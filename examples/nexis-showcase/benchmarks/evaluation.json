@@ -130,7 +130,7 @@
       "detail": "4 cards"
     },
     {
-      "name": "Nexis client JavaScript is no larger than the comparison baseline",
+      "name": "Nexil client JavaScript is no larger than the comparison baseline",
       "passed": true,
       "detail": "{\"nexis\":1940,\"astro\":2272,\"nexisFiles\":[\"nexis-bootstrap.js\",\"nexis-chunks/chunk_535ea9ea9b73.js\"],\"astroFiles\":[\"astro-island.js\"],\"gatePassed\":true}"
     },

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 const live = process.env.SHOWCASE_BASE_URL ?? 'http://127.0.0.1:5173'
 
-test.describe('Nexis showcase', () => {
+test.describe('Nexil showcase', () => {
   test('renders SSR content and resumes interaction on demand', async ({ page }) => {
     const errors: string[] = []
     page.on('console', (message) => {
@@ -46,7 +46,7 @@ test.describe('Nexis showcase', () => {
   })
 })
 
-test('posts the progressive action form through the Nexis endpoint', async ({ page }) => {
+test('posts the progressive action form through the Nexil endpoint', async ({ page }) => {
   await page.goto(`${live}/labs`, { waitUntil: 'networkidle' })
   await expect(page.locator('#action-form')).toHaveAttribute('data-nx-on-submit', /chunk_/)
   await page.locator('#action-name').fill('Ada')

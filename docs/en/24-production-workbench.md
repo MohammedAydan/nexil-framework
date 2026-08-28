@@ -1,12 +1,12 @@
-# 24 — Build Nexis Workbench: from an empty folder to production
+# 24 — Build Nexil Workbench: from an empty folder to production
 
-This chapter is a complete, practical path for an application built with Nexis `1.3.1`. **Nexis Workbench** is a public knowledge base with static articles, a narrow interactive filter, semantic Link navigation, a native-first support request, application-owned access policy, discovery metadata, and a release gate. It is deliberately not a promise that Nexis includes a database, user directory, OAuth provider, email vendor, or permanent session store. Those remain application choices.
+This chapter is a complete, practical path for an application built with Nexil `1.3.1`. **Nexil Workbench** is a public knowledge base with static articles, a narrow interactive filter, semantic Link navigation, a native-first support request, application-owned access policy, discovery metadata, and a release gate. It is deliberately not a promise that Nexil includes a database, user directory, OAuth provider, email vendor, or permanent session store. Those remain application choices.
 
 ## What you will prove
 
 | Stage         | Observable result before continuing                                                          |
 | ------------- | -------------------------------------------------------------------------------------------- |
-| Project       | `pnpm dev` serves a generated Nexis application.                                             |
+| Project       | `pnpm dev` serves a generated Nexil application.                                             |
 | HTML shell    | The title, navigation, and main content exist before JavaScript.                             |
 | Routing       | Static article paths render, unknown paths become real 404 responses.                        |
 | Navigation    | A marked same-origin Link can replace `#app`; the anchor still works without JavaScript.     |
@@ -18,10 +18,10 @@ This chapter is a complete, practical path for an application built with Nexis `
 
 ## 0. Create the project safely
 
-Configure access to the `@nexis` package scope through your user or CI environment. Do not commit a registry token or paste it into `.npmrc`. Then use the current initializer and commit the lockfile produced by your own installation.
+Configure access to the `@nexil` package scope through your user or CI environment. Do not commit a registry token or paste it into `.npmrc`. Then use the current initializer and commit the lockfile produced by your own installation.
 
 ```bash
-pnpm dlx @nexis/create-nexis@1.0.0 nexis-workbench --yes --ts --template interactive
+pnpm dlx @nexil/create-nexis@1.0.0 nexis-workbench --yes --ts --template interactive
 cd nexis-workbench
 pnpm install
 pnpm dev
@@ -42,7 +42,7 @@ Create a layout that has semantic navigation and a main landmark. A layout rende
 
 ```tsx
 // src/routes/_layout.tsx
-import { Link } from '@nexis/router'
+import { Link } from '@nexil/router'
 
 export default function WorkbenchLayout({ children }: { readonly children: unknown }) {
   return (
@@ -69,7 +69,7 @@ Then make the home route readable even when scripts never load.
 ```tsx
 // src/routes/index.tsx
 export const seo = {
-  title: 'Nexis Workbench',
+  title: 'Nexil Workbench',
   description: 'A public knowledge base built with server-rendered HTML.',
 }
 
@@ -104,7 +104,7 @@ export function getArticle(slug: string) {
 
 ```tsx
 // src/routes/articles/[slug].tsx
-import { notFound } from '@nexis/server'
+import { notFound } from '@nexil/server'
 import { getArticle, articles } from '../../lib/articles'
 
 export async function getStaticPaths() {
@@ -130,7 +130,7 @@ Do not let an unvalidated `slug` choose a filesystem path, database query, cache
 Use `Link` only when direct, same-origin page navigation benefits from an optional `#app` replacement. It emits a normal anchor with `data-nx-link`; it does not create a virtual router or client-side component tree.
 
 ```tsx
-import { Link } from '@nexis/router'
+import { Link } from '@nexil/router'
 
 export function ArticleNavigation() {
   return (
@@ -157,7 +157,7 @@ Use a Signal for local interactive state. Initial article content still renders 
 
 ```tsx
 // src/components/ArticleFilter.tsx
-import { state } from '@nexis/core'
+import { state } from '@nexil/core'
 
 export function ArticleFilter() {
   const active = state(false)
@@ -181,8 +181,8 @@ Capture only JSON-literal values, Signals, Stores, Actions, or supported ScopeRe
 Context avoids prop drilling; it is not a browser-global store or an asynchronous ambient context mechanism. Use a ContextScope for SSR/SSG work that crosses asynchronous boundaries.
 
 ```tsx
-import { createContext, createContextScope, provideContext, state } from '@nexis/core'
-import { createStore } from '@nexis/state'
+import { createContext, createContextScope, provideContext, state } from '@nexil/core'
+import { createStore } from '@nexil/state'
 
 const Locale = createContext('en')
 
@@ -231,7 +231,7 @@ import {
   assertTrustedOrigin,
   createMemoryIdempotencyStore,
   handleActionRequest,
-} from '@nexis/actions'
+} from '@nexil/actions'
 
 const idempotency = createMemoryIdempotencyStore()
 
@@ -268,11 +268,11 @@ export function postSupport(request: Request) {
 
 ## 7. Add application-owned session and resource policy
 
-Nexis can read an opaque session identifier and apply role or resource rules; it intentionally does not verify passwords, perform OAuth/OIDC exchange, or implement your user table.
+Nexil can read an opaque session identifier and apply role or resource rules; it intentionally does not verify passwords, perform OAuth/OIDC exchange, or implement your user table.
 
 ```ts
 // src/server/session.ts
-import { createSession, requireAccess, requirePermission, type SessionStore } from '@nexis/security'
+import { createSession, requireAccess, requirePermission, type SessionStore } from '@nexil/security'
 
 interface WorkbenchUser {
   readonly id: string
@@ -300,7 +300,7 @@ Every public route needs accurate metadata. Use a real absolute production origi
 // src/routes/articles/index.tsx
 export const seo = {
   title: 'Workbench articles',
-  description: 'Public documentation for building and operating Nexis applications.',
+  description: 'Public documentation for building and operating Nexil applications.',
   canonical: 'https://workbench.example/articles/',
 }
 ```
@@ -328,7 +328,7 @@ pnpm build
 pnpm start
 ```
 
-For Node, use the generated `nexis start` lifecycle or `@nexis/serve`. Use the Deno or Cloudflare adapter only when its Fetch-native runtime is the actual target. Set a public `siteOrigin`, define redirects, cache rules, header policy, and trusted-proxy behavior in reviewed configuration. Set proxy trust only when the proxy removes and reconstructs forwarded headers safely.
+For Node, use the generated `nexis start` lifecycle or `@nexil/serve`. Use the Deno or Cloudflare adapter only when its Fetch-native runtime is the actual target. Set a public `siteOrigin`, define redirects, cache rules, header policy, and trusted-proxy behavior in reviewed configuration. Set proxy trust only when the proxy removes and reconstructs forwarded headers safely.
 
 Your deployment checklist must include the following observable checks.
 
@@ -346,4 +346,4 @@ Your deployment checklist must include the following observable checks.
 
 This chapter is the path through the framework, not a substitute for the exact API references. Read the corresponding detailed guides before changing a contract: [project creation](./03-project-creation.md), [routing and rendering](./05-routing-and-rendering.md), [interactivity](./06-interactivity-and-scoperef.md), [state and Context](./07-state-and-reactivity.md), [Actions and forms](./08-actions-and-forms.md), [SEO](./11-seo-and-metadata.md), [server and deployment](./12-server-and-deployment.md), [testing](./13-testing-and-performance.md), and [security](./23-security-authentication-and-middleware.md).
 
-The executable Workbench example and its tests are the source of truth for the commands in this chapter. If a desired integration is absent, add it as an application boundary and test it; do not infer that it is automatically provided by Nexis.
+The executable Workbench example and its tests are the source of truth for the commands in this chapter. If a desired integration is absent, add it as an application boundary and test it; do not infer that it is automatically provided by Nexil.

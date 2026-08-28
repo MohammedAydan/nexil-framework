@@ -1,11 +1,11 @@
 {
-  "name": "@nexis/example-blog",
+  "name": "@nexil/example-blog",
   "private": true,
   "type": "module",
   "dependencies": {
-    "@nexis/core": "workspace:*",
-    "@nexis/jsx-runtime": "workspace:*",
-    "@nexis/seo": "workspace:*",
+    "@nexil/core": "workspace:*",
+    "@nexil/jsx-runtime": "workspace:*",
+    "@nexil/seo": "workspace:*",
     "zod": "^4.1.0"
   },
   "scripts": {

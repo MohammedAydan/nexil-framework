@@ -6,7 +6,7 @@ Use `renderHead` and the SEO helpers rather than writing inconsistent tags in ev
 
 ```ts
 const seo = {
-  title: 'Nexis guide',
+  title: 'Nexil guide',
   description: 'A practical guide to building HTML-first pages.',
   canonical: 'https://example.com/docs/nexis',
   ogType: 'article',
@@ -23,9 +23,9 @@ Write a unique title and an accurate description for each route. Dynamic routes 
 ```ts
 // src/routes/_layout.tsx
 export const seo = {
-  title: 'Nexis App',
-  titleTemplate: '%s · Nexis App',
-  openGraph: { siteName: 'Nexis App' },
+  title: 'Nexil App',
+  titleTemplate: '%s · Nexil App',
+  openGraph: { siteName: 'Nexil App' },
 }
 ```
 
@@ -114,4 +114,4 @@ A local Lighthouse result does not prove indexing or traffic. These are engineer
 
 ## Workbench lab
 
-Build the executable Workbench with `pnpm --filter @nexis/example-nexis-workbench build`. Inspect its generated `sitemap.xml`, `robots.txt`, `feed.xml`, `atom.xml`, and the route HTML head before using the patterns in a public service. Set your own absolute production `NEXIS_SITE_ORIGIN` during the verification build; never copy an example or preview hostname into a canonical field.
+Build the executable Workbench with `pnpm --filter @nexil/example-nexis-workbench build`. Inspect its generated `sitemap.xml`, `robots.txt`, `feed.xml`, `atom.xml`, and the route HTML head before using the patterns in a public service. Set your own absolute production `NEXIS_SITE_ORIGIN` during the verification build; never copy an example or preview hostname into a canonical field.

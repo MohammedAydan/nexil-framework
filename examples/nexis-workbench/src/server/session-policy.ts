@@ -1,4 +1,4 @@
-import { createSession, requireAccess, requirePermission, type SessionStore } from '@nexis/security'
+import { createSession, requireAccess, requirePermission, type SessionStore } from '@nexil/security'
 
 export interface WorkbenchUser {
   readonly id: string
@@ -6,7 +6,7 @@ export interface WorkbenchUser {
   readonly permissions: readonly string[]
 }
 
-// The application supplies a durable store; this typed declaration deliberately does not pretend Nexis owns it.
+// The application supplies a durable store; this typed declaration deliberately does not pretend Nexil owns it.
 declare const applicationSessionStore: SessionStore<WorkbenchUser>
 
 export const sessions = createSession(applicationSessionStore, { cookieName: 'workbench_session' })

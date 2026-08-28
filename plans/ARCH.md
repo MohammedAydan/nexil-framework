@@ -6,15 +6,15 @@ Monorepo producing 19 scoped packages. Examples consume workspace deps locally; 
 
 ## Architecture Pattern
 
-pnpm workspace monorepo, package-per-directory, TypeScript compiled per-package (`tsc -p`), root `tsc -b` project references for typecheck. Vite-based dev/build tooling in `@nexis/cli`.
+pnpm workspace monorepo, package-per-directory, TypeScript compiled per-package (`tsc -p`), root `tsc -b` project references for typecheck. Vite-based dev/build tooling in `@nexil/cli`.
 
 ## Core Components
 
 | Component                          | Responsibility                           | Location                |
 | ---------------------------------- | ---------------------------------------- | ----------------------- |
 | core                               | JSX runtime source, HTML primitives      | `packages/core`         |
-| compiler                           | Nexis transform, budget checks           | `packages/compiler`     |
-| vite-plugin                        | Vite integration, `transformNexisSource` | `packages/vite-plugin`  |
+| compiler                           | Nexil transform, budget checks           | `packages/compiler`     |
+| vite-plugin                        | Vite integration, `transformNexilSource` | `packages/vite-plugin`  |
 | cli (`nexis` bin)                  | dev/build/start/check/analyze/routes     | `packages/cli`          |
 | create-nexis (`create-nexis` bin)  | Project scaffolder (public entry point)  | `packages/create-nexis` |
 | media                              | Image/font pipeline (sharp)              | `packages/media`        |
@@ -32,7 +32,7 @@ Tier 3: create-nexis (standalone bin)
 
 ## Data Flow
 
-User runs `pnpm dlx @nexis/create-nexis my-app --yes --ts` → scaffold writes package.json depending on published versions (^0.1.x) → user installs from GitHub Packages → `nexis dev/build` drives Vite + compiler.
+User runs `pnpm dlx @nexil/create-nexis my-app --yes --ts` → scaffold writes package.json depending on published versions (^0.1.x) → user installs from GitHub Packages → `nexis dev/build` drives Vite + compiler.
 
 ## Boundaries & Invariants
 

@@ -1,6 +1,6 @@
-# Nexis Framework Documentation
+# Nexil Framework Documentation
 
-This directory contains the complete English documentation for Nexis Framework `1.3.1`. It is written for developers who need to understand the framework internally, build production applications, test them, optimize them, secure them, and deploy them.
+This directory contains the complete English documentation for Nexil Framework `1.3.1`. It is written for developers who need to understand the framework internally, build production applications, test them, optimize them, secure them, and deploy them.
 
 > This documentation describes the behavior implemented in the current repository. When using another version, verify the exact TypeScript declarations and generated `.d.ts` files for that version.
 
@@ -42,7 +42,7 @@ A new user should start with [24-production-workbench.md](./24-production-workbe
 
 ## Core concepts
 
-Nexis is an HTML-first TypeScript framework built around SSR/SSG, progressive enhancement, resumable interaction, and fine-grained DOM reactivity. A page is rendered on the server into useful HTML. Client JavaScript is emitted only for boundaries that require interaction. When an interaction occurs, the browser loads the smallest relevant chunk and resolves explicitly declared `ScopeRef` values rather than hydrating an entire application. Direct Signal reads and explicit binding directives can update one text node or scalar DOM property through `effect()` without rerunning the component.
+Nexil is an HTML-first TypeScript framework built around SSR/SSG, progressive enhancement, resumable interaction, and fine-grained DOM reactivity. A page is rendered on the server into useful HTML. Client JavaScript is emitted only for boundaries that require interaction. When an interaction occurs, the browser loads the smallest relevant chunk and resolves explicitly declared `ScopeRef` values rather than hydrating an entire application. Direct Signal reads and explicit binding directives can update one text node or scalar DOM property through `effect()` without rerunning the component.
 
 | Concept           | Practical meaning                                                   |
 | ----------------- | ------------------------------------------------------------------- |
@@ -55,8 +55,8 @@ Nexis is an HTML-first TypeScript framework built around SSR/SSG, progressive en
 | Lazy handler      | An event handler emitted into a separately loaded chunk             |
 | DOM binding       | A Signal subscription that updates one text node or scalar property |
 | Action            | A server operation invoked through a typed endpoint                 |
-| Production server | `@nexis/serve` serving the final build                              |
-| Security package  | `@nexis/security` session and authorization primitives              |
+| Production server | `@nexil/serve` serving the final build                              |
+| Security package  | `@nexil/security` session and authorization primitives              |
 | Build artifact    | Generated HTML, CSS, JavaScript, media, and metadata                |
 
 ## Example policy
@@ -73,7 +73,7 @@ The examples use TypeScript and JSX. Adjust paths to match your application. Nev
 - [Telemetry README](../../packages/telemetry/README.md)
 - [Showcase report](../../examples/nexis-showcase/SHOWCASE-REPORT.md)
 - [Practical documentation curriculum](../architecture/practical-documentation-curriculum.md)
-- [Nexis Workbench production path](./24-production-workbench.md)
+- [Nexil Workbench production path](./24-production-workbench.md)
 - [v1.1.0 release and migration guide](../releases/v1.1.0.md)
 - [v1.3.0 Link and Context release notes](../releases/v1.3.0.md)
 - [v1.3.1 Starter correction notes](../releases/next.md)

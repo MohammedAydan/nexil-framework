@@ -9,7 +9,7 @@ test('landing page ships a responsive visual baseline without client JavaScript'
   })
 
   await page.goto('/examples/landing-page/')
-  await expect(page).toHaveTitle('Nexis — HTML-first web apps')
+  await expect(page).toHaveTitle('Nexil — HTML-first web apps')
   await expect(
     page.getByRole('heading', { name: 'Ship the page before the script.' }),
   ).toBeVisible()

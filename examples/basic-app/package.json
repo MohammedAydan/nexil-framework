@@ -1,12 +1,12 @@
 {
-  "name": "@nexis/example-basic-app",
+  "name": "@nexil/example-basic-app",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm --filter @nexis/media build && node ../../tests/e2e/build-basic-app.mjs",
+    "build": "pnpm --filter @nexil/media build && node ../../tests/e2e/build-basic-app.mjs",
     "clean": "node -e \"const fs=require('fs');for(const f of ['dist','tsconfig.tsbuildinfo']){try{fs.rmSync(f,{recursive:true,force:true})}catch(e){}}\""
   },
   "dependencies": {
-    "@nexis/media": "workspace:*"
+    "@nexil/media": "workspace:*"
   }
 }

@@ -1,9 +1,9 @@
-/** @jsxImportSource @nexis/jsx-runtime */
+/** @jsxImportSource @nexil/jsx-runtime */
 
-import { element } from '@nexis/core'
+import { element } from '@nexil/core'
 
-export const seo = { title: 'Hello Nexis' }
+export const seo = { title: 'Hello Nexil' }
 
 export default function Home() {
-  return element('h1', {}, 'Hello Nexis')
+  return element('h1', {}, 'Hello Nexil')
 }

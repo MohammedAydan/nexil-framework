@@ -1,5 +1,5 @@
-import { getCookie, serializeCookie } from '@nexis/server'
-import type { CookieOptions } from '@nexis/server'
+import { getCookie, serializeCookie } from '@nexil/server'
+import type { CookieOptions } from '@nexil/server'
 
 /** The minimum identity information needed for framework-level access checks. */
 export interface Principal {
@@ -47,7 +47,7 @@ function cookieOptions(options: SessionOptions): CookieOptions {
 }
 
 /**
- * Creates a secure, storage-agnostic session manager. Nexis does not own users,
+ * Creates a secure, storage-agnostic session manager. Nexil does not own users,
  * credentials, OAuth/OIDC verification, or the database behind this adapter.
  */
 export function createSession<Identity extends Principal = Principal>(

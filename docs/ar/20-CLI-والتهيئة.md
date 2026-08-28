@@ -21,7 +21,7 @@
 
 ## تشخيص قابل للاستهلاك الآلي
 
-استخدم `nexis doctor --json` عندما تحتاج CI أو مولد مشروع أو تكامل editor إلى تقرير ثابت. يحتوي إصدار التقرير `1` على حالة `ok` أو `warn` أو `error` وفحوصات لـ package manifest وscripts lifecycle ومجلد routes وHTML outlets وNexis config ونية trusted proxy وإعدادات security headers الصريحة.
+استخدم `nexis doctor --json` عندما تحتاج CI أو مولد مشروع أو تكامل editor إلى تقرير ثابت. يحتوي إصدار التقرير `1` على حالة `ok` أو `warn` أو `error` وفحوصات لـ package manifest وscripts lifecycle ومجلد routes وHTML outlets وNexil config ونية trusted proxy وإعدادات security headers الصريحة.
 
 ```bash
 nexis doctor --json > nexis-doctor.json
@@ -34,7 +34,7 @@ nexis doctor --json > nexis-doctor.json
 يدعم المشروع `nexis.config.json` و`nexis.config.js` و`nexis.config.mjs` و`nexis.config.ts`. يجب أن يصدر الملف object configuration صالحًا.
 
 ```ts
-import type { NexisBuildConfig } from '@nexis/cli'
+import type { NexilBuildConfig } from '@nexil/cli'
 
 export default {
   siteOrigin: 'https://example.com',
@@ -46,7 +46,7 @@ export default {
     language: 'ar',
   },
   redirects: [{ from: '/legacy', to: '/', status: 308 }],
-} satisfies NexisBuildConfig
+} satisfies NexilBuildConfig
 ```
 
 استخدم `satisfies` حتى يراجع TypeScript الحقول دون فقدان أنواع القيم الحرفية.

@@ -1,15 +1,15 @@
 {
-  "name": "@nexis/dev-server",
+  "name": "@nexil/dev-server",
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "@nexis/actions": "workspace:*",
-    "@nexis/core": "workspace:*",
-    "@nexis/adapters": "workspace:*",
-    "@nexis/renderer": "workspace:*",
-    "@nexis/router": "workspace:*",
-    "@nexis/seo": "workspace:*",
-    "@nexis/vite-plugin": "workspace:*",
+    "@nexil/actions": "workspace:*",
+    "@nexil/core": "workspace:*",
+    "@nexil/adapters": "workspace:*",
+    "@nexil/renderer": "workspace:*",
+    "@nexil/router": "workspace:*",
+    "@nexil/seo": "workspace:*",
+    "@nexil/vite-plugin": "workspace:*",
     "vite": "^7.3.6"
   },
   "exports": {

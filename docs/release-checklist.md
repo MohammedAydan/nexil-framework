@@ -1,4 +1,4 @@
-# Nexis Release Candidate Checklist
+# Nexil Release Candidate Checklist
 
 ## Implemented in this baseline
 

@@ -1,9 +1,9 @@
 {
-  "name": "@nexis/core",
+  "name": "@nexil/core",
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "@nexis/reactivity": "workspace:*"
+    "@nexil/reactivity": "workspace:*"
   },
   "exports": {
     ".": {

@@ -164,7 +164,7 @@ try {
   )
 } catch {}
 check(
-  'Nexis client JavaScript is no larger than the comparison baseline',
+  'Nexil client JavaScript is no larger than the comparison baseline',
   astroComparison?.clientJsBytes?.gatePassed === true,
   JSON.stringify(astroComparison?.clientJsBytes ?? null),
 )

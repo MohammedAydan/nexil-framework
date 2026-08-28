@@ -1,10 +1,10 @@
 # Practical documentation curriculum
 
-> **Status: implementation plan for the current documentation branch.** This curriculum is documentation work, not a claim that Nexis supplies a database, hosted identity provider, payment system, or persistent application storage.
+> **Status: implementation plan for the current documentation branch.** This curriculum is documentation work, not a claim that Nexil supplies a database, hosted identity provider, payment system, or persistent application storage.
 
 ## Outcome
 
-The documentation must allow a developer or an AI agent unfamiliar with Nexis to create, understand, test, deploy, and operate an HTML-first application without guessing at framework behavior. Every lesson leads toward one coherent example application, **Nexis Workbench**: a public knowledge base with static articles, a focused interactive filter, a native-first support form, application-owned session and authorization boundaries, production metadata, and a verifiable release process.
+The documentation must allow a developer or an AI agent unfamiliar with Nexil to create, understand, test, deploy, and operate an HTML-first application without guessing at framework behavior. Every lesson leads toward one coherent example application, **Nexil Workbench**: a public knowledge base with static articles, a focused interactive filter, a native-first support form, application-owned session and authorization boundaries, production metadata, and a verifiable release process.
 
 ## Lesson contract
 
@@ -21,7 +21,7 @@ Every public capability documented in the framework and on the official site mus
 
 ## Progressive curriculum
 
-| Stage             | Workbench capability                                                 | Nexis surface                        | Required proof                                                                     |
+| Stage             | Workbench capability                                                 | Nexil surface                        | Required proof                                                                     |
 | ----------------- | -------------------------------------------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------- |
 | 00 — Start        | Create and inspect a project                                         | `create-nexis`, Starter, CLI         | Generated files, lockfile, `pnpm dev`                                              |
 | 01 — Document     | Render a public home and shared shell                                | Core, JSX runtime, Renderer, layouts | HTML contains title, heading, navigation, and skip link without JavaScript         |
@@ -40,7 +40,7 @@ The framework documentation remains the normative, bilingual reference. The offi
 
 ## Example policy
 
-Use real Nexis APIs only. When a complete application needs a persistence layer, email service, identity provider, or deployment secret, expose it as an application-owned interface and explain the integration point. Never represent a placeholder as a shipped framework subsystem. Do not place credentials, personal data, authorization decisions, or request-private values in JSX, generated HTML, `nexis-state.js`, client chunks, examples, or logs.
+Use real Nexil APIs only. When a complete application needs a persistence layer, email service, identity provider, or deployment secret, expose it as an application-owned interface and explain the integration point. Never represent a placeholder as a shipped framework subsystem. Do not place credentials, personal data, authorization decisions, or request-private values in JSX, generated HTML, `nexis-state.js`, client chunks, examples, or logs.
 
 ## Completion criteria
 

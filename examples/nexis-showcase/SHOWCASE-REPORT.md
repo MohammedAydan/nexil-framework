@@ -1,4 +1,4 @@
-# Nexis Showcase — Phase 3 Production GA Report
+# Nexil Showcase — Phase 3 Production GA Report
 
 **Generated:** 25 August 2026
 **Application:** `examples/nexis-showcase`
@@ -8,7 +8,7 @@
 
 ## Executive summary
 
-Phase 3 completes the Nexis v1.0.0 Production GA surface on top of the Phase 2 production-parity baseline. The implementation adds computed-cycle diagnostics and store lifecycle cleanup, a reproducible Astro-style client-budget comparison, Lighthouse automation across all seven routes, RSS and Atom feeds, expanded sitemap metadata, typed configuration loading, build-time OG PNG cards, validated redirects, incremental stream traversal with cancellation and flush thresholds, Cloudflare and Deno Fetch handlers, persistent media caching and picture markup, optional LCP/CLS/INP observers, and a local telemetry receiver. The final evaluator passes **27/27 checks**, Lighthouse passes **7/7 routes** with SEO 100, performance 100, and accessibility 100 in this controlled local run, the repository unit/integration suite passes **135/135 tests**, repository E2E passes **13/13**, the Astro comparison gate reports Nexis at **1,940 bytes versus 2,272 bytes**, and build, typecheck, lint, formatting, high-severity audit, parity, budget, and whitespace gates pass. These are reproducible local or CI measurements, not internet production performance, Search Console, rankings, backlink authority, or real-user Core Web Vitals evidence. Remaining deployment work is deliberately documented: arbitrary closure serialization, durable distributed idempotency, full edge static-file deployment adapters, complete external Schema.org validation, consent/retention governance, and real-user field collection still require application and infrastructure decisions.
+Phase 3 completes the Nexil v1.0.0 Production GA surface on top of the Phase 2 production-parity baseline. The implementation adds computed-cycle diagnostics and store lifecycle cleanup, a reproducible Astro-style client-budget comparison, Lighthouse automation across all seven routes, RSS and Atom feeds, expanded sitemap metadata, typed configuration loading, build-time OG PNG cards, validated redirects, incremental stream traversal with cancellation and flush thresholds, Cloudflare and Deno Fetch handlers, persistent media caching and picture markup, optional LCP/CLS/INP observers, and a local telemetry receiver. The final evaluator passes **27/27 checks**, Lighthouse passes **7/7 routes** with SEO 100, performance 100, and accessibility 100 in this controlled local run, the repository unit/integration suite passes **135/135 tests**, repository E2E passes **13/13**, the Astro comparison gate reports Nexil at **1,940 bytes versus 2,272 bytes**, and build, typecheck, lint, formatting, high-severity audit, parity, budget, and whitespace gates pass. These are reproducible local or CI measurements, not internet production performance, Search Console, rankings, backlink authority, or real-user Core Web Vitals evidence. Remaining deployment work is deliberately documented: arbitrary closure serialization, durable distributed idempotency, full edge static-file deployment adapters, complete external Schema.org validation, consent/retention governance, and real-user field collection still require application and infrastructure decisions.
 
 ## 1. Scope and deliverables
 
@@ -41,7 +41,7 @@ The final repository verification was run on Linux with Node `v22.13.0` and pnpm
 | Repository E2E                  | **13/13 passed** | Fixture and showcase servers managed automatically                  |
 | Production evaluator            |        **27/27** | Routes, feeds, redirects, OG cards, SEO, crawler, media, budgets    |
 | Lighthouse hard gates           |          **7/7** | SEO 100, performance 100, accessibility 100 in local mobile lab run |
-| Astro client-JS comparison      |       **Passed** | Nexis 1,940 B vs Astro-style baseline 2,272 B                       |
+| Astro client-JS comparison      |       **Passed** | Nexil 1,940 B vs Astro-style baseline 2,272 B                       |
 | Lint, format, audit, whitespace |           Passed | ESLint, Prettier, high-severity audit, `git diff --check`           |
 
 The browser action test exposed and corrected an important event-order issue: a form’s native submit navigation can occur before a lazy handler finishes importing. The bootstrap now prevents submit synchronously, then imports the handler and performs the action request. This is covered by the 19/19 browser artifact and the repository showcase E2E test.
@@ -66,7 +66,7 @@ A production deployment must replace the default process-local idempotency store
 
 ## 5. Official production server and runtime parity
 
-`@nexis/serve` is now the supported route-aware Node server. It maps `/` and nested paths to generated `index.html` files, serves a built-in HTML 404 document or an application `404.html`, accepts `GET` and `HEAD`, rejects other methods with `405`, prevents traversal candidates, sets MIME types, and applies revalidation caching to HTML and immutable caching to assets. The CLI exposes this implementation through `nexis serve`; the showcase benchmark wrapper imports the package rather than carrying a bespoke server implementation.
+`@nexil/serve` is now the supported route-aware Node server. It maps `/` and nested paths to generated `index.html` files, serves a built-in HTML 404 document or an application `404.html`, accepts `GET` and `HEAD`, rejects other methods with `405`, prevents traversal candidates, sets MIME types, and applies revalidation caching to HTML and immutable caching to assets. The CLI exposes this implementation through `nexis serve`; the showcase benchmark wrapper imports the package rather than carrying a bespoke server implementation.
 
 The official server was exercised against the full built output. The final production benchmark confirms that all seven routes return 200, the unknown route returns a real HTML 404, `HEAD` and `405` behavior are covered by package tests, action transport works, and sitemap/robots files are served as dedicated endpoints.
 
@@ -203,7 +203,7 @@ Phase 3 and the v1.0.0 Production GA acceptance surface are complete against the
 [3]: benchmarks/evaluation.json 'Final 27-gate acceptance evaluation'
 [4]: benchmarks/browser-evaluation.json 'Final 19-check browser evaluation'
 [5]: ../../tests/e2e/showcase.spec.ts 'Repository showcase Playwright coverage'
-[6]: ../../packages/seo/src/index.ts 'Nexis SEO helpers and schema validation'
+[6]: ../../packages/seo/src/index.ts 'Nexil SEO helpers and schema validation'
 [7]: ../../packages/serve/README.md 'Official route-aware production server'
 [8]: ../../docs/adr/phase-2-production-parity.md 'Phase 2 production parity architecture decision'
 [9]: benchmarks/live-browser-qa.md 'Temporary public browser QA log'

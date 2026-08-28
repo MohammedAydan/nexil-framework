@@ -6,8 +6,8 @@ Start with the scripts in `package.json` and the CLI help for the installed rele
 
 ```bash
 # For the published scoped initializer, configure GitHub Packages when required.
-npm config set @nexis:registry https://registry.npmjs.org/
-pnpm dlx @nexis/create-nexis@1.0.0 my-app --yes --ts
+npm config set @nexil:registry https://registry.npmjs.org/
+pnpm dlx @nexil/create-nexis@1.0.0 my-app --yes --ts
 cd my-app
 pnpm install
 pnpm dev
@@ -32,7 +32,7 @@ The v1.2 CLI also provides `generate route`, `generate component`, `add action`,
 
 ## Machine-readable diagnostics
 
-Use `nexis doctor --json` when CI, a project generator, or an editor integration must consume a stable report. The v1 report has a `status` of `ok`, `warn`, or `error`, and checks for the package manifest, lifecycle scripts, routes directory, HTML outlets, Nexis configuration, trusted-proxy intent, and explicit security-header configuration.
+Use `nexis doctor --json` when CI, a project generator, or an editor integration must consume a stable report. The v1 report has a `status` of `ok`, `warn`, or `error`, and checks for the package manifest, lifecycle scripts, routes directory, HTML outlets, Nexil configuration, trusted-proxy intent, and explicit security-header configuration.
 
 ```bash
 nexis doctor --json > nexis-doctor.json
@@ -51,7 +51,7 @@ pnpm typecheck
 pnpm test
 ```
 
-`dev` is for local iteration. `build` creates the full production artifact, including `public/` assets, and `start` serves it with Nexis route, Action, cache, and security semantics. Production verification must use `pnpm build` then `pnpm start`, not only the development server.
+`dev` is for local iteration. `build` creates the full production artifact, including `public/` assets, and `start` serves it with Nexil route, Action, cache, and security semantics. Production verification must use `pnpm build` then `pnpm start`, not only the development server.
 
 ## Route discovery
 
@@ -59,10 +59,10 @@ The build discovers route files under the configured source directory, recursive
 
 ## Rendering configuration
 
-Configuration is optional. Import `defineConfig` from `@nexis/serve` only when overriding defaults such as the public origin, server port, redirects, feed metadata, cache policy, or Action origin policy. Keep configuration narrowly typed and avoid undocumented fields.
+Configuration is optional. Import `defineConfig` from `@nexil/serve` only when overriding defaults such as the public origin, server port, redirects, feed metadata, cache policy, or Action origin policy. Keep configuration narrowly typed and avoid undocumented fields.
 
 ```ts
-import { defineConfig } from '@nexis/serve'
+import { defineConfig } from '@nexil/serve'
 
 export default defineConfig({
   app: { origin: 'https://app.example.com' },

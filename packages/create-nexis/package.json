@@ -1,10 +1,10 @@
 {
-  "name": "@nexis/create-nexis",
+  "name": "@nexil/create-nexis",
   "version": "1.0.0",
-  "description": "Create a Nexis application",
+  "description": "Create a Nexil application",
   "type": "module",
   "dependencies": {
-    "@nexis/starter": "workspace:*"
+    "@nexil/starter": "workspace:*"
   },
   "files": [
     "dist",

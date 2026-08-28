@@ -1,11 +1,11 @@
-import { component } from '@nexis/core'
+import { component } from '@nexil/core'
 
 export const staticPaths = ['architecture', 'resumability', 'performance']
 export const seo = ({ pathname = '/docs/architecture' }: { pathname?: string } = {}) => ({
-  title: 'Nexis Documentation — Architecture note',
-  description: 'Static documentation generated from a dynamic Nexis route.',
+  title: 'Nexil Documentation — Architecture note',
+  description: 'Static documentation generated from a dynamic Nexil route.',
   type: 'article' as const,
-  jsonLd: { '@context': 'https://schema.org', '@type': 'TechArticle', name: 'Nexis Documentation' },
+  jsonLd: { '@context': 'https://schema.org', '@type': 'TechArticle', name: 'Nexil Documentation' },
   pathname,
 })
 

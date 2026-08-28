@@ -1,10 +1,10 @@
-import { Link } from '@nexis/router'
+import { Link } from '@nexil/router'
 import { ArticleFilter } from '../components/article-filter'
 
 export const seo = {
-  title: 'Nexis Workbench',
+  title: 'Nexil Workbench',
   description:
-    'A production-oriented Nexis example with server-rendered HTML and narrow browser boundaries.',
+    'A production-oriented Nexil example with server-rendered HTML and narrow browser boundaries.',
 }
 
 export default function Home() {

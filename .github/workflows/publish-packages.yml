@@ -61,7 +61,7 @@ jobs:
         run: |
           pnpm publish:npm:dry > pack-report.log 2>&1 || { cat pack-report.log; exit 1; }
           sed -i 's/\x1b\[[0-9;]*m//g' pack-report.log
-          MATCHED=$(grep -cE '^\+ @nexis/' pack-report.log || true)
+          MATCHED=$(grep -cE '^\+ @nexil/' pack-report.log || true)
           echo "Packages matched: $MATCHED"
           if [ "$MATCHED" -lt 20 ]; then
             echo '::error::Dry run matched fewer packages than expected — aborting release'
@@ -82,7 +82,7 @@ jobs:
       - name: Configure npm authentication
         run: |
           {
-            echo "@nexis:registry=https://registry.npmjs.org"
+            echo "@nexil:registry=https://registry.npmjs.org"
             echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}"
           } > "$RUNNER_TEMP/publish.npmrc"
         env:
@@ -95,7 +95,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Verify initializer is resolvable
-        run: npm view @nexis/create-nexis version --registry=https://registry.npmjs.org
+        run: npm view @nexil/create-nexis version --registry=https://registry.npmjs.org
         env:
           NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/publish.npmrc
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

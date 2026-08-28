@@ -1,23 +1,23 @@
-export type NexisHandler = (request: Request) => Response | Promise<Response>
+export type NexilHandler = (request: Request) => Response | Promise<Response>
 
-export interface NexisAdapter {
+export interface NexilAdapter {
   readonly name: 'node' | 'cloudflare' | 'deno'
-  readonly handle: NexisHandler
+  readonly handle: NexilHandler
 }
 
-function createAdapter(name: NexisAdapter['name'], handler: NexisHandler): NexisAdapter {
+function createAdapter(name: NexilAdapter['name'], handler: NexilHandler): NexilAdapter {
   return Object.freeze({ name, handle: handler })
 }
 
-export function createNodeAdapter(handler: NexisHandler): NexisAdapter {
+export function createNodeAdapter(handler: NexilHandler): NexilAdapter {
   return createAdapter('node', handler)
 }
 
-export function createCloudflareAdapter(handler: NexisHandler): NexisAdapter {
+export function createCloudflareAdapter(handler: NexilHandler): NexilAdapter {
   return createAdapter('cloudflare', handler)
 }
 
-export function createDenoAdapter(handler: NexisHandler): NexisAdapter {
+export function createDenoAdapter(handler: NexilHandler): NexilAdapter {
   return createAdapter('deno', handler)
 }
 

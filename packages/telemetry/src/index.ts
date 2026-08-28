@@ -58,7 +58,7 @@ export interface TelemetryClient {
 
 function assertEndpoint(endpoint: string): void {
   if (!endpoint.startsWith('/') || endpoint.startsWith('//'))
-    throw new TypeError('Nexis telemetry endpoint must be a local absolute path.')
+    throw new TypeError('Nexil telemetry endpoint must be a local absolute path.')
 }
 
 export function createTelemetry(options: TelemetryOptions): TelemetryClient {

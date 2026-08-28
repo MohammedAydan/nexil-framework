@@ -32,7 +32,7 @@ test.beforeAll(async () => {
   const result = await scaffoldProject('engine-test', tempDir, { yes: true, language: 'ts' })
   const appDir = result.directory
 
-  // Install workspace dependencies (needed for Vite SSR to resolve @nexis/*)
+  // Install workspace dependencies (needed for Vite SSR to resolve @nexil/*)
   try {
     execSync('pnpm install --silent', { cwd: appDir, stdio: 'inherit', timeout: 90_000 })
   } catch {
@@ -53,7 +53,7 @@ test.beforeAll(async () => {
   console.log(
     `[engine-proof] dist/client/index.html chunk: ${html.match(/chunk_[a-f0-9]+\.js/)?.[0]}`,
   )
-  if (!html.includes('Rendered via Nexis SSR Engine')) {
+  if (!html.includes('Rendered via Nexil SSR Engine')) {
     throw new Error('Build output missing engine-stamp - SSR pipeline bypassed')
   }
   if (!html.includes('data-nx-on-click') && !html.includes('on:click')) {
@@ -122,7 +122,7 @@ test.afterAll(async () => {
 
 test('engine proof: SSR renders dynamic markup with engine stamp', async ({ page }) => {
   await page.goto('http://127.0.0.1:4317/')
-  await expect(page.locator('#engine-stamp')).toContainText('Rendered via Nexis SSR Engine')
+  await expect(page.locator('#engine-stamp')).toContainText('Rendered via Nexil SSR Engine')
 })
 
 test('engine proof: counter has serialized resumable attributes', async ({ page }) => {

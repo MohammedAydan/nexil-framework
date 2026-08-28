@@ -1,6 +1,6 @@
-import type { Serializable } from '@nexis/core'
-import { isSerializable } from '@nexis/core'
-import { effect, state } from '@nexis/reactivity'
+import type { Serializable } from '@nexil/core'
+import { isSerializable } from '@nexil/core'
+import { effect, state } from '@nexil/reactivity'
 
 export const RESUME_FORMAT_VERSION = 1 as const
 export const MAX_RESUME_DEPTH = 8
@@ -72,27 +72,27 @@ function payloadSize(value: string): number {
 export function serializeResumeState(state: unknown): string {
   if (!isSerializable(state) || !isResumableValue(state)) {
     throw new TypeError(
-      `Nexis resumability state must contain only serializable plain data with maximum depth ${MAX_RESUME_DEPTH}.`,
+      `Nexil resumability state must contain only serializable plain data with maximum depth ${MAX_RESUME_DEPTH}.`,
     )
   }
 
   const payload: ResumePayload = { version: RESUME_FORMAT_VERSION, state }
   const serialized = JSON.stringify(payload)
   if (payloadSize(serialized) > MAX_RESUME_PAYLOAD_BYTES) {
-    throw new RangeError(`Nexis resumability payload exceeds ${MAX_RESUME_PAYLOAD_BYTES} bytes.`)
+    throw new RangeError(`Nexil resumability payload exceeds ${MAX_RESUME_PAYLOAD_BYTES} bytes.`)
   }
   return serialized
 }
 
 export function deserializeResumeState(serialized: string): Serializable {
   if (payloadSize(serialized) > MAX_RESUME_PAYLOAD_BYTES) {
-    throw new RangeError(`Nexis resumability payload exceeds ${MAX_RESUME_PAYLOAD_BYTES} bytes.`)
+    throw new RangeError(`Nexil resumability payload exceeds ${MAX_RESUME_PAYLOAD_BYTES} bytes.`)
   }
   let payload: unknown
   try {
     payload = JSON.parse(serialized)
   } catch {
-    throw new TypeError('Invalid Nexis resumability payload: expected JSON.')
+    throw new TypeError('Invalid Nexil resumability payload: expected JSON.')
   }
 
   if (
@@ -102,7 +102,7 @@ export function deserializeResumeState(serialized: string): Serializable {
     !isSerializable((payload as { state?: unknown }).state) ||
     !isResumableValue((payload as { state?: unknown }).state)
   ) {
-    throw new TypeError('Invalid or unsupported Nexis resumability payload.')
+    throw new TypeError('Invalid or unsupported Nexil resumability payload.')
   }
 
   return (payload as ResumePayload).state
@@ -279,7 +279,7 @@ function bindReadableSignalToDOM<T>(
   signal: BindingSignal<T>,
   target: DomBindingTargetNode,
 ): () => void {
-  if (!isBindingSignal(signal)) throw new TypeError('Nexis DOM bindings require a readable signal.')
+  if (!isBindingSignal(signal)) throw new TypeError('Nexil DOM bindings require a readable signal.')
   return effect(() => {
     applyBindingTarget(target, signal())
   })
@@ -292,14 +292,14 @@ export function bindSignalToDOM(
   targetProperty: DomBindingTarget,
 ): () => void {
   if (!/^nx:(?:signal|store):[A-Za-z0-9_-]+$/.test(scopeId))
-    throw new TypeError('Nexis DOM binding scope id must be a stable signal or store id.')
+    throw new TypeError('Nexil DOM binding scope id must be a stable signal or store id.')
   const registered = getScopeRegistry().resolve<BindingSignal | { value: BindingSignal }>(scopeId)
   const signal =
     registered && typeof registered === 'object' && 'value' in registered
       ? registered.value
       : registered
   if (!signal || !isBindingSignal(signal))
-    throw new Error(`Nexis DOM binding signal is not registered: ${scopeId}`)
+    throw new Error(`Nexil DOM binding signal is not registered: ${scopeId}`)
   return bindReadableSignalToDOM(signal, { node, target: targetProperty })
 }
 
@@ -491,7 +491,7 @@ export interface ScopeRegistry {
 }
 
 function assertScopeId(id: string): void {
-  if (!/^[a-zA-Z0-9:_-]{1,160}$/.test(id)) throw new TypeError('Invalid Nexis scope ID.')
+  if (!/^[a-zA-Z0-9:_-]{1,160}$/.test(id)) throw new TypeError('Invalid Nexil scope ID.')
 }
 
 function stableHash(value: string): string {
@@ -512,7 +512,7 @@ export function createScopeId(kind: ScopeRefKind, source: string): string {
 function assertSupportedScopeValue(value: unknown): asserts value is Serializable {
   if (!isSerializable(value) || !isResumableValue(value)) {
     throw new TypeError(
-      'Nexis scope capture supports only serializable plain values, signals, stores, and actions.',
+      'Nexil scope capture supports only serializable plain values, signals, stores, and actions.',
     )
   }
 }
@@ -542,16 +542,16 @@ export function createScopeRegistry(): ScopeRegistry {
         kind === 'signal' &&
         (typeof value !== 'function' || typeof (value as { set?: unknown }).set !== 'function')
       )
-        throw new TypeError('Nexis signal scope values must be callable signals.')
+        throw new TypeError('Nexil signal scope values must be callable signals.')
       if (
         kind === 'store' &&
         (!value ||
           typeof value !== 'object' ||
           typeof (value as { value?: unknown }).value !== 'function')
       )
-        throw new TypeError('Nexis store scope values must expose a signal value.')
+        throw new TypeError('Nexil store scope values must expose a signal value.')
       if (kind === 'action' && typeof value !== 'function')
-        throw new TypeError('Nexis action scope values must be callable.')
+        throw new TypeError('Nexil action scope values must be callable.')
       const previous = entries.get(id)
       if (previous && typeof (previous.value as { dispose?: unknown }).dispose === 'function') {
         ;(previous.value as { dispose: () => void }).dispose()
@@ -632,7 +632,7 @@ export function serializeScopeRefs(refs: Readonly<Record<string, ScopeRef>>): st
   for (const ref of Object.values(refs)) {
     if (ref.kind === 'value') assertSupportedScopeValue(ref.data)
     if (ref.kind === 'unsupported' && !ref.reason.trim())
-      throw new TypeError('Unsupported Nexis scope captures require a reason.')
+      throw new TypeError('Unsupported Nexil scope captures require a reason.')
   }
   return JSON.stringify(refs)
 }
@@ -642,17 +642,17 @@ export function deserializeScopeRefs(serialized: string): Readonly<Record<string
   try {
     parsed = JSON.parse(serialized)
   } catch {
-    throw new TypeError('Invalid Nexis scope reference payload: expected JSON.')
+    throw new TypeError('Invalid Nexil scope reference payload: expected JSON.')
   }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed))
-    throw new TypeError('Invalid Nexis scope reference payload.')
+    throw new TypeError('Invalid Nexil scope reference payload.')
   for (const ref of Object.values(parsed as Record<string, ScopeRef>)) {
     if (
       !ref ||
       typeof ref !== 'object' ||
       !['value', 'signal', 'store', 'action', 'unsupported'].includes(ref.kind)
     )
-      throw new TypeError('Invalid Nexis scope reference kind.')
+      throw new TypeError('Invalid Nexil scope reference kind.')
   }
   return parsed as Readonly<Record<string, ScopeRef>>
 }
@@ -669,7 +669,7 @@ export function resolveScopeRefs(
     }
     if (ref.kind === 'unsupported') {
       if ((globalThis as { __NEXIS_DEV__?: boolean }).__NEXIS_DEV__ === true)
-        throw new Error(`Unsupported Nexis scope capture: ${ref.reason}`)
+        throw new Error(`Unsupported Nexil scope capture: ${ref.reason}`)
       console.warn(`[nexis] Unsupported scope capture ignored: ${ref.reason}`)
       continue
     }

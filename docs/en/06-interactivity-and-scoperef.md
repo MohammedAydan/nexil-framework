@@ -2,7 +2,7 @@
 
 ## The idea
 
-Traditional hydration reruns application code in the browser to discover events and state. Nexis sends HTML with enough information to identify an event, then loads only the required handler when the user interacts. This is resumability.
+Traditional hydration reruns application code in the browser to discover events and state. Nexil sends HTML with enough information to identify an event, then loads only the required handler when the user interacts. This is resumability.
 
 ```text
 SSR HTML
@@ -18,7 +18,7 @@ SSR HTML
 
 ## Fine-grained DOM bindings
 
-Nexis can update one text node or scalar DOM property directly from a Signal without rerunning the component or reconciling a virtual tree. Use a direct read for the conservative automatic path:
+Nexil can update one text node or scalar DOM property directly from a Signal without rerunning the component or reconciling a virtual tree. Use a direct read for the conservative automatic path:
 
 ```tsx
 const count = state(0)
@@ -71,7 +71,7 @@ A simple serializable `postId` may be included in scope. A database connection, 
 
 ### Named local handlers
 
-A named local arrow or function expression is supported when it is passed directly to an event prop. Nexis resolves its body at build time, classifies the values that body closes over, and emits the same lazy boundary as an inline callback. This is useful for readable, reusable event intent without whole-component hydration.
+A named local arrow or function expression is supported when it is passed directly to an event prop. Nexil resolves its body at build time, classifies the values that body closes over, and emits the same lazy boundary as an inline callback. This is useful for readable, reusable event intent without whole-component hydration.
 
 ```tsx
 export default component(() => {
@@ -87,7 +87,7 @@ export default component(() => {
 })
 ```
 
-The handler must be a direct local identifier whose declaration appears before the event prop. Nexis does not serialize imported functions, arbitrary computed handler expressions, database clients, secrets, or mutable class instances. Keep pure helpers inside the handler or make their required public values explicit captures; server-only work belongs in an Action.
+The handler must be a direct local identifier whose declaration appears before the event prop. Nexil does not serialize imported functions, arbitrary computed handler expressions, database clients, secrets, or mutable class instances. Keep pure helpers inside the handler or make their required public values explicit captures; server-only work belongs in an Action.
 
 ## ScopeRef kinds
 
@@ -137,17 +137,17 @@ const signal = registry.resolve('counter')
 registry.dispose('counter')
 ```
 
-Use the actual exports from `@nexis/client`; do not create a parallel registry without a strong reason.
+Use the actual exports from `@nexil/client`; do not create a parallel registry without a strong reason.
 
 ## Why arbitrary closures are not transferred
 
-A closure may contain a connection, token, DOM reference, prototype, or non-serializable object. Converting it to JSON can change its meaning or leak a secret. Nexis classifies captures instead of pretending to reconstruct everything.
+A closure may contain a connection, token, DOM reference, prototype, or non-serializable object. Converting it to JSON can change its meaning or leak a secret. Nexil classifies captures instead of pretending to reconstruct everything.
 
 The safe approach is to capture a public serializable value. The unsafe approach is to capture `dbClient`, `process.env.SECRET`, or an entire user object inside a client handler.
 
 ## Delegated events
 
-Bootstrap delegates events at the document level and finds Nexis event attributes. Therefore:
+Bootstrap delegates events at the document level and finds Nexil event attributes. Therefore:
 
 - Use the correct event type.
 - Narrow `event.target` before using it.

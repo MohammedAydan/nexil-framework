@@ -2,7 +2,7 @@
 
 ## الفكرة
 
-في Hydration التقليدي، يعيد العميل تشغيل شجرة التطبيق ليعرف أين توجد الأحداث والحالة. في Nexis، يصل HTML ومعه معلومات كافية لتحديد الحدث، ثم يُحمّل Handler المطلوب فقط عند التفاعل. هذه هي Resumability.
+في Hydration التقليدي، يعيد العميل تشغيل شجرة التطبيق ليعرف أين توجد الأحداث والحالة. في Nexil، يصل HTML ومعه معلومات كافية لتحديد الحدث، ثم يُحمّل Handler المطلوب فقط عند التفاعل. هذه هي Resumability.
 
 ```text
 SSR HTML
@@ -18,13 +18,13 @@ SSR HTML
 
 ## الربط الدقيق والاستدلال التلقائي
 
-يمكن لـ Nexis تحديث عقدة نصية أو خاصية DOM مباشرة من Signal دون إعادة تشغيل component. القراءة المباشرة مثل `{count()}` تُحلل تلقائيًا عندما تكون القيمة قابلة للاستعادة. كما تدعم التوجيهات `bindText$` و`bindValue$` و`bindChecked$` و`bindDisabled$` و`bindHidden$` و`bindClass$` و`bindStyle$` و`bindHref$` و`bindSrc$` و`bindAriaLabel$`.
+يمكن لـ Nexil تحديث عقدة نصية أو خاصية DOM مباشرة من Signal دون إعادة تشغيل component. القراءة المباشرة مثل `{count()}` تُحلل تلقائيًا عندما تكون القيمة قابلة للاستعادة. كما تدعم التوجيهات `bindText$` و`bindValue$` و`bindChecked$` و`bindDisabled$` و`bindHidden$` و`bindClass$` و`bindStyle$` و`bindHref$` و`bindSrc$` و`bindAriaLabel$`.
 
 تستخدم v1.1.0 تحليل AST للقيم الابتدائية، وتجمع التعبيرات المتساوية في lazy chunk واحد، وترفع حمولات `data-nx-scope` المتطابقة إلى أقرب سلف مشترك. لذلك لا تكتب `data-nx-scope` ولا تستدعِ `serializeScopeRefs()` يدويًا داخل route.
 
 ## State payload في production
 
-في v1.2.0، عندما يلتقط Handler إشارة أو Store أو Action، يستبدل بناء production الحمولة المسمّاة في HTML بمفتاح scope معتم، ويضع الحمولة الضرورية للمتصفح في `nexis-state.js` قبل runtime الاستئناف. يستمر Nexis في تحليل AST للقيمة الابتدائية ويجمع التعبيرات المتساوية في lazy chunk واحد؛ لا تكتب `data-nx-scope` ولا تستدعِ `serializeScopeRefs()` يدويًا داخل route.
+في v1.2.0، عندما يلتقط Handler إشارة أو Store أو Action، يستبدل بناء production الحمولة المسمّاة في HTML بمفتاح scope معتم، ويضع الحمولة الضرورية للمتصفح في `nexis-state.js` قبل runtime الاستئناف. يستمر Nexil في تحليل AST للقيمة الابتدائية ويجمع التعبيرات المتساوية في lazy chunk واحد؛ لا تكتب `data-nx-scope` ولا تستدعِ `serializeScopeRefs()` يدويًا داخل route.
 
 هذا يقلل ظهور أسماء captures و`kind` و`id` والقيم الابتدائية في مصدر HTML. لكنه **ليس تشفيرًا ولا تفويضًا**: يمكن للمتصفح تنزيل `nexis-state.js`، ولذلك تبقى بيانات capture عامة للعميل. لا تلتقط secrets أو credentials أو ملف user خاص أو بيانات مرتبطة بطلب واحد. تبقى حمولات ScopeRef بصيغة JSON داخلية مدعومة للتوافق وللحدود المكتوبة يدويًا.
 
@@ -51,7 +51,7 @@ export function LikeButton({ postId }: { readonly postId: string }) {
 
 ### Handler محلي مسمّى
 
-يمكن تمرير Arrow function أو Function expression محلي مسمّى مباشرة إلى event prop. يحلّل Nexis جسم الدالة وقت البناء، ويصنّف القيم التي يغلق عليها، ثم ينتج lazy boundary نفسها التي ينتجها callback المكتوب داخل الحدث. بذلك يمكن تسمية نية التفاعل وإعادة استخدامها من دون Hydration للمكوّن كله.
+يمكن تمرير Arrow function أو Function expression محلي مسمّى مباشرة إلى event prop. يحلّل Nexil جسم الدالة وقت البناء، ويصنّف القيم التي يغلق عليها، ثم ينتج lazy boundary نفسها التي ينتجها callback المكتوب داخل الحدث. بذلك يمكن تسمية نية التفاعل وإعادة استخدامها من دون Hydration للمكوّن كله.
 
 ```tsx
 export default component(() => {
@@ -67,7 +67,7 @@ export default component(() => {
 })
 ```
 
-يجب أن يكون الـHandler identifier محليًا مباشرًا وأن يسبق تعريفه event prop. لا يسلّسل Nexis الدوال المستوردة أو تعبيرات handler المحسوبة عشوائيًا أو database client أو secrets أو class instances قابلة للتغيير. اجعل الـhelpers الخالصة داخل الـHandler، أو اجعل قيمها العامة captures صريحة؛ أما عمل الخادم فيبقى داخل Action.
+يجب أن يكون الـHandler identifier محليًا مباشرًا وأن يسبق تعريفه event prop. لا يسلّسل Nexil الدوال المستوردة أو تعبيرات handler المحسوبة عشوائيًا أو database client أو secrets أو class instances قابلة للتغيير. اجعل الـhelpers الخالصة داخل الـHandler، أو اجعل قيمها العامة captures صريحة؛ أما عمل الخادم فيبقى داخل Action.
 
 ## أنواع ScopeRef
 
@@ -94,11 +94,11 @@ const signal = registry.resolve('counter')
 registry.dispose('counter')
 ```
 
-استخدم الدوال الفعلية المصدرة من `@nexis/client`، ولا تبنِ نظام registry موازيًا.
+استخدم الدوال الفعلية المصدرة من `@nexil/client`، ولا تبنِ نظام registry موازيًا.
 
 ## لماذا لا تُنقل Closure عشوائيًا؟
 
-Closure قد تحتوي على connection أو token أو object يحمل prototype أو مرجعًا إلى DOM. تحويلها إلى JSON قد يؤدي إلى فقدان المعنى أو تسريب سر. Nexis يصنف capture بدل أن يدعي أنه يستطيع إعادة بناء كل شيء.
+Closure قد تحتوي على connection أو token أو object يحمل prototype أو مرجعًا إلى DOM. تحويلها إلى JSON قد يؤدي إلى فقدان المعنى أو تسريب سر. Nexil يصنف capture بدل أن يدعي أنه يستطيع إعادة بناء كل شيء.
 
 الأسلوب الصحيح:
 
@@ -114,7 +114,7 @@ function Button() {
 
 ## Delegated events
 
-Bootstrap يلتقط الأحداث على مستوى document ويبحث عن attributes الخاصة بـ Nexis. لذلك:
+Bootstrap يلتقط الأحداث على مستوى document ويبحث عن attributes الخاصة بـ Nexil. لذلك:
 
 - استخدم event type الصحيح.
 - لا تعتمد على `event.target` دون تضييق نوعه.

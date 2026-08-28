@@ -3,7 +3,7 @@ import {
   assertTrustedOrigin,
   createMemoryIdempotencyStore,
   handleActionRequest,
-} from '@nexis/actions'
+} from '@nexil/actions'
 
 const idempotency = createMemoryIdempotencyStore()
 

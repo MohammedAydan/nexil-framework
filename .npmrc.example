@@ -1,4 +1,4 @@
-@nexis:registry=https://registry.npmjs.org/
+@nexil:registry=https://registry.npmjs.org/
 # No auth needed for install. For publish:
 # npm login
 # or: //registry.npmjs.org/:_authToken=${NPM_TOKEN}

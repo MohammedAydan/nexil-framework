@@ -1,13 +1,13 @@
-import { component } from '@nexis/core'
-import { createSecurityHeaders } from '@nexis/server'
-import { renderTelemetryScript } from '@nexis/telemetry'
+import { component } from '@nexil/core'
+import { createSecurityHeaders } from '@nexil/server'
+import { renderTelemetryScript } from '@nexil/telemetry'
 
 export const seo = {
-  title: 'Nexis Showcase Status — Runtime health',
-  description: 'Health and coverage status for the Nexis showcase application.',
+  title: 'Nexil Showcase Status — Runtime health',
+  description: 'Health and coverage status for the Nexil showcase application.',
   canonical: 'https://nexis-showcase.example/showcase/status',
   type: 'website' as const,
-  jsonLd: { '@context': 'https://schema.org', '@type': 'WebPage', name: 'Nexis Showcase Status' },
+  jsonLd: { '@context': 'https://schema.org', '@type': 'WebPage', name: 'Nexil Showcase Status' },
 }
 
 const headers = createSecurityHeaders()

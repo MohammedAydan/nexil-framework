@@ -1,25 +1,25 @@
-# 02 — Architecture and How Nexis Works
+# 02 — Architecture and How Nexil Works
 
 ## The complete system
 
-Nexis is organized as focused packages. Each package owns a specific responsibility, which allows individual layers to be tested without running an entire application.
+Nexil is organized as focused packages. Each package owns a specific responsibility, which allows individual layers to be tested without running an entire application.
 
 | Layer       | Package              | Responsibility                                          |
 | ----------- | -------------------- | ------------------------------------------------------- |
-| Core        | `@nexis/core`        | RenderNode, Child, and Element types                    |
-| Routing     | `@nexis/router`      | Route records and URL matching                          |
-| Rendering   | `@nexis/renderer`    | Convert RenderNodes into HTML or streams                |
-| Reactivity  | `@nexis/reactivity`  | Signals, computed values, effects, batching, cleanup    |
-| State       | `@nexis/state`       | Stores, selectors, and state registries                 |
-| Client      | `@nexis/client`      | ScopeRef registry and resume state                      |
-| Compiler    | `@nexis/compiler`    | JavaScript and interaction budgets                      |
-| Vite plugin | `@nexis/vite-plugin` | Source analysis, Bootstrap, and lazy chunks             |
-| CLI         | `@nexis/cli`         | Route discovery and build output                        |
-| Server      | `@nexis/serve`       | Official production server                              |
-| Actions     | `@nexis/actions`     | Validation, origin policy, execution, replay protection |
-| SEO         | `@nexis/seo`         | Head, sitemap, feeds, and JSON-LD                       |
-| Media       | `@nexis/media`       | Image variants, picture markup, and caching             |
-| Telemetry   | `@nexis/telemetry`   | Low-cardinality events and optional Web Vitals          |
+| Core        | `@nexil/core`        | RenderNode, Child, and Element types                    |
+| Routing     | `@nexil/router`      | Route records and URL matching                          |
+| Rendering   | `@nexil/renderer`    | Convert RenderNodes into HTML or streams                |
+| Reactivity  | `@nexil/reactivity`  | Signals, computed values, effects, batching, cleanup    |
+| State       | `@nexil/state`       | Stores, selectors, and state registries                 |
+| Client      | `@nexil/client`      | ScopeRef registry and resume state                      |
+| Compiler    | `@nexil/compiler`    | JavaScript and interaction budgets                      |
+| Vite plugin | `@nexil/vite-plugin` | Source analysis, Bootstrap, and lazy chunks             |
+| CLI         | `@nexil/cli`         | Route discovery and build output                        |
+| Server      | `@nexil/serve`       | Official production server                              |
+| Actions     | `@nexil/actions`     | Validation, origin policy, execution, replay protection |
+| SEO         | `@nexil/seo`         | Head, sitemap, feeds, and JSON-LD                       |
+| Media       | `@nexil/media`       | Image variants, picture markup, and caching             |
+| Telemetry   | `@nexil/telemetry`   | Low-cardinality events and optional Web Vitals          |
 
 ## Development stage
 
@@ -42,7 +42,7 @@ During development, the Vite dev server runs the application. The Vite plugin di
 
 ## Request processing
 
-In production, `@nexis/serve` receives a request and maps it to `dist/client`:
+In production, `@nexil/serve` receives a request and maps it to `dist/client`:
 
 - `/` and nested routes resolve to generated `index.html` files.
 - Static assets receive the correct MIME type and immutable caching when fingerprinted.
@@ -58,12 +58,12 @@ In production, `@nexis/serve` receives a request and maps it to `dist/client`:
 The Renderer does not require a DOM. It works with abstract values such as text, elements, arrays, and promises. This allows the same rendering contract to run in Node, Deno, and edge environments.
 
 ```ts
-import { renderToStringAsync } from '@nexis/renderer'
+import { renderToStringAsync } from '@nexil/renderer'
 
 const html = await renderToStringAsync({
   type: 'main',
   props: { class: 'page' },
-  children: ['Hello from Nexis'],
+  children: ['Hello from Nexil'],
 })
 ```
 
@@ -77,7 +77,7 @@ Bootstrap is not the place for application logic. Keep it generic and small; kee
 
 ## ScopeRef registry
 
-`ScopeRef` is the ABI between server output and the browser. Instead of transferring an arbitrary closure or object, Nexis records the kind and identifier of a reference:
+`ScopeRef` is the ABI between server output and the browser. Instead of transferring an arbitrary closure or object, Nexil records the kind and identifier of a reference:
 
 ```ts
 type ScopeRef =

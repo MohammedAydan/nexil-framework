@@ -36,7 +36,7 @@ const quantity = state(2)
 const total = computed(() => price() * quantity())
 ```
 
-Nexis detects computed re-entry and emits a descriptive cycle error instead of leaving an obscure stack overflow. When a cycle appears, look for direct or indirect self-reference.
+Nexil detects computed re-entry and emits a descriptive cycle error instead of leaving an obscure stack overflow. When a cycle appears, look for direct or indirect self-reference.
 
 ### Signals captured by lazy handlers
 
@@ -129,7 +129,7 @@ When the store is disposed, its underlying signal and selector computeds must st
 
 ### Explicit browser-global Store across Link navigation
 
-Use `createStore(initial, 'global')` only for serializable, non-secret browser state that should survive a successful Nexis Link outlet replacement, such as a client-side theme preference or a temporary cart. A captured `global` Store reuses its browser registry entry after a Link swap; the default `local`, `shared`, `route`, and `layout` Store captures are cleared with the outgoing route bindings.
+Use `createStore(initial, 'global')` only for serializable, non-secret browser state that should survive a successful Nexil Link outlet replacement, such as a client-side theme preference or a temporary cart. A captured `global` Store reuses its browser registry entry after a Link swap; the default `local`, `shared`, `route`, and `layout` Store captures are cleared with the outgoing route bindings.
 
 ```ts
 const preferences = createStore({ theme: 'light' as const }, 'global')
@@ -143,10 +143,10 @@ Do not use a mutable singleton for private request data. Create state inside the
 
 ## Context: explicit shared ownership
 
-`createContext(defaultValue)` is Nexis dependency injection, not a hidden global store. It can pass a Signal or Store through a small synchronous subtree without prop drilling. Use `context.use()` (or the compatible `context.useContext()`) to read the nearest Provider value.
+`createContext(defaultValue)` is Nexil dependency injection, not a hidden global store. It can pass a Signal or Store through a small synchronous subtree without prop drilling. Use `context.use()` (or the compatible `context.useContext()`) to read the nearest Provider value.
 
 ```tsx
-import { createContext, state } from '@nexis/core'
+import { createContext, state } from '@nexil/core'
 
 const Theme = createContext(state<'light' | 'dark'>('light'))
 
@@ -171,7 +171,7 @@ const user = CurrentUser.use(userScope)
 
 ## Fine-grained DOM bindings without hydration
 
-A Signal does not replace server HTML. Render important content during SSR first, then let a binding update the specific text node or scalar property after the Signal changes. Nexis does not rerun the component and does not reconcile a virtual tree for these updates.
+A Signal does not replace server HTML. Render important content during SSR first, then let a binding update the specific text node or scalar property after the Signal changes. Nexil does not rerun the component and does not reconcile a virtual tree for these updates.
 
 Direct reads are lowered automatically when the compiler can prove the target and dependency:
 
@@ -207,4 +207,4 @@ When state crosses a lazy boundary, prefer compiler inference over manual ScopeR
 
 ## Workbench lab
 
-Run `pnpm --filter @nexis/example-nexis-workbench build` and inspect the home output and manifest. Its `ArticleFilter` is deliberately one Signal-driven boundary, so it is a small place to confirm the initial HTML, lazy interaction marker, and direct binding behavior. Extend it with the ContextScope test from this guide only after writing two independent scopes; do not turn the example's browser UI state into a module-level request singleton.
+Run `pnpm --filter @nexil/example-nexis-workbench build` and inspect the home output and manifest. Its `ArticleFilter` is deliberately one Signal-driven boundary, so it is a small place to confirm the initial HTML, lazy interaction marker, and direct binding behavior. Extend it with the ContextScope test from this guide only after writing two independent scopes; do not turn the example's browser UI state into a module-level request singleton.

@@ -2,7 +2,7 @@
 
 **Status:** Accepted for the Phase 2 implementation
 
-**Decision:** Nexis adds additive, runtime-portable contracts for resumable scope capture, routed server actions, route-aware production serving, adapter and stream parity, build-time media variants, opt-in telemetry, and crawlable SEO endpoints. Existing APIs remain valid; the new contracts are explicit at the boundary and fail closed when a value cannot be safely resumed.
+**Decision:** Nexil adds additive, runtime-portable contracts for resumable scope capture, routed server actions, route-aware production serving, adapter and stream parity, build-time media variants, opt-in telemetry, and crawlable SEO endpoints. Existing APIs remain valid; the new contracts are explicit at the boundary and fail closed when a value cannot be safely resumed.
 
 ## ScopeRef ABI
 
@@ -16,7 +16,7 @@ Actions are exposed as `POST /__nexis/actions/<route>/<name>`. The transport acc
 
 ## Production serving and runtime parity
 
-`@nexis/serve` is the official Node-compatible static server. It maps generated route directories to `index.html`, serves a framework 404 document, supports `GET` and `HEAD`, rejects other methods with `405`, prevents traversal, and applies revalidation caching to HTML and immutable caching to hashed assets. The CLI `nexis serve` command uses this package. Node, Cloudflare-style, and Deno-style adapters continue to expose the same request/response contract. Stream rendering is bounded, cancellation-aware, and byte-identical to buffered rendering.
+`@nexil/serve` is the official Node-compatible static server. It maps generated route directories to `index.html`, serves a framework 404 document, supports `GET` and `HEAD`, rejects other methods with `405`, prevents traversal, and applies revalidation caching to HTML and immutable caching to hashed assets. The CLI `nexis serve` command uses this package. Node, Cloudflare-style, and Deno-style adapters continue to expose the same request/response contract. Stream rendering is bounded, cancellation-aware, and byte-identical to buffered rendering.
 
 ## Media, telemetry, and SEO
 

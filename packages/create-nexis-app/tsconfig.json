@@ -8,8 +8,8 @@
     "rootDir": "src",
     "baseUrl": ".",
     "paths": {
-      "@nexis/starter/node": ["../starter/src/node.ts"],
-      "@nexis/starter": ["../starter/src/index.ts"]
+      "@nexil/starter/node": ["../starter/src/node.ts"],
+      "@nexil/starter": ["../starter/src/index.ts"]
     }
   },
   "include": ["src/**/*.ts"],

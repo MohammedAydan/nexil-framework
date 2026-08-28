@@ -4,7 +4,7 @@ This is a practical map of the public APIs. The installed TypeScript declaration
 
 ## Core
 
-`@nexis/core` exposes RenderNode, ElementNode, Child, and related rendering types, plus the authoring APIs used by routes: `component`, `text`, `element`, `For`, `Show`, `createContext`, `createContextScope`, `provideContext`, `withContext`, `createRequestContext`, `ErrorBoundary`, `Suspense`, `Form`, and `SubmitButton`. Context is explicit dependency injection with a synchronous Provider convenience; use a request-owned `ContextScope` for async work. It also re-exports the reactivity toolkit (`state`, `useState`, `computed`, `effect`, `watch`, `batch`, `untrack`, `createRoot`, `onCleanup`, and `resource`). Import reactive primitives from core or from `@nexis/reactivity` directly; stores come from `@nexis/state`, which generated projects depend on by default.
+`@nexil/core` exposes RenderNode, ElementNode, Child, and related rendering types, plus the authoring APIs used by routes: `component`, `text`, `element`, `For`, `Show`, `createContext`, `createContextScope`, `provideContext`, `withContext`, `createRequestContext`, `ErrorBoundary`, `Suspense`, `Form`, and `SubmitButton`. Context is explicit dependency injection with a synchronous Provider convenience; use a request-owned `ContextScope` for async work. It also re-exports the reactivity toolkit (`state`, `useState`, `computed`, `effect`, `watch`, `batch`, `untrack`, `createRoot`, `onCleanup`, and `resource`). Import reactive primitives from core or from `@nexil/reactivity` directly; stores come from `@nexil/state`, which generated projects depend on by default.
 
 ## Renderer
 
@@ -84,8 +84,8 @@ Signals are callable, expose `get()` and readonly `value`, and provide `set`, `s
 | --------------------------------------- | ------------------------------------------------- |
 | `createServer(root, options)`           | Start the official Node server                    |
 | `createMiddleware(root, options)`       | Create embeddable route middleware                |
-| `composeMiddleware(...handlers)`        | Compose application and Nexis handlers in order   |
-| `defineConfig(config)`                  | Define optional typed Nexis project configuration |
+| `composeMiddleware(...handlers)`        | Compose application and Nexil handlers in order   |
+| `defineConfig(config)`                  | Define optional typed Nexil project configuration |
 | `createSecurityHeaders(options?)`       | Create opt-in Node security-header middleware     |
 | `serializeCookie(name, value, options)` | Serialize a cookie safely                         |
 | `createDataContext(request)`            | Create request-scoped data context                |
@@ -96,7 +96,7 @@ Signals are callable, expose `get()` and readonly `value`, and provide `set`, `s
 
 ## Actions
 
-`@nexis/actions` provides `action`, `assertTrustedOrigin`, typed action responses, request parsing, validation, endpoint options, and `createMemoryIdempotencyStore`. Use the durable-store contract for distributed production.
+`@nexil/actions` provides `action`, `assertTrustedOrigin`, typed action responses, request parsing, validation, endpoint options, and `createMemoryIdempotencyStore`. Use the durable-store contract for distributed production.
 
 `ProductionServerOptions` accepts `securityHeaders?: SecurityHeadersOptions` and
 `trustProxy?: boolean`. `SecurityHeadersOptions` supports reviewed overrides for
@@ -107,14 +107,14 @@ termination boundary is known.
 
 ## Security
 
-`@nexis/security` provides `createSession`, `hasRole`, `requireRole`, `hasPermission`, `requirePermission`, and `requireAccess`. It supplies framework-level session and policy primitives while applications continue to own identity providers, credential verification, session persistence, RBAC data, and audit records.
+`@nexil/security` provides `createSession`, `hasRole`, `requireRole`, `hasPermission`, `requirePermission`, and `requireAccess`. It supplies framework-level session and policy primitives while applications continue to own identity providers, credential verification, session persistence, RBAC data, and audit records.
 
 ## Vite plugin and Client
 
 | API                                          | Purpose                                                                                               |
 | -------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | `nexis(options)`                             | Vite plugin                                                                                           |
-| `transformNexisSource(source, id, options?)` | Extract lazy chunks; `{ scopeSerialization: 'external' }` emits opaque scope keys and payload records |
+| `transformNexilSource(source, id, options?)` | Extract lazy chunks; `{ scopeSerialization: 'external' }` emits opaque scope keys and payload records |
 | `externalizeScopeAttributes(html, id)`       | Replace inline ScopeRef HTML attributes with opaque keys and return external payloads                 |
 | `classifyScopeCaptures(...)`                 | Classify values, signals, stores, actions, and unsupported captures                                   |
 | `RESUMABILITY_BOOTSTRAP`                     | The delegated resumability runtime served as `nexis-bootstrap.js`                                     |
@@ -136,9 +136,9 @@ Lazy handlers receive `{ element, event, scope }`. Signals, stores, and actions
 captured by a handler are materialized once per scope id and shared across every
 boundary that captures the same declaration.
 
-`@nexis/starter` exports `STARTER_TEMPLATES`, `resolveStarterOptions`, and `createStarterFiles(options)`. Its root API is portable and returns only typed `{ path, content }` records. `@nexis/starter/node` additionally exports `parseScaffoldArgs()` and `scaffoldProject()` for filesystem-backed CLIs.
+`@nexil/starter` exports `STARTER_TEMPLATES`, `resolveStarterOptions`, and `createStarterFiles(options)`. Its root API is portable and returns only typed `{ path, content }` records. `@nexil/starter/node` additionally exports `parseScaffoldArgs()` and `scaffoldProject()` for filesystem-backed CLIs.
 
-`@nexis/cli` exports `diagnoseProject(root): Promise<DoctorReport>`. The command form `nexis doctor --json` serializes that versioned report. Its checks and status are a local configuration review aid, not an attestation of proxy, TLS, CSP, or other deployment controls.
+`@nexil/cli` exports `diagnoseProject(root): Promise<DoctorReport>`. The command form `nexis doctor --json` serializes that versioned report. Its checks and status are a local configuration review aid, not an attestation of proxy, TLS, CSP, or other deployment controls.
 
 The compiler directives `bindText$`, `bindValue$`, `bindChecked$`, `bindDisabled$`, `bindHidden$`, `bindClass$`, `bindStyle$`, `bindHref$`, `bindSrc$`, and `bindAriaLabel$` create fine-grained DOM bindings. The client function has the following contract:
 

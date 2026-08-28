@@ -1,12 +1,12 @@
 @font-face {
-  font-family: 'Nexis Inter';
+  font-family: 'Nexil Inter';
   src: url('/examples/basic-app/assets/inter.woff2') format('woff2');
   font-display: swap;
 }
 
 :root {
   color-scheme: dark;
-  font-family: 'Nexis Inter', system-ui, sans-serif;
+  font-family: 'Nexil Inter', system-ui, sans-serif;
 }
 body {
   margin: 0;

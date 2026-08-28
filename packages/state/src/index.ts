@@ -1,7 +1,7 @@
-import type { ReadableSignal, Signal, Unsubscribe } from '@nexis/reactivity'
-import { computed, state } from '@nexis/reactivity'
-import type { Serializable } from '@nexis/core'
-import { isSerializable } from '@nexis/core'
+import type { ReadableSignal, Signal, Unsubscribe } from '@nexil/reactivity'
+import { computed, state } from '@nexil/reactivity'
+import type { Serializable } from '@nexil/core'
+import { isSerializable } from '@nexil/core'
 
 export type StateScope = 'local' | 'shared' | 'route' | 'layout' | 'global'
 
@@ -58,19 +58,19 @@ export function createStore<T extends Serializable>(
   scope: StateScope = 'local',
 ): Store<T> {
   if (!isSerializable(initial))
-    throw new TypeError('Nexis store initial state must be serializable.')
+    throw new TypeError('Nexil store initial state must be serializable.')
   const signal = state(initial)
   const selectors = new Set<ReadableSignal<unknown>>()
   let disposed = false
 
   const assertActive = () => {
-    if (disposed) throw new Error('Nexis store has been disposed.')
+    if (disposed) throw new Error('Nexil store has been disposed.')
   }
   const set = (next: T | ((previous: T) => T)): void => {
     assertActive()
     const resolved = typeof next === 'function' ? (next as (previous: T) => T)(signal()) : next
     if (!isSerializable(resolved))
-      throw new TypeError('Nexis store state must remain serializable.')
+      throw new TypeError('Nexil store state must remain serializable.')
     signal.set(resolved)
   }
   const store: Store<T> = {

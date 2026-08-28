@@ -4,15 +4,15 @@
 
 ## Homepage
 
-The temporary public homepage returned a rendered Nexis Showcase document with title `Nexis Showcase — HTML-first, resumable applications`. It exposed navigation links for Features, Labs, Docs, and Status, two CTA links, and the `#signal-button` interactive control. The document showed the SSR, no-hydration, resumability, media/CSS, server-policy, adapter, and SEO evidence sections.
+The temporary public homepage returned a rendered Nexil Showcase document with title `Nexil Showcase — HTML-first, resumable applications`. It exposed navigation links for Features, Labs, Docs, and Status, two CTA links, and the `#signal-button` interactive control. The document showed the SSR, no-hydration, resumability, media/CSS, server-policy, adapter, and SEO evidence sections.
 
 ## Features route
 
-`/features` returned the title `Nexis Features — Runtime surface area`, rendered its nine-package inventory, and exposed the `Open evaluation lab` link. No button or form control was present on this route; the available controls were navigation links only. The route displayed the feature map and evidence counts without a browser error in the inspected state.
+`/features` returned the title `Nexil Features — Runtime surface area`, rendered its nine-package inventory, and exposed the `Open evaluation lab` link. No button or form control was present on this route; the available controls were navigation links only. The route displayed the feature map and evidence counts without a browser error in the inspected state.
 
 ## Labs route and controls
 
-`/labs` returned `Nexis Labs — Runtime evaluation surface` and exposed two buttons, one text input, one submit form, and navigation links. Clicking `Run a batched update` changed the button text from `Run a batched update` to `Batch flushed / 1`, confirming the lazy state interaction works on the public preview without navigation. The route also rendered the action endpoint contract, serialized payload, security headers/cookie evidence, and adapter status.
+`/labs` returned `Nexil Labs — Runtime evaluation surface` and exposed two buttons, one text input, one submit form, and navigation links. Clicking `Run a batched update` changed the button text from `Run a batched update` to `Batch flushed / 1`, confirming the lazy state interaction works on the public preview without navigation. The route also rendered the action endpoint contract, serialized payload, security headers/cookie evidence, and adapter status.
 
 The Labs action form accepted the `Grace` input and the resumable submit boundary fired, but the public-origin request returned `Forbidden origin` in the live page. This is a real deployment/configuration gap: direct benchmark POSTs without a browser `Origin` passed, while the browser’s temporary public origin was not allowlisted by the development action middleware. The button therefore did not produce the expected success output on the public URL and should be fixed or documented as origin configuration dependent.
 
@@ -22,7 +22,7 @@ With trusted proxy origin handling enabled, the same public-origin form submissi
 
 ## Dynamic documentation routes
 
-`/docs/architecture` returned the route-specific architecture copy, title `Nexis Documentation — Architecture note`, dynamic path evidence, and links for the lab, showcase, and feature map. It contained no button or form control.
+`/docs/architecture` returned the route-specific architecture copy, title `Nexil Documentation — Architecture note`, dynamic path evidence, and links for the lab, showcase, and feature map. It contained no button or form control.
 
 `/docs/resumability` returned the route-specific resumability copy with the same document title, dynamic static-path evidence, and the same navigation links. It contained no button or form control. Both routes rendered without visible browser errors.
 
@@ -30,7 +30,7 @@ With trusted proxy origin handling enabled, the same public-origin form submissi
 
 `/docs/performance` returned the route-specific performance copy, the dynamic static-path marker, and the expected lab/showcase/feature links. It contained no button or form control.
 
-`/status` returned `Nexis Showcase Status — Runtime health`, showed healthy route graph and SSR indicators, a present security policy, a ready benchmark harness, and `Disabled by default: emitted telemetry script bytes 0`. It exposed navigation links only and no button or form control.
+`/status` returned `Nexil Showcase Status — Runtime health`, showed healthy route graph and SSR indicators, a present security policy, a ready benchmark harness, and `Disabled by default: emitted telemetry script bytes 0`. It exposed navigation links only and no button or form control.
 
 ## Crawl endpoints
 

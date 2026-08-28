@@ -2,11 +2,11 @@
 
 ## The media pipeline
 
-`@nexis/media` builds image variants at multiple widths and formats using a content-addressed cache. Nexis can run this pipeline automatically for public PNG, JPEG, and SVG files during `nexis build`, but it remains opt-in so existing applications keep their current output until they choose it.
+`@nexil/media` builds image variants at multiple widths and formats using a content-addressed cache. Nexil can run this pipeline automatically for public PNG, JPEG, and SVG files during `nexis build`, but it remains opt-in so existing applications keep their current output until they choose it.
 
 ```ts
 // nexis.config.ts
-import { defineConfig } from '@nexis/serve'
+import { defineConfig } from '@nexil/serve'
 
 export default defineConfig({
   media: {
@@ -46,7 +46,7 @@ Use `loading="eager"` and `fetchpriority="high"` only for the real LCP image. Do
 When using the build-generated static files, prefer the `Image` component with `staticVariants`. It uses the same stable file naming contract as `nexis build`:
 
 ```tsx
-import { Image } from '@nexis/media'
+import { Image } from '@nexil/media'
 
 export default function Hero() {
   return (
@@ -72,7 +72,7 @@ The in-memory cache is fast but disappears after a process restart. `cacheDir` a
 
 Include source bytes, width, format, and transform settings in the cache key. If quality settings are not part of the key, a build may reuse an outdated result.
 
-Nexis includes the source bytes, file base, and requested widths in its cache key. Delete `.nexis/media-cache` to force a full rebuild; do not deploy this cache directory.
+Nexil includes the source bytes, file base, and requested widths in its cache key. Delete `.nexis/media-cache` to force a full rebuild; do not deploy this cache directory.
 
 ## Remote images
 
@@ -80,7 +80,7 @@ Do not turn a user-provided image URL into an unrestricted server-side fetch. Al
 
 ## OG images
 
-`@nexis/og-image` creates an escaped SVG and rasterizes it to PNG during the build. Titles and descriptions are escaped before entering the SVG, and output filenames are content-addressed.
+`@nexil/og-image` creates an escaped SVG and rasterizes it to PNG during the build. Titles and descriptions are escaped before entering the SVG, and output filenames are content-addressed.
 
 ```ts
 const card = await generateOgImage({

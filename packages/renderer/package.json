@@ -1,9 +1,9 @@
 {
-  "name": "@nexis/renderer",
+  "name": "@nexil/renderer",
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "@nexis/core": "workspace:*"
+    "@nexil/core": "workspace:*"
   },
   "exports": {
     ".": {

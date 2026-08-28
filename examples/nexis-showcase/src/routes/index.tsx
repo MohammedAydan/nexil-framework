@@ -1,22 +1,22 @@
-import { action, assertTrustedOrigin } from '@nexis/actions'
-import { adapterCapabilities, createNodeAdapter } from '@nexis/adapters'
-import { createHandlerReference, createResumeAttribute, serializeResumeState } from '@nexis/client'
-import { component, computed, state } from '@nexis/core'
-import { cn, extractStyle } from '@nexis/css'
-import { Image, imageAttributes, fontFace } from '@nexis/media'
-import { batch } from '@nexis/reactivity'
-import { buildRobots, buildSitemap } from '@nexis/seo'
-import { createStateRegistry } from '@nexis/state'
-import { createDataContext, createSecurityHeaders, data, serializeCookie } from '@nexis/server'
+import { action, assertTrustedOrigin } from '@nexil/actions'
+import { adapterCapabilities, createNodeAdapter } from '@nexil/adapters'
+import { createHandlerReference, createResumeAttribute, serializeResumeState } from '@nexil/client'
+import { component, computed, state } from '@nexil/core'
+import { cn, extractStyle } from '@nexil/css'
+import { Image, imageAttributes, fontFace } from '@nexil/media'
+import { batch } from '@nexil/reactivity'
+import { buildRobots, buildSitemap } from '@nexil/seo'
+import { createStateRegistry } from '@nexil/state'
+import { createDataContext, createSecurityHeaders, data, serializeCookie } from '@nexil/server'
 
 export const seo = {
-  title: 'Nexis Showcase — HTML-first, resumable applications',
+  title: 'Nexil Showcase — HTML-first, resumable applications',
   description:
-    'A complete, runnable feature showcase for the Nexis HTML-first and resumable web framework.',
+    'A complete, runnable feature showcase for the Nexil HTML-first and resumable web framework.',
   canonical: 'https://nexis-showcase.example/showcase',
   image: 'https://nexis-showcase.example/og.png',
   type: 'website' as const,
-  jsonLd: { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Nexis Showcase' },
+  jsonLd: { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Nexil Showcase' },
 }
 
 const score = state(8)
@@ -37,7 +37,7 @@ const heroImage = imageAttributes({
   sizes: '(max-width: 820px) 100vw, 45vw',
 })
 const typeCss = fontFace({
-  family: 'Nexis Serif',
+  family: 'Nexil Serif',
   weight: [400, 700],
   source: '/fonts/nexis-serif.woff2',
 })
@@ -68,7 +68,7 @@ const serverAction = action({
   authorize: (context) => assertTrustedOrigin(context.request, ['https://nexis-showcase.example']),
   handle: (_context, input) => ({ accepted: input.email.endsWith('.test') }),
 })
-const nodeAdapter = createNodeAdapter(async () => new Response('Nexis adapter ready'))
+const nodeAdapter = createNodeAdapter(async () => new Response('Nexil adapter ready'))
 const metricCards = [
   ['HTML first', 'The initial document is rendered on the server, not assembled after hydration.'],
   ['Resumable', 'Event boundaries become tiny validated chunks that load only when needed.'],
@@ -97,7 +97,7 @@ export default component(() => {
               Build pages that arrive <em>already alive.</em>
             </h1>
             <p className="lede">
-              Nexis treats the document as the product: render useful HTML first, serialize only the
+              Nexil treats the document as the product: render useful HTML first, serialize only the
               state that matters, and load interaction at the exact boundary where a reader asks for
               it.
             </p>

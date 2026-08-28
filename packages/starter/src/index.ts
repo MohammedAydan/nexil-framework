@@ -61,16 +61,16 @@ export function resolveStarterOptions(options: StarterOptions): ResolvedStarterO
 
 function packageJson(options: ResolvedStarterOptions): string {
   const dependencies: Record<string, string> = {
-    '@nexis/cli': options.dependencyVersion,
-    '@nexis/core': options.dependencyVersion,
-    '@nexis/css': options.dependencyVersion,
-    '@nexis/jsx-runtime': options.dependencyVersion,
-    '@nexis/media': options.dependencyVersion,
-    '@nexis/reactivity': options.dependencyVersion,
-    '@nexis/router': options.dependencyVersion,
-    '@nexis/security': options.dependencyVersion,
-    '@nexis/seo': options.dependencyVersion,
-    '@nexis/state': options.dependencyVersion,
+    '@nexil/cli': options.dependencyVersion,
+    '@nexil/core': options.dependencyVersion,
+    '@nexil/css': options.dependencyVersion,
+    '@nexil/jsx-runtime': options.dependencyVersion,
+    '@nexil/media': options.dependencyVersion,
+    '@nexil/reactivity': options.dependencyVersion,
+    '@nexil/router': options.dependencyVersion,
+    '@nexil/security': options.dependencyVersion,
+    '@nexil/seo': options.dependencyVersion,
+    '@nexil/state': options.dependencyVersion,
   }
   const devDependencies: Record<string, string> = {
     typescript: '^5.8.0',
@@ -119,7 +119,7 @@ function tsconfig(options: ResolvedStarterOptions): string {
         module: 'ESNext',
         moduleResolution: 'Bundler',
         jsx: 'react-jsx',
-        jsxImportSource: '@nexis/jsx-runtime',
+        jsxImportSource: '@nexil/jsx-runtime',
         allowJs: options.language === 'js',
         strict: true,
         skipLibCheck: true,
@@ -147,7 +147,7 @@ const SHELL_HTML = `<!doctype html>
 </html>
 `
 
-const BASE_CSS = `/* Nexis starter design system: restrained technical paper */
+const BASE_CSS = `/* Nexil starter design system: restrained technical paper */
 *{box-sizing:border-box}
 body{margin:0;background:#f5f6f3;color:#13231d;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.6}
 a{color:inherit}.shell{width:min(72rem,100% - 2rem);margin:auto;padding:clamp(2rem,6vw,6rem) 0}.eyebrow{font:700 .75rem/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.12em;color:#147a55}.hero{max-width:48rem}.hero h1{font-size:clamp(2.7rem,7vw,5.5rem);line-height:.96;letter-spacing:-.06em;margin:.7rem 0 1rem}.hero p{font-size:1.1rem;max-width:42rem}.panel{margin-top:2.5rem;padding:1.5rem;border:1px solid #c9d0c9;background:#fff;box-shadow:8px 8px 0 #dce7d7}.button{border:0;background:#147a55;color:#fff;padding:.75rem 1rem;font:inherit;font-weight:700;cursor:pointer}.button:focus-visible{outline:3px solid #d7a900;outline-offset:3px}.code{overflow:auto;padding:1rem;background:#13231d;color:#e8f5ed;font:500 .86rem/1.6 ui-monospace,SFMono-Regular,Menlo,monospace}
@@ -156,9 +156,9 @@ a{color:inherit}.shell{width:min(72rem,100% - 2rem);margin:auto;padding:clamp(2r
 function routeSource(options: ResolvedStarterOptions): string {
   const typedEvent = options.language === 'ts' ? ': { element: HTMLElement }' : ''
   if (options.template === 'interactive') {
-    return `import { component, state } from '@nexis/core'
+    return `import { component, state } from '@nexil/core'
 
-export const seo = { title: '${options.projectName} — Nexis', description: 'An HTML-first Nexis starter with one resumable interaction boundary.' }
+export const seo = { title: '${options.projectName} — Nexil', description: 'An HTML-first Nexil starter with one resumable interaction boundary.' }
 
 export default component(() => {
   const count = state(0)
@@ -171,8 +171,8 @@ export default component(() => {
 
   return (
     <main className="shell">
-      <p className="eyebrow">NEXIS · INTERACTIVE STARTER</p>
-      <section className="hero"><h1>Ship HTML.<br />Wake only the button.</h1><p id="engine-stamp">Rendered via Nexis SSR Engine. This page is useful before JavaScript; the counter below is a focused resumable boundary.</p></section>
+      <p className="eyebrow">NEXIL · INTERACTIVE STARTER</p>
+      <section className="hero"><h1>Ship HTML.<br />Wake only the button.</h1><p id="engine-stamp">Rendered via Nexil SSR Engine. This page is useful before JavaScript; the counter below is a focused resumable boundary.</p></section>
       <section className="panel"><p className="eyebrow">STATE BOUNDARY</p><p><button id="counter-btn" className="button" onClick$={increment}>Count: 0</button></p></section>
     </main>
   )
@@ -183,13 +183,13 @@ export default component(() => {
     options.template === 'secure-node'
       ? '<p>Security headers are configured explicitly in <code>nexis.config.ts</code>. Review CSP and trustProxy before deployment.</p>'
       : '<p>This project starts with useful server-rendered HTML and no client boundary.</p>'
-  return `import { component } from '@nexis/core'
+  return `import { component } from '@nexil/core'
 
-export const seo = { title: '${options.projectName} — Nexis', description: 'An HTML-first Nexis starter project.' }
+export const seo = { title: '${options.projectName} — Nexil', description: 'An HTML-first Nexil starter project.' }
 
 export default component(() => (
   <main className="shell">
-    <p className="eyebrow">NEXIS · ${options.template.toUpperCase()}</p>
+    <p className="eyebrow">NEXIL · ${options.template.toUpperCase()}</p>
     <section className="hero"><h1>Begin with the document.</h1>${secureNote}</section>
     <section className="panel"><p className="eyebrow">FIRST CHECK</p><pre className="code"><code>pnpm build\npnpm check\npnpm start</code></pre></section>
   </main>
@@ -199,7 +199,7 @@ export default component(() => (
 
 function secureConfig(options: ResolvedStarterOptions): string | undefined {
   if (options.template !== 'secure-node') return undefined
-  return `import { defineConfig } from '@nexis/serve'
+  return `import { defineConfig } from '@nexil/serve'
 
 export default defineConfig({
   server: {
@@ -214,13 +214,13 @@ export default defineConfig({
 
 function counterRouteSource(options: ResolvedStarterOptions): string | undefined {
   if (options.template !== 'interactive') return undefined
-  return `import { component, state } from '@nexis/core'
+  return `import { component, state } from '@nexil/core'
 
-export const seo = { title: 'Counter — ${options.projectName}', description: 'A focused resumable Nexis state boundary.' }
+export const seo = { title: 'Counter — ${options.projectName}', description: 'A focused resumable Nexil state boundary.' }
 
 const count = state(0)
 
-export default component(() => <main className="shell"><p className="eyebrow">NEXIS · COUNTER</p><section className="panel"><p><button className="button" onClick$={({ element }) => { const next = count() + 1; count.set(next); element.textContent = 'Count: ' + String(next) }}>Count: 0</button></p></section></main>)
+export default component(() => <main className="shell"><p className="eyebrow">NEXIL · COUNTER</p><section className="panel"><p><button className="button" onClick$={({ element }) => { const next = count() + 1; count.set(next); element.textContent = 'Count: ' + String(next) }}>Count: 0</button></p></section></main>)
 `
 }
 
@@ -231,12 +231,12 @@ export function createStarterFiles(options: StarterOptions): readonly StarterFil
     { path: 'package.json', content: packageJson(resolved) },
     { path: 'index.html', content: SHELL_HTML },
     { path: 'tsconfig.json', content: tsconfig(resolved) },
-    { path: '.npmrc', content: '@nexis:registry=https://registry.npmjs.org/\n' },
+    { path: '.npmrc', content: '@nexil:registry=https://registry.npmjs.org/\n' },
     { path: 'public/styles.css', content: BASE_CSS },
     { path: `src/routes/index.${extension}`, content: routeSource(resolved) },
     {
       path: 'README.md',
-      content: `# ${resolved.projectName}\n\nCreated with the Nexis ${resolved.template} template.\n\n## Run\n\n\`\`\`bash\npnpm install\npnpm dev\n\`\`\`\n\nBefore deployment, run \`pnpm typecheck\`, \`pnpm check\`, and \`pnpm build\`. Configure a npm token with \`npm publish access\` in your local or deployment environment; never commit it.\n`,
+      content: `# ${resolved.projectName}\n\nCreated with the Nexil ${resolved.template} template.\n\n## Run\n\n\`\`\`bash\npnpm install\npnpm dev\n\`\`\`\n\nBefore deployment, run \`pnpm typecheck\`, \`pnpm check\`, and \`pnpm build\`. Configure a npm token with \`npm publish access\` in your local or deployment environment; never commit it.\n`,
     },
   ]
   const counter = counterRouteSource(resolved)

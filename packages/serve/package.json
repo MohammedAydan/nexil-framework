@@ -1,9 +1,9 @@
 {
-  "name": "@nexis/serve",
+  "name": "@nexil/serve",
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "@nexis/actions": "workspace:*"
+    "@nexil/actions": "workspace:*"
   },
   "exports": {
     ".": {

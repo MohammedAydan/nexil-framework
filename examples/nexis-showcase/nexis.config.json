@@ -1,7 +1,7 @@
 {
   "feed": {
-    "title": "Nexis Showcase Updates",
-    "description": "Nexis HTML-first framework routes, runtime notes, and benchmark updates.",
+    "title": "Nexil Showcase Updates",
+    "description": "Nexil HTML-first framework routes, runtime notes, and benchmark updates.",
     "language": "en-US"
   },
   "redirects": [{ "from": "/docs", "to": "/docs/architecture", "status": 308 }]

@@ -1,13 +1,13 @@
 # Security, authentication, authorization, and middleware
 
-Nexis now provides a concise security surface for the parts a framework can safely standardize: opaque session cookies, session lookup contracts, role and permission checks, ownership policies, and Node middleware composition. It does **not** ship a password database, OAuth/OIDC client, user directory, MFA flow, identity provider, distributed rate limiter, or audit-log backend. Those remain explicit application choices.
+Nexil now provides a concise security surface for the parts a framework can safely standardize: opaque session cookies, session lookup contracts, role and permission checks, ownership policies, and Node middleware composition. It does **not** ship a password database, OAuth/OIDC client, user directory, MFA flow, identity provider, distributed rate limiter, or audit-log backend. Those remain explicit application choices.
 
 ## Session-first authentication
 
 Persist a session server-side and place only its opaque identifier in a secure cookie.
 
 ```ts
-import { createSession } from '@nexis/security'
+import { createSession } from '@nexil/security'
 
 const sessions = createSession(sessionStore)
 
@@ -24,7 +24,7 @@ The store must provide `find(id)` and `destroy(id)`. `createSession` emits `Secu
 Roles are coarse policy inputs; permissions are explicit capabilities; ownership and tenant checks belong to the application resource rule.
 
 ```ts
-import { requireAccess, requirePermission } from '@nexis/security'
+import { requireAccess, requirePermission } from '@nexil/security'
 
 const principal = await currentPrincipal(request)
 requirePermission(principal, 'invoice:approve')
@@ -42,8 +42,8 @@ Run authorization in the Action or server guard that owns the resource. Hiding a
 Actions remain the mutation boundary. Validation, origin policy, session resolution, authorization, ownership, CSRF policy, and idempotency have separate responsibilities.
 
 ```ts
-import { action } from '@nexis/actions'
-import { requirePermission } from '@nexis/security'
+import { action } from '@nexil/actions'
+import { requirePermission } from '@nexil/security'
 
 export const approveInvoice = action({
   validate: parseApprovalInput,
@@ -63,10 +63,10 @@ Use a durable idempotency store for retriable financial or externally visible op
 
 ## Middleware
 
-Use middleware for cross-cutting request work and let the final Nexis handler serve routes and Actions.
+Use middleware for cross-cutting request work and let the final Nexil handler serve routes and Actions.
 
 ```ts
-import { composeMiddleware, createMiddleware } from '@nexis/serve'
+import { composeMiddleware, createMiddleware } from '@nexil/serve'
 
 const handler = composeMiddleware(
   requestIdMiddleware,

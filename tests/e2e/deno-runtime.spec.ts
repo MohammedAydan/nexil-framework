@@ -1,5 +1,5 @@
 /**
- * Deno runtime verification for the Nexis GA release.
+ * Deno runtime verification for the Nexil GA release.
  *
  * Executed by Deno itself (not Playwright/Node):
  *   deno run --allow-read --allow-env tests/e2e/deno-runtime.spec.ts

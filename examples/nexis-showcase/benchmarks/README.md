@@ -1,6 +1,6 @@
-# Nexis showcase benchmarks
+# Nexil showcase benchmarks
 
-This directory contains a reproducible evaluation harness for the Nexis showcase application. The benchmark process measures the generated manifest, raw and gzip asset sizes, HTML response sizes, local route latency, HTTP status behavior, cache headers, resumability boundaries, action POST envelopes, sitemap/robots/feed endpoints, declarative redirects, crawler link integrity, JSON-LD schema shape, build-time media and OG variants, dangerous URL output, Astro-style client budgets, Lighthouse lab scores, and browser interaction. It does not measure search rankings, organic traffic, Core Web Vitals from real users, or external crawl coverage.
+This directory contains a reproducible evaluation harness for the Nexil showcase application. The benchmark process measures the generated manifest, raw and gzip asset sizes, HTML response sizes, local route latency, HTTP status behavior, cache headers, resumability boundaries, action POST envelopes, sitemap/robots/feed endpoints, declarative redirects, crawler link integrity, JSON-LD schema shape, build-time media and OG variants, dangerous URL output, Astro-style client budgets, Lighthouse lab scores, and browser interaction. It does not measure search rankings, organic traffic, Core Web Vitals from real users, or external crawl coverage.
 
 ## Run the suite
 
@@ -9,7 +9,7 @@ From the repository root, build the framework and showcase first:
 ```bash
 pnpm install --offline --no-frozen-lockfile
 pnpm build
-pnpm --filter @nexis/example-nexis-showcase build
+pnpm --filter @nexil/example-nexis-showcase build
 ```
 
 Run the complete GA sequence from the repository root:
@@ -20,7 +20,7 @@ pnpm build
 pnpm bench:compare
 pnpm bench:production
 pnpm bench:lighthouse
-pnpm --filter @nexis/example-nexis-showcase evaluate
+pnpm --filter @nexil/example-nexis-showcase evaluate
 pnpm test:parity
 pnpm check:budget
 pnpm test:node-runtime
@@ -28,7 +28,7 @@ pnpm test:edge
 pnpm test:e2e
 ```
 
-For an isolated manual production run, use `BENCH_PORT=4175 pnpm --filter @nexis/example-nexis-showcase bench`; the benchmark starts `benchmarks/serve-production.mjs`, which loads `nexis.config.json` and serves the official `@nexis/serve` implementation. `pnpm bench:lighthouse` starts its own clean production server when `LIGHTHOUSE_ORIGIN` is unavailable. Set `LIGHTHOUSE_USE_EXISTING=1` when intentionally auditing an already-running deployment. The browser-only evaluator and chart generation remain available from `examples/nexis-showcase`:
+For an isolated manual production run, use `BENCH_PORT=4175 pnpm --filter @nexil/example-nexis-showcase bench`; the benchmark starts `benchmarks/serve-production.mjs`, which loads `nexis.config.json` and serves the official `@nexil/serve` implementation. `pnpm bench:lighthouse` starts its own clean production server when `LIGHTHOUSE_ORIGIN` is unavailable. Set `LIGHTHOUSE_USE_EXISTING=1` when intentionally auditing an already-running deployment. The browser-only evaluator and chart generation remain available from `examples/nexis-showcase`:
 
 ```bash
 cd examples/nexis-showcase
@@ -60,7 +60,7 @@ The JSON and CSV outputs are generated in this directory. The charts are written
 | Media pipeline            |                   WebP/AVIF variants, responsive picture markup, persistent cache API |
 | OG image pipeline         |                          Build-time deterministic PNG card emitted for each SEO route |
 | Telemetry default         |                                          Disabled output is exactly zero script bytes |
-| Astro client budget       |                          Nexis route-scoped client JS no larger than baseline fixture |
+| Astro client budget       |                          Nexil route-scoped client JS no larger than baseline fixture |
 | Lighthouse lab gates      |                       SEO 100, performance ≥95, accessibility ≥95 on all seven routes |
 | Edge handler parity       |                           Cloudflare and Deno Fetch handlers pass package conformance |
 

@@ -1,5 +1,5 @@
 {
-  "name": "@nexis/example-nexis-workbench",
+  "name": "@nexil/example-nexis-workbench",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -14,16 +14,16 @@
     "verify": "pnpm typecheck && pnpm test && pnpm check && pnpm build"
   },
   "dependencies": {
-    "@nexis/actions": "workspace:*",
-    "@nexis/cli": "workspace:*",
-    "@nexis/core": "workspace:*",
-    "@nexis/jsx-runtime": "workspace:*",
-    "@nexis/reactivity": "workspace:*",
-    "@nexis/router": "workspace:*",
-    "@nexis/security": "workspace:*",
-    "@nexis/seo": "workspace:*",
-    "@nexis/server": "workspace:*",
-    "@nexis/state": "workspace:*"
+    "@nexil/actions": "workspace:*",
+    "@nexil/cli": "workspace:*",
+    "@nexil/core": "workspace:*",
+    "@nexil/jsx-runtime": "workspace:*",
+    "@nexil/reactivity": "workspace:*",
+    "@nexil/router": "workspace:*",
+    "@nexil/security": "workspace:*",
+    "@nexil/seo": "workspace:*",
+    "@nexil/server": "workspace:*",
+    "@nexil/state": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.8.0",

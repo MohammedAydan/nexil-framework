@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { assertBudget, checkBudget } from './budget'
 
-describe('Nexis performance budgets', () => {
+describe('Nexil performance budgets', () => {
   it('passes a non-interactive route with zero client JavaScript', () => {
     expect(
       checkBudget({

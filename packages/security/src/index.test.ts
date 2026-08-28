@@ -25,7 +25,7 @@ class MemorySessions implements SessionStore<User> {
   }
 }
 
-describe('Nexis security', () => {
+describe('Nexil security', () => {
   it('uses secure cookie defaults and resolves an application-owned session', async () => {
     const store = new MemorySessions()
     const user: User = {

@@ -1,5 +1,5 @@
-import { element } from '@nexis/core'
-import type { Child, ElementNode } from '@nexis/core'
+import { element } from '@nexil/core'
+import type { Child, ElementNode } from '@nexil/core'
 export { NEXIS_NAVIGATION_RUNTIME } from './navigation.js'
 
 export interface RouteParam {
@@ -44,7 +44,7 @@ export function Link({
   ...props
 }: LinkProps): ElementNode {
   if (!href.startsWith('/') || href.startsWith('//'))
-    throw new TypeError('Nexis Link href must be an internal absolute path.')
+    throw new TypeError('Nexil Link href must be an internal absolute path.')
   const linkChildren: Child[] =
     children === undefined
       ? []

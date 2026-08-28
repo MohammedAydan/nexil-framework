@@ -1,4 +1,4 @@
-# Nexis Security Control Matrix
+# Nexil Security Control Matrix
 
 This matrix translates the project security contract into verifiable implementation controls. The baseline is OWASP ASVS 5.0, with CSP behavior aligned to W3C CSP Level 3, request semantics aligned to WHATWG Fetch, and cookie behavior aligned to RFC 6265 while RFC 6265bis is monitored.
 

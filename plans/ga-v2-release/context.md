@@ -9,7 +9,7 @@
 - CLI buildArtifacts emits bootstrap at dist root, chunks under dist/nexis-chunks.
 - Handler chunks pass through `transformWithEsbuild(loader:'ts')` when route is
   .ts/.tsx → plain-JS output (regression test added).
-- transformNexisSource is now async (esbuild API); plugin.transform + cli await it.
+- transformNexilSource is now async (esbuild API); plugin.transform + cli await it.
 - Scaffold: real counter (onClick$ handler receives {element}), bootstrap script
   tag in shell, DOM lib, reactivity dep, ^2.0.0 ranges, create-nexis-app bin alias,
   invokedAs-aware usage message.

@@ -1,23 +1,23 @@
-import { action, assertTrustedOrigin } from '@nexis/actions'
-import { adapterCapabilities } from '@nexis/adapters'
+import { action, assertTrustedOrigin } from '@nexil/actions'
+import { adapterCapabilities } from '@nexil/adapters'
 import {
   createHandlerReference,
   createResumeAttribute,
   deserializeResumeState,
   serializeResumeState,
-} from '@nexis/client'
-import { component, computed, Form, SubmitButton, state } from '@nexis/core'
-import { batch } from '@nexis/reactivity'
-import { createSecurityHeaders, serializeCookie } from '@nexis/server'
-import { createStateRegistry } from '@nexis/state'
+} from '@nexil/client'
+import { component, computed, Form, SubmitButton, state } from '@nexil/core'
+import { batch } from '@nexil/reactivity'
+import { createSecurityHeaders, serializeCookie } from '@nexil/server'
+import { createStateRegistry } from '@nexil/state'
 
 export const seo = {
-  title: 'Nexis Labs — Runtime evaluation surface',
+  title: 'Nexil Labs — Runtime evaluation surface',
   description:
-    'Interactive runtime, serialization, server action, and platform adapter tests for Nexis.',
+    'Interactive runtime, serialization, server action, and platform adapter tests for Nexil.',
   canonical: 'https://nexis-showcase.example/showcase/labs',
   type: 'website' as const,
-  jsonLd: { '@context': 'https://schema.org', '@type': 'TechArticle', name: 'Nexis Labs' },
+  jsonLd: { '@context': 'https://schema.org', '@type': 'TechArticle', name: 'Nexil Labs' },
 }
 
 const registry = createStateRegistry()

@@ -1,12 +1,12 @@
-import { createCloudflareAdapter } from '@nexis/adapters'
-import type { NexisHandler } from '@nexis/adapters'
+import { createCloudflareAdapter } from '@nexil/adapters'
+import type { NexilHandler } from '@nexil/adapters'
 
 export interface CloudflareAssets {
   readonly fetch: (request: Request) => Response | Promise<Response>
 }
 
 export interface CloudflareServerOptions {
-  readonly handler?: NexisHandler
+  readonly handler?: NexilHandler
   readonly assets?: CloudflareAssets
 }
 
@@ -14,7 +14,7 @@ export interface CloudflareExecutionContext {
   readonly waitUntil?: (promise: Promise<unknown>) => void
 }
 
-export function createCloudflareHandler(options: CloudflareServerOptions): NexisHandler {
+export function createCloudflareHandler(options: CloudflareServerOptions): NexilHandler {
   const handler = options.handler
   const assets = options.assets
   return async (request) => {
@@ -30,7 +30,7 @@ export function createCloudflareHandler(options: CloudflareServerOptions): Nexis
   }
 }
 
-export function createCloudflareAdapterHandler(options: CloudflareServerOptions): NexisHandler {
+export function createCloudflareAdapterHandler(options: CloudflareServerOptions): NexilHandler {
   const adapter = createCloudflareAdapter(async (request) => {
     if (options.assets) {
       const asset = await options.assets.fetch(request)
@@ -47,9 +47,9 @@ export function createCloudflareAdapterHandler(options: CloudflareServerOptions)
 }
 
 export function withCloudflareContext(
-  handler: NexisHandler,
+  handler: NexilHandler,
   context: CloudflareExecutionContext,
-): NexisHandler {
+): NexilHandler {
   return async (request) => {
     const response = await handler(request)
     context.waitUntil?.(Promise.resolve())

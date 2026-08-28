@@ -1,4 +1,4 @@
-# Nexis framework improvement notes
+# Nexil framework improvement notes
 
 ## Current verified behavior
 
@@ -10,20 +10,20 @@
 | Existing server API         | `createProductionServer()` wraps `createProductionMiddleware()` and provides serving, action dispatch, safe redirects, cache control, telemetry, and 404/405/HEAD behavior. | Introduce concise aliases `createServer()` and `createMiddleware()` while preserving existing exported names as deprecated-compatible aliases.                |
 | Existing Action policy      | An Action validates then optionally authorizes before handling. The server applies Origin checks and optional idempotency.                                                  | Preserve the Action contract. Introduce concise authorization helpers and a first-party session abstraction that accepts application-owned storage.           |
 | Existing cookie helpers     | The server package provides parsing and secure serialization defaults.                                                                                                      | Build `createSession()` on these helpers without shipping a user store, credential flow, or identity provider.                                                |
-| Current gap                 | There is no first-party auth/session/RBAC/middleware composition API.                                                                                                       | Add a new `@nexis/security` package exposing session creation, principals, permission guards, composable middleware, and policy helpers.                      |
+| Current gap                 | There is no first-party auth/session/RBAC/middleware composition API.                                                                                                       | Add a new `@nexil/security` package exposing session creation, principals, permission guards, composable middleware, and policy helpers.                      |
 
 ## Proposed developer experience
 
 ```bash
 pnpm dev       # development server
 pnpm build     # production artifact
-pnpm start     # route-aware Nexis production server
+pnpm start     # route-aware Nexil production server
 ```
 
 The default should need no `nexis.config.*` file. A project can opt into custom behavior with a typed `nexis.config.ts` export.
 
 ```ts
-import { defineConfig } from '@nexis/serve'
+import { defineConfig } from '@nexil/serve'
 
 export default defineConfig({
   app: { origin: 'https://app.example.com' },

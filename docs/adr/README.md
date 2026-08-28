@@ -1,11 +1,11 @@
-# Nexis Architecture Decision Records
+# Nexil Architecture Decision Records
 
 These decisions are binding for the v2 implementation unless superseded by a new ADR. The v1 decisions ADR-001 through ADR-008 remain active where they do not conflict with this index.
 
 ## ADR-009 — No VDOM or diffing engine
 
 **Status:** Accepted.
-**Decision:** Reactivity is implemented with signals and compiler-known direct DOM updates. Nexis will not ship a virtual DOM, reconciliation loop, or tree diffing engine.
+**Decision:** Reactivity is implemented with signals and compiler-known direct DOM updates. Nexil will not ship a virtual DOM, reconciliation loop, or tree diffing engine.
 **Rationale:** The framework contract prioritizes minimal client code and fine-grained updates. Introducing a VDOM, even temporarily, would create an incompatible runtime assumption and obscure the cost model.
 **Consequence:** Renderer and compiler tests must assert direct binding contracts; any proposal for VDOM requires a new superseding ADR.
 

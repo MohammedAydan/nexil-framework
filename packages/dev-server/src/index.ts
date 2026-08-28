@@ -3,16 +3,16 @@ import { readFile, readdir } from 'node:fs/promises'
 import { join, relative } from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Plugin } from 'vite'
-import { escapeHtml, renderToString } from '@nexis/renderer'
-import type { Child, ComponentContext } from '@nexis/core'
-import { createRequestContext } from '@nexis/core'
-import { renderHead, withCanonical } from '@nexis/seo'
-import type { SeoMetadata } from '@nexis/seo'
-import { routeFromFile, resolveRoute, matchRoute } from '@nexis/router'
-import type { NexisHandler } from '@nexis/adapters'
-import { createMemoryIdempotencyStore, handleActionRequest } from '@nexis/actions'
-import type { ServerAction } from '@nexis/actions'
-import nexis from '@nexis/vite-plugin'
+import { escapeHtml, renderToString } from '@nexil/renderer'
+import type { Child, ComponentContext } from '@nexil/core'
+import { createRequestContext } from '@nexil/core'
+import { renderHead, withCanonical } from '@nexil/seo'
+import type { SeoMetadata } from '@nexil/seo'
+import { routeFromFile, resolveRoute, matchRoute } from '@nexil/router'
+import type { NexilHandler } from '@nexil/adapters'
+import { createMemoryIdempotencyStore, handleActionRequest } from '@nexil/actions'
+import type { ServerAction } from '@nexil/actions'
+import nexis from '@nexil/vite-plugin'
 
 const routeCache = new Map<string, ReturnType<typeof routeFromFile>[]>()
 const devIdempotency = createMemoryIdempotencyStore()
@@ -104,12 +104,12 @@ async function handleDevAction(
 }
 
 export interface DevServer {
-  readonly handle: NexisHandler
+  readonly handle: NexilHandler
   readonly revision: () => number
   readonly invalidate: () => number
 }
 
-export function createDevServer(handler: NexisHandler): DevServer {
+export function createDevServer(handler: NexilHandler): DevServer {
   let currentRevision = 0
   return {
     handle: handler,
@@ -402,7 +402,7 @@ export function nexisSSRPlugin(root: string): Plugin {
               // Fall through to the escaped title fallback.
             }
             if (seo?.title) return `<title>${escapeHtml(seo.title)}</title>`
-            return '<title>Nexis App</title>'
+            return '<title>Nexil App</title>'
           })()
 
           const Component = routeModule.default as
@@ -572,7 +572,7 @@ export function nexisSSRPlugin(root: string): Plugin {
   }
 }
 
-export async function createNexisDevMiddleware(root: string) {
+export async function createNexilDevMiddleware(root: string) {
   const { createServer } = await import('vite')
   const vite = await createServer({
     root,

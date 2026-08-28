@@ -1,7 +1,7 @@
-/** @jsxImportSource @nexis/jsx-runtime */
+/** @jsxImportSource @nexil/jsx-runtime */
 
 import { z } from 'zod'
-import { element } from '@nexis/core'
+import { element } from '@nexil/core'
 
 export const render = { mode: 'isr' as const, revalidate: 60 }
 
@@ -23,12 +23,12 @@ export const load = async ({ params }: { params: { slug: string } }) => {
 }
 
 export const seo = {
-  title: 'Nexis Blog Article',
+  title: 'Nexil Blog Article',
   description: 'A dynamic ISR blog fixture.',
   canonical: '/blog/example',
   image: '/images/blog-card.webp',
   ogType: 'article',
-  jsonLd: { '@type': 'Article', headline: 'Nexis Blog Article' },
+  jsonLd: { '@type': 'Article', headline: 'Nexil Blog Article' },
 }
 
 export default function Article({ article }: { article: z.infer<typeof articleSchema> }) {

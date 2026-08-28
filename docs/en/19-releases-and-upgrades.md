@@ -62,7 +62,7 @@ Use `Form` and `SubmitButton` for native-first forms. Add an action `endpoint` w
 
 ## v1.2.0 migration
 
-Upgrade the coordinated Nexis packages to `1.2.0` in one dependency update, regenerate the lockfile, and perform a clean build. In particular, do not mix an old `@nexis/cli` or `@nexis/vite-plugin` with a v1.2.0 generated artifact: production interactive pages now use opaque `data-nx-scope` keys plus conditional `nexis-state.js`.
+Upgrade the coordinated Nexil packages to `1.2.0` in one dependency update, regenerate the lockfile, and perform a clean build. In particular, do not mix an old `@nexil/cli` or `@nexil/vite-plugin` with a v1.2.0 generated artifact: production interactive pages now use opaque `data-nx-scope` keys plus conditional `nexis-state.js`.
 
 After upgrading, rebuild from source, confirm static routes emit no state runtime, and use Playwright to verify an interactive route loads `nexis-state.js`, preserves opaque scope keys in the browser DOM, and resumes both handlers and bindings. The public state asset is not secret storage; remove any sensitive capture rather than relying on the new HTML representation.
 
@@ -70,7 +70,7 @@ Project creation may now select `minimal`, `interactive`, or `secure-node` with 
 
 ## v1.3.0 migration
 
-Upgrade the coordinated Nexis package set to `1.3.0` in one dependency update, including `@nexis/seo`, regenerate the lockfile, remove the previous generated `dist` output, and build again. Do not mix a v1.2 CLI, Router, Vite plugin, or resumability runtime with a v1.3 production artifact.
+Upgrade the coordinated Nexil package set to `1.3.0` in one dependency update, including `@nexil/seo`, regenerate the lockfile, remove the previous generated `dist` output, and build again. Do not mix a v1.2 CLI, Router, Vite plugin, or resumability runtime with a v1.3 production artifact.
 
 Use `Link` for eligible internal navigation where a direct `#app` outlet replacement is useful. Keep its `href` valid without JavaScript and keep every destination independently correct as SSR/SSG HTML. The runtime keeps hash-only, modified, middle-click, external, `target`, `download`, and `rel="external"` links native; a failed fetch, non-HTML response, or incomplete destination also becomes ordinary navigation. Treat `prefetch` as a bounded public session-memory hint, not a data cache: `private` and `no-store` responses are never retained.
 
@@ -78,7 +78,7 @@ Use `Link` for eligible internal navigation where a direct `#app` outlet replace
 
 ## v1.3.1 migration
 
-Upgrade the coordinated Nexis packages to `1.3.1` together and regenerate the lockfile. This patch changes Starter's default generated dependency range from `^1.2.0` to `^1.3.1`; it does not require source changes in an existing application deliberately pinned to `1.3.0`.
+Upgrade the coordinated Nexil packages to `1.3.1` together and regenerate the lockfile. This patch changes Starter's default generated dependency range from `^1.2.0` to `^1.3.1`; it does not require source changes in an existing application deliberately pinned to `1.3.0`.
 
 ## v1.3.2 migration
 

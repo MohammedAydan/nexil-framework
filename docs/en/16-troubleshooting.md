@@ -39,7 +39,7 @@ Check the first error rather than the final cascade. Look for:
 If a control works only after a full refresh:
 
 1. Confirm the source uses the expected `$` handler form.
-2. Inspect generated HTML for Nexis event attributes.
+2. Inspect generated HTML for Nexil event attributes.
 3. Inspect the bootstrap and lazy-chunk network requests.
 4. Verify captured values are serializable.
 5. Check that the scope was not disposed early.

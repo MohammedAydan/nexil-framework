@@ -1,9 +1,9 @@
-import type { Child } from '@nexis/core'
+import type { Child } from '@nexil/core'
 
 export const metadata = {
-  title: 'Nexis / field guide',
-  titleTemplate: '%s · Nexis',
-  openGraph: { siteName: 'Nexis / field guide' },
+  title: 'Nexil / field guide',
+  titleTemplate: '%s · Nexil',
+  openGraph: { siteName: 'Nexil / field guide' },
 }
 
 export default function RootLayout({ children }: { readonly children?: Child }) {
@@ -12,7 +12,7 @@ export default function RootLayout({ children }: { readonly children?: Child }) 
       <header className="shell site-header">
         <a className="wordmark" href="/">
           <span className="mark">N</span>
-          <span>Nexis / field guide</span>
+          <span>Nexil / field guide</span>
         </a>
         <nav className="nav" aria-label="Primary navigation">
           <a href="/">Home</a>
@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { readonly children?: Child }) 
       </header>
       {children}
       <footer className="shell site-footer">
-        <span>Built with Nexis / no hydration required</span>
+        <span>Built with Nexil / no hydration required</span>
         <span>
           <a href="/">Return home</a>
         </span>

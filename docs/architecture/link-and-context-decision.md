@@ -4,7 +4,7 @@
 
 ## Problem and current baseline
 
-`@nexis/router` renders `Link` as a semantic internal `<a href>`, adds the `data-nx-link` marker, and exposes a `data-nx-prefetch` hint. The conditional browser runtime consumes those markers only as a progressive enhancement; an ordinary link still follows native full-document navigation when JavaScript is unavailable or the request is ineligible. `@nexis/core` exposes `createContext` and explicit `ContextScope` helpers; its synchronous Provider convenience must not be described as a general async ambient request-isolation mechanism.
+`@nexil/router` renders `Link` as a semantic internal `<a href>`, adds the `data-nx-link` marker, and exposes a `data-nx-prefetch` hint. The conditional browser runtime consumes those markers only as a progressive enhancement; an ordinary link still follows native full-document navigation when JavaScript is unavailable or the request is ineligible. `@nexil/core` exposes `createContext` and explicit `ContextScope` helpers; its synchronous Provider convenience must not be described as a general async ambient request-isolation mechanism.
 
 The framework must add useful in-app navigation and dependency injection without introducing a virtual tree, reconciliation pass, synthetic event layer, or a client-side rendering requirement for SSR/SSG pages.
 

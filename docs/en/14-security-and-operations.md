@@ -26,7 +26,7 @@ When a server fetches a user-provided URL, allow only HTTP(S), restrict hosts, b
 
 ## Actions and CSRF
 
-Origin checks are important but do not replace authorization. Nexis Actions reject a
+Origin checks are important but do not replace authorization. Nexil Actions reject a
 malformed or untrusted supplied `Origin`; a missing Origin remains compatible with
 non-browser callers and therefore is not a complete CSRF defense by itself. After
 validating the origin, verify the session, role, and resource ownership. Use CSRF

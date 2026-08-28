@@ -1,9 +1,9 @@
 {
-  "name": "@nexis/router",
+  "name": "@nexil/router",
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "@nexis/core": "workspace:*"
+    "@nexil/core": "workspace:*"
   },
   "exports": {
     ".": {

@@ -2,7 +2,7 @@
 
 ## Scope
 
-Nexis is an experimental web framework. Security-sensitive behavior includes HTML rendering, serialization, server/client graph separation, cookies, CSRF, redirects, cache keys, server actions, and adapter request handling.
+Nexil is an experimental web framework. Security-sensitive behavior includes HTML rendering, serialization, server/client graph separation, cookies, CSRF, redirects, cache keys, server actions, and adapter request handling.
 
 ## Development requirements
 

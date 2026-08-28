@@ -4,11 +4,11 @@
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | **Action**                  | A server-owned operation exposed through a validated request endpoint.                                                |
 | **Atom**                    | An XML syndication format emitted by the feed generator.                                                              |
-| **Bootstrap**               | The small client entry that discovers Nexis metadata and loads interaction handlers.                                  |
+| **Bootstrap**               | The small client entry that discovers Nexil metadata and loads interaction handlers.                                  |
 | **Boundary**                | The smallest tree or scope that needs client behavior or a lifecycle owner.                                           |
 | **Canonical URL**           | The preferred absolute URL for one page.                                                                              |
 | **Computed**                | A memoized reactive value derived from signals or other tracked sources.                                              |
-| **Delegated event**         | An event handled at a common ancestor and resolved through Nexis metadata.                                            |
+| **Delegated event**         | An event handled at a common ancestor and resolved through Nexil metadata.                                            |
 | **Effect**                  | A reactive computation intended for an external side effect and cleanup.                                              |
 | **Fetch handler**           | A function receiving a web-standard `Request` and returning a `Response`.                                             |
 | **ISR**                     | Incremental Static Regeneration: cached route output revalidated under an explicit policy.                            |
@@ -28,8 +28,8 @@
 | **Telemetry**               | Optional client and server measurement, including Web Vitals events and a receiver.                                   |
 | **Trusted proxy**           | A reverse proxy whose forwarded headers are sanitized before the application trusts them.                             |
 | **Web Vitals**              | Browser performance signals such as LCP, CLS, and INP; field collection requires a real telemetry policy.             |
-| **Vite plugin**             | The compiler integration that transforms Nexis source and emits route, handler, and manifest metadata.                |
-| **Hydration**               | A client startup process that reconstructs behavior from server HTML; Nexis minimizes this work through resumability. |
+| **Vite plugin**             | The compiler integration that transforms Nexil source and emits route, handler, and manifest metadata.                |
+| **Hydration**               | A client startup process that reconstructs behavior from server HTML; Nexil minimizes this work through resumability. |
 | **Rendering mode**          | The route policy: static, server, or ISR.                                                                             |
 | **Picture markup**          | Responsive HTML using `<picture>`, `<source>`, and a fallback `<img>`.                                                |
 | **OG image**                | An Open Graph preview image generated for link sharing.                                                               |

@@ -15,7 +15,7 @@
 - Node v25.9.0, pnpm 10.15.0, Windows PowerShell
 - User-level `C:\Users\moham\.npmrc` has scope routing + token (works: npm whoami → MohammedAydan)
 - `GITHUB_TOKEN` env var is set locally — ASSUME COMPROMISED (was exposed in conversation); never print
-- Stale artifacts: `my-nexis-app/` (old @nexis/* scope scaffold), untracked `REPORT.md`
+- Stale artifacts: `my-nexis-app/` (old @nexil/* scope scaffold), untracked `REPORT.md`
 
 ## Open questions resolved
 

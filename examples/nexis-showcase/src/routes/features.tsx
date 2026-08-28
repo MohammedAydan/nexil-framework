@@ -1,12 +1,12 @@
-import { component } from '@nexis/core'
+import { component } from '@nexil/core'
 
 export const seo = {
-  title: 'Nexis Features — Runtime surface area',
+  title: 'Nexil Features — Runtime surface area',
   description:
-    'A route-by-route inventory of the Nexis framework features exercised by the showcase.',
+    'A route-by-route inventory of the Nexil framework features exercised by the showcase.',
   canonical: 'https://nexis-showcase.example/showcase/features',
   type: 'website' as const,
-  jsonLd: { '@context': 'https://schema.org', '@type': 'CollectionPage', name: 'Nexis Features' },
+  jsonLd: { '@context': 'https://schema.org', '@type': 'CollectionPage', name: 'Nexil Features' },
 }
 
 const features = [
@@ -14,55 +14,55 @@ const features = [
     '01',
     'Core nodes',
     'Validated element and text nodes, safe serialization, request context, and component contracts.',
-    '@nexis/core',
+    '@nexil/core',
   ],
   [
     '02',
     'Fine-grained reactivity',
     'Signals, computed values, batching, effects, scopes, untracking, and explicit disposal.',
-    '@nexis/reactivity',
+    '@nexil/reactivity',
   ],
   [
     '03',
     'File routing',
     'Static, dynamic, optional catch-all, encoded segments, and static path expansion from src/routes.',
-    '@nexis/router',
+    '@nexil/router',
   ],
   [
     '04',
     'HTML rendering',
     'Escaped text and attributes, safe URLs, style serialization, async children, streams, and render modes.',
-    '@nexis/renderer',
+    '@nexil/renderer',
   ],
   [
     '05',
     'Boundary compiler',
     'Lazy dollar-event extraction, lexical capture rewriting, static CSS extraction, and client/server checks.',
-    '@nexis/compiler + vite-plugin',
+    '@nexil/compiler + vite-plugin',
   ],
   [
     '06',
     'SEO engine',
     'Head tags, canonical and OpenGraph URLs, JSON-LD, sitemap XML, robots directives, and validation.',
-    '@nexis/seo',
+    '@nexil/seo',
   ],
   [
     '07',
     'Media pipeline',
     'Responsive image attributes, font-face generation, safe remote font downloading, and image transforms.',
-    '@nexis/media',
+    '@nexil/media',
   ],
   [
     '08',
     'Server and actions',
     'Request data deduplication, cookies, security headers, trusted origins, idempotency, and validated actions.',
-    '@nexis/server + actions',
+    '@nexil/server + actions',
   ],
   [
     '09',
     'Adapters',
     'Portable handler shape and declared capability matrix for Node, Cloudflare, and Deno runtimes.',
-    '@nexis/adapters',
+    '@nexil/adapters',
   ],
 ]
 

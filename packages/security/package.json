@@ -1,9 +1,9 @@
 {
-  "name": "@nexis/security",
+  "name": "@nexil/security",
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "@nexis/server": "workspace:*"
+    "@nexil/server": "workspace:*"
   },
   "exports": {
     ".": {

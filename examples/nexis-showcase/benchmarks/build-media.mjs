@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url'
 import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
-import { buildImageVariants } from '@nexis/media'
+import { buildImageVariants } from '@nexil/media'
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const source = join(root, 'public', 'nexis-showcase.svg')
@@ -31,4 +31,4 @@ await writeFile(
   `${JSON.stringify({ source: '/nexis-showcase.svg', variants }, null, 2)}\n`,
   'utf8',
 )
-console.log(`Nexis media build produced ${variants.length} variants.`)
+console.log(`Nexil media build produced ${variants.length} variants.`)

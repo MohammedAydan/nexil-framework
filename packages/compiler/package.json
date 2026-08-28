@@ -1,5 +1,5 @@
 {
-  "name": "@nexis/compiler",
+  "name": "@nexil/compiler",
   "version": "1.0.0",
   "type": "module",
   "exports": {

@@ -2,7 +2,7 @@
 
 ## File-based routing
 
-Nexis discovers files under `src/routes` and maps them to URLs. `index.tsx` represents a directory route, a normal filename represents a path, and square brackets represent a dynamic parameter.
+Nexil discovers files under `src/routes` and maps them to URLs. `index.tsx` represents a directory route, a normal filename represents a path, and square brackets represent a dynamic parameter.
 
 ```text
 src/routes/index.tsx                 → /
@@ -27,10 +27,10 @@ if (match) {
 
 ## Semantic `Link` navigation
 
-Import `Link` from `@nexis/router` when a route should opt into progressive same-origin navigation. The server and static build still emit an ordinary `<a href>`; therefore search engines, bookmarks, copied URLs, and browsers without JavaScript follow standard document navigation.
+Import `Link` from `@nexil/router` when a route should opt into progressive same-origin navigation. The server and static build still emit an ordinary `<a href>`; therefore search engines, bookmarks, copied URLs, and browsers without JavaScript follow standard document navigation.
 
 ```tsx
-import { Link } from '@nexis/router'
+import { Link } from '@nexil/router'
 
 export default function DocumentationIndex() {
   return (
@@ -140,8 +140,8 @@ A route should define what to render, a component should define how to render it
 
 ## v1.1 layout and streaming additions
 
-Nexis v1.1.0 discovers `_layout.*` files recursively and composes them around route content. Route groups preserve layout context without adding URL segments. Parent `seo` exports can provide `titleTemplate` and `openGraph.siteName`; child routes override only the fields they need. The `Suspense` render node sends a fallback in the initial shell and flushes completed asynchronous boundaries out of order. See the [v1.1.0 release and migration guide](../releases/v1.1.0.md) for a complete example.
+Nexil v1.1.0 discovers `_layout.*` files recursively and composes them around route content. Route groups preserve layout context without adding URL segments. Parent `seo` exports can provide `titleTemplate` and `openGraph.siteName`; child routes override only the fields they need. The `Suspense` render node sends a fallback in the initial shell and flushes completed asynchronous boundaries out of order. See the [v1.1.0 release and migration guide](../releases/v1.1.0.md) for a complete example.
 
 ## Workbench lab
 
-The executable [`examples/nexis-workbench`](../../examples/nexis-workbench) contains an `_layout.tsx`, a static article index, and `articles/[slug].tsx` with `getStaticPaths()`. Run `pnpm --filter @nexis/example-nexis-workbench verify`, then inspect `dist/client/articles/first-boundary/index.html` and `dist/client/articles/release-check/index.html`. The same project uses semantic `Link` elements in its layout; disable JavaScript once to confirm that every link remains a normal document link.
+The executable [`examples/nexis-workbench`](../../examples/nexis-workbench) contains an `_layout.tsx`, a static article index, and `articles/[slug].tsx` with `getStaticPaths()`. Run `pnpm --filter @nexil/example-nexis-workbench verify`, then inspect `dist/client/articles/first-boundary/index.html` and `dist/client/articles/release-check/index.html`. The same project uses semantic `Link` elements in its layout; disable JavaScript once to confirm that every link remains a normal document link.

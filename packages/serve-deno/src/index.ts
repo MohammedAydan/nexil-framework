@@ -1,5 +1,5 @@
-import { createDenoAdapter } from '@nexis/adapters'
-import type { NexisHandler } from '@nexis/adapters'
+import { createDenoAdapter } from '@nexil/adapters'
+import type { NexilHandler } from '@nexil/adapters'
 
 export interface DenoAsset {
   readonly body: BodyInit
@@ -7,7 +7,7 @@ export interface DenoAsset {
 }
 
 export interface DenoServerOptions {
-  readonly handler?: NexisHandler
+  readonly handler?: NexilHandler
   readonly assets?: Readonly<Record<string, DenoAsset>>
 }
 
@@ -17,7 +17,7 @@ function localPath(request: Request): string {
   return new URL(request.url).pathname
 }
 
-export function createDenoHandler(options: DenoServerOptions): NexisHandler {
+export function createDenoHandler(options: DenoServerOptions): NexilHandler {
   const fallback = options.handler
   return async (request) => {
     const pathname = localPath(request)
@@ -46,18 +46,18 @@ export function createDenoHandler(options: DenoServerOptions): NexisHandler {
   }
 }
 
-export function createDenoAdapterHandler(options: DenoServerOptions): NexisHandler {
+export function createDenoAdapterHandler(options: DenoServerOptions): NexilHandler {
   const adapter = createDenoAdapter(createDenoHandler(options))
   return adapter.handle
 }
 
 type DenoServe = (
-  handler: NexisHandler,
+  handler: NexilHandler,
   options?: { readonly port?: number; readonly hostname?: string },
 ) => unknown
 
 export function serveDeno(
-  handler: NexisHandler,
+  handler: NexilHandler,
   options: { readonly port?: number; readonly host?: string; readonly serve?: DenoServe } = {},
 ): unknown {
   const runtimeServe = options.serve ?? (globalThis as { Deno?: { serve?: DenoServe } }).Deno?.serve

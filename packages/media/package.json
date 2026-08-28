@@ -1,5 +1,5 @@
 {
-  "name": "@nexis/media",
+  "name": "@nexil/media",
   "version": "1.0.0",
   "type": "module",
   "exports": {
@@ -14,7 +14,7 @@
     "clean": "node -e \"const fs=require('fs');for(const f of ['dist','tsconfig.tsbuildinfo']){try{fs.rmSync(f,{recursive:true,force:true})}catch(e){}}\""
   },
   "dependencies": {
-    "@nexis/core": "workspace:*",
+    "@nexil/core": "workspace:*",
     "sharp": "^0.35.3"
   },
   "repository": {

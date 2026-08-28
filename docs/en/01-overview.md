@@ -1,8 +1,8 @@
-# 01 — Nexis Framework Overview
+# 01 — Nexil Framework Overview
 
-## What is Nexis?
+## What is Nexil?
 
-Nexis Framework is a TypeScript web framework for applications that render useful HTML on the server and ship JavaScript only to the parts that require interaction. Its central design is to separate **content output** from **behavior execution**: a page remains indexable and useful without JavaScript, while interactive behavior is loaded when the user actually needs it.
+Nexil Framework is a TypeScript web framework for applications that render useful HTML on the server and ship JavaScript only to the parts that require interaction. Its central design is to separate **content output** from **behavior execution**: a page remains indexable and useful without JavaScript, while interactive behavior is loaded when the user actually needs it.
 
 This model fits marketing sites, blogs, documentation, dashboards, stores, product pages, and content applications where first HTML, JavaScript size, and server control matter.
 
@@ -44,9 +44,9 @@ Browser event ──► event bootstrap ──► lazy chunk ──► handler
 | Runtime parity     | Fetch-compatible Deno and Cloudflare handlers                       |
 | Performance gates  | Bootstrap, chunk, Lighthouse, and client-budget checks              |
 
-## When to use Nexis
+## When to use Nexil
 
-Use Nexis when first HTML, indexing, JavaScript size, or server control is important. It is particularly effective for sites with many static or semi-static pages and a limited number of interactive islands.
+Use Nexil when first HTML, indexing, JavaScript size, or server control is important. It is particularly effective for sites with many static or semi-static pages and a limited number of interactive islands.
 
 It can also support browser-heavy applications, but the architecture should still define clear interactive boundaries. For a canvas-heavy application or a full client application with no useful pre-JavaScript content, the benefits of an HTML-first design may be smaller.
 
@@ -57,12 +57,12 @@ Do not begin with, “How do I make the entire page a client application?” Beg
 1. Which content must arrive as HTML?
 2. What is the smallest part that needs browser code?
 
-The smaller the interaction boundary, the more value you get from Nexis. Static content should remain JSX/HTML; buttons, search controls, forms, and individual bound properties should own focused client behavior.
+The smaller the interaction boundary, the more value you get from Nexil. Static content should remain JSX/HTML; buttons, search controls, forms, and individual bound properties should own focused client behavior.
 
-## What Nexis does not do automatically
+## What Nexil does not do automatically
 
-Nexis does not convert arbitrary closures into transferable data, infer every piece of application state, provide a database or authentication system, or make a process-local store suitable for multi-instance production. Those responsibilities belong to the application and infrastructure design.
+Nexil does not convert arbitrary closures into transferable data, infer every piece of application state, provide a database or authentication system, or make a process-local store suitable for multi-instance production. Those responsibilities belong to the application and infrastructure design.
 
 ## Summary
 
-Nexis is neither a traditional SSR-only framework nor a conventional SPA. It combines **HTML-first output, selective interaction, tagged state references, and measurable client budgets**. Successful applications make the boundary between static content and interactive behavior explicit.
+Nexil is neither a traditional SSR-only framework nor a conventional SPA. It combines **HTML-first output, selective interaction, tagged state references, and measurable client budgets**. Successful applications make the boundary between static content and interactive behavior explicit.

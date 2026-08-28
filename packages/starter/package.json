@@ -1,7 +1,7 @@
 {
-  "name": "@nexis/starter",
+  "name": "@nexil/starter",
   "version": "1.0.0",
-  "description": "Typed, portable Nexis starter project templates",
+  "description": "Typed, portable Nexil starter project templates",
   "type": "module",
   "exports": {
     ".": {

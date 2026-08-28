@@ -1,10 +1,10 @@
 {
-  "name": "@nexis/client",
+  "name": "@nexil/client",
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "@nexis/core": "workspace:*",
-    "@nexis/reactivity": "workspace:*"
+    "@nexil/core": "workspace:*",
+    "@nexil/reactivity": "workspace:*"
   },
   "exports": {
     ".": {

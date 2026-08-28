@@ -1,8 +1,8 @@
-import type { Child } from '@nexis/core'
+import type { Child } from '@nexil/core'
 
 export const metadata = {
-  titleTemplate: '%s · Docs · Nexis',
-  openGraph: { siteName: 'Nexis / field guide' },
+  titleTemplate: '%s · Docs · Nexil',
+  openGraph: { siteName: 'Nexil / field guide' },
 }
 
 export default function DocsLayout({ children }: { readonly children?: Child }) {

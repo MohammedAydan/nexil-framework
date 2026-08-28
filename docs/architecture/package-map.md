@@ -1,4 +1,4 @@
-# Nexis Package Map
+# Nexil Package Map
 
 ## Dependency direction
 

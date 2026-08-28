@@ -1,5 +1,5 @@
-import type { Child, ElementNode } from '@nexis/core'
-import { element, text } from '@nexis/core'
+import type { Child, ElementNode } from '@nexil/core'
+import { element, text } from '@nexil/core'
 
 export function jsx(
   tag: string | ((props: Record<string, unknown>) => Child),

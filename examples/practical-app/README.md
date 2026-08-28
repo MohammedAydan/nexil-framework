@@ -1,4 +1,4 @@
-# Nexis Practical Lab
+# Nexil Practical Lab
 
 This fixture exercises the framework as a real Tailwind-powered application rather than only testing isolated packages.
 
@@ -7,8 +7,8 @@ The home route verifies SSR styling, `className` normalization, `cx`/`cn`, style
 Run the fixture from the repository root with:
 
 ```bash
-pnpm --filter @nexis/example-practical-app build
-pnpm --filter @nexis/example-practical-app check
+pnpm --filter @nexil/example-practical-app build
+pnpm --filter @nexil/example-practical-app check
 ```
 
 The generated output must contain compiled Tailwind utilities under `dist/client/assets/styles.css`, one stylesheet link in each HTML page, and static pages for every entry in `staticPaths`.

@@ -1,4 +1,4 @@
-import type { Child, ElementNode, RenderNode, SuspenseNode, TextNode } from '@nexis/core'
+import type { Child, ElementNode, RenderNode, SuspenseNode, TextNode } from '@nexil/core'
 
 const VOID_ELEMENTS = new Set([
   'area',
@@ -136,7 +136,7 @@ function isSafeUrl(value: string): boolean {
 
 export function renderBindingMarker(scopeId: string, target: DomBindingTarget): string {
   if (!/^nx:(?:signal|store):[A-Za-z0-9_-]+$/.test(scopeId))
-    throw new TypeError('Nexis binding scope id must be a stable signal or store id.')
+    throw new TypeError('Nexil binding scope id must be a stable signal or store id.')
   if (
     !(
       [
@@ -153,7 +153,7 @@ export function renderBindingMarker(scopeId: string, target: DomBindingTarget): 
     ).includes(target) &&
     !/^aria-[a-z][a-z0-9-]*$/.test(target)
   )
-    throw new TypeError('Nexis binding target is not supported.')
+    throw new TypeError('Nexil binding target is not supported.')
   return `data-nx-bind="${escapeHtml(`${scopeId}#${target}`)}"`
 }
 

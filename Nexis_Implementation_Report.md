@@ -1,8 +1,8 @@
-# تقرير تنفيذ Nexis Framework
+# تقرير تنفيذ Nexil Framework
 
 ## الملخص التنفيذي
 
-تم تنفيذ baseline معماري واسع لمشروع **Nexis Framework** داخل `/home/ubuntu/nexis` وفق الخطة المعتمدة والمواصفة v2.0. يثبت هذا الإصدار المبادئ الأساسية قبل التوسع: HTML-first، SSR deterministic، Fine-Grained Reactivity بلا VDOM، Resumability بصيغة versioned، أربعة render-mode contracts، server/client boundary diagnostics، performance-budget API، request isolation، وsecure-by-default primitives.
+تم تنفيذ baseline معماري واسع لمشروع **Nexil Framework** داخل `/home/ubuntu/nexis` وفق الخطة المعتمدة والمواصفة v2.0. يثبت هذا الإصدار المبادئ الأساسية قبل التوسع: HTML-first، SSR deterministic، Fine-Grained Reactivity بلا VDOM، Resumability بصيغة versioned، أربعة render-mode contracts، server/client boundary diagnostics، performance-budget API، request isolation، وsecure-by-default primitives.
 
 هذا الإصدار **Release Baseline / Experimental** وليس ادعاءً بأنه Production Ready بعد. السبب ليس نقصًا في الضوابط المقصودة، بل أن بعض بوابات الخطة تحتاج تشغيلًا فعليًا في بيئات Node وCloudflare وDeno ومتصفح حقيقي، كما تحتاج بعض الأجزاء ربطًا فعليًا بطبقة Vite وasset pipeline قبل إعلانها مكتملة.
 

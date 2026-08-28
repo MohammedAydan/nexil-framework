@@ -1,4 +1,4 @@
-import { Link } from '@nexis/router'
+import { Link } from '@nexil/router'
 
 export default function WorkbenchLayout({ children }: { readonly children: unknown }) {
   return (
@@ -7,7 +7,7 @@ export default function WorkbenchLayout({ children }: { readonly children: unkno
         Skip to content
       </a>
       <header>
-        <Link href="/">Nexis Workbench</Link>
+        <Link href="/">Nexil Workbench</Link>
         <nav aria-label="Primary navigation">
           <Link href="/articles/" prefetch="intent">
             Articles

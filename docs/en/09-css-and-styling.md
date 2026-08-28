@@ -1,6 +1,6 @@
 # 09 — CSS, Tailwind, and Styling
 
-## CSS in Nexis
+## CSS in Nexil
 
 Static pages should receive their styles without depending on JavaScript. Prefer build-time extraction so static routes remain zero-client-JavaScript routes.
 

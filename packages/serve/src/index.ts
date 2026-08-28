@@ -6,8 +6,8 @@ import {
   type Server,
   type ServerResponse,
 } from 'node:http'
-import { createMemoryIdempotencyStore, handleActionRequest } from '@nexis/actions'
-import type { IdempotencyStore, ServerAction } from '@nexis/actions'
+import { createMemoryIdempotencyStore, handleActionRequest } from '@nexil/actions'
+import type { IdempotencyStore, ServerAction } from '@nexil/actions'
 
 export interface SecurityHeadersOptions {
   /** A reviewed Content-Security-Policy string for this application. CSP is opt-in because script/style requirements are app-specific. */
@@ -28,7 +28,7 @@ export interface ProductionServerOptions {
   readonly redirects?: readonly RedirectRule[]
   readonly telemetry?: TelemetryReceiverOptions
   readonly idempotency?: IdempotencyStore
-  /** Runs before Nexis route and Action handling for app-level guards and instrumentation. */
+  /** Runs before Nexil route and Action handling for app-level guards and instrumentation. */
   readonly middleware?: readonly ProductionRequestHandler[]
   /** Opt-in security response headers applied to routes, assets, redirects, telemetry, and Actions. */
   readonly securityHeaders?: SecurityHeadersOptions
@@ -41,7 +41,7 @@ export interface ProductionServerOptions {
 }
 
 /** Optional project configuration. Applications run without it; use it to override defaults. */
-export interface NexisConfig {
+export interface NexilConfig {
   readonly app?: {
     readonly origin?: string
   }
@@ -65,7 +65,7 @@ export interface NexisConfig {
 }
 
 /** Define typed optional project configuration with no runtime work. */
-export function defineConfig<Config extends NexisConfig>(config: Config): Config {
+export function defineConfig<Config extends NexilConfig>(config: Config): Config {
   return config
 }
 
@@ -91,14 +91,14 @@ export interface ProductionServer {
   readonly close: () => Promise<void>
 }
 
-/** Compose Node middleware in order. The Nexis route handler is normally the final handler. */
+/** Compose Node middleware in order. The Nexil route handler is normally the final handler. */
 export function composeMiddleware(
   ...handlers: readonly ProductionRequestHandler[]
 ): ProductionRequestHandler {
   return async (request, response, next) => {
     let cursor = -1
     const dispatch = async (index: number): Promise<void> => {
-      if (index <= cursor) throw new Error('Nexis middleware called next() more than once.')
+      if (index <= cursor) throw new Error('Nexil middleware called next() more than once.')
       cursor = index
       const handler = handlers[index]
       if (!handler) {
@@ -282,7 +282,7 @@ async function findAction(
   }
 }
 
-/** Create the route-aware Nexis request handler for an existing Node server. */
+/** Create the route-aware Nexil request handler for an existing Node server. */
 export function createMiddleware(
   distDir: string,
   options: ProductionServerOptions = {},
@@ -420,7 +420,7 @@ export function createMiddleware(
   }
 }
 
-/** Create a production-ready Nexis server with route, Action, cache, and security defaults. */
+/** Create a production-ready Nexil server with route, Action, cache, and security defaults. */
 export function createServer(
   distDir: string,
   options: ProductionServerOptions = {},

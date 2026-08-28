@@ -4,10 +4,10 @@
 
 | Runtime     | Package                   | Use case                                    |
 | ----------- | ------------------------- | ------------------------------------------- |
-| Node        | `@nexis/serve`            | Full production server on a VM or container |
-| Deno        | `@nexis/serve-deno`       | Fetch-native runtime or Deno Deploy         |
-| Cloudflare  | `@nexis/serve-cloudflare` | Workers with an Assets binding              |
-| Development | `@nexis/dev-server`       | Local development only                      |
+| Node        | `@nexil/serve`            | Full production server on a VM or container |
+| Deno        | `@nexil/serve-deno`       | Fetch-native runtime or Deno Deploy         |
+| Cloudflare  | `@nexil/serve-cloudflare` | Workers with an Assets binding              |
+| Development | `@nexil/dev-server`       | Local development only                      |
 
 Build the application once, then use the adapter that matches the deployment environment’s Request/Response contract.
 
@@ -32,7 +32,7 @@ pnpm start
 ## Node production server
 
 ```ts
-import { createServer } from '@nexis/serve'
+import { createServer } from '@nexil/serve'
 
 const app = createServer('./dist/client', {
   host: process.env.HOST ?? '0.0.0.0',
@@ -52,10 +52,10 @@ await app.listen()
 
 The official server implements route mapping, 404, 405, HEAD, MIME types, cache headers, traversal rejection, action delegation, and an optional telemetry receiver.
 
-For application-specific request work, compose clear middleware before Nexis route handling:
+For application-specific request work, compose clear middleware before Nexil route handling:
 
 ```ts
-import { composeMiddleware, createMiddleware } from '@nexis/serve'
+import { composeMiddleware, createMiddleware } from '@nexil/serve'
 
 const handler = composeMiddleware(
   requestId,
@@ -163,4 +163,4 @@ Before exposing traffic:
 
 ## Workbench lab
 
-`pnpm --filter @nexis/example-nexis-workbench verify` runs TypeScript, the Nexis budget check, and the production build for the full example. Start only the generated artifact with `pnpm --filter @nexis/example-nexis-workbench start`; do not use a development server as production evidence. The Workbench server modules illustrate integration boundaries, not a hosted database, identity provider, or durable session store.
+`pnpm --filter @nexil/example-nexis-workbench verify` runs TypeScript, the Nexil budget check, and the production build for the full example. Start only the generated artifact with `pnpm --filter @nexil/example-nexis-workbench start`; do not use a development server as production evidence. The Workbench server modules illustrate integration boundaries, not a hosted database, identity provider, or durable session store.

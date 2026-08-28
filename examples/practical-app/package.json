@@ -1,5 +1,5 @@
 {
-  "name": "@nexis/example-practical-app",
+  "name": "@nexil/example-practical-app",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -9,13 +9,13 @@
     "check": "node ../../packages/cli/dist/bin.js check --budget"
   },
   "dependencies": {
-    "@nexis/actions": "workspace:*",
-    "@nexis/cli": "workspace:*",
-    "@nexis/core": "workspace:*",
-    "@nexis/css": "workspace:*",
-    "@nexis/jsx-runtime": "workspace:*",
-    "@nexis/reactivity": "workspace:*",
-    "@nexis/seo": "workspace:*"
+    "@nexil/actions": "workspace:*",
+    "@nexil/cli": "workspace:*",
+    "@nexil/core": "workspace:*",
+    "@nexil/css": "workspace:*",
+    "@nexil/jsx-runtime": "workspace:*",
+    "@nexil/reactivity": "workspace:*",
+    "@nexil/seo": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.0",

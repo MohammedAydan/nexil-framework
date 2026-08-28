@@ -1,12 +1,12 @@
-﻿# Nexis Framework
+﻿# Nexil Framework
 
-> **Migrated from `@mohammedaydan` to `@nexis` at `1.0.0` on npm (previously `1.3.x` on GitHub Packages).**
+> **Migrated from `@mohammedaydan` to `@nexil` at `1.0.0` on npm (previously `1.3.x` on GitHub Packages).**
 
-**Nexis is an HTML-first, resumable TypeScript framework for building server-rendered web applications.** It produces useful HTML first, keeps static routes free of route-specific client JavaScript, and loads interaction code only when a user reaches an interactive boundary. Nexis has no virtual DOM and does not hydrate or reconcile an entire component tree.
+**Nexil is an HTML-first, resumable TypeScript framework for building server-rendered web applications.** It produces useful HTML first, keeps static routes free of route-specific client JavaScript, and loads interaction code only when a user reaches an interactive boundary. Nexil has no virtual DOM and does not hydrate or reconcile an entire component tree.
 
 > **HTML first → progressive enhancement → resumable interaction → fine-grained DOM updates**
 
-Nexis is designed for applications that need strong server rendering, small client boundaries, typed Web Standard interfaces, and deployment flexibility across Node.js and edge runtimes.
+Nexil is designed for applications that need strong server rendering, small client boundaries, typed Web Standard interfaces, and deployment flexibility across Node.js and edge runtimes.
 
 ## Current status
 
@@ -14,9 +14,9 @@ The repository contains the v1.1.0 framework surface and its production verifica
 
 The detailed documentation is available in the [English documentation package](docs/en/README.md). The equivalent Arabic package is available at [docs/ar/README.md](docs/ar/README.md).
 
-## Why Nexis?
+## Why Nexil?
 
-Nexis separates server rendering from client interaction instead of treating every page as a browser application. A static route can ship HTML and CSS without application JavaScript. An interactive route declares a small boundary with a `$`-suffixed event or binding directive. The compiler extracts the boundary, serializes only supported references, and emits small assets that the browser loads when they are needed.
+Nexil separates server rendering from client interaction instead of treating every page as a browser application. A static route can ship HTML and CSS without application JavaScript. An interactive route declares a small boundary with a `$`-suffixed event or binding directive. The compiler extracts the boundary, serializes only supported references, and emits small assets that the browser loads when they are needed.
 
 State changes use fine-grained Signals. A bound text node or scalar property is updated directly by an `effect()` subscription; the component function is not executed again, and no virtual-DOM tree is created or reconciled. Essential content still belongs in the initial server-rendered HTML so that the page remains useful before any script executes.
 
@@ -35,7 +35,7 @@ These contracts are enforced by compiler tests, integration tests, runtime parit
 
 ## Quick start
 
-Published scoped packages are hosted on the public npm registry (`https://registry.npmjs.org/`). No special registry configuration is required for `@nexis` — install directly via `pnpm add @nexis/...`.
+Published scoped packages are hosted on the public npm registry (`https://registry.npmjs.org/`). No special registry configuration is required for `@nexil` — install directly via `pnpm add @nexil/...`.
 
 ```bash
 npm login
@@ -45,7 +45,7 @@ npm login
 Create a TypeScript application with the current initializer:
 
 ```bash
-pnpm dlx @nexis/create-nexis@1.0.0 my-nexis-app --yes --ts
+pnpm dlx @nexil/create-nexis@1.0.0 my-nexis-app --yes --ts
 cd my-nexis-app
 pnpm install
 pnpm dev
@@ -54,14 +54,14 @@ pnpm dev
 Equivalent npm and Yarn forms are:
 
 ```bash
-npx --yes @nexis/create-nexis@1.0.0 my-nexis-app --yes --ts
+npx --yes @nexil/create-nexis@1.0.0 my-nexis-app --yes --ts
 # or
-yarn dlx @nexis/create-nexis@1.0.0 my-nexis-app --yes --ts
+yarn dlx @nexil/create-nexis@1.0.0 my-nexis-app --yes --ts
 ```
 
 The initializer supports `--yes`, `--ts`, `--js`, `--tailwind`, and `--no-tailwind`. Inside an existing application, the CLI exposes the same project operations through `nexis create <name>`. The generated project includes route files, an HTML shell, TypeScript configuration, public assets, and package scripts for development and production builds.
 
-> If package installation reports `ERR_PNPM_FETCH_404`, verify you are using the public npm registry (`https://registry.npmjs.org/`) and the package name is `@nexis/...`. No GitHub Packages token is required for public `@nexis` packages.
+> If package installation reports `ERR_PNPM_FETCH_404`, verify you are using the public npm registry (`https://registry.npmjs.org/`) and the package name is `@nexil/...`. No GitHub Packages token is required for public `@nexil` packages.
 
 ## Project structure
 
@@ -82,7 +82,7 @@ my-nexis-app/
 └── vite.config.ts
 ```
 
-Routes are discovered under `src/routes/**/*.{tsx,jsx,ts,js}`. `_layout.*` files are recursive composition modules rather than standalone routes; legacy `layout.*` files remain supported for compatibility. Route groups retain their directory context for layout composition without becoming URL segments. The application shell should contain the Nexis outlet markers:
+Routes are discovered under `src/routes/**/*.{tsx,jsx,ts,js}`. `_layout.*` files are recursive composition modules rather than standalone routes; legacy `layout.*` files remain supported for compatibility. Route groups retain their directory context for layout composition without becoming URL segments. The application shell should contain the Nexil outlet markers:
 
 ```html
 <!doctype html>
@@ -97,11 +97,11 @@ Routes are discovered under `src/routes/**/*.{tsx,jsx,ts,js}`. `_layout.*` files
 </html>
 ```
 
-The build replaces these markers with the route head, rendered HTML, and only the scripts required by the route. Do not place route content outside the outlets if it is expected to pass through the Nexis renderer.
+The build replaces these markers with the route head, rendered HTML, and only the scripts required by the route. Do not place route content outside the outlets if it is expected to pass through the Nexil renderer.
 
 ## JSX and TSX authoring
 
-Nexis uses JSX and TSX with its own runtime. Generated projects use `react-jsx` with `@nexis/jsx-runtime`; React is not required.
+Nexil uses JSX and TSX with its own runtime. Generated projects use `react-jsx` with `@nexil/jsx-runtime`; React is not required.
 
 ```json
 {
@@ -110,7 +110,7 @@ Nexis uses JSX and TSX with its own runtime. Generated projects use `react-jsx` 
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
-    "jsxImportSource": "@nexis/jsx-runtime",
+    "jsxImportSource": "@nexil/jsx-runtime",
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
@@ -125,14 +125,14 @@ A static route is an ordinary component that returns renderable children. Its HT
 
 ```tsx
 export const seo = {
-  title: 'Home | Nexis App',
+  title: 'Home | Nexil App',
   description: 'A server-rendered page with no route-specific client JavaScript.',
 }
 
 export default function HomePage() {
   return (
     <main>
-      <h1>Welcome to Nexis</h1>
+      <h1>Welcome to Nexil</h1>
       <p>This content is available before any client script runs.</p>
     </main>
   )
@@ -171,10 +171,10 @@ The handler is not executed during initial paint. The browser loads its lazy chu
 
 ## Fine-grained Signal bindings
 
-Nexis also supports direct Signal-to-DOM updates without manual `textContent` assignments and without component rerenders. Direct Signal reads are lowered conservatively:
+Nexil also supports direct Signal-to-DOM updates without manual `textContent` assignments and without component rerenders. Direct Signal reads are lowered conservatively:
 
 ```tsx
-import { state } from '@nexis/core'
+import { state } from '@nexil/core'
 
 const count = state(0)
 
@@ -188,7 +188,7 @@ The compiler keeps the initial SSR value, emits a stable binding marker, and the
 Use explicit directives when the target is a DOM property or the intended binding should be unambiguous:
 
 ```tsx
-import { state } from '@nexis/core'
+import { state } from '@nexil/core'
 
 const name = state('Ada')
 const busy = state(false)
@@ -254,8 +254,8 @@ A route that contains only events receives `nexis-bootstrap.js`. A route that co
 Signals also support comparator-aware updates and asynchronous resources. Use `resource()` for request-local loading, success, and error state; its refetch generation prevents stale responses from replacing newer data. Use stores with `setPath()` for nested immutable updates and `lens()` for writable focused views.
 
 ```ts
-import { resource, state } from '@nexis/reactivity'
-import { createStore, setPath } from '@nexis/state'
+import { resource, state } from '@nexil/reactivity'
+import { createStore, setPath } from '@nexil/state'
 
 const userId = state('ada')
 const profile = resource(() => fetchProfile(userId()), { immediate: true })
@@ -267,7 +267,7 @@ setPath(preferences, ['theme'], 'dark')
 Signals are callable for reads and expose a readonly `.value` getter. Update them with `.set(...)` or `.setValue(...)`; do not assign to `.value`.
 
 ```ts
-import { batch, computed, effect, state } from '@nexis/reactivity'
+import { batch, computed, effect, state } from '@nexil/reactivity'
 
 const firstName = state('Ada')
 const lastName = state('Lovelace')
@@ -292,7 +292,7 @@ Stores provide `value`, `snapshot()`, `set`, `select`, `subscribe`, and `dispose
 Use `_layout.tsx` files to share navigation, shells, and metadata. Parent `seo` exports may define a `titleTemplate` and `openGraph.siteName`; child routes override only the fields they need. Use `Suspense` to stream a fallback immediately and flush completed asynchronous boundaries out of order.
 
 ```tsx
-import { Suspense } from '@nexis/core'
+import { Suspense } from '@nexil/core'
 
 export default function Page() {
   return (
@@ -305,7 +305,7 @@ export default function Page() {
 
 ## Rendering modes
 
-`@nexis/renderer` provides four render modes through `renderRoute`:
+`@nexil/renderer` provides four render modes through `renderRoute`:
 
 | Mode    | Configuration                          | Cache behavior                         | Appropriate use                              |
 | ------- | -------------------------------------- | -------------------------------------- | -------------------------------------------- |
@@ -315,7 +315,7 @@ export default function Page() {
 | Partial | `{ mode: 'partial' }`                  | Public shell with partial request work | Public pages with controlled dynamic regions |
 
 ```ts
-import { renderRoute } from '@nexis/renderer'
+import { renderRoute } from '@nexil/renderer'
 
 const result = await renderRoute({
   key: '/news',
@@ -335,10 +335,10 @@ ISR requires a cache implementation and validates the revalidation interval. Ser
 
 Inline static style objects are extracted into CSS at build time. For Tailwind CSS 4, create the application with `--tailwind`; the scaffold adds `@tailwindcss/vite`, creates `src/styles.css`, and configures the generated Vite integration.
 
-The `@nexis/css` package provides `cx` for composing class names:
+The `@nexil/css` package provides `cx` for composing class names:
 
 ```tsx
-import { cx } from '@nexis/css'
+import { cx } from '@nexil/css'
 
 export function Card({ featured }: { readonly featured: boolean }) {
   return (
@@ -356,7 +356,7 @@ Prefer semantic class names and accessible HTML. Test responsive behavior, keybo
 The media package can generate WebP and AVIF variants, responsive `picture` markup, self-hosted font rules, and optional persistent transform caches:
 
 ```ts
-import { imageAttributes, transformImage } from '@nexis/media'
+import { imageAttributes, transformImage } from '@nexil/media'
 
 const variants = await transformImage(source, 'hero', [320, 640, 1024])
 const attributes = imageAttributes({
@@ -374,11 +374,11 @@ After a build, `nexis analyze` also inventories emitted non-HTML assets. It repo
 The SEO package provides typed head output, canonical URLs, JSON-LD validation and escaping, breadcrumbs, sitemaps, robots.txt, RSS, Atom, and related metadata helpers:
 
 ```ts
-import { buildRobots, buildSitemap, renderHead } from '@nexis/seo'
+import { buildRobots, buildSitemap, renderHead } from '@nexil/seo'
 
 const head = renderHead({
-  title: 'Home | Nexis App',
-  description: 'A server-rendered Nexis application.',
+  title: 'Home | Nexil App',
+  description: 'A server-rendered Nexil application.',
   canonical: 'https://example.com/',
   jsonLd: { '@type': 'WebSite', name: 'Example' },
 })
@@ -391,7 +391,7 @@ URLs are validated, JSON-LD is escaped for safe embedding in a script element, a
 
 ## Server and deployment
 
-The repository exposes Fetch-native adapters for Node.js, Deno, and Cloudflare. The Node production server is provided by `@nexis/serve`; edge packages provide Deno and Cloudflare handlers. Keep request and response behavior consistent across adapters and test cache headers for each render mode.
+The repository exposes Fetch-native adapters for Node.js, Deno, and Cloudflare. The Node production server is provided by `@nexil/serve`; edge packages provide Deno and Cloudflare handlers. Keep request and response behavior consistent across adapters and test cache headers for each render mode.
 
 Production deployment should include the built `dist` directory, generated route modules, route HTML, assets, lazy chunks, manifests, feed files, sitemap and robots artifacts, and the runtime assets required by interactive or binding-enabled routes. Trust forwarded host and protocol headers only when the deployment is behind a controlled proxy and the explicit trust setting is enabled.
 
@@ -402,7 +402,7 @@ Health checks, graceful shutdown, bounded request bodies, safe cookies, strict O
 `Form` and `SubmitButton` preserve native browser submission while enabling the generated forms runtime. The runtime serializes repeated fields, sends an idempotency key, forwards an optional CSRF token, and exposes loading and success/error events. Server-side actions must still validate input, authorize the request, enforce trusted origins, and bound idempotency storage.
 
 ```tsx
-import { Form, SubmitButton } from '@nexis/core'
+import { Form, SubmitButton } from '@nexil/core'
 
 export default function Contact() {
   return (
@@ -420,9 +420,9 @@ The installed `nexis` binary and repository scripts expose the framework workflo
 
 | Command                           | Purpose                                                                                                          |
 | --------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `nexis dev`                       | Run the Vite development server with Nexis SSR middleware and hot updates                                        |
+| `nexis dev`                       | Run the Vite development server with Nexil SSR middleware and hot updates                                        |
 | `nexis build`                     | Build route HTML, server modules, assets, lazy chunks, runtimes, feeds, redirects, manifest, and `public/` files |
-| `nexis start`                     | Serve the built artifact with route-aware Nexis production behavior                                              |
+| `nexis start`                     | Serve the built artifact with route-aware Nexil production behavior                                              |
 | `nexis serve`                     | Compatibility alias for `nexis start`                                                                            |
 | `nexis check --budget`            | Run build and byte-budget checks                                                                                 |
 | `nexis analyze`                   | Report route output, client-size metrics, static-asset totals, and the largest emitted assets                    |
@@ -466,33 +466,33 @@ pnpm build
 pnpm start
 ```
 
-Use an optional typed `nexis.config.ts` with `defineConfig` from `@nexis/serve` only to override defaults such as the public origin, port, redirects, feed metadata, cache controls, or Action policy.
+Use an optional typed `nexis.config.ts` with `defineConfig` from `@nexil/serve` only to override defaults such as the public origin, port, redirects, feed metadata, cache controls, or Action policy.
 
 ## Package map
 
 | Package                   | Responsibility                                                                                      |
 | ------------------------- | --------------------------------------------------------------------------------------------------- |
-| `@nexis/core`             | Render nodes, component types, layouts, Suspense, forms, request context, and reactivity re-exports |
-| `@nexis/jsx-runtime`      | Automatic JSX runtime used by `react-jsx` projects                                                  |
-| `@nexis/reactivity`       | Signals, comparators, resources, computed values, effects, batching, roots, and cleanup             |
-| `@nexis/state`            | Serializable stores, selectors, registries, and disposal                                            |
-| `@nexis/compiler`         | Boundary analysis, capture diagnostics, and byte-budget enforcement                                 |
-| `@nexis/vite-plugin`      | JSX transformation, lazy chunks, ScopeRef metadata, binding markers, and development assets         |
-| `@nexis/client`           | Scope materialization, delegated events, DOM bindings, progressive forms, and cleanup               |
-| `@nexis/renderer`         | HTML/string/stream rendering and render modes                                                       |
-| `@nexis/router`           | Route discovery, groups, nested layouts, query/hash matching, parameters, and resolution            |
-| `@nexis/seo`              | Head tags, canonicals, JSON-LD, sitemap, robots, RSS, and Atom                                      |
-| `@nexis/media`            | Image variants, responsive markup, fonts, and media caching                                         |
-| `@nexis/actions`          | Typed server Actions, validation, Origin checks, cookies, and idempotency                           |
-| `@nexis/server`           | Server composition and request-scoped data helpers                                                  |
-| `@nexis/security`         | Session, role, permission, and resource-policy primitives with application-owned storage            |
-| `@nexis/adapters`         | Node, Deno, Cloudflare, and Fetch adapter contracts                                                 |
-| `@nexis/serve`            | Node production server and middleware                                                               |
-| `@nexis/serve-deno`       | Deno edge handler package                                                                           |
-| `@nexis/serve-cloudflare` | Cloudflare edge handler package                                                                     |
-| `@nexis/telemetry`        | Optional Web Vitals and telemetry receiver primitives                                               |
-| `@nexis/cli`              | CLI orchestration and production build pipeline                                                     |
-| `@nexis/create-nexis`     | Project initializer and compatibility initializer binaries                                          |
+| `@nexil/core`             | Render nodes, component types, layouts, Suspense, forms, request context, and reactivity re-exports |
+| `@nexil/jsx-runtime`      | Automatic JSX runtime used by `react-jsx` projects                                                  |
+| `@nexil/reactivity`       | Signals, comparators, resources, computed values, effects, batching, roots, and cleanup             |
+| `@nexil/state`            | Serializable stores, selectors, registries, and disposal                                            |
+| `@nexil/compiler`         | Boundary analysis, capture diagnostics, and byte-budget enforcement                                 |
+| `@nexil/vite-plugin`      | JSX transformation, lazy chunks, ScopeRef metadata, binding markers, and development assets         |
+| `@nexil/client`           | Scope materialization, delegated events, DOM bindings, progressive forms, and cleanup               |
+| `@nexil/renderer`         | HTML/string/stream rendering and render modes                                                       |
+| `@nexil/router`           | Route discovery, groups, nested layouts, query/hash matching, parameters, and resolution            |
+| `@nexil/seo`              | Head tags, canonicals, JSON-LD, sitemap, robots, RSS, and Atom                                      |
+| `@nexil/media`            | Image variants, responsive markup, fonts, and media caching                                         |
+| `@nexil/actions`          | Typed server Actions, validation, Origin checks, cookies, and idempotency                           |
+| `@nexil/server`           | Server composition and request-scoped data helpers                                                  |
+| `@nexil/security`         | Session, role, permission, and resource-policy primitives with application-owned storage            |
+| `@nexil/adapters`         | Node, Deno, Cloudflare, and Fetch adapter contracts                                                 |
+| `@nexil/serve`            | Node production server and middleware                                                               |
+| `@nexil/serve-deno`       | Deno edge handler package                                                                           |
+| `@nexil/serve-cloudflare` | Cloudflare edge handler package                                                                     |
+| `@nexil/telemetry`        | Optional Web Vitals and telemetry receiver primitives                                               |
+| `@nexil/cli`              | CLI orchestration and production build pipeline                                                     |
+| `@nexil/create-nexis`     | Project initializer and compatibility initializer binaries                                          |
 
 ## Verification workflow
 

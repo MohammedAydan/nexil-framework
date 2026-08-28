@@ -1,6 +1,6 @@
 # Compatibility and Release Track
 
-Nexis does not replace application libraries. The framework provides boundary, rendering, data, and security primitives while applications remain free to choose ecosystem components.
+Nexil does not replace application libraries. The framework provides boundary, rendering, data, and security primitives while applications remain free to choose ecosystem components.
 
 | Integration                              | Support boundary                                         | Validation status             |
 | ---------------------------------------- | -------------------------------------------------------- | ----------------------------- |

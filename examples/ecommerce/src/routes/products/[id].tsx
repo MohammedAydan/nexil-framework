@@ -1,8 +1,8 @@
-/** @jsxImportSource @nexis/jsx-runtime */
+/** @jsxImportSource @nexil/jsx-runtime */
 
 import { z } from 'zod'
-import { action, assertTrustedOrigin } from '@nexis/actions'
-import { element } from '@nexis/core'
+import { action, assertTrustedOrigin } from '@nexil/actions'
+import { element } from '@nexil/core'
 import { getProduct } from '../../server/catalog.js'
 
 export const render = { mode: 'isr' as const, revalidate: 30 }
@@ -18,7 +18,7 @@ export const load = async ({ request, params }: { request: Request; params: { id
 })
 
 export const seo = {
-  title: 'Nexis Product',
+  title: 'Nexil Product',
   description: 'An ecommerce compatibility fixture.',
   canonical: '/products/example',
   image: '/images/product.webp',

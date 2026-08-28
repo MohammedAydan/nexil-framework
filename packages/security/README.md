@@ -1,9 +1,9 @@
-# `@nexis/security`
+# `@nexil/security`
 
-`@nexis/security` provides the **framework-level building blocks** for sessions and authorization. It intentionally does not own users, passwords, OAuth/OIDC verification, a database, or a distributed cache. Applications provide their own durable session store and identity flow.
+`@nexil/security` provides the **framework-level building blocks** for sessions and authorization. It intentionally does not own users, passwords, OAuth/OIDC verification, a database, or a distributed cache. Applications provide their own durable session store and identity flow.
 
 ```ts
-import { createSession, requirePermission } from '@nexis/security'
+import { createSession, requirePermission } from '@nexil/security'
 
 const sessions = createSession(sessionStore)
 

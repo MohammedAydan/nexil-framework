@@ -301,7 +301,7 @@ export function Form({
 }: FormProps): ElementNode {
   const endpoint = typeof action === 'string' ? action : action.endpoint
   if (!endpoint || !endpoint.startsWith('/') || endpoint.startsWith('//'))
-    throw new TypeError('Nexis Form action must be a local absolute path or action reference.')
+    throw new TypeError('Nexil Form action must be a local absolute path or action reference.')
   const formChildren: Child[] =
     children === undefined
       ? []
@@ -353,11 +353,11 @@ export {
   useState,
   resource,
   watch,
-} from '@nexis/reactivity'
+} from '@nexil/reactivity'
 export type {
   Signal,
   ReadableSignal,
   Unsubscribe,
   Resource,
   SignalOptions,
-} from '@nexis/reactivity'
+} from '@nexil/reactivity'

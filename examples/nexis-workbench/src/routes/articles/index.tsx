@@ -1,9 +1,9 @@
-import { Link } from '@nexis/router'
+import { Link } from '@nexil/router'
 import { articles } from '../../lib/articles'
 
 export const seo = {
   title: 'Workbench articles',
-  description: 'Public Nexis Workbench articles.',
+  description: 'Public Nexil Workbench articles.',
 }
 
 export default function ArticlesIndex() {

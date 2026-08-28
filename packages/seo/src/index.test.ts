@@ -39,14 +39,14 @@ describe('SEO metadata', () => {
   })
 
   it('applies title templates to document and social titles', () => {
-    const head = renderHead({ title: 'Architecture', titleTemplate: '%s · Nexis' })
-    expect(head).toContain('<title>Architecture · Nexis</title>')
-    expect(head).toContain('property="og:title" content="Architecture · Nexis"')
+    const head = renderHead({ title: 'Architecture', titleTemplate: '%s · Nexil' })
+    expect(head).toContain('<title>Architecture · Nexil</title>')
+    expect(head).toContain('property="og:title" content="Architecture · Nexil"')
   })
 
   it('emits an inherited OpenGraph site name', () => {
-    expect(renderHead({ title: 'Docs', openGraph: { siteName: 'Nexis' } })).toContain(
-      'property="og:site_name" content="Nexis"',
+    expect(renderHead({ title: 'Docs', openGraph: { siteName: 'Nexil' } })).toContain(
+      'property="og:site_name" content="Nexil"',
     )
   })
 
@@ -124,7 +124,7 @@ describe('SEO validation helpers', () => {
       pubDate: '2026-01-02T03:04:05Z',
     }
     const rss = generateFeed([item], {
-      title: 'Nexis',
+      title: 'Nexil',
       link: 'https://example.test/',
       description: 'Updates',
       feedUrl: 'https://example.test/feed.xml',
@@ -135,7 +135,7 @@ describe('SEO validation helpers', () => {
     expect(rss).toContain('isPermaLink="true"')
     expect(
       generateAtomFeed([item], {
-        title: 'Nexis',
+        title: 'Nexil',
         link: 'https://example.test/',
         description: 'Updates',
       }),

@@ -75,13 +75,13 @@ export function state<T>(initial: T, options: SignalOptions<T> = {}): Signal<T> 
   const equals = options.equals ?? Object.is
 
   const read = (() => {
-    if (disposed) throw new Error('Nexis signal has been disposed.')
+    if (disposed) throw new Error('Nexil signal has been disposed.')
     track(read)
     return value
   }) as Signal<T>
 
   read.get = () => {
-    if (disposed) throw new Error('Nexis signal has been disposed.')
+    if (disposed) throw new Error('Nexil signal has been disposed.')
     track(read)
     return value
   }
@@ -140,7 +140,7 @@ export function computed<T>(derive: () => T, options: SignalOptions<T> = {}): Re
     try {
       if (evaluatingComputeds.has(derive))
         throw new Error(
-          'Nexis computed dependency cycle detected while evaluating a derived signal.',
+          'Nexil computed dependency cycle detected while evaluating a derived signal.',
         )
       evaluatingComputeds.add(derive)
       evaluating = true
@@ -171,7 +171,7 @@ export function computed<T>(derive: () => T, options: SignalOptions<T> = {}): Re
 
   const read = (() => {
     if (evaluating)
-      throw new Error('Nexis computed dependency cycle detected while reading a derived signal.')
+      throw new Error('Nexil computed dependency cycle detected while reading a derived signal.')
     return result.get() as T
   }) as ReadableSignal<T>
   read.get = () => read()

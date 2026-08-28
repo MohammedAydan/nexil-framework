@@ -6,7 +6,7 @@
 
 ```ts
 const seo = {
-  title: 'دليل Nexis',
+  title: 'دليل Nexil',
   description: 'شرح عملي لبناء صفحات HTML أولًا.',
   canonical: 'https://example.com/docs/nexis',
   ogType: 'article',
@@ -22,9 +22,9 @@ const seo = {
 
 ```ts
 export const seo = {
-  title: 'Nexis App',
-  titleTemplate: '%s · Nexis App',
-  openGraph: { siteName: 'Nexis App' },
+  title: 'Nexil App',
+  titleTemplate: '%s · Nexil App',
+  openGraph: { siteName: 'Nexil App' },
 }
 ```
 
@@ -111,4 +111,4 @@ const feed = generateFeed(items, {
 
 ## مختبر Workbench
 
-ابنِ مثال Workbench التنفيذي بالأمر `pnpm --filter @nexis/example-nexis-workbench build`. افحص `sitemap.xml` و`robots.txt` و`feed.xml` و`atom.xml` الناتجة وhead لكل route قبل نقل النمط لخدمة عامة. عيّن `NEXIS_SITE_ORIGIN` إنتاجيًّا مطلقًا خاصًا بك أثناء build التحقق؛ لا تنسخ hostname مثال أو preview إلى canonical.
+ابنِ مثال Workbench التنفيذي بالأمر `pnpm --filter @nexil/example-nexis-workbench build`. افحص `sitemap.xml` و`robots.txt` و`feed.xml` و`atom.xml` الناتجة وhead لكل route قبل نقل النمط لخدمة عامة. عيّن `NEXIS_SITE_ORIGIN` إنتاجيًّا مطلقًا خاصًا بك أثناء build التحقق؛ لا تنسخ hostname مثال أو preview إلى canonical.

@@ -1,5 +1,5 @@
 export const seo = {
-  title: 'Nexis Forms Lab',
+  title: 'Nexil Forms Lab',
   description: 'Generic resumable input and submit event verification.',
 }
 

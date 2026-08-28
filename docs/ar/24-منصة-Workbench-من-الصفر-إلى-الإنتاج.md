@@ -1,12 +1,12 @@
-# 24 — بناء Nexis Workbench: من مجلد فارغ إلى Production
+# 24 — بناء Nexil Workbench: من مجلد فارغ إلى Production
 
-هذا فصل عملي كامل لتطبيق يعمل بـ Nexis `1.3.1`. اسم التطبيق **Nexis Workbench**، وهو قاعدة معرفة عامة فيها مقالات ثابتة، وفلتر تفاعلي صغير، و`Link` دلالي، وطلب دعم native-first، وحدود جلسة وتفويض يملكها التطبيق، وبيانات وصفية للإنتاج، وبوابة إصدار قابلة للتحقق. هذا لا يعني أن Nexis يوفّر قاعدة بيانات أو directory مستخدمين أو OAuth أو خدمة بريد أو تخزين جلسات دائم؛ هذه قرارات يملكها التطبيق.
+هذا فصل عملي كامل لتطبيق يعمل بـ Nexil `1.3.1`. اسم التطبيق **Nexil Workbench**، وهو قاعدة معرفة عامة فيها مقالات ثابتة، وفلتر تفاعلي صغير، و`Link` دلالي، وطلب دعم native-first، وحدود جلسة وتفويض يملكها التطبيق، وبيانات وصفية للإنتاج، وبوابة إصدار قابلة للتحقق. هذا لا يعني أن Nexil يوفّر قاعدة بيانات أو directory مستخدمين أو OAuth أو خدمة بريد أو تخزين جلسات دائم؛ هذه قرارات يملكها التطبيق.
 
 ## ما الذي ستثبته
 
 | المرحلة    | النتيجة المرئية قبل المتابعة                                              |
 | ---------- | ------------------------------------------------------------------------- |
-| المشروع    | يخدم `pnpm dev` تطبيق Nexis مولدًا.                                       |
+| المشروع    | يخدم `pnpm dev` تطبيق Nexil مولدًا.                                       |
 | HTML shell | يظهر العنوان والتنقل والمحتوى قبل JavaScript.                             |
 | التوجيه    | تخرج مسارات المقالات الثابتة، والمسار غير المعروف يرد 404 حقيقيًا.        |
 | التنقل     | يمكن لـLink داخلي مؤهل استبدال `#app`، ويظل anchor صالحًا بلا JavaScript. |
@@ -18,10 +18,10 @@
 
 ## 0. أنشئ المشروع بأمان
 
-هيئ صلاحية نطاق `@nexis` في بيئة المستخدم أو CI. لا تضع registry token في المستودع أو في `.npmrc` المتتبع. أنشئ المشروع بالإصدار الحالي وثبّت lockfile الناتج من تثبيتك أنت.
+هيئ صلاحية نطاق `@nexil` في بيئة المستخدم أو CI. لا تضع registry token في المستودع أو في `.npmrc` المتتبع. أنشئ المشروع بالإصدار الحالي وثبّت lockfile الناتج من تثبيتك أنت.
 
 ```bash
-pnpm dlx @nexis/create-nexis@1.0.0 nexis-workbench --yes --ts --template interactive
+pnpm dlx @nexil/create-nexis@1.0.0 nexis-workbench --yes --ts --template interactive
 cd nexis-workbench
 pnpm install
 pnpm dev
@@ -42,7 +42,7 @@ pnpm check
 
 ```tsx
 // src/routes/_layout.tsx
-import { Link } from '@nexis/router'
+import { Link } from '@nexil/router'
 
 export default function WorkbenchLayout({ children }: { readonly children: unknown }) {
   return (
@@ -69,7 +69,7 @@ export default function WorkbenchLayout({ children }: { readonly children: unkno
 ```tsx
 // src/routes/index.tsx
 export const seo = {
-  title: 'Nexis Workbench',
+  title: 'Nexil Workbench',
   description: 'A public knowledge base built with server-rendered HTML.',
 }
 
@@ -104,7 +104,7 @@ export function getArticle(slug: string) {
 
 ```tsx
 // src/routes/articles/[slug].tsx
-import { notFound } from '@nexis/server'
+import { notFound } from '@nexil/server'
 import { getArticle, articles } from '../../lib/articles'
 
 export async function getStaticPaths() {
@@ -130,7 +130,7 @@ export default function Article({ slug }: { readonly slug?: string }) {
 استخدم `Link` فقط عندما يفيد الانتقال المباشر same-origin مع استبدال اختياري لـ`#app`. يخرج anchor عاديًا مع `data-nx-link`؛ ولا يصنع virtual router أو client component tree.
 
 ```tsx
-import { Link } from '@nexis/router'
+import { Link } from '@nexil/router'
 
 export function ArticleNavigation() {
   return (
@@ -157,7 +157,7 @@ export function ArticleNavigation() {
 
 ```tsx
 // src/components/ArticleFilter.tsx
-import { state } from '@nexis/core'
+import { state } from '@nexil/core'
 
 export function ArticleFilter() {
   const active = state(false)
@@ -181,8 +181,8 @@ export function ArticleFilter() {
 Context يمنع prop drilling، وليس store عالميًا للمتصفح أو آلية async ambient context. استخدم ContextScope في عمل SSR/SSG الذي يمر عبر async boundary.
 
 ```tsx
-import { createContext, createContextScope, provideContext, state } from '@nexis/core'
-import { createStore } from '@nexis/state'
+import { createContext, createContextScope, provideContext, state } from '@nexil/core'
+import { createStore } from '@nexil/state'
 
 const Locale = createContext('en')
 const requestScope = createContextScope()
@@ -230,7 +230,7 @@ import {
   assertTrustedOrigin,
   createMemoryIdempotencyStore,
   handleActionRequest,
-} from '@nexis/actions'
+} from '@nexil/actions'
 
 const idempotency = createMemoryIdempotencyStore()
 
@@ -267,11 +267,11 @@ export function postSupport(request: Request) {
 
 ## 7. أضف session وسياسة مورد يملكهما التطبيق
 
-يمكن لـNexis قراءة session identifier معتم وتطبيق role أو resource rules، لكنه لا يتحقق من كلمات المرور ولا ينفذ OAuth/OIDC ولا يملك user table.
+يمكن لـNexil قراءة session identifier معتم وتطبيق role أو resource rules، لكنه لا يتحقق من كلمات المرور ولا ينفذ OAuth/OIDC ولا يملك user table.
 
 ```ts
 // src/server/session.ts
-import { createSession, requireAccess, requirePermission, type SessionStore } from '@nexis/security'
+import { createSession, requireAccess, requirePermission, type SessionStore } from '@nexil/security'
 
 interface WorkbenchUser {
   readonly id: string
@@ -299,7 +299,7 @@ export async function editArticle(request: Request, article: { readonly tenantId
 // src/routes/articles/index.tsx
 export const seo = {
   title: 'Workbench articles',
-  description: 'Public documentation for building and operating Nexis applications.',
+  description: 'Public documentation for building and operating Nexil applications.',
   canonical: 'https://workbench.example/articles/',
 }
 ```
@@ -327,7 +327,7 @@ pnpm build
 pnpm start
 ```
 
-في Node استخدم `nexis start` المولد أو `@nexis/serve`. استعمل Deno أو Cloudflare adapter عندما يكون runtime Fetch-native هو هدف النشر الحقيقي. عرّف `siteOrigin` وredirects وcache وheaders وtrusted-proxy في config مراجع. فعّل trust للـproxy فقط عندما ينظف forwarded headers ويعيد بناءها بأمان.
+في Node استخدم `nexis start` المولد أو `@nexil/serve`. استعمل Deno أو Cloudflare adapter عندما يكون runtime Fetch-native هو هدف النشر الحقيقي. عرّف `siteOrigin` وredirects وcache وheaders وtrusted-proxy في config مراجع. فعّل trust للـproxy فقط عندما ينظف forwarded headers ويعيد بناءها بأمان.
 
 | المجال     | فحص Production                                                                                      |
 | ---------- | --------------------------------------------------------------------------------------------------- |
@@ -343,4 +343,4 @@ pnpm start
 
 هذا الفصل طريق عبر الفريمورك وليس بديلًا عن API reference الدقيقة. اقرأ أدلة [إنشاء المشروع](./03-إنشاء-المشروع.md) و[التوجيه والرندر](./05-التوجيه-والرندر.md) و[التفاعلية](./06-التفاعلية-وScopeRef.md) و[الحالة وContext](./07-الحالة-والتفاعلية.md) و[Actions والنماذج](./08-الأفعال-والنماذج.md) و[SEO](./11-SEO-والبيانات-الوصفية.md) و[الخادم والنشر](./12-الخادم-والنشر.md) و[الاختبار](./13-الاختبار-والأداء.md) و[الأمان](./21-المصادقة-والتفويض-وmiddleware.md).
 
-مثال Workbench التنفيذي واختباراته هما مصدر الحقيقة للأوامر هنا. إذا كانت integration مطلوبة وغير موجودة، أضفها كـapplication boundary واختبرها؛ لا تفترض أنها مشحونة تلقائيًا مع Nexis.
+مثال Workbench التنفيذي واختباراته هما مصدر الحقيقة للأوامر هنا. إذا كانت integration مطلوبة وغير موجودة، أضفها كـapplication boundary واختبرها؛ لا تفترض أنها مشحونة تلقائيًا مع Nexil.

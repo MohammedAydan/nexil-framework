@@ -1,5 +1,5 @@
 {
-  "name": "@nexis/serve-cloudflare",
+  "name": "@nexil/serve-cloudflare",
   "version": "1.0.0",
   "type": "module",
   "exports": {
@@ -13,7 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@nexis/adapters": "workspace:*"
+    "@nexil/adapters": "workspace:*"
   },
   "devDependencies": {
     "vitest": "^3.0.0"

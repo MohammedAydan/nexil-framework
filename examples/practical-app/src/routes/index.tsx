@@ -1,8 +1,8 @@
-import { useState } from '@nexis/core'
-import { cn, cx } from '@nexis/css'
+import { useState } from '@nexil/core'
+import { cn, cx } from '@nexil/css'
 
 export const seo = {
-  title: 'Nexis Practical Lab',
+  title: 'Nexil Practical Lab',
   description: 'A complete Tailwind, SSR, state, and resumability verification app.',
   canonical: 'https://example.test/',
   image: '/social-card.png',
@@ -23,7 +23,7 @@ export default function Home() {
             Tailwind styles should be visible, not merely suggested.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-            This page verifies that Nexis emits styled SSR HTML, links compiled CSS, and keeps
+            This page verifies that Nexil emits styled SSR HTML, links compiled CSS, and keeps
             interactive handlers resumable.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">

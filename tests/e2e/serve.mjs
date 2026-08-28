@@ -26,7 +26,7 @@ const server = createServer((request, response) => {
         'Transfer-Encoding': 'chunked',
       })
       response.write(
-        '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Nexis Streaming SSR</title></head><body><main><h1>Streaming SSR</h1>',
+        '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Nexil Streaming SSR</title></head><body><main><h1>Streaming SSR</h1>',
       )
       response.write(
         '<p data-data-source="request-local">Data streamed from a request-local loader.</p></main></body></html>',
@@ -71,5 +71,5 @@ const server = createServer((request, response) => {
 })
 
 server.listen(4173, '127.0.0.1', () => {
-  process.stdout.write('Nexis E2E fixture server listening on http://127.0.0.1:4173\n')
+  process.stdout.write('Nexil E2E fixture server listening on http://127.0.0.1:4173\n')
 })
