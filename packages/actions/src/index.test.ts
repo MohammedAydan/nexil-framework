@@ -44,7 +44,7 @@ describe('server actions', () => {
       (input: unknown) => String(input).trim(),
       (_context, input) => input.toUpperCase(),
     )
-    await expect(handler.execute(context, ' nexis ')).resolves.toBe('NEXIL')
+    await expect(handler.execute(context, ' nexil ')).resolves.toBe('NEXIL')
   })
 
   it('requires trusted origin for cross-origin state changes', () => {
