@@ -77,7 +77,7 @@ test('Link swaps server-rendered outlet without a full document reload and suppo
 }) => {
   const navigationRequests: string[] = []
   page.on('request', (request) => {
-    if (request.headers()['x-nexis-navigation'] === '1') navigationRequests.push(request.url())
+    if (request.headers()['x-nexil-navigation'] === '1') navigationRequests.push(request.url())
   })
   await page.goto('http://127.0.0.1:4321/')
   await expect(page.locator('#about-link')).toHaveAttribute('data-nx-link', 'push')
@@ -123,7 +123,7 @@ test('Link swaps server-rendered outlet without a full document reload and suppo
 test('Link leaves native escape hatches untouched and cancels a stale visit', async ({ page }) => {
   const navigationRequests: string[] = []
   page.on('request', (request) => {
-    if (request.headers()['x-nexis-navigation'] === '1') navigationRequests.push(request.url())
+    if (request.headers()['x-nexil-navigation'] === '1') navigationRequests.push(request.url())
   })
   await page.goto('http://127.0.0.1:4321/')
   navigationRequests.length = 0
@@ -246,7 +246,7 @@ test('an explicit browser-global Store survives a Link outlet replacement', asyn
 test('Link prefetch caches only cacheable HTML documents', async ({ page }) => {
   const requests: string[] = []
   page.on('request', (request) => {
-    if (request.headers()['x-nexis-navigation'] === '1') requests.push(request.url())
+    if (request.headers()['x-nexil-navigation'] === '1') requests.push(request.url())
   })
   await page.goto('http://127.0.0.1:4321/')
   requests.length = 0
