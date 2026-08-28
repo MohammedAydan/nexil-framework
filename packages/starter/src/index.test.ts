@@ -12,10 +12,11 @@ describe('Nexis starter engine', () => {
     expect(paths).toEqual(
       expect.arrayContaining(['package.json', 'index.html', 'src/routes/index.tsx', '.npmrc']),
     )
-    expect(files.find((file) => file.path === 'src/routes/index.tsx')?.content).toContain(
-      'onClick$',
-    )
-    expect(files.find((file) => file.path === 'package.json')?.content).toContain('^1.3.1')
+    const interactive = files.find((file) => file.path === 'src/routes/index.tsx')?.content ?? ''
+    expect(interactive).toContain('onClick$')
+    expect(interactive).toContain('const increment =')
+    expect(interactive).toContain('onClick$={increment}')
+    expect(files.find((file) => file.path === 'package.json')?.content).toContain('^1.3.2')
     expect(files.every((file) => !file.content.includes('ghp_'))).toBe(true)
   })
 

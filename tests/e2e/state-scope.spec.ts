@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { execSync } from 'node:child_process'
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { preview } from 'vite'
 
@@ -18,15 +18,16 @@ export const seo = { title: 'Scope State Proof', description: 'Resumable closure
 
 export default component(() => {
   const count = state(0)
+  const increment = () => {
+    count.set((current) => current + 1)
+  }
   return (
     <main className="scope-proof">
       <h1 id="engine-stamp">Rendered via Nexis SSR Engine</h1>
       <output id="scope-value">{count()}</output>
       <button
         id="scope-btn"
-        onClick$={() => {
-          count.set((current) => current + 1)
-        }}
+        onClick$={increment}
       >
         increment
       </button>
@@ -73,6 +74,20 @@ test.beforeAll(async () => {
   if (!html.includes('data-nx-bind=') || !html.includes('#text')) {
     throw new Error('Build output missing automatic Signal text binding')
   }
+  const chunkDirectory = join(appDir, 'dist', 'client', 'nexis-chunks')
+  const eventReference = /data-nx-on-click="([^"]+)"/.exec(html)?.[1]
+  const chunkName = eventReference?.split('#')[0]
+  const availableChunks = await readdir(chunkDirectory)
+  if (!chunkName || !availableChunks.includes(chunkName)) {
+    throw new Error('Build output did not reference a materialized named-handler chunk')
+  }
+  const chunk = await readFile(join(chunkDirectory, chunkName), 'utf8')
+  if (chunk.includes('scope.increment')) {
+    throw new Error('Named local handler was emitted as an unavailable scope function')
+  }
+  if (!/\.count\.set\(/.test(chunk)) {
+    throw new Error('Named local handler did not capture its Signal into the lazy chunk')
+  }
 
   // Budget gate must stay green with the enriched bootstrap.
   await expect(runCli(['check', '--budget'], appDir)).resolves.toContain('checks passed')
@@ -96,7 +111,9 @@ test.afterAll(async () => {
   await rm(tempDir, { recursive: true, force: true })
 })
 
-test('captured signal resumes lazily and persists across clicks', async ({ page }) => {
+test('a named local handler resumes its captured signal lazily and persists across clicks', async ({
+  page,
+}) => {
   const chunkRequests: string[] = []
   page.on('request', (request) => {
     if (request.url().includes('/nexis-chunks/')) chunkRequests.push(request.url())

@@ -180,6 +180,54 @@ function captureExpression(expressionSource: string): {
   }
 }
 
+/**
+ * Resolves a bare local handler identifier used by an event prop to its function
+ * expression before capture analysis. Lazy chunks execute in a fresh module, so
+ * an emitted `scope.increment(...)` cannot work: ordinary local functions are
+ * not serializable scope values. Resolving the body lets the existing capture
+ * pipeline serialize the Signal/Store/Action values the handler actually uses.
+ *
+ * This intentionally only resolves author-local arrow/function expressions that
+ * occur before the JSX event reference. Imported functions and computed handler
+ * expressions retain the existing behavior rather than being guessed at.
+ */
+function resolveLocalHandlerExpression(
+  source: string,
+  expressionSource: string,
+  referenceStart: number,
+): string {
+  const identifier = /^\s*([A-Za-z_$][\w$]*)\s*$/.exec(expressionSource)?.[1]
+  if (!identifier) return expressionSource
+
+  const ast = parseSource(source, 'nexis-local-handler.tsx')
+  let resolved: AstNode | undefined
+
+  walk(ast, (node) => {
+    if (node.start === undefined || node.start >= referenceStart) return
+    const declaration = node as AstNode & { readonly id?: AstNode; readonly init?: AstNode }
+    if (
+      node.type === 'FunctionDeclaration' &&
+      astIdentifierName(declaration.id) === identifier &&
+      node.end !== undefined
+    ) {
+      resolved = node
+      return
+    }
+    if (node.type !== 'VariableDeclarator') return
+    const init = declaration.init
+    if (
+      astIdentifierName(declaration.id) === identifier &&
+      (init?.type === 'ArrowFunctionExpression' || init?.type === 'FunctionExpression') &&
+      init.start !== undefined &&
+      init.end !== undefined
+    )
+      resolved = init
+  })
+
+  if (resolved?.start === undefined || resolved.end === undefined) return expressionSource
+  return source.slice(resolved.start, resolved.end)
+}
+
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
@@ -667,7 +715,11 @@ export async function transformNexisSource(
         )
         return
       }
-      const expressionSource = source.slice(expression.start, expression.end)
+      const expressionSource = resolveLocalHandlerExpression(
+        source,
+        source.slice(expression.start, expression.end),
+        expression.start,
+      )
       const canonicalExpression = expressionSource.replace(/\s+/g, ' ').trim()
       const idHash = hash(`handler:${canonicalExpression}`)
       const exportName = `handler_${idHash}`
