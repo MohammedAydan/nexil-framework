@@ -8,10 +8,10 @@
 SSR HTML
   + data-nx-on-click="chunk-id#handler"
   + data-nx-scope="nx:scope:<opaque-key>"
-  + nexis-state.js (فقط عند الحاجة إلى state قابلة للاستئناف)
-  + nexis-bootstrap.js
-  + nexis-bindings.js (binding routes only)
-  + nexis-forms.js (progressive Form routes only)
+  + nexil-state.js (فقط عند الحاجة إلى state قابلة للاستئناف)
+  + nexil-bootstrap.js
+  + nexil-bindings.js (binding routes only)
+  + nexil-forms.js (progressive Form routes only)
         │
         └── click → import lazy chunk → resolve scope → execute handler
 ```
@@ -24,9 +24,9 @@ SSR HTML
 
 ## State payload في production
 
-في v1.2.0، عندما يلتقط Handler إشارة أو Store أو Action، يستبدل بناء production الحمولة المسمّاة في HTML بمفتاح scope معتم، ويضع الحمولة الضرورية للمتصفح في `nexis-state.js` قبل runtime الاستئناف. يستمر Nexil في تحليل AST للقيمة الابتدائية ويجمع التعبيرات المتساوية في lazy chunk واحد؛ لا تكتب `data-nx-scope` ولا تستدعِ `serializeScopeRefs()` يدويًا داخل route.
+في v1.2.0، عندما يلتقط Handler إشارة أو Store أو Action، يستبدل بناء production الحمولة المسمّاة في HTML بمفتاح scope معتم، ويضع الحمولة الضرورية للمتصفح في `nexil-state.js` قبل runtime الاستئناف. يستمر Nexil في تحليل AST للقيمة الابتدائية ويجمع التعبيرات المتساوية في lazy chunk واحد؛ لا تكتب `data-nx-scope` ولا تستدعِ `serializeScopeRefs()` يدويًا داخل route.
 
-هذا يقلل ظهور أسماء captures و`kind` و`id` والقيم الابتدائية في مصدر HTML. لكنه **ليس تشفيرًا ولا تفويضًا**: يمكن للمتصفح تنزيل `nexis-state.js`، ولذلك تبقى بيانات capture عامة للعميل. لا تلتقط secrets أو credentials أو ملف user خاص أو بيانات مرتبطة بطلب واحد. تبقى حمولات ScopeRef بصيغة JSON داخلية مدعومة للتوافق وللحدود المكتوبة يدويًا.
+هذا يقلل ظهور أسماء captures و`kind` و`id` والقيم الابتدائية في مصدر HTML. لكنه **ليس تشفيرًا ولا تفويضًا**: يمكن للمتصفح تنزيل `nexil-state.js`، ولذلك تبقى بيانات capture عامة للعميل. لا تلتقط secrets أو credentials أو ملف user خاص أو بيانات مرتبطة بطلب واحد. تبقى حمولات ScopeRef بصيغة JSON داخلية مدعومة للتوافق وللحدود المكتوبة يدويًا.
 
 ## كتابة Handler lazy
 
@@ -81,7 +81,7 @@ export default component(() => {
 
 ## النماذج التدريجية
 
-تحافظ `Form` و`SubmitButton` على الإرسال الأصلي للمتصفح، ويضيف runtime `nexis-forms.js` idempotency key وCSRF اختياريًا وحالة تحميل وأحداث نجاح وفشل. استخدم `endpoint` داخل action عند تمرير مرجع Action إلى Form، وابقِ التحقق والتفويض وفحص Origin على الخادم.
+تحافظ `Form` و`SubmitButton` على الإرسال الأصلي للمتصفح، ويضيف runtime `nexil-forms.js` idempotency key وCSRF اختياريًا وحالة تحميل وأحداث نجاح وفشل. استخدم `endpoint` داخل action عند تمرير مرجع Action إلى Form، وابقِ التحقق والتفويض وفحص Origin على الخادم.
 
 ## Registry
 
@@ -120,7 +120,7 @@ Bootstrap يلتقط الأحداث على مستوى document ويبحث عن a
 - لا تعتمد على `event.target` دون تضييق نوعه.
 - إذا كان الحدث submit، يجب منع الإرسال الأصلي في الوقت المناسب ثم تنفيذ enhancement.
 - يجب أن يعمل النموذج حتى قبل تحميل JavaScript، عبر `action` و`method` حقيقيين.
-- استخدم `Form` و`SubmitButton` للنماذج؛ يُضاف `nexis-forms.js` فقط عندما يحتوي route على Form تدريجي.
+- استخدم `Form` و`SubmitButton` للنماذج؛ يُضاف `nexil-forms.js` فقط عندما يحتوي route على Form تدريجي.
 
 ## حدود التفاعل
 

@@ -22,10 +22,10 @@ describe('Nexil starter engine', () => {
 
   it('creates an explicit secure-node configuration and validates options', () => {
     const files = createStarterFiles({ projectName: 'ledger', template: 'secure-node' })
-    expect(files.find((file) => file.path === 'nexis.config.ts')?.content).toContain(
+    expect(files.find((file) => file.path === 'nexil.config.ts')?.content).toContain(
       'securityHeaders',
     )
-    expect(files.find((file) => file.path === 'nexis.config.ts')?.content).toContain(
+    expect(files.find((file) => file.path === 'nexil.config.ts')?.content).toContain(
       'trustProxy: false',
     )
     expect(() => resolveStarterOptions({ projectName: '../escape' })).toThrow(/Project name/)

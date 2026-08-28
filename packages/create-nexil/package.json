@@ -1,0 +1,33 @@
+{
+  "name": "@nexil/create-nexil",
+  "version": "1.0.0",
+  "description": "Create a Nexil application",
+  "type": "module",
+  "dependencies": {
+    "@nexil/starter": "workspace:*"
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.test.*",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MohammedAydan/nexil-framework.git",
+    "directory": "packages/create-nexil"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "bin": {
+    "create-nexil": "dist/bin.js",
+    "create-nexil-app": "dist/bin.js",
+    "create-nexis": "dist/bin.js",
+    "create-nexis-app": "dist/bin.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "node -e \"const fs=require('fs');for(const f of ['dist','tsconfig.tsbuildinfo']){try{fs.rmSync(f,{recursive:true,force:true})}catch(e){}}\""
+  }
+}

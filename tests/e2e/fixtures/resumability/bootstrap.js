@@ -1,4 +1,4 @@
-window.__nexisHandlerRuns = 0
+window.__nexilHandlerRuns = 0
 
 const button = document.querySelector('[data-nx-on-click]')
 button.addEventListener('click', async () => {

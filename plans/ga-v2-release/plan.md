@@ -2,13 +2,13 @@
 
 ## Goal
 
-Ship the production-ready v2.0.0 GA: initializer parity (`create-nexis` + `create-nexis-app` binaries), genuinely working interactive template, world-class truthful README, Deno e2e spec in CI, full gates, all packages published at 2.0.0 via the tag-driven pipeline.
+Ship the production-ready v2.0.0 GA: initializer parity (`create-nexil` + `create-nexil-app` binaries), genuinely working interactive template, world-class truthful README, Deno e2e spec in CI, full gates, all packages published at 2.0.0 via the tag-driven pipeline.
 
 ## Acceptance criteria
 
 - [ ] Scaffolded app has a REAL working resumable counter (dev + build + preview)
 - [ ] Resumability bootstrap works identically in dev (middleware) and prod (static)
-- [ ] create-nexis exposes both `create-nexis` and `create-nexis-app` bins; documented exec forms verified
+- [ ] create-nexil exposes both `create-nexil` and `create-nexil-app` bins; documented exec forms verified
 - [ ] README rewritten as doc hub; every code sample traced to real exported APIs
 - [ ] tests/e2e/deno-runtime.spec.ts added; runs under Deno in CI; excluded from Playwright
 - [ ] All public packages at 2.0.0; scaffold deps ^2.0.0

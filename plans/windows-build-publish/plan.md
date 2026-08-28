@@ -2,7 +2,7 @@
 
 ## Goal
 
-Make the monorepo build cleanly on Windows, publish the public `@nexil/*` packages to GitHub Packages, and prove `pnpm dlx @nexil/create-nexis` scaffolds an app that installs/builds/runs from published packages only.
+Make the monorepo build cleanly on Windows, publish the public `@nexil/*` packages to GitHub Packages, and prove `pnpm dlx @nexil/create-nexil` scaffolds an app that installs/builds/runs from published packages only.
 
 ## Acceptance Criteria
 
@@ -12,7 +12,7 @@ Make the monorepo build cleanly on Windows, publish the public `@nexil/*` packag
 - [ ] Public package list identified and documented; internal/duplicate package kept private
 - [ ] Tarballs inspected: correct files, no workspace:* leaks, valid exports
 - [ ] All public packages published to GitHub Packages in dependency-safe order
-- [ ] `npm view @nexil/create-nexis version --registry=https://registry.npmjs.org/` returns version
+- [ ] `npm view @nexil/create-nexil version --registry=https://registry.npmjs.org/` returns version
 - [ ] Fresh scaffold OUTSIDE repo installs, builds, starts, serves expected HTML
 - [ ] No local paths / workspace refs in generated consumer
 - [ ] Tag-driven GitHub Actions publish workflow committed
@@ -23,7 +23,7 @@ Make the monorepo build cleanly on Windows, publish the public `@nexil/*` packag
 1. Fix `tests/e2e/build-basic-app.mjs` path construction (fileURLToPath).
 2. Commit already-applied cross-platform root build script.
 3. Full build + test matrix locally.
-4. Mark create-nexis-app private; update READMEs; add project .npmrc (scope routing only).
+4. Mark create-nexil-app private; update READMEs; add project .npmrc (scope routing only).
 5. Dry-run publish → inspect tarballs → publish topologically.
 6. External consumer validation in temp dir outside the repo.
 7. Rework publish workflow to tag-driven; update docs.

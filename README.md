@@ -28,7 +28,7 @@ These contracts are enforced by compiler tests, integration tests, runtime parit
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
 | Static output            | A route without resumable interaction emits zero route-specific client JavaScript.                                               | CLI manifest, build tests, Playwright         |
 | Small interactive output | Interactive route code remains within the configured compressed budget.                                                          | `pnpm check:budget`, CLI checks               |
-| Isolated runtimes        | `nexis-bootstrap.js` serves events; `nexis-bindings.js` serves bindings; `nexis-forms.js` is emitted only for progressive forms. | CLI integration tests, E2E network assertions |
+| Isolated runtimes        | `nexil-bootstrap.js` serves events; `nexil-bindings.js` serves bindings; `nexil-forms.js` is emitted only for progressive forms. | CLI integration tests, E2E network assertions |
 | No full hydration        | Resumed handlers and bindings materialize their references without rerunning the component tree.                                 | Client runtime and browser tests              |
 | Request isolation        | Request-specific values are created per request and are not shared through mutable module singletons.                            | Server and parity tests                       |
 | Web-standard boundaries  | Adapters use `Request`, `Response`, `Headers`, `ReadableStream`, and Web Crypto-compatible contracts where applicable.           | Node, Deno, Cloudflare, and parity tests      |
@@ -45,8 +45,8 @@ npm login
 Create a TypeScript application with the current initializer:
 
 ```bash
-pnpm dlx @nexil/create-nexis@1.0.0 my-nexis-app --yes --ts
-cd my-nexis-app
+pnpm dlx @nexil/create-nexil@1.0.0 my-nexil-app --yes --ts
+cd my-nexil-app
 pnpm install
 pnpm dev
 ```
@@ -54,12 +54,12 @@ pnpm dev
 Equivalent npm and Yarn forms are:
 
 ```bash
-npx --yes @nexil/create-nexis@1.0.0 my-nexis-app --yes --ts
+npx --yes @nexil/create-nexil@1.0.0 my-nexil-app --yes --ts
 # or
-yarn dlx @nexil/create-nexis@1.0.0 my-nexis-app --yes --ts
+yarn dlx @nexil/create-nexil@1.0.0 my-nexil-app --yes --ts
 ```
 
-The initializer supports `--yes`, `--ts`, `--js`, `--tailwind`, and `--no-tailwind`. Inside an existing application, the CLI exposes the same project operations through `nexis create <name>`. The generated project includes route files, an HTML shell, TypeScript configuration, public assets, and package scripts for development and production builds.
+The initializer supports `--yes`, `--ts`, `--js`, `--tailwind`, and `--no-tailwind`. Inside an existing application, the CLI exposes the same project operations through `nexil create <name>`. The generated project includes route files, an HTML shell, TypeScript configuration, public assets, and package scripts for development and production builds.
 
 > If package installation reports `ERR_PNPM_FETCH_404`, verify you are using the public npm registry (`https://registry.npmjs.org/`) and the package name is `@nexil/...`. No GitHub Packages token is required for public `@nexil` packages.
 
@@ -68,7 +68,7 @@ The initializer supports `--yes`, `--ts`, `--js`, `--tailwind`, and `--no-tailwi
 A small application commonly looks like this:
 
 ```text
-my-nexis-app/
+my-nexil-app/
 ├── src/
 │   ├── routes/
 │   │   ├── _layout.tsx
@@ -88,11 +88,11 @@ Routes are discovered under `src/routes/**/*.{tsx,jsx,ts,js}`. `_layout.*` files
 <!doctype html>
 <html lang="en">
   <head>
-    <!--nexis-head-outlet-->
+    <!--nexil-head-outlet-->
   </head>
   <body>
-    <div id="app"><!--nexis-app-outlet--></div>
-    <!--nexis-scripts-outlet-->
+    <div id="app"><!--nexil-app-outlet--></div>
+    <!--nexil-scripts-outlet-->
   </body>
 </html>
 ```
@@ -247,7 +247,7 @@ It resolves a registered `nx:signal:<id>` or `nx:store:<id>`, applies the curren
 
 Automatic lowering intentionally does not guess arbitrary dependency graphs. An expression such as `{count() + ' items'}` remains ordinary SSR output and emits a compiler diagnostic recommending an explicit directive. Use `bindText$` when a complex expression must be updated as one binding.
 
-A route that contains only events receives `nexis-bootstrap.js`. A route that contains bindings receives the separate `nexis-bindings.js` runtime in addition to any required event bootstrap. A route containing a `Form` receives `nexis-forms.js`; a route may receive more than one runtime when it contains multiple boundary kinds. Static routes receive none of these runtimes.
+A route that contains only events receives `nexil-bootstrap.js`. A route that contains bindings receives the separate `nexil-bindings.js` runtime in addition to any required event bootstrap. A route containing a `Form` receives `nexil-forms.js`; a route may receive more than one runtime when it contains multiple boundary kinds. Static routes receive none of these runtimes.
 
 ## State and reactivity
 
@@ -369,7 +369,7 @@ const attributes = imageAttributes({
 
 Use intrinsic dimensions, meaningful alternative text, and responsive sources. Treat remote image and font URLs as untrusted input and validate the allowed origin policy before fetching.
 
-After a build, `nexis analyze` also inventories emitted non-HTML assets. It reports the total delivery size, image subtotal, and five largest files. Images at or above 256 KiB receive an advisory to generate AVIF/WebP variants and use correct responsive loading. This is a build-time delivery guard, not a substitute for field Core Web Vitals or real CDN measurements.
+After a build, `nexil analyze` also inventories emitted non-HTML assets. It reports the total delivery size, image subtotal, and five largest files. Images at or above 256 KiB receive an advisory to generate AVIF/WebP variants and use correct responsive loading. This is a build-time delivery guard, not a substitute for field Core Web Vitals or real CDN measurements.
 
 The SEO package provides typed head output, canonical URLs, JSON-LD validation and escaping, breadcrumbs, sitemaps, robots.txt, RSS, Atom, and related metadata helpers:
 
@@ -406,7 +406,7 @@ import { Form, SubmitButton } from '@nexil/core'
 
 export default function Contact() {
   return (
-    <Form action="/__nexis/actions/contact" csrfToken={csrfToken}>
+    <Form action="/__nexil/actions/contact" csrfToken={csrfToken}>
       <input name="email" type="email" required />
       <SubmitButton loadingText="Sending…">Send</SubmitButton>
     </Form>
@@ -416,25 +416,25 @@ export default function Contact() {
 
 ## CLI commands
 
-The installed `nexis` binary and repository scripts expose the framework workflow:
+The installed `nexil` binary and repository scripts expose the framework workflow:
 
 | Command                           | Purpose                                                                                                          |
 | --------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `nexis dev`                       | Run the Vite development server with Nexil SSR middleware and hot updates                                        |
-| `nexis build`                     | Build route HTML, server modules, assets, lazy chunks, runtimes, feeds, redirects, manifest, and `public/` files |
-| `nexis start`                     | Serve the built artifact with route-aware Nexil production behavior                                              |
-| `nexis serve`                     | Compatibility alias for `nexis start`                                                                            |
-| `nexis check --budget`            | Run build and byte-budget checks                                                                                 |
-| `nexis analyze`                   | Report route output, client-size metrics, static-asset totals, and the largest emitted assets                    |
-| `nexis routes`                    | List discovered route files                                                                                      |
-| `nexis create <name>`             | Scaffold an application                                                                                          |
-| `nexis preview`                   | Compatibility alias for `nexis start`                                                                            |
-| `nexis generate route <path>`     | Generate a route safely                                                                                          |
-| `nexis generate component <name>` | Generate a component safely                                                                                      |
-| `nexis add action <name>`         | Generate a server action scaffold                                                                                |
-| `nexis doctor`                    | Diagnose package, shell, and route configuration                                                                 |
-| `nexis test`                      | Run the integrated test workflow                                                                                 |
-| `nexis upgrade`                   | Scan for upgrade and migration work                                                                              |
+| `nexil dev`                       | Run the Vite development server with Nexil SSR middleware and hot updates                                        |
+| `nexil build`                     | Build route HTML, server modules, assets, lazy chunks, runtimes, feeds, redirects, manifest, and `public/` files |
+| `nexil start`                     | Serve the built artifact with route-aware Nexil production behavior                                              |
+| `nexil serve`                     | Compatibility alias for `nexil start`                                                                            |
+| `nexil check --budget`            | Run build and byte-budget checks                                                                                 |
+| `nexil analyze`                   | Report route output, client-size metrics, static-asset totals, and the largest emitted assets                    |
+| `nexil routes`                    | List discovered route files                                                                                      |
+| `nexil create <name>`             | Scaffold an application                                                                                          |
+| `nexil preview`                   | Compatibility alias for `nexil start`                                                                            |
+| `nexil generate route <path>`     | Generate a route safely                                                                                          |
+| `nexil generate component <name>` | Generate a component safely                                                                                      |
+| `nexil add action <name>`         | Generate a server action scaffold                                                                                |
+| `nexil doctor`                    | Diagnose package, shell, and route configuration                                                                 |
+| `nexil test`                      | Run the integrated test workflow                                                                                 |
+| `nexil upgrade`                   | Scan for upgrade and migration work                                                                              |
 
 A production build commonly contains:
 
@@ -444,19 +444,19 @@ dist/
 │   ├── index.html
 │   ├── assets/
 │   ├── og/
-│   ├── nexis-manifest.json
-│   ├── nexis-bootstrap.js       # event routes only
-│   ├── nexis-bindings.js        # binding routes only
-│   ├── nexis-forms.js           # progressive form routes only
+│   ├── nexil-manifest.json
+│   ├── nexil-bootstrap.js       # event routes only
+│   ├── nexil-bindings.js        # binding routes only
+│   ├── nexil-forms.js           # progressive form routes only
 │   ├── robots.txt
 │   ├── sitemap.xml
 │   ├── feed.xml
 │   └── atom.xml
 ├── server/routes/                # generated SSR modules
-└── nexis-chunks/                 # hashed lazy handlers
+└── nexil-chunks/                 # hashed lazy handlers
 ```
 
-Exact generated files depend on the route inventory and configuration. Treat `nexis-manifest.json` and the build output as the source of truth for a particular release.
+Exact generated files depend on the route inventory and configuration. Treat `nexil-manifest.json` and the build output as the source of truth for a particular release.
 
 A generated project needs no configuration for the standard lifecycle:
 
@@ -466,7 +466,7 @@ pnpm build
 pnpm start
 ```
 
-Use an optional typed `nexis.config.ts` with `defineConfig` from `@nexil/serve` only to override defaults such as the public origin, port, redirects, feed metadata, cache controls, or Action policy.
+Use an optional typed `nexil.config.ts` with `defineConfig` from `@nexil/serve` only to override defaults such as the public origin, port, redirects, feed metadata, cache controls, or Action policy.
 
 ## Package map
 
@@ -492,7 +492,7 @@ Use an optional typed `nexis.config.ts` with `defineConfig` from `@nexil/serve` 
 | `@nexil/serve-cloudflare` | Cloudflare edge handler package                                                                     |
 | `@nexil/telemetry`        | Optional Web Vitals and telemetry receiver primitives                                               |
 | `@nexil/cli`              | CLI orchestration and production build pipeline                                                     |
-| `@nexil/create-nexis`     | Project initializer and compatibility initializer binaries                                          |
+| `@nexil/create-nexil`     | Project initializer and compatibility initializer binaries                                          |
 
 ## Verification workflow
 

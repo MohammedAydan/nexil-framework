@@ -1,6 +1,8 @@
 import { element } from '@nexil/core'
 import type { Child, ElementNode } from '@nexil/core'
-export { NEXIS_NAVIGATION_RUNTIME } from './navigation.js'
+export { NEXIL_NAVIGATION_RUNTIME } from './navigation.js'
+// Compat alias for pre-rename imports
+export { NEXIL_NAVIGATION_RUNTIME as nexil_NAVIGATION_RUNTIME } from './navigation.js'
 
 export interface RouteParam {
   readonly name: string
@@ -144,7 +146,7 @@ export function routeFromFile(file: string): RouteRecord {
 }
 
 function splitUrl(input: string | URL): { pathname: string; query: URLSearchParams; hash: string } {
-  const url = input instanceof URL ? input : new URL(input, 'http://nexis.invalid')
+  const url = input instanceof URL ? input : new URL(input, 'http://nexil.invalid')
   return { pathname: url.pathname, query: url.searchParams, hash: url.hash.slice(1) }
 }
 

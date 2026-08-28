@@ -69,7 +69,7 @@ Nexil هو فريمورك TypeScript يركز على **HTML أولًا**، و**S
 - [مصفوفة الضوابط الأمنية](../security/control-matrix.md)
 - [توثيق الخادم](../../packages/serve/README.md)
 - [توثيق Telemetry](../../packages/telemetry/README.md)
-- [تقرير Showcase](../../examples/nexis-showcase/SHOWCASE-REPORT.md)
+- [تقرير Showcase](../../examples/nexil-showcase/SHOWCASE-REPORT.md)
 - [منهج التوثيق العملي](./منهج-التوثيق-العملي.md)
 - [مسار Nexil Workbench الإنتاجي](./24-منصة-Workbench-من-الصفر-إلى-الإنتاج.md)
 - [ملاحظات إصدار v1.1.0](../releases/v1.1.0-ar.md)

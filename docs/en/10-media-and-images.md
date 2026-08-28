@@ -2,10 +2,10 @@
 
 ## The media pipeline
 
-`@nexil/media` builds image variants at multiple widths and formats using a content-addressed cache. Nexil can run this pipeline automatically for public PNG, JPEG, and SVG files during `nexis build`, but it remains opt-in so existing applications keep their current output until they choose it.
+`@nexil/media` builds image variants at multiple widths and formats using a content-addressed cache. Nexil can run this pipeline automatically for public PNG, JPEG, and SVG files during `nexil build`, but it remains opt-in so existing applications keep their current output until they choose it.
 
 ```ts
-// nexis.config.ts
+// nexil.config.ts
 import { defineConfig } from '@nexil/serve'
 
 export default defineConfig({
@@ -13,15 +13,15 @@ export default defineConfig({
     images: {
       transform: true,
       widths: [320, 640, 960, 1280],
-      cacheDir: '.nexis/media-cache',
+      cacheDir: '.nexil/media-cache',
     },
   },
 })
 ```
 
-The build copies the original public file, emits AVIF and WebP variants beside it, persists reusable transform data beneath `.nexis/media-cache`, and writes `nexis-media.json` to both `dist/` and `dist/client/`. Add `.nexis/` to `.gitignore`; the cache is disposable and not a source artifact.
+The build copies the original public file, emits AVIF and WebP variants beside it, persists reusable transform data beneath `.nexil/media-cache`, and writes `nexil-media.json` to both `dist/` and `dist/client/`. Add `.nexil/` to `.gitignore`; the cache is disposable and not a source artifact.
 
-For `public/images/hero.jpg`, the generated variants include `/images/hero-jpg-320.avif`, `/images/hero-jpg-320.webp`, `/images/hero-jpg-640.avif`, and so on. The exact result and cache state appear in `nexis analyze`.
+For `public/images/hero.jpg`, the generated variants include `/images/hero-jpg-320.avif`, `/images/hero-jpg-320.webp`, `/images/hero-jpg-640.avif`, and so on. The exact result and cache state appear in `nexil analyze`.
 
 ## Picture markup
 
@@ -43,7 +43,7 @@ Use `<picture>` with AVIF first, WebP second, and a fallback `<img>`. The image 
 
 Use `loading="eager"` and `fetchpriority="high"` only for the real LCP image. Do not make every image eager.
 
-When using the build-generated static files, prefer the `Image` component with `staticVariants`. It uses the same stable file naming contract as `nexis build`:
+When using the build-generated static files, prefer the `Image` component with `staticVariants`. It uses the same stable file naming contract as `nexil build`:
 
 ```tsx
 import { Image } from '@nexil/media'
@@ -72,7 +72,7 @@ The in-memory cache is fast but disappears after a process restart. `cacheDir` a
 
 Include source bytes, width, format, and transform settings in the cache key. If quality settings are not part of the key, a build may reuse an outdated result.
 
-Nexil includes the source bytes, file base, and requested widths in its cache key. Delete `.nexis/media-cache` to force a full rebuild; do not deploy this cache directory.
+Nexil includes the source bytes, file base, and requested widths in its cache key. Delete `.nexil/media-cache` to force a full rebuild; do not deploy this cache directory.
 
 ## Remote images
 

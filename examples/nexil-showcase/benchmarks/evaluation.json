@@ -1,0 +1,143 @@
+{
+  "generatedAt": "2026-08-26T18:37:25.911Z",
+  "passed": 27,
+  "total": 27,
+  "passRate": 100,
+  "checks": [
+    {
+      "name": "All published routes return 200",
+      "passed": true,
+      "detail": "/:200 /features:200 /labs:200 /docs/architecture:200 /docs/resumability:200 /docs/performance:200 /status:200"
+    },
+    {
+      "name": "Missing route returns 404",
+      "passed": true,
+      "detail": "status=404"
+    },
+    {
+      "name": "SSR emits substantive HTML",
+      "passed": true,
+      "detail": "/:9187B /features:5588B /labs:5325B /docs/architecture:2983B /docs/resumability:3009B /docs/performance:2975B /status:3669B"
+    },
+    {
+      "name": "Nested static paths render",
+      "passed": true,
+      "detail": "dynamic route expansion"
+    },
+    {
+      "name": "Interactive route emits resumability boundary",
+      "passed": true,
+      "detail": "home and labs"
+    },
+    {
+      "name": "Static feature page is non-interactive",
+      "passed": true,
+      "detail": "interactive=false"
+    },
+    {
+      "name": "SEO title exists on every measured page",
+      "passed": true,
+      "detail": "title tags"
+    },
+    {
+      "name": "SEO description exists on every measured page",
+      "passed": true,
+      "detail": "description tags"
+    },
+    {
+      "name": "Canonical and OpenGraph URL exist",
+      "passed": true,
+      "detail": "canonical + og:url"
+    },
+    {
+      "name": "No dangerous URL protocols emitted",
+      "passed": true,
+      "detail": "javascript/vbscript/data protocol scan"
+    },
+    {
+      "name": "Bootstrap is below 2KB raw",
+      "passed": true,
+      "detail": "1732B"
+    },
+    {
+      "name": "Average interactive chunk is below 2KB raw",
+      "passed": true,
+      "detail": "2 chunks"
+    },
+    {
+      "name": "Median route latency is below 250ms",
+      "passed": true,
+      "detail": "/:1.4ms /features:1.2ms /labs:0.68ms /docs/architecture:0.64ms /docs/resumability:0.63ms /docs/performance:0.62ms /status:0.68ms"
+    },
+    {
+      "name": "HTML responses include an explicit cache policy",
+      "passed": true,
+      "detail": "/:public, max-age=0, must-revalidate /features:public, max-age=0, must-revalidate /labs:public, max-age=0, must-revalidate /docs/architecture:public, max-age=0, must-revalidate /docs/resumability:public, max-age=0, must-revalidate /docs/performance:public, max-age=0, must-revalidate /status:public, max-age=0, must-revalidate"
+    },
+    {
+      "name": "Sitemap endpoint is crawlable and includes published routes",
+      "passed": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "Robots endpoint points to the sitemap",
+      "passed": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "Action endpoint returns a successful typed envelope",
+      "passed": true,
+      "detail": "{\"ok\":true,\"data\":\"queued:Ada\"}"
+    },
+    {
+      "name": "Crawler finds no broken internal links or duplicate metadata signatures",
+      "passed": true,
+      "detail": "{\"brokenLinks\":[],\"duplicateMetadata\":[]}"
+    },
+    {
+      "name": "Every measured page passes schema-level JSON-LD validation",
+      "passed": true,
+      "detail": "schema.org context/type/name"
+    },
+    {
+      "name": "Build-time image variants are present and non-empty",
+      "passed": true,
+      "detail": "4 variants"
+    },
+    {
+      "name": "Static routes ship zero client JavaScript",
+      "passed": true,
+      "detail": "static route client-byte floor"
+    },
+    {
+      "name": "RSS feed is valid and includes expanded routes",
+      "passed": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "Atom feed is valid and includes expanded routes",
+      "passed": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "Declarative docs redirect returns 308",
+      "passed": true,
+      "detail": "status=308"
+    },
+    {
+      "name": "Build-time OG cards are emitted",
+      "passed": true,
+      "detail": "4 cards"
+    },
+    {
+      "name": "Nexil client JavaScript is no larger than the comparison baseline",
+      "passed": true,
+      "detail": "{\"nexil\":1940,\"astro\":2272,\"nexilFiles\":[\"nexil-bootstrap.js\",\"nexil-chunks/chunk_535ea9ea9b73.js\"],\"astroFiles\":[\"astro-island.js\"],\"gatePassed\":true}"
+    },
+    {
+      "name": "Lighthouse SEO/performance/accessibility gates pass on all routes",
+      "passed": true,
+      "detail": "{\"seo\":1,\"performance\":0.95,\"accessibility\":0.95}"
+    }
+  ]
+}

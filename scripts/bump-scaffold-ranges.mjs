@@ -4,9 +4,9 @@ import { readFile, writeFile } from 'node:fs/promises'
 const OLD = "'^0.1.0'"
 const NEW = "'^1.0.0'"
 const files = [
-  'packages/create-nexis/src/scaffold.ts',
+  'packages/create-nexil/src/scaffold.ts',
   'packages/cli/src/scaffold.ts',
-  'packages/create-nexis-app/src/scaffold.ts',
+  'packages/create-nexil-app/src/scaffold.ts',
 ]
 for (const file of files) {
   const source = await readFile(file, 'utf8')

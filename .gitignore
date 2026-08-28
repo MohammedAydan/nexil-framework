@@ -12,6 +12,6 @@ test-results/
 !.env.example
 *.log
 .DS_Store
-my-nexis-app/
-docs/nexis-arabic-documentation.zip
-docs/nexis-english-documentation.zip
+my-nexil-app/
+docs/nexil-arabic-documentation.zip
+docs/nexil-english-documentation.zip

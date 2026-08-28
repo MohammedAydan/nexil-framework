@@ -111,7 +111,7 @@ importers:
 
   examples/landing-page: {}
 
-  examples/nexis-showcase:
+  examples/nexil-showcase:
     dependencies:
       '@nexil/actions':
         specifier: workspace:*
@@ -169,7 +169,7 @@ importers:
         specifier: ^7.3.6
         version: 7.3.6(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0)
 
-  examples/nexis-workbench:
+  examples/nexil-workbench:
     dependencies:
       '@nexil/actions':
         specifier: workspace:*
@@ -310,13 +310,13 @@ importers:
         specifier: workspace:*
         version: link:../reactivity
 
-  packages/create-nexis:
+  packages/create-nexil:
     dependencies:
       '@nexil/starter':
         specifier: workspace:*
         version: link:../starter
 
-  packages/create-nexis-app:
+  packages/create-nexil-app:
     dependencies:
       '@nexil/starter':
         specifier: workspace:*

@@ -13,7 +13,7 @@ let server: { readonly close: () => Promise<void>; readonly listen: () => Promis
 test.beforeAll(async () => {
   const { createProject, runCli } = await import('../../packages/cli/dist/index.js')
   const { createServer } = await import('../../packages/serve/dist/index.js')
-  parent = await mkdtemp(join(tmpdir(), 'nexis-link-e2e-'))
+  parent = await mkdtemp(join(tmpdir(), 'nexil-link-e2e-'))
   appDir = await createProject('link-app', parent)
   await writeFile(
     join(appDir, 'src/routes/_layout.tsx'),
@@ -81,9 +81,9 @@ test('Link swaps server-rendered outlet without a full document reload and suppo
   })
   await page.goto('http://127.0.0.1:4321/')
   await expect(page.locator('#about-link')).toHaveAttribute('data-nx-link', 'push')
-  await expect(page.locator('script[src="/nexis-navigation.js"]')).toHaveCount(1)
+  await expect(page.locator('script[src="/nexil-navigation.js"]')).toHaveCount(1)
   await page.evaluate(() => {
-    ;(globalThis as typeof globalThis & { __nexisLinkProof?: string }).__nexisLinkProof =
+    ;(globalThis as typeof globalThis & { __nexilLinkProof?: string }).__nexilLinkProof =
       'preserved'
   })
   await page.evaluate(() => scrollTo(0, 300))
@@ -106,7 +106,7 @@ test('Link swaps server-rendered outlet without a full document reload and suppo
   await expect
     .poll(() =>
       page.evaluate(
-        () => (globalThis as typeof globalThis & { __nexisLinkProof?: string }).__nexisLinkProof,
+        () => (globalThis as typeof globalThis & { __nexilLinkProof?: string }).__nexilLinkProof,
       ),
     )
     .toBe('preserved')
@@ -166,14 +166,14 @@ test('Link leaves native escape hatches untouched and cancels a stale visit', as
   })
   await page.evaluate(() => {
     ;(
-      globalThis as typeof globalThis & { __nexisNavigate?: (href: string) => void }
-    ).__nexisNavigate?.('/slow')
+      globalThis as typeof globalThis & { __nexilNavigate?: (href: string) => void }
+    ).__nexilNavigate?.('/slow')
   })
   await page.waitForTimeout(25)
   await page.evaluate(() => {
     ;(
-      globalThis as typeof globalThis & { __nexisNavigate?: (href: string) => void }
-    ).__nexisNavigate?.('/about')
+      globalThis as typeof globalThis & { __nexilNavigate?: (href: string) => void }
+    ).__nexilNavigate?.('/about')
   })
   await expect(page).toHaveURL('http://127.0.0.1:4321/about')
   await expect(page.getByRole('heading', { name: 'About Nexil' })).toBeVisible()
@@ -198,8 +198,8 @@ test('Link clears a restored-page request and falls back for a non-HTML response
   })
   await page.evaluate(() => {
     ;(
-      globalThis as typeof globalThis & { __nexisNavigate?: (href: string) => void }
-    ).__nexisNavigate?.('/restored-slow')
+      globalThis as typeof globalThis & { __nexilNavigate?: (href: string) => void }
+    ).__nexilNavigate?.('/restored-slow')
   })
   await page.waitForTimeout(25)
   await page.evaluate(() => dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })))
@@ -212,8 +212,8 @@ test('Link clears a restored-page request and falls back for a non-HTML response
   )
   await page.evaluate(() => {
     ;(
-      globalThis as typeof globalThis & { __nexisNavigate?: (href: string) => void }
-    ).__nexisNavigate?.('/non-html')
+      globalThis as typeof globalThis & { __nexilNavigate?: (href: string) => void }
+    ).__nexilNavigate?.('/non-html')
   })
   await expect(page).toHaveURL('http://127.0.0.1:4321/non-html')
   await expect(page.getByRole('heading', { name: 'Nexil home' })).toHaveCount(0)

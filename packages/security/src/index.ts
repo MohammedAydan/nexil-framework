@@ -34,7 +34,7 @@ export interface SessionManager<Identity extends Principal = Principal> {
   destroy(request: Request): Promise<void>
 }
 
-const DEFAULT_COOKIE_NAME = 'nexis_session'
+const DEFAULT_COOKIE_NAME = 'nexil_session'
 
 function cookieOptions(options: SessionOptions): CookieOptions {
   return {

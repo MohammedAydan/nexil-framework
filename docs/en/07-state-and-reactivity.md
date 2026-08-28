@@ -42,7 +42,7 @@ Nexil detects computed re-entry and emits a descriptive cycle error instead of l
 
 When an `onClick$` handler closes over a signal or store, the production compiler
 puts an opaque key in `data-nx-scope` and stores the corresponding browser payload
-in `nexis-state.js` so the browser can materialize it on first interaction. This
+in `nexil-state.js` so the browser can materialize it on first interaction. This
 requires a **JSON-literal initial value**:
 
 ```ts
@@ -207,4 +207,4 @@ When state crosses a lazy boundary, prefer compiler inference over manual ScopeR
 
 ## Workbench lab
 
-Run `pnpm --filter @nexil/example-nexis-workbench build` and inspect the home output and manifest. Its `ArticleFilter` is deliberately one Signal-driven boundary, so it is a small place to confirm the initial HTML, lazy interaction marker, and direct binding behavior. Extend it with the ContextScope test from this guide only after writing two independent scopes; do not turn the example's browser UI state into a module-level request singleton.
+Run `pnpm --filter @nexil/example-nexil-workbench build` and inspect the home output and manifest. Its `ArticleFilter` is deliberately one Signal-driven boundary, so it is a small place to confirm the initial HTML, lazy interaction marker, and direct binding behavior. Extend it with the ContextScope test from this guide only after writing two independent scopes; do not turn the example's browser UI state into a module-level request singleton.

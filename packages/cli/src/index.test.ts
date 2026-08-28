@@ -15,13 +15,13 @@ describe('Nexil CLI', () => {
   })
 
   it('creates a one-route project safely', async () => {
-    const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-'))
+    const parent = await mkdtemp(join(tmpdir(), 'nexil-cli-'))
     const directory = await createProject('demo-app', parent)
     expect(await readFile(join(directory, 'src/routes/index.tsx'), 'utf8')).toContain(
       'Rendered via Nexil SSR Engine',
     )
     expect(await readFile(join(directory, 'index.html'), 'utf8')).toContain(
-      '<!--nexis-app-outlet-->',
+      '<!--nexil-app-outlet-->',
     )
     await expect(createProject('../escape', parent)).rejects.toThrow(/Project name/)
     await expect(runCli(['routes'], directory)).resolves.toContain('index.tsx')
@@ -33,7 +33,7 @@ describe('Nexil CLI', () => {
   })
 
   it('requires a production artifact before start', async () => {
-    const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-start-'))
+    const parent = await mkdtemp(join(tmpdir(), 'nexil-cli-start-'))
     try {
       const directory = await createProject('start-app', parent)
       await expect(runCli(['start'], directory)).rejects.toThrow(/Run `pnpm build`/)
@@ -43,11 +43,11 @@ describe('Nexil CLI', () => {
   })
 
   it('uses optional project configuration for the production origin', async () => {
-    const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-config-'))
+    const parent = await mkdtemp(join(tmpdir(), 'nexil-cli-config-'))
     try {
       const directory = await createProject('configured-app', parent)
       await writeFile(
-        join(directory, 'nexis.config.mjs'),
+        join(directory, 'nexil.config.mjs'),
         "export default { app: { origin: 'https://configured.example.test' } }\n",
         'utf8',
       )
@@ -60,7 +60,7 @@ describe('Nexil CLI', () => {
   })
 
   it('reports oversized static images in the production asset inventory', async () => {
-    const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-assets-'))
+    const parent = await mkdtemp(join(tmpdir(), 'nexil-cli-assets-'))
     try {
       const directory = await createProject('asset-app', parent)
       await mkdir(join(directory, 'public'), { recursive: true })
@@ -71,7 +71,7 @@ describe('Nexil CLI', () => {
       expect(analysis).toContain('/hero.png')
       expect(analysis).toContain('warning: consider AVIF/WebP variants')
       const manifest = JSON.parse(
-        await readFile(join(directory, 'dist', 'nexis-manifest.json'), 'utf8'),
+        await readFile(join(directory, 'dist', 'nexil-manifest.json'), 'utf8'),
       ) as { assets?: { count: number; imageBytes: number } }
       expect(manifest.assets?.count).toBeGreaterThan(0)
       expect(manifest.assets?.imageBytes).toBeGreaterThanOrEqual(300 * 1024)
@@ -81,7 +81,7 @@ describe('Nexil CLI', () => {
   })
 
   it('emits cached AVIF and WebP public-image variants when configured', async () => {
-    const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-media-'))
+    const parent = await mkdtemp(join(tmpdir(), 'nexil-cli-media-'))
     try {
       const directory = await createProject('media-app', parent)
       await mkdir(join(directory, 'public'), { recursive: true })
@@ -90,7 +90,7 @@ describe('Nexil CLI', () => {
         '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect width="20" height="20" fill="green" /></svg>',
       )
       await writeFile(
-        join(directory, 'nexis.config.mjs'),
+        join(directory, 'nexil.config.mjs'),
         'export default { media: { images: { transform: true, widths: [16] } } }\n',
         'utf8',
       )
@@ -103,7 +103,7 @@ describe('Nexil CLI', () => {
       ).toBeGreaterThan(0)
       await runCli(['build'], directory)
       const manifest = JSON.parse(
-        await readFile(join(directory, 'dist/nexis-manifest.json'), 'utf8'),
+        await readFile(join(directory, 'dist/nexil-manifest.json'), 'utf8'),
       ) as { media?: { images: Array<{ variants: Array<{ cacheHit: boolean }> }> } }
       expect(manifest.media?.images[0]?.variants).toHaveLength(2)
       expect(manifest.media?.images[0]?.variants.every((variant) => variant.cacheHit)).toBe(true)
@@ -114,7 +114,7 @@ describe('Nexil CLI', () => {
   })
 
   it('uses local workspace dependencies when scaffolded inside the repository', async () => {
-    const parent = await mkdtemp(join(process.cwd(), '.nexis-scaffold-test-'))
+    const parent = await mkdtemp(join(process.cwd(), '.nexil-scaffold-test-'))
     try {
       const result = await scaffoldProject('workspace-app', parent, { yes: true, language: 'ts' })
       const packageJson = JSON.parse(
@@ -127,7 +127,7 @@ describe('Nexil CLI', () => {
         'onlyBuiltDependencies:',
       )
       expect(await readFile(join(result.directory, 'index.html'), 'utf8')).toContain(
-        '<!--nexis-app-outlet-->',
+        '<!--nexil-app-outlet-->',
       )
     } finally {
       await rm(parent, { recursive: true, force: true })
@@ -135,17 +135,17 @@ describe('Nexil CLI', () => {
   })
 
   it('configures published scaffolds for GitHub Packages', async () => {
-    const parent = await mkdtemp(join(tmpdir(), 'nexis-github-scaffold-'))
+    const parent = await mkdtemp(join(tmpdir(), 'nexil-github-scaffold-'))
     try {
       const result = await scaffoldProject('github-app', parent, { yes: true, language: 'ts' })
       const packageJson = JSON.parse(
         await readFile(join(result.directory, 'package.json'), 'utf8'),
       ) as {
         dependencies: { '@nexil/cli': string }
-        nexis: { source: string; registry: string }
+        nexil: { source: string; registry: string }
       }
       expect(packageJson.dependencies['@nexil/cli']).toBe('^1.0.0')
-      expect(packageJson.nexis).toEqual({
+      expect(packageJson.nexil).toEqual({
         routeExtension: 'tsx',
         source: 'npm',
         registry: 'https://registry.npmjs.org/',
@@ -159,11 +159,11 @@ describe('Nexil CLI', () => {
   })
 
   it('handles Windows-style path containment without POSIX separators', () => {
-    const parent = 'D:\\Projects\\Test\\nexis-framework'
+    const parent = 'D:\\Projects\\Test\\nexil-framework'
     expect(
       isContainedPath(
         parent,
-        `${parent}\\my-nexis-app`,
+        `${parent}\\my-nexil-app`,
         { relative: win32.relative, isAbsolute: win32.isAbsolute },
         '\\',
       ),
@@ -179,7 +179,7 @@ describe('Nexil CLI', () => {
     expect(
       isContainedPath(
         parent,
-        'D:\\Projects\\Test\\nexis-framework\\..\\escape',
+        'D:\\Projects\\Test\\nexil-framework\\..\\escape',
         { relative: win32.relative, isAbsolute: win32.isAbsolute },
         '\\',
       ),
@@ -187,7 +187,7 @@ describe('Nexil CLI', () => {
   })
 
   it('supports deterministic TSX and JSX scaffold variants', async () => {
-    const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-scaffold-'))
+    const parent = await mkdtemp(join(tmpdir(), 'nexil-cli-scaffold-'))
     expect(parseScaffoldArgs(['app', '--yes', '--js', '--tailwind'])).toEqual({
       name: 'app',
       options: { yes: true, language: 'js', tailwind: true },
@@ -232,7 +232,7 @@ describe('Nexil CLI', () => {
     const stylesheet = await readFile(join(directory, 'dist/client/assets/styles.css'), 'utf8')
     const html = await readFile(join(directory, 'dist/client/index.html'), 'utf8')
     const manifest = JSON.parse(
-      await readFile(join(directory, 'dist/client/nexis-manifest.json'), 'utf8'),
+      await readFile(join(directory, 'dist/client/nexil-manifest.json'), 'utf8'),
     ) as { routes: Array<{ route: string }> }
     expect(stylesheet).toContain('.bg-slate-950')
     expect(html.match(/href="\/assets\/styles\.css"/g)).toHaveLength(1)
@@ -245,7 +245,7 @@ describe('Nexil CLI', () => {
   })
 
   it('emits and measures bootstrap for an interactive route', async () => {
-    const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-interactive-'))
+    const parent = await mkdtemp(join(tmpdir(), 'nexil-cli-interactive-'))
     const directory = await createProject('interactive-app', parent)
     await writeFile(
       join(directory, 'src/routes/index.tsx'),
@@ -255,18 +255,18 @@ describe('Nexil CLI', () => {
 
     await expect(runCli(['check', '--budget'], directory)).resolves.toContain('checks passed')
     const manifest = JSON.parse(
-      await readFile(join(directory, 'dist/nexis-manifest.json'), 'utf8'),
+      await readFile(join(directory, 'dist/nexil-manifest.json'), 'utf8'),
     ) as { routes: Array<{ source: string; interactive: boolean; bootstrapGzipBytes: number }> }
     const indexRoute = manifest.routes.find((route) => route.source === 'index.tsx')
     expect(indexRoute?.interactive).toBe(true)
     expect(indexRoute?.bootstrapGzipBytes).toBeGreaterThan(0)
-    expect(await readFile(join(directory, 'dist/nexis-bootstrap.js'), 'utf8')).toContain(
+    expect(await readFile(join(directory, 'dist/nexil-bootstrap.js'), 'utf8')).toContain(
       'document.addEventListener',
     )
   })
 
   it('moves resumability state metadata out of generated HTML', async () => {
-    const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-external-state-'))
+    const parent = await mkdtemp(join(tmpdir(), 'nexil-cli-external-state-'))
     try {
       const directory = await createProject('external-state-app', parent)
       await writeFile(
@@ -282,8 +282,8 @@ export default function Home() { return <button onClick$={() => accountBalance.s
       expect(html).toMatch(/data-nx-scope="nx:scope:[a-f0-9]{12}"/)
       expect(html).not.toContain('accountBalance')
       expect(html).not.toContain('&quot;initial&quot;')
-      expect(html).toContain('<script type="module" src="/nexis-state.js"></script>')
-      const stateRuntime = await readFile(join(directory, 'dist/client/nexis-state.js'), 'utf8')
+      expect(html).toContain('<script type="module" src="/nexil-state.js"></script>')
+      const stateRuntime = await readFile(join(directory, 'dist/client/nexil-state.js'), 'utf8')
       expect(stateRuntime).toContain('accountBalance')
       expect(stateRuntime).toContain('1200')
     } finally {
@@ -292,7 +292,7 @@ export default function Home() { return <button onClick$={() => accountBalance.s
   })
 
   it('emits the direct navigation runtime only for routes that render Link', async () => {
-    const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-navigation-'))
+    const parent = await mkdtemp(join(tmpdir(), 'nexil-cli-navigation-'))
     try {
       const staticDirectory = await createProject('navigation-static', parent)
       await writeFile(
@@ -302,13 +302,13 @@ export default function Home() { return <button onClick$={() => accountBalance.s
       )
       await runCli(['build'], staticDirectory)
       const staticHtml = await readFile(join(staticDirectory, 'dist/client/index.html'), 'utf8')
-      expect(staticHtml).not.toContain('/nexis-navigation.js')
+      expect(staticHtml).not.toContain('/nexil-navigation.js')
       const staticManifest = JSON.parse(
-        await readFile(join(staticDirectory, 'dist/nexis-manifest.json'), 'utf8'),
+        await readFile(join(staticDirectory, 'dist/nexil-manifest.json'), 'utf8'),
       ) as { routes: Array<{ navigationGzipBytes: number }> }
       expect(staticManifest.routes[0]?.navigationGzipBytes).toBe(0)
       await expect(
-        readFile(join(staticDirectory, 'dist/client/nexis-navigation.js'), 'utf8'),
+        readFile(join(staticDirectory, 'dist/client/nexil-navigation.js'), 'utf8'),
       ).rejects.toThrow()
 
       const linkDirectory = await createProject('navigation-link', parent)
@@ -329,12 +329,12 @@ export default function Home() { return <main><Link href="/about" prefetch="inte
       expect(linkHtml).toContain('href="/about"')
       expect(linkHtml).toContain('data-nx-link="push"')
       expect(linkHtml).toContain('data-nx-prefetch="intent"')
-      expect(linkHtml).toContain('/nexis-navigation.js')
+      expect(linkHtml).toContain('/nexil-navigation.js')
       expect(
-        await readFile(join(linkDirectory, 'dist/client/nexis-navigation.js'), 'utf8'),
+        await readFile(join(linkDirectory, 'dist/client/nexil-navigation.js'), 'utf8'),
       ).toContain('history.pushState')
       const linkManifest = JSON.parse(
-        await readFile(join(linkDirectory, 'dist/nexis-manifest.json'), 'utf8'),
+        await readFile(join(linkDirectory, 'dist/nexil-manifest.json'), 'utf8'),
       ) as { routes: Array<{ route: string; navigationGzipBytes: number }> }
       expect(
         linkManifest.routes.find((route) => route.route === '/')?.navigationGzipBytes,
@@ -345,7 +345,7 @@ export default function Home() { return <main><Link href="/about" prefetch="inte
   })
 
   it('creates an isolated ContextScope for each statically rendered Route and Layout', async () => {
-    const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-context-scope-'))
+    const parent = await mkdtemp(join(tmpdir(), 'nexil-cli-context-scope-'))
     try {
       const directory = await createProject('context-scope-app', parent)
       await writeFile(
@@ -382,7 +382,7 @@ export default function Layout({ children }: { children: unknown }, context?: { 
 })
 
 it('generates routes, components, and actions with safe paths', async () => {
-  const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-generators-'))
+  const parent = await mkdtemp(join(tmpdir(), 'nexil-cli-generators-'))
   try {
     const directory = await createProject('generator-app', parent)
     await expect(runCli(['generate', 'route', 'account/settings'], directory)).resolves.toContain(
@@ -413,7 +413,7 @@ it('generates routes, components, and actions with safe paths', async () => {
 })
 
 it('emits the automatic progressive-form runtime only for Form routes', async () => {
-  const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-forms-'))
+  const parent = await mkdtemp(join(tmpdir(), 'nexil-cli-forms-'))
   try {
     const directory = await createProject('forms-app', parent)
     await writeFile(
@@ -424,8 +424,8 @@ it('emits the automatic progressive-form runtime only for Form routes', async ()
     await runCli(['build'], directory)
     const html = await readFile(join(directory, 'dist/client/index.html'), 'utf8')
     expect(html).toContain('data-nx-form="progressive"')
-    expect(html).toContain('/nexis-forms.js')
-    expect(await readFile(join(directory, 'dist/client/nexis-forms.js'), 'utf8')).toContain(
+    expect(html).toContain('/nexil-forms.js')
+    expect(await readFile(join(directory, 'dist/client/nexil-forms.js'), 'utf8')).toContain(
       'Idempotency-Key',
     )
   } finally {
@@ -434,7 +434,7 @@ it('emits the automatic progressive-form runtime only for Form routes', async ()
 })
 
 it('isolates the binding runtime to binding-enabled routes', async () => {
-  const parent = await mkdtemp(join(tmpdir(), 'nexis-cli-bindings-'))
+  const parent = await mkdtemp(join(tmpdir(), 'nexil-cli-bindings-'))
   try {
     const staticDirectory = await createProject('static-app', parent)
     await writeFile(
@@ -444,9 +444,9 @@ it('isolates the binding runtime to binding-enabled routes', async () => {
     )
     await runCli(['build'], staticDirectory)
     const staticHtml = await readFile(join(staticDirectory, 'dist/client/index.html'), 'utf8')
-    expect(staticHtml).not.toContain('/nexis-bindings.js')
+    expect(staticHtml).not.toContain('/nexil-bindings.js')
     await expect(
-      readFile(join(staticDirectory, 'dist/client/nexis-bindings.js'), 'utf8'),
+      readFile(join(staticDirectory, 'dist/client/nexil-bindings.js'), 'utf8'),
     ).rejects.toThrow()
 
     const bindingDirectory = await createProject('binding-app', parent)
@@ -460,9 +460,9 @@ export default function Home() { return <output>{count()}</output> }
     )
     await runCli(['build'], bindingDirectory)
     const bindingHtml = await readFile(join(bindingDirectory, 'dist/client/index.html'), 'utf8')
-    expect(bindingHtml).toContain('/nexis-bindings.js')
+    expect(bindingHtml).toContain('/nexil-bindings.js')
     expect(
-      await readFile(join(bindingDirectory, 'dist/client/nexis-bindings.js'), 'utf8'),
+      await readFile(join(bindingDirectory, 'dist/client/nexil-bindings.js'), 'utf8'),
     ).toContain('data-nx-bind')
   } finally {
     await rm(parent, { recursive: true, force: true })

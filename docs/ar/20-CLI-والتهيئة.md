@@ -4,34 +4,34 @@
 
 | الأمر                             | الوظيفة                                 |
 | --------------------------------- | --------------------------------------- |
-| `nexis build`                     | بناء routes وHTML والأصول والـ metadata |
-| `nexis preview`                   | معاينة production build                 |
-| `nexis serve`                     | تشغيل production server على build جاهز  |
-| `nexis generate route <path>`     | إنشاء route بأمان                       |
-| `nexis generate component <name>` | إنشاء component بأمان                   |
-| `nexis add action <name>`         | إنشاء server action scaffold            |
-| `nexis doctor`                    | فحص config وshell وroute structure      |
-| `nexis doctor --json`             | تقرير تشخيصي versioned للاستهلاك في CI  |
-| `nexis test`                      | تشغيل workflow الاختبارات               |
-| `nexis upgrade`                   | فحص متطلبات الترقية                     |
-| `nexis --help`                    | عرض الأوامر والخيارات                   |
-| `create-nexis-app`                | إنشاء مشروع جديد                        |
+| `nexil build`                     | بناء routes وHTML والأصول والـ metadata |
+| `nexil preview`                   | معاينة production build                 |
+| `nexil serve`                     | تشغيل production server على build جاهز  |
+| `nexil generate route <path>`     | إنشاء route بأمان                       |
+| `nexil generate component <name>` | إنشاء component بأمان                   |
+| `nexil add action <name>`         | إنشاء server action scaffold            |
+| `nexil doctor`                    | فحص config وshell وroute structure      |
+| `nexil doctor --json`             | تقرير تشخيصي versioned للاستهلاك في CI  |
+| `nexil test`                      | تشغيل workflow الاختبارات               |
+| `nexil upgrade`                   | فحص متطلبات الترقية                     |
+| `nexil --help`                    | عرض الأوامر والخيارات                   |
+| `create-nexil-app`                | إنشاء مشروع جديد                        |
 
 استخدم scripts في `package.json` لتوحيد الخيارات داخل الفريق بدل تمرير flags مختلفة يدويًا في كل مرة. في v1.3.1 يقبل `create` الخيار `--template minimal|interactive|secure-node`، ويصدر `doctor --json` تقريرًا versioned. استخدم `_layout.*` للتخطيطات المتداخلة؛ تبقى `layout.*` مدعومة للتوافق، ولا تتحول route groups إلى أجزاء من URL.
 
 ## تشخيص قابل للاستهلاك الآلي
 
-استخدم `nexis doctor --json` عندما تحتاج CI أو مولد مشروع أو تكامل editor إلى تقرير ثابت. يحتوي إصدار التقرير `1` على حالة `ok` أو `warn` أو `error` وفحوصات لـ package manifest وscripts lifecycle ومجلد routes وHTML outlets وNexil config ونية trusted proxy وإعدادات security headers الصريحة.
+استخدم `nexil doctor --json` عندما تحتاج CI أو مولد مشروع أو تكامل editor إلى تقرير ثابت. يحتوي إصدار التقرير `1` على حالة `ok` أو `warn` أو `error` وفحوصات لـ package manifest وscripts lifecycle ومجلد routes وHTML outlets وNexil config ونية trusted proxy وإعدادات security headers الصريحة.
 
 ```bash
-nexis doctor --json > nexis-doctor.json
+nexil doctor --json > nexil-doctor.json
 ```
 
 التحذير دعوة للمراجعة وليس دليلًا على أن الاستضافة آمنة أو غير آمنة. خصوصًا عند تفعيل `trustProxy`، لا يستطيع فحص CLI إثبات أن proxy في البنية التحتية يستبدل forwarded headers فعلًا.
 
 ## ملف التهيئة
 
-يدعم المشروع `nexis.config.json` و`nexis.config.js` و`nexis.config.mjs` و`nexis.config.ts`. يجب أن يصدر الملف object configuration صالحًا.
+يدعم المشروع `nexil.config.json` و`nexil.config.js` و`nexil.config.mjs` و`nexil.config.ts`. يجب أن يصدر الملف object configuration صالحًا.
 
 ```ts
 import type { NexilBuildConfig } from '@nexil/cli'
@@ -85,22 +85,22 @@ export default {
 
 ```text
 dist/client/index.html
-dist/client/nexis-manifest.json
-dist/client/nexis-state.js
-dist/client/nexis-bootstrap.js
-dist/client/nexis-bindings.js
-dist/client/nexis-forms.js
-dist/client/nexis-navigation.js  # Routes التي تحتوي Link دلالي فقط
+dist/client/nexil-manifest.json
+dist/client/nexil-state.js
+dist/client/nexil-bootstrap.js
+dist/client/nexil-bindings.js
+dist/client/nexil-forms.js
+dist/client/nexil-navigation.js  # Routes التي تحتوي Link دلالي فقط
 dist/client/sitemap.xml
 dist/client/robots.txt
 dist/client/feed.xml
 dist/client/atom.xml
-dist/nexis-redirects.json
+dist/nexil-redirects.json
 dist/client/og/
 dist/client/images/
 ```
 
-يخرج `nexis-navigation.js` فقط عندما يحتوي HTML الناتج على `Link` دلالي، ويسجل `BuildRouteRecord.navigationGzipBytes` القيمة `0` في غير ذلك. يفرض `nexis check` ميزانية مستقلة قدرها 6 KiB gzip لـruntime التنقل بالإضافة إلى ميزانيات route وbootstrap الحالية. راجع الـmanifest الناتج وسجل البناء باعتبارهما مصدر حقيقة خاصًا بالإصدار.
+يخرج `nexil-navigation.js` فقط عندما يحتوي HTML الناتج على `Link` دلالي، ويسجل `BuildRouteRecord.navigationGzipBytes` القيمة `0` في غير ذلك. يفرض `nexil check` ميزانية مستقلة قدرها 6 KiB gzip لـruntime التنقل بالإضافة إلى ميزانيات route وbootstrap الحالية. راجع الـmanifest الناتج وسجل البناء باعتبارهما مصدر حقيقة خاصًا بالإصدار.
 
 ## CI
 

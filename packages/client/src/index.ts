@@ -155,8 +155,8 @@ type ScopeSeedMap = Readonly<Record<string, Readonly<Record<string, ScopeRef>>>>
 function parseScopePayload(raw: string | null): Readonly<Record<string, ScopeRef>> | undefined {
   if (!raw) return undefined
   if (raw.startsWith('nx:scope:')) {
-    const seeds = (globalThis as typeof globalThis & { __nexisScopeSeeds?: ScopeSeedMap })
-      .__nexisScopeSeeds
+    const seeds = (globalThis as typeof globalThis & { __nexilScopeSeeds?: ScopeSeedMap })
+      .__nexilScopeSeeds
     return seeds?.[raw]
   }
   try {
@@ -188,7 +188,7 @@ function materializeScope(
       continue
     }
     if (ref.kind === 'unsupported') {
-      console.warn('[nexis] unsupported scope:', (ref as ScopeRefUnsupported).reason)
+      console.warn('[nexil] unsupported scope:', (ref as ScopeRefUnsupported).reason)
       continue
     }
     const id = (ref as ScopeRefSignal | ScopeRefStore | ScopeRefAction).id
@@ -385,7 +385,7 @@ function bindResumableDOMBindings(
     for (const binding of parseBindingAttribute(value)) {
       const signal = resolveMaterializedBinding(element, cache, binding.scopeId)
       if (!signal) {
-        console.warn(`[nexis] binding signal unavailable: ${binding.scopeId}`)
+        console.warn(`[nexil] binding signal unavailable: ${binding.scopeId}`)
         continue
       }
       disposers.push(bindReadableSignalToDOM(signal, { node: element, target: binding.target }))
@@ -668,9 +668,9 @@ export function resolveScopeRefs(
       continue
     }
     if (ref.kind === 'unsupported') {
-      if ((globalThis as { __NEXIS_DEV__?: boolean }).__NEXIS_DEV__ === true)
+      if ((globalThis as { __nexil_DEV__?: boolean }).__nexil_DEV__ === true)
         throw new Error(`Unsupported Nexil scope capture: ${ref.reason}`)
-      console.warn(`[nexis] Unsupported scope capture ignored: ${ref.reason}`)
+      console.warn(`[nexil] Unsupported scope capture ignored: ${ref.reason}`)
       continue
     }
     scope[name] = globalScopeRegistry.resolve(ref.id)
@@ -766,10 +766,10 @@ export function enhanceForms(options: EnhanceFormsOptions = {}): () => void {
       })
       if (result.ok) {
         options.onSuccess?.(form, result)
-        form.dispatchEvent(new CustomEvent('nexis:form-success', { detail: result.data }))
+        form.dispatchEvent(new CustomEvent('nexil:form-success', { detail: result.data }))
       } else {
         options.onError?.(form, result)
-        form.dispatchEvent(new CustomEvent('nexis:form-error', { detail: result.errors }))
+        form.dispatchEvent(new CustomEvent('nexil:form-error', { detail: result.errors }))
       }
       form.removeAttribute('aria-busy')
       if (button) {

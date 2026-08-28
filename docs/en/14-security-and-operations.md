@@ -40,7 +40,7 @@ For the Node production server, `trustProxy: true` is opt-in. It trusts only the
 validated `x-forwarded-proto` (`http` or `https`) and `x-forwarded-host` when
 reconstructing Action request URLs. Trust it only when a trusted proxy removes client
 values and writes its own; never enable it on a directly exposed application. The
-development server’s `NEXIS_TRUST_PROXY=1` remains a local-development setting, not a
+development server’s `NEXIL_TRUST_PROXY=1` remains a local-development setting, not a
 deployment policy.
 
 ## Cookies

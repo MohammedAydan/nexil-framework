@@ -1,0 +1,388 @@
+{
+  "generatedAt": "2026-08-25T18:40:34.085Z",
+  "environment": {
+    "node": "v22.13.0",
+    "platform": "linux",
+    "port": 4173
+  },
+  "routes": {
+    "manifest": [
+      {
+        "route": "/docs/architecture",
+        "source": "docs/[slug].tsx",
+        "interactive": false,
+        "clientJsBytes": 0,
+        "clientJsGzipBytes": 0,
+        "bootstrapGzipBytes": 0,
+        "cssBytes": 0
+      },
+      {
+        "route": "/docs/resumability",
+        "source": "docs/[slug].tsx",
+        "interactive": false,
+        "clientJsBytes": 0,
+        "clientJsGzipBytes": 0,
+        "bootstrapGzipBytes": 0,
+        "cssBytes": 0
+      },
+      {
+        "route": "/docs/performance",
+        "source": "docs/[slug].tsx",
+        "interactive": false,
+        "clientJsBytes": 0,
+        "clientJsGzipBytes": 0,
+        "bootstrapGzipBytes": 0,
+        "cssBytes": 0
+      },
+      {
+        "route": "/features",
+        "source": "features.tsx",
+        "interactive": false,
+        "clientJsBytes": 0,
+        "clientJsGzipBytes": 0,
+        "bootstrapGzipBytes": 0,
+        "cssBytes": 0
+      },
+      {
+        "route": "/",
+        "source": "index.tsx",
+        "interactive": true,
+        "clientJsBytes": 319,
+        "clientJsGzipBytes": 219,
+        "bootstrapGzipBytes": 930,
+        "cssBytes": 52
+      },
+      {
+        "route": "/labs",
+        "source": "labs.tsx",
+        "interactive": true,
+        "clientJsBytes": 1023,
+        "clientJsGzipBytes": 509,
+        "bootstrapGzipBytes": 930,
+        "cssBytes": 0
+      },
+      {
+        "route": "/status",
+        "source": "status.tsx",
+        "interactive": false,
+        "clientJsBytes": 0,
+        "clientJsGzipBytes": 0,
+        "bootstrapGzipBytes": 0,
+        "cssBytes": 0
+      }
+    ],
+    "measured": [
+      {
+        "path": "/",
+        "status": 200,
+        "bytes": 8204,
+        "gzipBytes": 2791,
+        "latencyMs": {
+          "min": 1.54,
+          "median": 1.86,
+          "max": 63.26
+        },
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentType": "text/html; charset=utf-8",
+        "interactive": true,
+        "seo": {
+          "title": true,
+          "description": true,
+          "canonical": true,
+          "openGraph": true,
+          "twitter": true,
+          "jsonLd": true,
+          "jsonLdSchema": true,
+          "noDangerousUrl": true
+        }
+      },
+      {
+        "path": "/features",
+        "status": 200,
+        "bytes": 5365,
+        "gzipBytes": 1994,
+        "latencyMs": {
+          "min": 1.03,
+          "median": 1.54,
+          "max": 2.43
+        },
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentType": "text/html; charset=utf-8",
+        "interactive": false,
+        "seo": {
+          "title": true,
+          "description": true,
+          "canonical": true,
+          "openGraph": true,
+          "twitter": true,
+          "jsonLd": true,
+          "jsonLdSchema": true,
+          "noDangerousUrl": true
+        }
+      },
+      {
+        "path": "/labs",
+        "status": 200,
+        "bytes": 5028,
+        "gzipBytes": 1909,
+        "latencyMs": {
+          "min": 0.8,
+          "median": 0.93,
+          "max": 1.39
+        },
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentType": "text/html; charset=utf-8",
+        "interactive": true,
+        "seo": {
+          "title": true,
+          "description": true,
+          "canonical": true,
+          "openGraph": true,
+          "twitter": true,
+          "jsonLd": true,
+          "jsonLdSchema": true,
+          "noDangerousUrl": true
+        }
+      },
+      {
+        "path": "/docs/architecture",
+        "status": 200,
+        "bytes": 2411,
+        "gzipBytes": 949,
+        "latencyMs": {
+          "min": 0.76,
+          "median": 0.81,
+          "max": 1.38
+        },
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentType": "text/html; charset=utf-8",
+        "interactive": false,
+        "seo": {
+          "title": true,
+          "description": true,
+          "canonical": true,
+          "openGraph": true,
+          "twitter": true,
+          "jsonLd": true,
+          "jsonLdSchema": true,
+          "noDangerousUrl": true
+        }
+      },
+      {
+        "path": "/docs/resumability",
+        "status": 200,
+        "bytes": 2437,
+        "gzipBytes": 981,
+        "latencyMs": {
+          "min": 0.78,
+          "median": 0.82,
+          "max": 1.02
+        },
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentType": "text/html; charset=utf-8",
+        "interactive": false,
+        "seo": {
+          "title": true,
+          "description": true,
+          "canonical": true,
+          "openGraph": true,
+          "twitter": true,
+          "jsonLd": true,
+          "jsonLdSchema": true,
+          "noDangerousUrl": true
+        }
+      },
+      {
+        "path": "/docs/performance",
+        "status": 200,
+        "bytes": 2403,
+        "gzipBytes": 968,
+        "latencyMs": {
+          "min": 0.7,
+          "median": 0.77,
+          "max": 0.79
+        },
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentType": "text/html; charset=utf-8",
+        "interactive": false,
+        "seo": {
+          "title": true,
+          "description": true,
+          "canonical": true,
+          "openGraph": true,
+          "twitter": true,
+          "jsonLd": true,
+          "jsonLdSchema": true,
+          "noDangerousUrl": true
+        }
+      },
+      {
+        "path": "/status",
+        "status": 200,
+        "bytes": 3439,
+        "gzipBytes": 1307,
+        "latencyMs": {
+          "min": 0.75,
+          "median": 0.75,
+          "max": 0.77
+        },
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentType": "text/html; charset=utf-8",
+        "interactive": false,
+        "seo": {
+          "title": true,
+          "description": true,
+          "canonical": true,
+          "openGraph": true,
+          "twitter": true,
+          "jsonLd": true,
+          "jsonLdSchema": true,
+          "noDangerousUrl": true
+        }
+      }
+    ],
+    "missingRoute": {
+      "path": "/missing-benchmark-route",
+      "status": 404,
+      "bytes": 128,
+      "gzipBytes": 116,
+      "latencyMs": {
+        "min": 0.71,
+        "median": 0.83,
+        "max": 1.37
+      },
+      "cacheControl": "no-store",
+      "contentType": "text/html; charset=utf-8",
+      "interactive": false,
+      "seo": {
+        "title": true,
+        "description": false,
+        "canonical": false,
+        "openGraph": false,
+        "twitter": false,
+        "jsonLd": false,
+        "jsonLdSchema": false,
+        "noDangerousUrl": true
+      },
+      "body": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>Not Found</title></head><body><h1>Not Found</h1></body></html>"
+    }
+  },
+  "endpoints": {
+    "/sitemap.xml": {
+      "status": 200,
+      "contentType": "application/xml; charset=utf-8",
+      "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\"><url><loc>https://nexil-showcase.example/docs/architecture</loc><changefreq>weekly</changefreq></url><url><loc>https://nexil-showcase.example/docs/resumability</loc><changefreq>weekly</changefreq></url><url><loc>https://nexil-showcase.example/docs/performance</loc><changefreq>weekly</changefreq></url><url><loc>https://nexil-showcase.example/features</loc><changefreq>weekly</changefreq></url><url><loc>https://nexil-showcase.example/</loc><changefreq>weekly</changefreq></url><url><loc>https://nexil-showcase.example/labs</loc><changefreq>weekly</changefreq></url><url><loc>https://nexil-showcase.example/status</loc><changefreq>weekly</changefreq></url></urlset>"
+    },
+    "/robots.txt": {
+      "status": 200,
+      "contentType": "text/plain; charset=utf-8",
+      "body": "User-agent: *\nSitemap: https://nexil-showcase.example/sitemap.xml\n"
+    }
+  },
+  "action": {
+    "status": 200,
+    "body": {
+      "ok": true,
+      "data": "queued:Ada"
+    }
+  },
+  "crawler": {
+    "brokenLinks": [],
+    "duplicateMetadata": []
+  },
+  "media": {
+    "variants": [
+      {
+        "format": "webp",
+        "width": 320,
+        "fileName": "nexil-showcase-320.webp",
+        "bytes": 2278,
+        "cacheHit": false
+      },
+      {
+        "format": "avif",
+        "width": 320,
+        "fileName": "nexil-showcase-320.avif",
+        "bytes": 2113,
+        "cacheHit": false
+      },
+      {
+        "format": "webp",
+        "width": 640,
+        "fileName": "nexil-showcase-640.webp",
+        "bytes": 5786,
+        "cacheHit": false
+      },
+      {
+        "format": "avif",
+        "width": 640,
+        "fileName": "nexil-showcase-640.avif",
+        "bytes": 4101,
+        "cacheHit": false
+      }
+    ],
+    "smallerOrEqual": true
+  },
+  "assets": {
+    "bootstrap": {
+      "bytes": 1621,
+      "gzipBytes": 930
+    },
+    "chunks": [
+      {
+        "name": "chunk_535ea9ea9b73.js",
+        "bytes": 319,
+        "gzipBytes": 219
+      },
+      {
+        "name": "chunk_a0ed3ab49db7.js",
+        "bytes": 312,
+        "gzipBytes": 216
+      },
+      {
+        "name": "chunk_f04ac5ef53ed.js",
+        "bytes": 711,
+        "gzipBytes": 417
+      }
+    ],
+    "assets": [
+      {
+        "name": "images/nexil-showcase-320.avif",
+        "bytes": 2113,
+        "gzipBytes": 2042
+      },
+      {
+        "name": "images/nexil-showcase-320.webp",
+        "bytes": 2278,
+        "gzipBytes": 2301
+      },
+      {
+        "name": "images/nexil-showcase-640.avif",
+        "bytes": 4101,
+        "gzipBytes": 4030
+      },
+      {
+        "name": "images/nexil-showcase-640.webp",
+        "bytes": 5786,
+        "gzipBytes": 5809
+      },
+      {
+        "name": "nexil.css",
+        "bytes": 52,
+        "gzipBytes": 72
+      },
+      {
+        "name": "styles.css",
+        "bytes": 9152,
+        "gzipBytes": 2952
+      }
+    ]
+  },
+  "totals": {
+    "routeCount": 7,
+    "interactiveRoutes": 2,
+    "chunkCount": 3,
+    "clientJsBytes": 2963,
+    "clientJsGzipBytes": 1782
+  }
+}

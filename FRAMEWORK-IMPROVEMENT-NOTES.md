@@ -4,8 +4,8 @@
 
 | Concern                     | Current behavior                                                                                                                                                            | Improvement direction                                                                                                                                         |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Generated project lifecycle | The initializer already emits `dev: nexis dev`, `build: nexis build`, and `start: nexis start`.                                                                             | Preserve these commands, make `start` use the route-aware production server rather than Vite preview, and give it sensible default host/port/output behavior. |
-| Production serving          | `nexis start` currently invokes Vite `preview`, while `nexis serve` invokes the official static, Action-aware production server.                                            | Make `start` the clear production default; retain `serve` as a compatibility alias.                                                                           |
+| Generated project lifecycle | The initializer already emits `dev: nexil dev`, `build: nexil build`, and `start: nexil start`.                                                                             | Preserve these commands, make `start` use the route-aware production server rather than Vite preview, and give it sensible default host/port/output behavior. |
+| Production serving          | `nexil start` currently invokes Vite `preview`, while `nexil serve` invokes the official static, Action-aware production server.                                            | Make `start` the clear production default; retain `serve` as a compatibility alias.                                                                           |
 | Default production output   | Build emits `dist/client`, server route modules, manifests, SEO artifacts, generated OG images, and resumability runtimes.                                                  | Keep automatic output. Add a clear runtime configuration model only for deviations such as origins, redirects, caches, Action policy, and middleware.         |
 | Existing server API         | `createProductionServer()` wraps `createProductionMiddleware()` and provides serving, action dispatch, safe redirects, cache control, telemetry, and 404/405/HEAD behavior. | Introduce concise aliases `createServer()` and `createMiddleware()` while preserving existing exported names as deprecated-compatible aliases.                |
 | Existing Action policy      | An Action validates then optionally authorizes before handling. The server applies Origin checks and optional idempotency.                                                  | Preserve the Action contract. Introduce concise authorization helpers and a first-party session abstraction that accepts application-owned storage.           |
@@ -20,7 +20,7 @@ pnpm build     # production artifact
 pnpm start     # route-aware Nexil production server
 ```
 
-The default should need no `nexis.config.*` file. A project can opt into custom behavior with a typed `nexis.config.ts` export.
+The default should need no `nexil.config.*` file. A project can opt into custom behavior with a typed `nexil.config.ts` export.
 
 ```ts
 import { defineConfig } from '@nexil/serve'

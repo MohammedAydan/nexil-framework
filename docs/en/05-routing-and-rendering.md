@@ -46,7 +46,7 @@ export default function DocumentationIndex() {
 }
 ```
 
-The build emits `nexis-navigation.js` only when rendered output contains Link markup. It delegates unmodified primary clicks for marked same-origin anchors, fetches a normal HTML response, validates `#app`, updates owned metadata, and replaces only that outlet. It uses the History API and scroll restoration; it can use `document.startViewTransition()` when the browser supports it. This is direct DOM replacement, not a virtual-DOM diff or a client component renderer.
+The build emits `nexil-navigation.js` only when rendered output contains Link markup. It delegates unmodified primary clicks for marked same-origin anchors, fetches a normal HTML response, validates `#app`, updates owned metadata, and replaces only that outlet. It uses the History API and scroll restoration; it can use `document.startViewTransition()` when the browser supports it. This is direct DOM replacement, not a virtual-DOM diff or a client component renderer.
 
 If a deployment has route-owned stylesheets, mark each one with `data-nx-route-style`. Link navigation removes the previous marked stylesheets and adopts the destination document's marked stylesheets while leaving shared stylesheets untouched. This keeps route-specific CSS correct after a no-reload navigation; the initial HTML must still include the stylesheet for direct visits and no-JavaScript fallback.
 
@@ -144,4 +144,4 @@ Nexil v1.1.0 discovers `_layout.*` files recursively and composes them around ro
 
 ## Workbench lab
 
-The executable [`examples/nexis-workbench`](../../examples/nexis-workbench) contains an `_layout.tsx`, a static article index, and `articles/[slug].tsx` with `getStaticPaths()`. Run `pnpm --filter @nexil/example-nexis-workbench verify`, then inspect `dist/client/articles/first-boundary/index.html` and `dist/client/articles/release-check/index.html`. The same project uses semantic `Link` elements in its layout; disable JavaScript once to confirm that every link remains a normal document link.
+The executable [`examples/nexil-workbench`](../../examples/nexil-workbench) contains an `_layout.tsx`, a static article index, and `articles/[slug].tsx` with `getStaticPaths()`. Run `pnpm --filter @nexil/example-nexil-workbench verify`, then inspect `dist/client/articles/first-boundary/index.html` and `dist/client/articles/release-check/index.html`. The same project uses semantic `Link` elements in its layout; disable JavaScript once to confirm that every link remains a normal document link.

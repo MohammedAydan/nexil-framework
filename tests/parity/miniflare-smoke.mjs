@@ -20,7 +20,7 @@ const miniflare = new Miniflare({
     {
       config: {
         type: 'worker',
-        name: 'nexis-edge-smoke',
+        name: 'nexil-edge-smoke',
         compatibilityDate: '2025-01-01',
         env: {},
       },

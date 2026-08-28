@@ -109,7 +109,7 @@ await test('renderer escapes untrusted text', () => {
 
 await test('resumability bootstrap resolves script-relative chunks and delegates events', () => {
   assert(
-    RESUMABILITY_BOOTSTRAP.includes("new URL('../nexis-chunks/',s.src)"),
+    RESUMABILITY_BOOTSTRAP.includes("new URL('../nexil-chunks/',s.src)"),
     'script-relative chunk base missing',
   )
   assert(

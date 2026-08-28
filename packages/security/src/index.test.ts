@@ -41,7 +41,7 @@ describe('Nexil security', () => {
     expect(cookie).toContain('HttpOnly')
     expect(cookie).toContain('SameSite=Lax')
     const request = new Request('https://app.example.test', {
-      headers: { cookie: 'nexis_session=session_1' },
+      headers: { cookie: 'nexil_session=session_1' },
     })
     await expect(sessions.require(request)).resolves.toMatchObject({ principal: { id: 'user_1' } })
     expect(sessions.clearCookie()).toContain('Max-Age=0')
@@ -57,7 +57,7 @@ describe('Nexil security', () => {
     const sessions = createSession(store)
     await expect(
       sessions.read(
-        new Request('https://app.example.test', { headers: { cookie: 'nexis_session=expired' } }),
+        new Request('https://app.example.test', { headers: { cookie: 'nexil_session=expired' } }),
       ),
     ).resolves.toBeUndefined()
     expect(store.destroyed).toContain('expired')

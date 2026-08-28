@@ -8,7 +8,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { build, createServer, transformWithEsbuild } from 'vite'
 import { createRequestContext, type Child, type ComponentContext } from '@nexil/core'
 import { assertBudget } from '@nexil/compiler'
-import nexis, {
+import nexil, {
   externalizeScopeAttributes,
   RESUMABILITY_BINDINGS_EXTERNAL,
   RESUMABILITY_BOOTSTRAP_EXTERNAL,
@@ -28,8 +28,8 @@ import {
   renderHead,
   withCanonical,
 } from '@nexil/seo'
-import { matchRoute, NEXIS_NAVIGATION_RUNTIME, routeFromFile } from '@nexil/router'
-import { nexisSSRPlugin } from '@nexil/dev-server'
+import { matchRoute, NEXIL_NAVIGATION_RUNTIME, routeFromFile } from '@nexil/router'
+import { nexilSSRPlugin } from '@nexil/dev-server'
 import { createServer as createProductionServer } from '@nexil/serve'
 import type { NexilConfig, RedirectRule } from '@nexil/serve'
 import type { SeoMetadata } from '@nexil/seo'
@@ -171,7 +171,7 @@ export function parseCommand(argv: readonly string[]): ParsedCommand {
   const [first, ...args] = argv
   if (!first || first === '--help' || first === '-h') return { command: 'help', args }
   if (!commands.has(first as NexilCommand))
-    throw new Error(`Unknown Nexil command: ${first}. Run nexis --help.`)
+    throw new Error(`Unknown Nexil command: ${first}. Run nexil --help.`)
   return { command: first as NexilCommand, args }
 }
 
@@ -179,13 +179,13 @@ export function helpText(): string {
   return [
     'Nexil — HTML-first TypeScript framework',
     '',
-    'Usage: nexis <command>',
+    'Usage: nexil <command>',
     '',
     'Commands:',
     '  create <name>  Create a zero-config Nexil application',
     '                 Flags: --yes --ts --js --tailwind --template minimal|interactive|secure-node',
     '  dev            Start the development server',
-    '                 Env: NEXIS_HOST, NEXIS_PORT, NEXIS_ALLOW_ALL_HOSTS=1',
+    '                 Env: NEXIL_HOST, NEXIL_PORT, NEXIL_ALLOW_ALL_HOSTS=1',
     '  build          Build SSG/ISR/SSR bundles',
     '  start          Start the route-aware production build',
     '  preview        Preview a production build (alias for start)',
@@ -286,8 +286,8 @@ export async function diagnoseProject(root: string): Promise<DoctorReport> {
           'Expected dev, build, and start scripts were not all found.',
         )
       if (typeof manifest.dependencies?.['@nexil/cli'] === 'string')
-        add('nexis-cli', 'ok', 'A Nexil CLI dependency is configured.')
-      else add('nexis-cli', 'warn', 'No @nexil/cli dependency was found.')
+        add('nexil-cli', 'ok', 'A Nexil CLI dependency is configured.')
+      else add('nexil-cli', 'warn', 'No @nexil/cli dependency was found.')
     } catch {
       add('package-json', 'error', 'package.json is not valid JSON.')
     }
@@ -307,7 +307,7 @@ export async function diagnoseProject(root: string): Promise<DoctorReport> {
   if (existsSync(join(root, 'index.html'))) {
     const shell = await readFile(join(root, 'index.html'), 'utf8')
     const hasOutlets =
-      shell.includes('<!--nexis-app-outlet-->') && shell.includes('<!--nexis-head-outlet-->')
+      shell.includes('<!--nexil-app-outlet-->') && shell.includes('<!--nexil-head-outlet-->')
     add(
       'html-outlets',
       hasOutlets ? 'ok' : 'warn',
@@ -318,7 +318,7 @@ export async function diagnoseProject(root: string): Promise<DoctorReport> {
   }
   try {
     const config = await readNexilConfig(root)
-    add('nexis-config', 'ok', 'Nexil configuration is readable.')
+    add('nexil-config', 'ok', 'Nexil configuration is readable.')
     if (config.server?.trustProxy === true)
       add(
         'trusted-proxy',
@@ -341,7 +341,7 @@ export async function diagnoseProject(root: string): Promise<DoctorReport> {
       )
   } catch (error) {
     add(
-      'nexis-config',
+      'nexil-config',
       'error',
       `Configuration error: ${error instanceof Error ? error.message : String(error)}`,
     )
@@ -434,26 +434,26 @@ interface BuildManifest {
 
 async function readNexilConfig(root: string): Promise<NexilConfig> {
   try {
-    const parsed = JSON.parse(await readFile(join(root, 'nexis.config.json'), 'utf8')) as unknown
+    const parsed = JSON.parse(await readFile(join(root, 'nexil.config.json'), 'utf8')) as unknown
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed))
-      throw new TypeError('Invalid nexis.config.json.')
+      throw new TypeError('Invalid nexil.config.json.')
     return parsed as NexilConfig
   } catch (error) {
-    if (error instanceof SyntaxError) throw new TypeError('Invalid nexis.config.json.')
+    if (error instanceof SyntaxError) throw new TypeError('Invalid nexil.config.json.')
     if (error instanceof TypeError) throw error
     if ((error as { readonly code?: string }).code !== 'ENOENT') throw error
   }
-  for (const fileName of ['nexis.config.mjs', 'nexis.config.js', 'nexis.config.ts']) {
+  for (const fileName of ['nexil.config.mjs', 'nexil.config.js', 'nexil.config.ts']) {
     const file = join(root, fileName)
     if (!existsSync(file)) continue
     const source = await readFile(file, 'utf8')
     const code = fileName.endsWith('.ts')
       ? (await transformWithEsbuild(source, fileName, { loader: 'ts', format: 'esm' })).code
       : source
-    const temporary = join(root, 'dist', `.nexis-config-${Date.now()}.mjs`)
+    const temporary = join(root, 'dist', `.nexil-config-${Date.now()}.mjs`)
     await mkdir(join(root, 'dist'), { recursive: true })
     await writeFile(temporary, code, 'utf8')
-    const module = await import(`${pathToFileURL(temporary).href}?nexis-config=${Date.now()}`)
+    const module = await import(`${pathToFileURL(temporary).href}?nexil-config=${Date.now()}`)
     const config = module.default ?? module.config ?? module
     if (!config || typeof config !== 'object' || Array.isArray(config))
       throw new TypeError(`Invalid ${fileName}.`)
@@ -511,7 +511,7 @@ async function buildConfiguredPublicImages(
   const imageConfig = config.media?.images
   if (!imageConfig?.transform) return undefined
   const publicRoot = join(root, 'public')
-  const cacheDir = resolve(root, imageConfig.cacheDir ?? '.nexis/media-cache')
+  const cacheDir = resolve(root, imageConfig.cacheDir ?? '.nexil/media-cache')
   if (relative(root, cacheDir).startsWith('..'))
     throw new TypeError('Nexil media cacheDir must remain inside the project root.')
   const widths = mediaWidths(imageConfig.widths)
@@ -654,9 +654,9 @@ async function discoverRoutes(directory: string, root: string): Promise<string[]
   return routes.sort()
 }
 
-const BOOTSTRAP_FILE = 'nexis-bootstrap.js'
-const STATE_FILE = 'nexis-state.js'
-const CHUNK_DIRECTORY = 'nexis-chunks'
+const BOOTSTRAP_FILE = 'nexil-bootstrap.js'
+const STATE_FILE = 'nexil-state.js'
+const CHUNK_DIRECTORY = 'nexil-chunks'
 
 function injectStylesheetLink(template: string, href: string): string {
   const link = `<link rel="stylesheet" href="${href}">`
@@ -917,7 +917,11 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   if (routes.length === 0) throw new Error(`No routes found in ${routeRoot}.`)
   const outputRoot = join(root, 'dist')
   const config = await readNexilConfig(root)
-  const siteOrigin = process.env.NEXIS_SITE_ORIGIN ?? config.app?.origin ?? 'http://localhost:4173'
+  const siteOrigin =
+    process.env.NEXIL_SITE_ORIGIN ??
+    process.env.NEXIS_SITE_ORIGIN ??
+    config.app?.origin ??
+    'http://localhost:4173'
   const resolveSeo = (seo: RouteModule['seo'], pathname: string): SeoMetadata | undefined => {
     if (!seo) return undefined
     const metadata = typeof seo === 'function' ? seo({ pathname }) : seo
@@ -940,7 +944,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   try {
     template = await readFile(join(root, 'index.html'), 'utf8')
   } catch {
-    template = `<!DOCTYPE html><html lang="en"><head><!--nexis-head-outlet--></head><body><div id="app"><!--nexis-app-outlet--></div><!--nexis-scripts-outlet--></body></html>`
+    template = `<!DOCTYPE html><html lang="en"><head><!--nexil-head-outlet--></head><body><div id="app"><!--nexil-app-outlet--></div><!--nexil-scripts-outlet--></body></html>`
   }
 
   try {
@@ -948,7 +952,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     const clientBuild = await build({
       root,
       ...VITE_WORKSPACE_CONFIG,
-      plugins: [nexis({ root })],
+      plugins: [nexil({ root })],
       build: {
         write: false,
         outDir: join(outputRoot, 'client'),
@@ -977,7 +981,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     const result = await build({
       root,
       ...VITE_WORKSPACE_CONFIG,
-      plugins: [nexis({ root })],
+      plugins: [nexil({ root })],
       build: {
         write: false,
         ssr: sourcePath,
@@ -992,7 +996,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     const serverModulePath = join(serverRoot, outputName)
     await mkdir(join(serverModulePath, '..'), { recursive: true })
     await writeFile(serverModulePath, entry.code, 'utf8')
-    const module = await import(`${pathToFileURL(serverModulePath).href}?nexis=${Date.now()}`)
+    const module = await import(`${pathToFileURL(serverModulePath).href}?nexil=${Date.now()}`)
     serverModules.set(route, module)
     return module
   }
@@ -1097,7 +1101,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   ).code
   const bootstrapGzipBytes = gzipSync(Buffer.from(minifiedBootstrap)).byteLength
   const minifiedNavigation = (
-    await transformWithEsbuild(NEXIS_NAVIGATION_RUNTIME, 'nexis-navigation.js', {
+    await transformWithEsbuild(NEXIL_NAVIGATION_RUNTIME, 'nexil-navigation.js', {
       loader: 'js',
       minify: true,
     })
@@ -1157,7 +1161,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     }
     for (const css of transformed.css) cssAssets.add(css)
     const routeTemplate =
-      transformed.css.length > 0 ? injectStylesheetLink(template, '/assets/nexis.css') : template
+      transformed.css.length > 0 ? injectStylesheetLink(template, '/assets/nexil.css') : template
     const routeName = route
       .replace(/\\/g, '/')
       .replace(/\.(tsx|jsx|ts|js)$/, '')
@@ -1171,7 +1175,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     let headHtml = '<title>Nexil App</title>'
     let scriptsHtml = interactive ? `<script type="module" src="/${BOOTSTRAP_FILE}"></script>` : ''
     if (transformed.bindings.length > 0)
-      scriptsHtml += `<script type="module" src="/nexis-bindings.js"></script>`
+      scriptsHtml += `<script type="module" src="/nexil-bindings.js"></script>`
     try {
       const mod = await loadServerModule(route)
       let routeSeo = await resolveInheritedSeo(route, mod, routePath)
@@ -1231,18 +1235,18 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
 
     if (renderedHtml.includes('data-nx-link')) {
       hasNavigationRoute = true
-      scriptsHtml = `<script type="module" src="/nexis-navigation.js"></script>${scriptsHtml}`
+      scriptsHtml = `<script type="module" src="/nexil-navigation.js"></script>${scriptsHtml}`
     }
 
     if (renderedHtml.includes('data-nx-form="progressive"')) {
       hasFormRoute = true
-      scriptsHtml += `<script type="module" src="/nexis-forms.js"></script>`
+      scriptsHtml += `<script type="module" src="/nexil-forms.js"></script>`
     }
     const html = sanitizeDocument(
       routeTemplate
-        .replace('<!--nexis-head-outlet-->', headHtml)
-        .replace('<!--nexis-app-outlet-->', renderedHtml)
-        .replace('<!--nexis-scripts-outlet-->', scriptsHtml),
+        .replace('<!--nexil-head-outlet-->', headHtml)
+        .replace('<!--nexil-app-outlet-->', renderedHtml)
+        .replace('<!--nexil-scripts-outlet-->', scriptsHtml),
     )
 
     const outDir = routePath === '/' ? clientRoot : join(clientRoot, routePath.slice(1))
@@ -1322,14 +1326,14 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
               })
             : headHtml
           const generatedScriptsHtml = generatedRenderedHtml.includes('data-nx-form="progressive"')
-            ? `${scriptsHtml}<script type="module" src="/nexis-forms.js"></script>`
+            ? `${scriptsHtml}<script type="module" src="/nexil-forms.js"></script>`
             : scriptsHtml
           if (generatedRenderedHtml.includes('data-nx-form="progressive"')) hasFormRoute = true
           const generatedHtml = sanitizeDocument(
             routeTemplate
-              .replace('<!--nexis-head-outlet-->', generatedHead)
-              .replace('<!--nexis-app-outlet-->', generatedRenderedHtml)
-              .replace('<!--nexis-scripts-outlet-->', generatedScriptsHtml),
+              .replace('<!--nexil-head-outlet-->', generatedHead)
+              .replace('<!--nexil-app-outlet-->', generatedRenderedHtml)
+              .replace('<!--nexil-scripts-outlet-->', generatedScriptsHtml),
           )
           const generatedDirectory = join(clientRoot, generatedPath.slice(1))
           await mkdir(generatedDirectory, { recursive: true })
@@ -1347,7 +1351,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
 
   if (cssAssets.size > 0) {
     const cssContent = [...cssAssets].join('')
-    await writeFile(join(assetRoot, 'nexis.css'), cssContent, 'utf8')
+    await writeFile(join(assetRoot, 'nexil.css'), cssContent, 'utf8')
   }
   if (hasInteractiveRoute) {
     await writeFile(join(outputRoot, BOOTSTRAP_FILE), minifiedBootstrap, 'utf8')
@@ -1355,33 +1359,33 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   }
   if (hasFormRoute) {
     const minifiedForms = (
-      await transformWithEsbuild(RESUMABILITY_FORMS, 'nexis-forms.js', {
+      await transformWithEsbuild(RESUMABILITY_FORMS, 'nexil-forms.js', {
         loader: 'js',
         minify: true,
       })
     ).code
-    await writeFile(join(outputRoot, 'nexis-forms.js'), minifiedForms, 'utf8')
-    await writeFile(join(clientRoot, 'nexis-forms.js'), minifiedForms, 'utf8')
+    await writeFile(join(outputRoot, 'nexil-forms.js'), minifiedForms, 'utf8')
+    await writeFile(join(clientRoot, 'nexil-forms.js'), minifiedForms, 'utf8')
   }
   if (hasNavigationRoute) {
-    await writeFile(join(outputRoot, 'nexis-navigation.js'), minifiedNavigation, 'utf8')
-    await writeFile(join(clientRoot, 'nexis-navigation.js'), minifiedNavigation, 'utf8')
+    await writeFile(join(outputRoot, 'nexil-navigation.js'), minifiedNavigation, 'utf8')
+    await writeFile(join(clientRoot, 'nexil-navigation.js'), minifiedNavigation, 'utf8')
   }
   if (hasBindingRoute) {
     const minifiedBindings = (
-      await transformWithEsbuild(RESUMABILITY_BINDINGS_EXTERNAL, 'nexis-bindings.js', {
+      await transformWithEsbuild(RESUMABILITY_BINDINGS_EXTERNAL, 'nexil-bindings.js', {
         loader: 'js',
         minify: true,
       })
     ).code
-    await writeFile(join(outputRoot, 'nexis-bindings.js'), minifiedBindings, 'utf8')
-    await writeFile(join(clientRoot, 'nexis-bindings.js'), minifiedBindings, 'utf8')
+    await writeFile(join(outputRoot, 'nexil-bindings.js'), minifiedBindings, 'utf8')
+    await writeFile(join(clientRoot, 'nexil-bindings.js'), minifiedBindings, 'utf8')
   }
   if (externalScopePayloads.size > 0) {
     const payload = Object.fromEntries(
       [...externalScopePayloads].map(([key, entry]) => [key, entry.payload]),
     )
-    const stateSource = `globalThis.__nexisScopeSeeds=Object.assign(globalThis.__nexisScopeSeeds||{},${JSON.stringify(payload)});\n`
+    const stateSource = `globalThis.__nexilScopeSeeds=Object.assign(globalThis.__nexilScopeSeeds||{},${JSON.stringify(payload)});\n`
     const minifiedState = (
       await transformWithEsbuild(stateSource, STATE_FILE, {
         loader: 'js',
@@ -1415,7 +1419,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   })
   await writeFile(join(clientRoot, 'atom.xml'), atom, 'utf8')
   await writeFile(
-    join(outputRoot, 'nexis-redirects.json'),
+    join(outputRoot, 'nexil-redirects.json'),
     `${JSON.stringify(config.redirects ?? [], null, 2)}\n`,
     'utf8',
   )
@@ -1433,23 +1437,23 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     ...(media ? { media } : {}),
   }
   await writeFile(
-    join(outputRoot, 'nexis-manifest.json'),
+    join(outputRoot, 'nexil-manifest.json'),
     `${JSON.stringify(manifest, null, 2)}\n`,
     'utf8',
   )
   await writeFile(
-    join(clientRoot, 'nexis-manifest.json'),
+    join(clientRoot, 'nexil-manifest.json'),
     `${JSON.stringify(manifest, null, 2)}\n`,
     'utf8',
   )
   if (media) {
     await writeFile(
-      join(outputRoot, 'nexis-media.json'),
+      join(outputRoot, 'nexil-media.json'),
       `${JSON.stringify(media, null, 2)}\n`,
       'utf8',
     )
     await writeFile(
-      join(clientRoot, 'nexis-media.json'),
+      join(clientRoot, 'nexil-media.json'),
       `${JSON.stringify(media, null, 2)}\n`,
       'utf8',
     )
@@ -1459,7 +1463,7 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
 
 async function readManifest(root: string): Promise<BuildManifest> {
   const manifest = JSON.parse(
-    await readFile(join(root, 'dist', 'nexis-manifest.json'), 'utf8'),
+    await readFile(join(root, 'dist', 'nexil-manifest.json'), 'utf8'),
   ) as BuildManifest
   if (manifest.version !== 1 || !Array.isArray(manifest.routes))
     throw new Error('Invalid Nexil build manifest.')
@@ -1467,12 +1471,12 @@ async function readManifest(root: string): Promise<BuildManifest> {
 }
 
 function configuredPort(config: NexilConfig): number {
-  const environmentPort = process.env.NEXIS_PORT?.trim()
+  const environmentPort = (process.env.NEXIL_PORT ?? process.env.NEXIS_PORT)?.trim()
   const raw = environmentPort || config.server?.port
   if (raw === undefined) return 4173
   const port = typeof raw === 'number' ? raw : Number(raw)
   if (!Number.isInteger(port) || port < 0 || port > 65535)
-    throw new RangeError('NEXIS_PORT must be an integer between 0 and 65535.')
+    throw new RangeError('NEXIL_PORT must be an integer between 0 and 65535.')
   return port
 }
 
@@ -1482,9 +1486,9 @@ async function startProduction(root: string): Promise<string> {
     throw new Error('No production build found. Run `pnpm build` before `pnpm start`.')
   const config = await readNexilConfig(root)
   const serverConfig = config.server ?? {}
-  const host = process.env.NEXIS_HOST ?? serverConfig.host ?? '0.0.0.0'
+  const host = process.env.NEXIL_HOST ?? process.env.NEXIS_HOST ?? serverConfig.host ?? '0.0.0.0'
   const port = configuredPort(config)
-  const environmentOrigins = process.env.NEXIS_ACTION_ORIGINS
+  const environmentOrigins = process.env.NEXIL_ACTION_ORIGINS ?? process.env.NEXIS_ACTION_ORIGINS
   const actionOrigins = environmentOrigins
     ? environmentOrigins
         .split(',')
@@ -1510,7 +1514,7 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
     const { name, options } = parseScaffoldArgs(parsed.args)
     if (!name)
       throw new Error(
-        'Usage: nexis create <name> [--yes] [--ts|--js] [--tailwind] [--template minimal|interactive|secure-node]',
+        'Usage: nexil create <name> [--yes] [--ts|--js] [--tailwind] [--template minimal|interactive|secure-node]',
       )
     return `Created ${(await scaffoldProject(name, cwd, options)).directory}`
   }
@@ -1550,15 +1554,17 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
     return 'Nexil checks passed.'
   }
   if (parsed.command === 'dev') {
+    const hostEnv = process.env.NEXIL_HOST ?? process.env.NEXIS_HOST
+    const portEnv = process.env.NEXIL_PORT ?? process.env.NEXIS_PORT
     const server = await createServer({
       root,
       server: {
-        ...(process.env.NEXIS_HOST ? { host: process.env.NEXIS_HOST } : {}),
-        ...(process.env.NEXIS_PORT ? { port: Number(process.env.NEXIS_PORT) } : {}),
-        ...(process.env.NEXIS_ALLOW_ALL_HOSTS === '1' ? { allowedHosts: true } : {}),
+        ...(hostEnv ? { host: hostEnv } : {}),
+        ...(portEnv ? { port: Number(portEnv) } : {}),
+        ...(process.env.NEXIL_ALLOW_ALL_HOSTS === '1' ? { allowedHosts: true } : {}),
       },
       ...VITE_WORKSPACE_CONFIG,
-      plugins: [nexis({ root }), nexisSSRPlugin(root)],
+      plugins: [nexil({ root }), nexilSSRPlugin(root)],
     })
     await server.listen()
     return `Nexil dev server running at ${server.resolvedUrls?.local?.[0] ?? 'local URL'}`
@@ -1568,17 +1574,17 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
   if (parsed.command === 'generate') {
     const [kind, name] = parsed.args
     if (!kind || !name || !['route', 'component'].includes(kind))
-      throw new Error('Usage: nexis generate <route|component> <name>')
+      throw new Error('Usage: nexil generate <route|component> <name>')
     return `Created ${await scaffoldCliArtifact(root, kind, name)}`
   }
   if (parsed.command === 'add') {
     const [kind, name] = parsed.args
-    if (kind !== 'action' || !name) throw new Error('Usage: nexis add action <name>')
+    if (kind !== 'action' || !name) throw new Error('Usage: nexil add action <name>')
     return `Created ${await scaffoldCliArtifact(root, kind, name)}`
   }
   if (parsed.command === 'doctor') {
     if (parsed.args.some((argument) => argument !== '--json'))
-      throw new Error('Usage: nexis doctor [--json]')
+      throw new Error('Usage: nexil doctor [--json]')
     const report = await diagnoseProject(root)
     return parsed.args.includes('--json')
       ? `${JSON.stringify(report, null, 2)}\n`

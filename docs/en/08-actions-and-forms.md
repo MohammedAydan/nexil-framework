@@ -9,21 +9,21 @@ An Action is a server operation invoked through a dedicated endpoint. Use it to 
 Build a form that works without JavaScript first:
 
 ```tsx
-<form action="/__nexis/actions/contact/submit" method="post">
+<form action="/__nexil/actions/contact/submit" method="post">
   <label for="email">Email</label>
   <input id="email" name="email" type="email" required />
   <button type="submit">Send</button>
 </form>
 ```
 
-For the standard path, replace the raw element with `Form` and `SubmitButton`. They retain native submission while marking the route for the generated `nexis-forms.js` runtime. Use `onSubmit$` only when the page needs custom result rendering; the native `action` and `method` remain the no-JavaScript fallback.
+For the standard path, replace the raw element with `Form` and `SubmitButton`. They retain native submission while marking the route for the generated `nexil-forms.js` runtime. Use `onSubmit$` only when the page needs custom result rendering; the native `action` and `method` remain the no-JavaScript fallback.
 
 ```tsx
 import { Form, SubmitButton } from '@nexil/core'
 import { action } from '@nexil/actions'
 
 const contactAction = action({
-  endpoint: '/__nexis/actions/contact/submit',
+  endpoint: '/__nexil/actions/contact/submit',
   validate: (input) => input,
   handle: async (_context, input) => saveContact(input),
 })
@@ -39,7 +39,7 @@ export function ContactForm({ csrfToken }: { readonly csrfToken: string }) {
 }
 ```
 
-The generated enhancer serializes repeated fields without loss, supplies an `Idempotency-Key`, forwards `X-CSRF-Token` when configured, disables the submit button while pending, and emits `nexis:form-success` or `nexis:form-error`.
+The generated enhancer serializes repeated fields without loss, supplies an `Idempotency-Key`, forwards `X-CSRF-Token` when configured, disables the submit button while pending, and emits `nexil:form-success` or `nexil:form-error`.
 
 ## Action transport stages
 
@@ -73,7 +73,7 @@ if (!input.email.includes('@')) {
 
 ## Origin and CSRF
 
-The server checks Origin so that a different site cannot submit a state-changing POST. Define allowed origins explicitly in production. `NEXIS_TRUST_PROXY=1` is safe only behind a proxy that strips client-supplied forwarded headers and writes trusted values.
+The server checks Origin so that a different site cannot submit a state-changing POST. Define allowed origins explicitly in production. `NEXIL_TRUST_PROXY=1` is safe only behind a proxy that strips client-supplied forwarded headers and writes trusted values.
 
 Origin validation is not authorization. After checking the origin, verify the user session, role, and ownership of the target resource.
 
@@ -89,7 +89,7 @@ Do not put authorization in a hidden input. Use a server-side session or secure 
 
 ## Telemetry receiver
 
-The production server can expose an optional `POST /__nexis/telemetry` receiver. It returns `202` for a valid event object and `400` for a malformed body. This is a minimal local receiver, not a complete ingestion, consent, retention, or analytics system.
+The production server can expose an optional `POST /__nexil/telemetry` receiver. It returns `202` for a valid event object and `400` for a malformed body. This is a minimal local receiver, not a complete ingestion, consent, retention, or analytics system.
 
 ## Common mistakes
 
@@ -110,4 +110,4 @@ Test success, invalid input, rejected Origin, unsupported methods, duplicate ide
 
 ## Workbench lab
 
-[`examples/nexis-workbench/src/routes/support/index.tsx`](../../examples/nexis-workbench/src/routes/support/index.tsx) starts with an ordinary `<form action="/api/support" method="post">`. Its sibling [`support-action.ts`](../../examples/nexis-workbench/src/server/support-action.ts) demonstrates the Action transport, input validation, Origin validation, and bounded in-memory idempotency for one process. Replace its persistence seam with an application-owned durable store before horizontal deployment, then add deny-path tests before exposing the endpoint.
+[`examples/nexil-workbench/src/routes/support/index.tsx`](../../examples/nexil-workbench/src/routes/support/index.tsx) starts with an ordinary `<form action="/api/support" method="post">`. Its sibling [`support-action.ts`](../../examples/nexil-workbench/src/server/support-action.ts) demonstrates the Action transport, input validation, Origin validation, and bounded in-memory idempotency for one process. Replace its persistence seam with an application-owned durable store before horizontal deployment, then add deny-path tests before exposing the endpoint.

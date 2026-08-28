@@ -71,7 +71,7 @@ The examples use TypeScript and JSX. Adjust paths to match your application. Nev
 - [Security control matrix](../security/control-matrix.md)
 - [Production server README](../../packages/serve/README.md)
 - [Telemetry README](../../packages/telemetry/README.md)
-- [Showcase report](../../examples/nexis-showcase/SHOWCASE-REPORT.md)
+- [Showcase report](../../examples/nexil-showcase/SHOWCASE-REPORT.md)
 - [Practical documentation curriculum](../architecture/practical-documentation-curriculum.md)
 - [Nexil Workbench production path](./24-production-workbench.md)
 - [v1.1.0 release and migration guide](../releases/v1.1.0.md)

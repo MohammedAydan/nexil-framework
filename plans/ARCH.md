@@ -2,7 +2,7 @@
 
 ## Overview
 
-Monorepo producing 19 scoped packages. Examples consume workspace deps locally; external consumers consume published versions from GitHub Packages via the `create-nexis` CLI.
+Monorepo producing 19 scoped packages. Examples consume workspace deps locally; external consumers consume published versions from GitHub Packages via the `create-nexil` CLI.
 
 ## Architecture Pattern
 
@@ -15,8 +15,8 @@ pnpm workspace monorepo, package-per-directory, TypeScript compiled per-package 
 | core                               | JSX runtime source, HTML primitives      | `packages/core`         |
 | compiler                           | Nexil transform, budget checks           | `packages/compiler`     |
 | vite-plugin                        | Vite integration, `transformNexilSource` | `packages/vite-plugin`  |
-| cli (`nexis` bin)                  | dev/build/start/check/analyze/routes     | `packages/cli`          |
-| create-nexis (`create-nexis` bin)  | Project scaffolder (public entry point)  | `packages/create-nexis` |
+| cli (`nexil` bin)                  | dev/build/start/check/analyze/routes     | `packages/cli`          |
+| create-nexil (`create-nexil` bin)  | Project scaffolder (public entry point)  | `packages/create-nexil` |
 | media                              | Image/font pipeline (sharp)              | `packages/media`        |
 | server/actions/adapters/dev-server | HTTP layer                               | `packages/*`            |
 
@@ -27,12 +27,12 @@ Tier 0 (no internal deps): adapters, compiler, core, css, media, reactivity, rou
 Tier 1: client(→core) jsx-runtime(→core) renderer(→core) server(→core)
         state(→core,reactivity) vite-plugin(→compiler)
 Tier 2: actions(→server) dev-server(→adapters) cli(→compiler,vite-plugin)
-Tier 3: create-nexis (standalone bin)
+Tier 3: create-nexil (standalone bin)
 ```
 
 ## Data Flow
 
-User runs `pnpm dlx @nexil/create-nexis my-app --yes --ts` → scaffold writes package.json depending on published versions (^0.1.x) → user installs from GitHub Packages → `nexis dev/build` drives Vite + compiler.
+User runs `pnpm dlx @nexil/create-nexil my-app --yes --ts` → scaffold writes package.json depending on published versions (^0.1.x) → user installs from GitHub Packages → `nexil dev/build` drives Vite + compiler.
 
 ## Boundaries & Invariants
 

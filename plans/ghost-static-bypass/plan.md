@@ -2,7 +2,7 @@
 
 ## Goal
 
-Eliminate the bypass where `nexis dev`/`start` served a pre-baked static `index.html` while the framework pipeline (renderer, JSX runtime, signals, resumability serializer) never executed.
+Eliminate the bypass where `nexil dev`/`start` served a pre-baked static `index.html` while the framework pipeline (renderer, JSX runtime, signals, resumability serializer) never executed.
 
 ## Root cause (verified)
 
@@ -10,9 +10,9 @@ Scaffold templates shipped a full marketing page as `index.html`; CLI dev used p
 
 ## Fix shipped
 
-1. Templates reduced to outlet-only shell (`nexis-head/app/scripts-outlet`).
-2. `@nexil/dev-server` now exports `nexisSSRPlugin(root)`: Vite SSR middleware — router matching → `ssrLoadModule` → `renderToString` → SEO head injection → resumability bootstrap injection.
-3. `nexis dev` mounts `[nexis(transform), nexisSSRPlugin]`; `nexis build` runs the same engine at build time and prerenders every route to `dist/client/<route>/index.html` (+ mirrored preview roots), keeping server modules/chunks/bootstrap/manifest emission.
+1. Templates reduced to outlet-only shell (`nexil-head/app/scripts-outlet`).
+2. `@nexil/dev-server` now exports `nexilSSRPlugin(root)`: Vite SSR middleware — router matching → `ssrLoadModule` → `renderToString` → SEO head injection → resumability bootstrap injection.
+3. `nexil dev` mounts `[nexil(transform), nexilSSRPlugin]`; `nexil build` runs the same engine at build time and prerenders every route to `dist/client/<route>/index.html` (+ mirrored preview roots), keeping server modules/chunks/bootstrap/manifest emission.
 4. `core` re-exports `component`, `state`, `computed`, `batch` (signals via new dependency on reactivity); core+jsx-runtime expose `./jsx-dev-runtime` with `jsxDEV` for Vite SSR dev transform.
 5. Chunk hashes normalized (`normalizeIdForHash`) so dev/build/preview reference identical emitted files.
 6. Cross-runtime hardening: `sharp.d.ts` removed once real types resolved; clean scripts remove `*.tsbuildinfo` (ADR-008).

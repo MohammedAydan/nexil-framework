@@ -31,7 +31,7 @@ audit — without breaking any existing behavior, API, or test.
 - reactivity: remove the cleanup-hoisting block in `computed` finally (stale-dep
   root cause).
 - core: widen reactivity re-export surface.
-- create-nexis (+cli/create-nexis-app copies): add `@nexil/state` dep.
+- create-nexil (+cli/create-nexil-app copies): add `@nexil/state` dep.
 - client: unify exported `bootstrapResumability` with the shipped contract
   (unified attrs + scope materialization via global registry); dispose-on-overwrite
   in ScopeRegistry.register.

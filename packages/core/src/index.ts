@@ -88,7 +88,7 @@ export interface RequestContext {
   readonly scope: ContextScope
 }
 
-const CONTEXT_KEY = Symbol('nexis.context')
+const CONTEXT_KEY = Symbol('nexil.context')
 
 export interface ContextScope {
   readonly parent?: ContextScope
@@ -231,7 +231,7 @@ function deepResolve(child: Child): Child {
 }
 
 export function createContext<T>(defaultValue: T): Context<T> {
-  const key = Symbol('nexis.context.value')
+  const key = Symbol('nexil.context.value')
   const context: ContextInternal<T> = {
     [CONTEXT_KEY]: key,
     Provider: ({ value, children, scope }) => {

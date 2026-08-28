@@ -1,6 +1,6 @@
 # Link and Context architecture decision
 
-> **Status: released in v1.3.0.** The foundational Link and Context work merged through [PR #16](https://github.com/MohammedAydan/nexis-framework/pull/16), and the v1.3.0 release passed its quality and package-publication workflows. This record defines the deliberately narrow contract, including the prefetch-deduplication regression repair. The subsequent v1.3.1 patch corrects Starter's default dependency pin only; it does not change this contract.
+> **Status: released in v1.3.0.** The foundational Link and Context work merged through [PR #16](https://github.com/MohammedAydan/nexil-framework/pull/16), and the v1.3.0 release passed its quality and package-publication workflows. This record defines the deliberately narrow contract, including the prefetch-deduplication regression repair. The subsequent v1.3.1 patch corrects Starter's default dependency pin only; it does not change this contract.
 
 ## Problem and current baseline
 
@@ -30,7 +30,7 @@ The synchronous `Provider` convenience is valid only for synchronous child resol
 
 ## Runtime coordination
 
-The build emits the navigation runtime only if output contains `data-nx-link`. Existing delegated resumability events continue working after an outlet swap. A build aggregates opaque ScopeRef payloads into one common `nexis-state.js` asset, which is loaded before its relevant runtime; opaque scope keys remain opaque in the live DOM. The bindings runtime exposes a narrow refresh/dispose hook so an outlet replacement removes old Signal subscriptions before binding the incoming subtree. The progressive Form event listener remains delegated and does not need a per-page reinstallation.
+The build emits the navigation runtime only if output contains `data-nx-link`. Existing delegated resumability events continue working after an outlet swap. A build aggregates opaque ScopeRef payloads into one common `nexil-state.js` asset, which is loaded before its relevant runtime; opaque scope keys remain opaque in the live DOM. The bindings runtime exposes a narrow refresh/dispose hook so an outlet replacement removes old Signal subscriptions before binding the incoming subtree. The progressive Form event listener remains delegated and does not need a per-page reinstallation.
 
 ## Evidence recorded for v1.3.0
 
@@ -41,7 +41,7 @@ The build emits the navigation runtime only if output contains `data-nx-link`. E
 | Navigation lifecycle | Playwright verifies push/back/forward, top-scroll behavior, aborted stale requests, non-HTML fallback, and synthetic persisted `pageshow` cleanup.                                      |
 | Rendering            | Playwright verifies a direct `#app` replacement while a window value survives, with no client component renderer or VDOM runtime introduced.                                            |
 | State                | Core, CLI, Vite, and browser tests prove explicit scope nesting, per-route SSG scope isolation, direct bindings after a swap, and explicit Store `global` persistence across that swap. |
-| Performance          | Static routes without Link receive no navigation runtime; the build records 1,864 gzip bytes for the current runtime and `nexis check` enforces a 6 KiB limit.                          |
+| Performance          | Static routes without Link receive no navigation runtime; the build records 1,864 gzip bytes for the current runtime and `nexil check` enforces a 6 KiB limit.                          |
 
 ## Non-goals for the first release
 

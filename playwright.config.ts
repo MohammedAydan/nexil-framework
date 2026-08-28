@@ -26,13 +26,13 @@ export default defineConfig({
       timeout: 30_000,
     },
     {
-      command: 'pnpm --filter @nexil/example-nexis-showcase dev',
+      command: 'pnpm --filter @nexil/example-nexil-showcase dev',
       url: 'http://127.0.0.1:5173/',
       reuseExistingServer: !process.env.CI,
       timeout: 30_000,
       env: {
-        NEXIS_HOST: '127.0.0.1',
-        NEXIS_PORT: '5173',
+        NEXIL_HOST: '127.0.0.1',
+        NEXIL_PORT: '5173',
       },
     },
   ],

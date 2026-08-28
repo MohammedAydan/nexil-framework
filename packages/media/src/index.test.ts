@@ -126,7 +126,7 @@ describe('buildImageVariants', () => {
     const { tmpdir } = await import('node:os')
     const { join } = await import('node:path')
     clearImageTransformCache()
-    const root = await mkdtemp(join(tmpdir(), 'nexis-media-'))
+    const root = await mkdtemp(join(tmpdir(), 'nexil-media-'))
     const source = join(root, 'fixture.svg')
     const output = join(root, 'variants')
     const cache = join(root, 'cache')

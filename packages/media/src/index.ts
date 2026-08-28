@@ -418,7 +418,7 @@ export async function buildImageVariants(
     } catch (error) {
       if (!imageFallbackWarningShown) {
         console.warn(
-          `[nexis/media] Image transform unavailable; keeping original asset. ${error instanceof Error ? error.message : String(error)}`,
+          `[nexil/media] Image transform unavailable; keeping original asset. ${error instanceof Error ? error.message : String(error)}`,
         )
         imageFallbackWarningShown = true
       }

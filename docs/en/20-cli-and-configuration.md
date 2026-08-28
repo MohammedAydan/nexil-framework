@@ -7,7 +7,7 @@ Start with the scripts in `package.json` and the CLI help for the installed rele
 ```bash
 # For the published scoped initializer, configure GitHub Packages when required.
 npm config set @nexil:registry https://registry.npmjs.org/
-pnpm dlx @nexil/create-nexis@1.0.0 my-app --yes --ts
+pnpm dlx @nexil/create-nexil@1.0.0 my-app --yes --ts
 cd my-app
 pnpm install
 pnpm dev
@@ -16,26 +16,26 @@ pnpm dev
 For an existing project, inspect the installed CLI and use the repository scripts:
 
 ```bash
-nexis --help
-nexis start
-nexis generate route account/settings
-nexis generate component Button
-nexis add action saveProfile
-nexis doctor
-nexis doctor --json
+nexil --help
+nexil start
+nexil generate route account/settings
+nexil generate component Button
+nexil add action saveProfile
+nexil doctor
+nexil doctor --json
 pnpm build
 pnpm check:budget
 pnpm release:check
 ```
 
-The v1.2 CLI also provides `generate route`, `generate component`, `add action`, `doctor`, `preview`, `test`, and `upgrade`. Create accepts `--template minimal|interactive|secure-node`; `doctor --json` emits a versioned report for CI. The exact flags are versioned; do not copy an option from an unrelated release without checking `nexis --help` and the installed declarations.
+The v1.2 CLI also provides `generate route`, `generate component`, `add action`, `doctor`, `preview`, `test`, and `upgrade`. Create accepts `--template minimal|interactive|secure-node`; `doctor --json` emits a versioned report for CI. The exact flags are versioned; do not copy an option from an unrelated release without checking `nexil --help` and the installed declarations.
 
 ## Machine-readable diagnostics
 
-Use `nexis doctor --json` when CI, a project generator, or an editor integration must consume a stable report. The v1 report has a `status` of `ok`, `warn`, or `error`, and checks for the package manifest, lifecycle scripts, routes directory, HTML outlets, Nexil configuration, trusted-proxy intent, and explicit security-header configuration.
+Use `nexil doctor --json` when CI, a project generator, or an editor integration must consume a stable report. The v1 report has a `status` of `ok`, `warn`, or `error`, and checks for the package manifest, lifecycle scripts, routes directory, HTML outlets, Nexil configuration, trusted-proxy intent, and explicit security-header configuration.
 
 ```bash
-nexis doctor --json > nexis-doctor.json
+nexil doctor --json > nexil-doctor.json
 ```
 
 Warnings are review prompts, not proof that a deployment is unsafe. In particular, enabling `trustProxy` requires a proxy that overwrites forwarded headers; no local CLI check can prove that infrastructure behavior.
@@ -88,7 +88,7 @@ When OG generation is enabled, build outputs PNG cards from escaped title and de
 Use environment variables for deployment-specific values such as host, port, public origin, trusted-proxy mode, and secrets. Document whether each variable is read at build time or request time.
 
 ```bash
-NEXIS_HOST=127.0.0.1 NEXIS_PORT=3000 pnpm start
+NEXIL_HOST=127.0.0.1 NEXIL_PORT=3000 pnpm start
 ```
 
 Never commit secrets or include them in generated HTML.
@@ -103,21 +103,21 @@ dist/
 │   ├── index.html
 │   ├── assets/
 │   ├── og/
-│   ├── nexis-manifest.json
-│   ├── nexis-state.js           # opaque ScopeRef payloads, when captures exist
-│   ├── nexis-bootstrap.js       # interactive routes only
-│   ├── nexis-bindings.js        # binding routes only
-│   ├── nexis-forms.js           # progressive Form routes only
-│   ├── nexis-navigation.js      # semantic Link routes only
+│   ├── nexil-manifest.json
+│   ├── nexil-state.js           # opaque ScopeRef payloads, when captures exist
+│   ├── nexil-bootstrap.js       # interactive routes only
+│   ├── nexil-bindings.js        # binding routes only
+│   ├── nexil-forms.js           # progressive Form routes only
+│   ├── nexil-navigation.js      # semantic Link routes only
 │   ├── robots.txt
 │   ├── sitemap.xml
 │   ├── feed.xml
 │   └── atom.xml
 ├── server/routes/                # generated SSR route modules
-└── nexis-chunks/                 # hashed lazy handler chunks
+└── nexil-chunks/                 # hashed lazy handler chunks
 ```
 
-The current CLI writes `nexis-manifest.json`. `nexis-bootstrap.js` is emitted when an event boundary exists, `nexis-bindings.js` when transformed routes contain binding metadata, `nexis-forms.js` when a route contains a progressive `Form`, and `nexis-navigation.js` only when rendered HTML contains semantic Link markup. `BuildRouteRecord.navigationGzipBytes` is `0` for other routes. `nexis check` enforces the 6 KiB gzip budget for a navigation runtime in addition to the existing route and bootstrap budgets. Use the generated manifest and build logs as the release-specific source of truth.
+The current CLI writes `nexil-manifest.json`. `nexil-bootstrap.js` is emitted when an event boundary exists, `nexil-bindings.js` when transformed routes contain binding metadata, `nexil-forms.js` when a route contains a progressive `Form`, and `nexil-navigation.js` only when rendered HTML contains semantic Link markup. `BuildRouteRecord.navigationGzipBytes` is `0` for other routes. `nexil check` enforces the 6 KiB gzip budget for a navigation runtime in addition to the existing route and bootstrap budgets. Use the generated manifest and build logs as the release-specific source of truth.
 
 ## CI configuration
 
@@ -131,4 +131,4 @@ Use a clean checkout and a frozen lockfile. Cache package-manager downloads, not
 - Make defaults safe for shared caching.
 - Fail the build on invalid SEO or redirect data.
 - Record configuration changes in release notes.
-- Keep generated runtime assumptions synchronized with `nexis-bootstrap.js`, `nexis-bindings.js`, `nexis-forms.js`, and `nexis-navigation.js`.
+- Keep generated runtime assumptions synchronized with `nexil-bootstrap.js`, `nexil-bindings.js`, `nexil-forms.js`, and `nexil-navigation.js`.

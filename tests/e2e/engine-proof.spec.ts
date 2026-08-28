@@ -65,7 +65,7 @@ test.beforeAll(async () => {
   if (html.includes('&quot;initial&quot;') || html.includes('"initial"')) {
     throw new Error('Build output still contains inline resumability initial values')
   }
-  if (!html.includes('src="/nexis-state.js"')) {
+  if (!html.includes('src="/nexil-state.js"')) {
     throw new Error('Build output is missing the external state runtime')
   }
 
@@ -80,16 +80,16 @@ test.beforeAll(async () => {
   await new Promise((resolve) => setTimeout(resolve, 2000))
   // Verify preview serves the chunk correctly before running tests
   const chunkFiles = await import('node:fs/promises').then((m) =>
-    m.readdir(join(appDir, 'dist', 'client', 'nexis-chunks')).catch(() => []),
+    m.readdir(join(appDir, 'dist', 'client', 'nexil-chunks')).catch(() => []),
   )
-  console.log(`[engine-proof] dist/nexis-chunks files: ${chunkFiles.join(', ')}`)
+  console.log(`[engine-proof] dist/nexil-chunks files: ${chunkFiles.join(', ')}`)
   const previewHtml = await fetch('http://127.0.0.1:4317/')
     .then((r) => r.text())
     .catch(() => '')
   console.log(`[engine-proof] preview / chunk: ${previewHtml.match(/chunk_[a-f0-9]+\.js/)?.[0]}`)
   if (chunkFiles.length > 0) {
     try {
-      const res = await fetch(`http://127.0.0.1:4317/nexis-chunks/${chunkFiles[0]}`)
+      const res = await fetch(`http://127.0.0.1:4317/nexil-chunks/${chunkFiles[0]}`)
       console.log(`[engine-proof] fetch chunk ${chunkFiles[0]} status: ${res.status}`)
       const text = await res.text()
       console.log(`[engine-proof] chunk content preview: ${text.slice(0, 200)}`)
@@ -98,7 +98,7 @@ test.beforeAll(async () => {
     }
   }
   try {
-    const res = await fetch('http://127.0.0.1:4317/nexis-bootstrap.js')
+    const res = await fetch('http://127.0.0.1:4317/nexil-bootstrap.js')
     console.log(`[engine-proof] fetch bootstrap status: ${res.status}`)
   } catch (e) {
     console.log(`[engine-proof] fetch bootstrap failed: ${e}`)
@@ -136,14 +136,14 @@ test('engine proof: counter has serialized resumable attributes', async ({ page 
   await expect(button).toHaveAttribute('data-nx-scope', /^nx:scope:[a-f0-9]{12}$/)
   const html = await page.content()
   expect(html).not.toContain('&quot;initial&quot;')
-  const stateResponse = await page.request.get('http://127.0.0.1:4317/nexis-state.js')
+  const stateResponse = await page.request.get('http://127.0.0.1:4317/nexil-state.js')
   expect(stateResponse.ok()).toBe(true)
 })
 
 test('engine proof: clicking counter updates without hydration', async ({ page }) => {
   const requests: string[] = []
   page.on('request', (req) => {
-    if (req.url().includes('chunk_') || req.url().includes('nexis-bootstrap')) {
+    if (req.url().includes('chunk_') || req.url().includes('nexil-bootstrap')) {
       requests.push(req.url())
     }
   })
@@ -156,7 +156,7 @@ test('engine proof: clicking counter updates without hydration', async ({ page }
 
   // Verify bootstrap is loaded
   const bootstrapLoaded = await page.evaluate(() => {
-    return document.querySelector('script[src="/nexis-bootstrap.js"]') !== null
+    return document.querySelector('script[src="/nexil-bootstrap.js"]') !== null
   })
   console.log(`bootstrap script tag present: ${bootstrapLoaded}`)
   console.log(`requests before click: ${requests.join(', ')}`)

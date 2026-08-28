@@ -87,16 +87,16 @@ function packageJson(options: ResolvedStarterOptions): string {
       type: 'module',
       packageManager: 'pnpm@10.15.0',
       scripts: {
-        dev: 'nexis dev',
-        build: 'nexis build',
-        start: 'nexis start',
+        dev: 'nexil dev',
+        build: 'nexil build',
+        start: 'nexil start',
         typecheck: 'tsc --noEmit',
-        check: 'nexis check --budget',
-        analyze: 'nexis analyze',
+        check: 'nexil check --budget',
+        analyze: 'nexil analyze',
       },
       dependencies,
       devDependencies,
-      nexis: {
+      nexil: {
         routeExtension: options.language === 'ts' ? 'tsx' : 'jsx',
         source: options.dependencyVersion === 'workspace:*' ? 'workspace' : 'npm',
         registry: 'https://registry.npmjs.org/',
@@ -137,12 +137,12 @@ const SHELL_HTML = `<!doctype html>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!--nexis-head-outlet-->
+    <!--nexil-head-outlet-->
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <div id="app"><!--nexis-app-outlet--></div>
-    <!--nexis-scripts-outlet-->
+    <div id="app"><!--nexil-app-outlet--></div>
+    <!--nexil-scripts-outlet-->
   </body>
 </html>
 `
@@ -181,7 +181,7 @@ export default component(() => {
   }
   const secureNote =
     options.template === 'secure-node'
-      ? '<p>Security headers are configured explicitly in <code>nexis.config.ts</code>. Review CSP and trustProxy before deployment.</p>'
+      ? '<p>Security headers are configured explicitly in <code>nexil.config.ts</code>. Review CSP and trustProxy before deployment.</p>'
       : '<p>This project starts with useful server-rendered HTML and no client boundary.</p>'
   return `import { component } from '@nexil/core'
 
@@ -244,7 +244,7 @@ export function createStarterFiles(options: StarterOptions): readonly StarterFil
   const config = secureConfig(resolved)
   if (config)
     files.push({
-      path: `nexis.config.${resolved.language === 'ts' ? 'ts' : 'js'}`,
+      path: `nexil.config.${resolved.language === 'ts' ? 'ts' : 'js'}`,
       content: config,
     })
   if (resolved.tailwind) {

@@ -80,7 +80,7 @@ describe('action transport', () => {
       handle: (_context, input) => `queued:${input.name}`,
     })
     const json = await handleActionRequest(
-      new Request('https://example.test/__nexis/actions/labs/submit', {
+      new Request('https://example.test/__nexil/actions/labs/submit', {
         method: 'POST',
         headers: { 'content-type': 'application/json', origin: 'https://example.test' },
         body: JSON.stringify({ name: 'Ada' }),

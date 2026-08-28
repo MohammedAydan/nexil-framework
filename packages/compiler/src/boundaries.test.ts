@@ -10,10 +10,10 @@ describe('module boundaries', () => {
 
   it('rejects server imports in client code and client imports in server code', () => {
     expect(validateImport('src/client/menu.ts', 'src/server/session.ts')?.code).toBe(
-      'NEXIS_SERVER_IMPORT_IN_CLIENT',
+      'nexil_SERVER_IMPORT_IN_CLIENT',
     )
     expect(validateImport('src/server/page.ts', 'src/client/widget.ts')?.code).toBe(
-      'NEXIS_CLIENT_IMPORT_IN_SERVER',
+      'nexil_CLIENT_IMPORT_IN_SERVER',
     )
     expect(validateImport('src/client/menu.ts', 'src/shared/types.ts')).toBeUndefined()
   })
@@ -21,7 +21,7 @@ describe('module boundaries', () => {
   it('detects secret-like environment access in client modules', () => {
     expect(
       findSecretExposure('src/client/config.ts', 'const x = process.env.API_SECRET')?.code,
-    ).toBe('NEXIS_SECRET_EXPOSURE')
+    ).toBe('nexil_SECRET_EXPOSURE')
     expect(
       findSecretExposure('src/server/config.ts', 'const x = process.env.API_SECRET'),
     ).toBeUndefined()

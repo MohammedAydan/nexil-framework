@@ -18,7 +18,7 @@ pnpm install --frozen-lockfile
 pnpm build
 ```
 
-Check for `dist/client/index.html`, `nexis-manifest.json`, and `nexis-bootstrap.js` when interactive routes exist. Also check `sitemap.xml`, `robots.txt`, `feed.xml`, and `atom.xml`.
+Check for `dist/client/index.html`, `nexil-manifest.json`, and `nexil-bootstrap.js` when interactive routes exist. Also check `sitemap.xml`, `robots.txt`, `feed.xml`, and `atom.xml`.
 
 For the standard Node path, the build is immediately runnable. No custom server file or configuration file is required:
 
@@ -27,7 +27,7 @@ pnpm build
 pnpm start
 ```
 
-`NEXIS_HOST` and `NEXIS_PORT` override the default production host and port. Set `NEXIS_SITE_ORIGIN` during the production build, or use `app.origin` in an optional typed `nexis.config.ts`, when canonical metadata and feeds need the real public origin.
+`NEXIL_HOST` and `NEXIL_PORT` override the default production host and port. Set `NEXIL_SITE_ORIGIN` during the production build, or use `app.origin` in an optional typed `nexil.config.ts`, when canonical metadata and feeds need the real public origin.
 
 ## Node production server
 
@@ -163,4 +163,4 @@ Before exposing traffic:
 
 ## Workbench lab
 
-`pnpm --filter @nexil/example-nexis-workbench verify` runs TypeScript, the Nexil budget check, and the production build for the full example. Start only the generated artifact with `pnpm --filter @nexil/example-nexis-workbench start`; do not use a development server as production evidence. The Workbench server modules illustrate integration boundaries, not a hosted database, identity provider, or durable session store.
+`pnpm --filter @nexil/example-nexil-workbench verify` runs TypeScript, the Nexil budget check, and the production build for the full example. Start only the generated artifact with `pnpm --filter @nexil/example-nexil-workbench start`; do not use a development server as production evidence. The Workbench server modules illustrate integration boundaries, not a hosted database, identity provider, or durable session store.

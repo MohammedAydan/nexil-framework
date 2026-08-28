@@ -6,7 +6,7 @@ This chapter assembles the patterns from the previous guides into a small docume
 
 ```bash
 npm config set @nexil:registry https://registry.npmjs.org/
-pnpm dlx @nexil/create-nexis@1.0.0 my-docs --yes --ts
+pnpm dlx @nexil/create-nexil@1.0.0 my-docs --yes --ts
 cd my-docs
 pnpm install
 ```
@@ -148,7 +148,7 @@ pnpm test
 pnpm test:e2e
 ```
 
-For Node, run `@nexil/serve`. For Deno or Cloudflare, use the corresponding Fetch adapter. Set `NEXIS_TRUST_PROXY=1` only when the deployment has a trusted header-sanitizing proxy.
+For Node, run `@nexil/serve`. For Deno or Cloudflare, use the corresponding Fetch adapter. Set `NEXIL_TRUST_PROXY=1` only when the deployment has a trusted header-sanitizing proxy.
 
 ## 10. Verification matrix
 

@@ -51,7 +51,7 @@ export interface NexilConfig {
       readonly transform?: boolean
       /** Responsive widths emitted for every configured source image. */
       readonly widths?: readonly number[]
-      /** Relative cache location retained between builds. Defaults to .nexis/media-cache. */
+      /** Relative cache location retained between builds. Defaults to .nexil/media-cache. */
       readonly cacheDir?: string
     }
   }
@@ -183,7 +183,7 @@ const DEFAULT_NOT_FOUND =
 
 function pathnameFromRequest(request: IncomingMessage): string {
   try {
-    return new URL(request.url ?? '/', 'http://nexis.invalid').pathname
+    return new URL(request.url ?? '/', 'http://nexil.invalid').pathname
   } catch {
     return '/%invalid%'
   }
@@ -205,7 +205,7 @@ function safeFile(root: string, candidate: string): string | undefined {
 function isAsset(candidate: string): boolean {
   return (
     candidate.startsWith('assets/') ||
-    candidate.startsWith('nexis-') ||
+    candidate.startsWith('nexil-') ||
     extname(candidate).toLowerCase() !== '.html'
   )
 }
@@ -273,7 +273,7 @@ async function findAction(
   const file = resolve(serverDir, `${route}.js`)
   if (relative(resolve(serverDir), file).startsWith('..')) return undefined
   try {
-    const module = (await import(`${file}?nexis-action=${Date.now()}`)) as {
+    const module = (await import(`${file}?nexil-action=${Date.now()}`)) as {
       readonly actions?: Readonly<Record<string, ServerAction<unknown, unknown>>>
     }
     return module.actions?.[actionName]
@@ -304,7 +304,7 @@ export function createMiddleware(
     await securityHeaders?.(request, response)
     const pathname = pathnameFromRequest(request)
     const method = request.method ?? 'GET'
-    const telemetryEndpoint = options.telemetry?.endpoint ?? '/__nexis/telemetry'
+    const telemetryEndpoint = options.telemetry?.endpoint ?? '/__nexil/telemetry'
     if (method === 'POST' && pathname === telemetryEndpoint) {
       try {
         const requestBody = await requestFromNode(request)
@@ -335,7 +335,7 @@ export function createMiddleware(
       response.end(method === 'HEAD' ? undefined : `Redirecting to ${redirect.to}`)
       return
     }
-    const actionMatch = /^\/__nexis\/actions\/(.+)\/([^/]+)$/.exec(pathname)
+    const actionMatch = /^\/__nexil\/actions\/(.+)\/([^/]+)$/.exec(pathname)
     if (actionMatch) {
       const actionRoute = actionMatch[1]
       const actionName = actionMatch[2]

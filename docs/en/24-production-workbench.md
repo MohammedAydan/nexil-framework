@@ -21,20 +21,20 @@ This chapter is a complete, practical path for an application built with Nexil `
 Configure access to the `@nexil` package scope through your user or CI environment. Do not commit a registry token or paste it into `.npmrc`. Then use the current initializer and commit the lockfile produced by your own installation.
 
 ```bash
-pnpm dlx @nexil/create-nexis@1.0.0 nexis-workbench --yes --ts --template interactive
-cd nexis-workbench
+pnpm dlx @nexil/create-nexil@1.0.0 nexil-workbench --yes --ts --template interactive
+cd nexil-workbench
 pnpm install
 pnpm dev
 ```
 
-The Starter creates an HTML shell with `#app`, a `<!--nexis-app-outlet-->`, route sources, CSS, and scripts for `dev`, `build`, `start`, `typecheck`, `check`, and `analyze`. Inspect `package.json` before adding dependencies. The generated dependencies are public browser or build dependencies; they are not a place to store service credentials.
+The Starter creates an HTML shell with `#app`, a `<!--nexil-app-outlet-->`, route sources, CSS, and scripts for `dev`, `build`, `start`, `typecheck`, `check`, and `analyze`. Inspect `package.json` before adding dependencies. The generated dependencies are public browser or build dependencies; they are not a place to store service credentials.
 
 ```bash
 pnpm typecheck
 pnpm check
 ```
 
-Expected result: TypeScript succeeds and `nexis check --budget` reports a passing artifact policy. If either fails, fix the generated setup before adding application code.
+Expected result: TypeScript succeeds and `nexil check --budget` reports a passing artifact policy. If either fails, fix the generated setup before adding application code.
 
 ## 1. Render the document first
 
@@ -328,7 +328,7 @@ pnpm build
 pnpm start
 ```
 
-For Node, use the generated `nexis start` lifecycle or `@nexil/serve`. Use the Deno or Cloudflare adapter only when its Fetch-native runtime is the actual target. Set a public `siteOrigin`, define redirects, cache rules, header policy, and trusted-proxy behavior in reviewed configuration. Set proxy trust only when the proxy removes and reconstructs forwarded headers safely.
+For Node, use the generated `nexil start` lifecycle or `@nexil/serve`. Use the Deno or Cloudflare adapter only when its Fetch-native runtime is the actual target. Set a public `siteOrigin`, define redirects, cache rules, header policy, and trusted-proxy behavior in reviewed configuration. Set proxy trust only when the proxy removes and reconstructs forwarded headers safely.
 
 Your deployment checklist must include the following observable checks.
 

@@ -8,9 +8,9 @@
 const seo = {
   title: 'دليل Nexil',
   description: 'شرح عملي لبناء صفحات HTML أولًا.',
-  canonical: 'https://example.com/docs/nexis',
+  canonical: 'https://example.com/docs/nexil',
   ogType: 'article',
-  image: 'https://example.com/og/nexis.png',
+  image: 'https://example.com/og/nexil.png',
 }
 ```
 
@@ -111,4 +111,4 @@ const feed = generateFeed(items, {
 
 ## مختبر Workbench
 
-ابنِ مثال Workbench التنفيذي بالأمر `pnpm --filter @nexil/example-nexis-workbench build`. افحص `sitemap.xml` و`robots.txt` و`feed.xml` و`atom.xml` الناتجة وhead لكل route قبل نقل النمط لخدمة عامة. عيّن `NEXIS_SITE_ORIGIN` إنتاجيًّا مطلقًا خاصًا بك أثناء build التحقق؛ لا تنسخ hostname مثال أو preview إلى canonical.
+ابنِ مثال Workbench التنفيذي بالأمر `pnpm --filter @nexil/example-nexil-workbench build`. افحص `sitemap.xml` و`robots.txt` و`feed.xml` و`atom.xml` الناتجة وhead لكل route قبل نقل النمط لخدمة عامة. عيّن `NEXIL_SITE_ORIGIN` إنتاجيًّا مطلقًا خاصًا بك أثناء build التحقق؛ لا تنسخ hostname مثال أو preview إلى canonical.

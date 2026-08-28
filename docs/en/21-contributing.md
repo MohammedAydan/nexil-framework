@@ -6,7 +6,7 @@ Read the root README, package-level README files, the relevant source declaratio
 
 ```bash
 git clone <repository-url>
-cd nexis-framework
+cd nexil-framework
 pnpm install --frozen-lockfile
 pnpm build
 pnpm test

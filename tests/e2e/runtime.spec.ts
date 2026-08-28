@@ -28,12 +28,12 @@ test('basic counter has no application handler before click and loads one lazy c
   const button = page.locator('#counter')
   const mainBefore = await page.locator('main').innerHTML()
 
-  expect(await page.evaluate(() => window.__nexisCounterHandlerRuns ?? 0)).toBe(0)
+  expect(await page.evaluate(() => window.__nexilCounterHandlerRuns ?? 0)).toBe(0)
   expect(chunks).toEqual([])
 
   await button.click()
   await expect(button).toHaveText('1')
-  expect(await page.evaluate(() => window.__nexisCounterHandlerRuns)).toBe(1)
+  expect(await page.evaluate(() => window.__nexilCounterHandlerRuns)).toBe(1)
   expect(chunks.some((url) => url.endsWith('/chunk_increment.js'))).toBe(true)
   expect(await page.locator('main').innerHTML()).not.toBe(mainBefore)
 })

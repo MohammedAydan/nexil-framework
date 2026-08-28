@@ -12,7 +12,7 @@ import { routeFromFile, resolveRoute, matchRoute } from '@nexil/router'
 import type { NexilHandler } from '@nexil/adapters'
 import { createMemoryIdempotencyStore, handleActionRequest } from '@nexil/actions'
 import type { ServerAction } from '@nexil/actions'
-import nexis from '@nexil/vite-plugin'
+import nexil from '@nexil/vite-plugin'
 
 const routeCache = new Map<string, ReturnType<typeof routeFromFile>[]>()
 const devIdempotency = createMemoryIdempotencyStore()
@@ -63,9 +63,13 @@ export async function nodeRequest(request: IncomingMessage): Promise<Request> {
   const init: RequestInit = { method, headers }
   if (method !== 'GET' && method !== 'HEAD') init.body = Buffer.concat(chunks)
   const forwardedProto =
-    process.env.NEXIS_TRUST_PROXY === '1' ? request.headers['x-forwarded-proto'] : undefined
+    (process.env.NEXIL_TRUST_PROXY ?? process.env.NEXIS_TRUST_PROXY) === '1'
+      ? request.headers['x-forwarded-proto']
+      : undefined
   const forwardedHost =
-    process.env.NEXIS_TRUST_PROXY === '1' ? request.headers['x-forwarded-host'] : undefined
+    (process.env.NEXIL_TRUST_PROXY ?? process.env.NEXIS_TRUST_PROXY) === '1'
+      ? request.headers['x-forwarded-host']
+      : undefined
   const proto =
     (Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto)?.split(',')[0]?.trim() ||
     'http'
@@ -83,7 +87,7 @@ async function handleDevAction(
   response: ServerResponse,
   pathname: string,
 ): Promise<boolean> {
-  const match = /^\/__nexis\/actions\/(.+)\/([^/]+)$/.exec(pathname)
+  const match = /^\/__nexil\/actions\/(.+)\/([^/]+)$/.exec(pathname)
   if (!match?.[1] || !match[2]) return false
   const route = match[1]
   const name = match[2]
@@ -292,9 +296,9 @@ async function resolveInheritedSeo(
   return withCanonical(merged as SeoMetadata, pathname, siteOrigin)
 }
 
-export function nexisSSRPlugin(root: string): Plugin {
+export function nexilSSRPlugin(root: string): Plugin {
   return {
-    name: 'nexis-ssr',
+    name: 'nexil-ssr',
     configureServer(server) {
       const invalidate = (file?: string) => {
         if (!file) {
@@ -314,7 +318,7 @@ export function nexisSSRPlugin(root: string): Plugin {
         try {
           const requestUrl = req.url || '/'
           const pathname = new URL(requestUrl, 'http://localhost').pathname
-          if (pathname.startsWith('/__nexis/actions/')) {
+          if (pathname.startsWith('/__nexil/actions/')) {
             if (await handleDevAction(root, server, req, res, pathname)) return
           }
           if (pathname === '/sitemap.xml' || pathname === '/robots.txt') {
@@ -382,11 +386,14 @@ export function nexisSSRPlugin(root: string): Plugin {
           } catch (err) {
             const error = errorFromUnknown(err)
             server.ssrFixStacktrace(error)
-            console.error(`[nexis] SSR load error for ${modulePath}:`, error.message)
+            console.error(`[nexil] SSR load error for ${modulePath}:`, error.message)
             return next(error)
           }
 
-          const siteOrigin = process.env.NEXIS_SITE_ORIGIN ?? 'https://nexis-showcase.example'
+          const siteOrigin =
+            process.env.NEXIL_SITE_ORIGIN ??
+            process.env.NEXIS_SITE_ORIGIN ??
+            'https://nexil-showcase.example'
           const seo = await resolveInheritedSeo(
             server,
             root,
@@ -534,15 +541,15 @@ export function nexisSSRPlugin(root: string): Plugin {
           const hasBindings = renderedHtml.includes('data-nx-bind')
           const scripts = `${
             hasEventHandlers || hasBindings
-              ? '<script type="module" src="/nexis-bootstrap.js"></script>'
+              ? '<script type="module" src="/nexil-bootstrap.js"></script>'
               : ''
-          }${hasBindings ? '<script type="module" src="/nexis-bindings.js"></script>' : ''}`
+          }${hasBindings ? '<script type="module" src="/nexil-bindings.js"></script>' : ''}`
 
           let template: string
           try {
             template = await readFile(join(root, 'index.html'), 'utf-8')
           } catch {
-            template = `<!DOCTYPE html><html lang="en"><head><!--nexis-head-outlet--></head><body><div id="app"><!--nexis-app-outlet--></div><!--nexis-scripts-outlet--></body></html>`
+            template = `<!DOCTYPE html><html lang="en"><head><!--nexil-head-outlet--></head><body><div id="app"><!--nexil-app-outlet--></div><!--nexil-scripts-outlet--></body></html>`
           }
 
           template = await server.transformIndexHtml(url, template)
@@ -554,9 +561,9 @@ export function nexisSSRPlugin(root: string): Plugin {
           }
 
           const html = template
-            .replace('<!--nexis-head-outlet-->', head)
-            .replace('<!--nexis-app-outlet-->', renderedHtml)
-            .replace('<!--nexis-scripts-outlet-->', scripts)
+            .replace('<!--nexil-head-outlet-->', head)
+            .replace('<!--nexil-app-outlet-->', renderedHtml)
+            .replace('<!--nexil-scripts-outlet-->', scripts)
 
           res.statusCode = 200
           res.setHeader('Content-Type', 'text/html; charset=utf-8')
@@ -576,7 +583,7 @@ export async function createNexilDevMiddleware(root: string) {
   const { createServer } = await import('vite')
   const vite = await createServer({
     root,
-    plugins: [nexis({ root }), nexisSSRPlugin(root)],
+    plugins: [nexil({ root }), nexilSSRPlugin(root)],
     server: { middlewareMode: true },
     appType: 'custom',
   })

@@ -13,7 +13,7 @@ describe('OG image generation', () => {
   })
 
   it('writes a PNG and returns a cache hit on the second generation', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'nexis-og-'))
+    const root = await mkdtemp(join(tmpdir(), 'nexil-og-'))
     try {
       const options = { title: 'Nexil', description: 'A fast framework' }
       const first = await generateOgImage(options, root)

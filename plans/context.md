@@ -2,7 +2,7 @@
 
 ## Purpose
 
-HTML-first, resumable TypeScript web framework. Monorepo of scoped packages (`@nexil/*`) published to GitHub Packages, with a scaffolding CLI (`create-nexis`) that generates consumer apps.
+HTML-first, resumable TypeScript web framework. Monorepo of scoped packages (`@nexil/*`) published to GitHub Packages, with a scaffolding CLI (`create-nexil`) that generates consumer apps.
 
 ## Current Status
 

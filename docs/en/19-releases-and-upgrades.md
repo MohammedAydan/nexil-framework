@@ -56,17 +56,17 @@ For each upgrade, write:
 
 ## v1.1.0 migration
 
-When moving from v1.0.0 to v1.1.0, rename preferred composition modules to `_layout.*`, remove manual `serializeScopeRefs()` calls from route components, and extract repeated shells into root or nested layouts. Update output checks to account for `nexis-forms.js`, recursive `nexis-chunks/`, inherited metadata, and Suspense replacement templates. Existing `layout.*` modules remain supported for compatibility.
+When moving from v1.0.0 to v1.1.0, rename preferred composition modules to `_layout.*`, remove manual `serializeScopeRefs()` calls from route components, and extract repeated shells into root or nested layouts. Update output checks to account for `nexil-forms.js`, recursive `nexil-chunks/`, inherited metadata, and Suspense replacement templates. Existing `layout.*` modules remain supported for compatibility.
 
 Use `Form` and `SubmitButton` for native-first forms. Add an action `endpoint` when passing an action reference to `Form`, and keep server-side validation, authorization, Origin, CSRF, and idempotency checks in place.
 
 ## v1.2.0 migration
 
-Upgrade the coordinated Nexil packages to `1.2.0` in one dependency update, regenerate the lockfile, and perform a clean build. In particular, do not mix an old `@nexil/cli` or `@nexil/vite-plugin` with a v1.2.0 generated artifact: production interactive pages now use opaque `data-nx-scope` keys plus conditional `nexis-state.js`.
+Upgrade the coordinated Nexil packages to `1.2.0` in one dependency update, regenerate the lockfile, and perform a clean build. In particular, do not mix an old `@nexil/cli` or `@nexil/vite-plugin` with a v1.2.0 generated artifact: production interactive pages now use opaque `data-nx-scope` keys plus conditional `nexil-state.js`.
 
-After upgrading, rebuild from source, confirm static routes emit no state runtime, and use Playwright to verify an interactive route loads `nexis-state.js`, preserves opaque scope keys in the browser DOM, and resumes both handlers and bindings. The public state asset is not secret storage; remove any sensitive capture rather than relying on the new HTML representation.
+After upgrading, rebuild from source, confirm static routes emit no state runtime, and use Playwright to verify an interactive route loads `nexil-state.js`, preserves opaque scope keys in the browser DOM, and resumes both handlers and bindings. The public state asset is not secret storage; remove any sensitive capture rather than relying on the new HTML representation.
 
-Project creation may now select `minimal`, `interactive`, or `secure-node` with `--template`. Existing default initializer behavior remains `interactive`. Run `nexis doctor --json` in CI if you want a versioned project-configuration report, while treating its warnings as review prompts rather than infrastructure attestations.
+Project creation may now select `minimal`, `interactive`, or `secure-node` with `--template`. Existing default initializer behavior remains `interactive`. Run `nexil doctor --json` in CI if you want a versioned project-configuration report, while treating its warnings as review prompts rather than infrastructure attestations.
 
 ## v1.3.0 migration
 
@@ -101,7 +101,7 @@ Never edit generated client chunks or manifests as a fix. Change source or confi
 | Actions    | Method, Origin, validation, CSRF, and idempotency                     |
 | Layouts    | `_layout.*` discovery, route groups, and metadata inheritance         |
 | Streaming  | Suspense fallback ordering and disconnect cleanup                     |
-| Forms      | Native fallback, `nexis-forms.js`, loading state, and repeated fields |
+| Forms      | Native fallback, `nexil-forms.js`, loading state, and repeated fields |
 
 ## Rollback
 

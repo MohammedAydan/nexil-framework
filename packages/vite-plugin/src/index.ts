@@ -137,7 +137,7 @@ function captureExpression(expressionSource: string): {
   readonly code: string
   readonly names: readonly string[]
 } {
-  const prefix = 'const __nexisHandler = '
+  const prefix = 'const __nexilHandler = '
   const ast = parse(`${prefix}${expressionSource}`, {
     sourceType: 'module',
     plugins: ['typescript', 'jsx', 'topLevelAwait'],
@@ -199,7 +199,7 @@ function resolveLocalHandlerExpression(
   const identifier = /^\s*([A-Za-z_$][\w$]*)\s*$/.exec(expressionSource)?.[1]
   if (!identifier) return expressionSource
 
-  const ast = parseSource(source, 'nexis-local-handler.tsx')
+  const ast = parseSource(source, 'nexil-local-handler.tsx')
   let resolved: AstNode | undefined
 
   walk(ast, (node) => {
@@ -286,7 +286,7 @@ function evaluateStaticLiteral(node: unknown): ScopeCaptureInitial | undefined {
  * Returns undefined when the initializer is not a pure JSON literal.
  */
 function extractStaticInitial(source: string, name: string): ScopeCaptureInitial | undefined {
-  const ast = parseSource(source, 'nexis-initializer.tsx')
+  const ast = parseSource(source, 'nexil-initializer.tsx')
   let initial: ScopeCaptureInitial | undefined
   walk(ast, (node) => {
     if (initial !== undefined || node.type !== 'VariableDeclarator') return
@@ -312,7 +312,7 @@ function extractStaticInitial(source: string, name: string): ScopeCaptureInitial
 }
 
 function extractStoreLifetime(source: string, name: string): ScopeCaptureLifetime {
-  const ast = parseSource(source, 'nexis-store-lifetime.tsx')
+  const ast = parseSource(source, 'nexil-store-lifetime.tsx')
   let lifetime: ScopeCaptureLifetime = 'route'
   walk(ast, (node) => {
     if (lifetime === 'global' || node.type !== 'VariableDeclarator') return
@@ -610,7 +610,7 @@ function extractStaticCss(source: string, id: string): string[] {
       .filter(Boolean)
       .map((entry) => {
         const separator = entry.indexOf(':')
-        if (separator < 1) throw new Error(`[NEXIS_CSS] Invalid static style in ${id}.`)
+        if (separator < 1) throw new Error(`[nexil_CSS] Invalid static style in ${id}.`)
         const rawProperty = entry.slice(0, separator).trim()
         const property = rawProperty.startsWith('--')
           ? rawProperty
@@ -620,7 +620,7 @@ function extractStaticCss(source: string, id: string): string[] {
           .trim()
           .replace(/^['"`]|['"`]$/g, '')
         if (!/^(?:--)?[a-zA-Z][a-zA-Z0-9-]*$/.test(property) || /[;{}<>]/.test(value))
-          throw new Error(`[NEXIS_CSS] Unsafe static style in ${id}.`)
+          throw new Error(`[nexil_CSS] Unsafe static style in ${id}.`)
         if (
           /^-?\d+(?:\.\d+)?$/.test(value) &&
           value !== '0' &&
@@ -711,7 +711,7 @@ export async function transformNexilSource(
         expression.end === undefined
       ) {
         moduleDiagnostics.push(
-          `[NEXIS_LAZY_BOUNDARY] ${node.name.name} must contain a serializable expression.`,
+          `[nexil_LAZY_BOUNDARY] ${node.name.name} must contain a serializable expression.`,
         )
         return
       }
@@ -727,7 +727,7 @@ export async function transformNexilSource(
       const eventName = node.name.name.slice(2, -1).toLowerCase()
       if (!/^[a-z][a-z0-9-]*$/.test(eventName)) {
         moduleDiagnostics.push(
-          `[NEXIS_LAZY_BOUNDARY] ${node.name.name} must use an event name such as onClick$ or onInput$.`,
+          `[nexil_LAZY_BOUNDARY] ${node.name.name} must use an event name such as onClick$ or onInput$.`,
         )
         return
       }
@@ -1036,12 +1036,12 @@ export async function transformNexilSource(
   }
 }
 
-export function nexis(options: { readonly root?: string } = {}): Plugin {
+export function nexil(options: { readonly root?: string } = {}): Plugin {
   const generatedChunks = new Map<string, string>()
   const generatedCss = new Set<string>()
   let hasBindings = false
   return {
-    name: 'nexis',
+    name: 'nexil',
     enforce: 'pre',
     configResolved(config) {
       void options.root
@@ -1053,14 +1053,14 @@ export function nexis(options: { readonly root?: string } = {}): Plugin {
       server.middlewares.use((request, response, next) => {
         if (request.method !== 'GET') return next()
         const url = request.url ?? ''
-        if (url === '/nexis-bootstrap.js' || url === '/nexis-bindings.js') {
+        if (url === '/nexil-bootstrap.js' || url === '/nexil-bindings.js') {
           response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' })
           response.end(
-            url === '/nexis-bindings.js' ? RESUMABILITY_BINDINGS : RESUMABILITY_BOOTSTRAP,
+            url === '/nexil-bindings.js' ? RESUMABILITY_BINDINGS : RESUMABILITY_BOOTSTRAP,
           )
           return
         }
-        const match = /^\/nexis-chunks\/([A-Za-z0-9_.-]+\.js)$/.exec(url)
+        const match = /^\/nexil-chunks\/([A-Za-z0-9_.-]+\.js)$/.exec(url)
         const chunkName = match?.[1]
         if (chunkName !== undefined) {
           const source = generatedChunks.get(chunkName)
@@ -1097,26 +1097,26 @@ export function nexis(options: { readonly root?: string } = {}): Plugin {
     },
     generateBundle() {
       for (const [fileName, source] of generatedChunks) {
-        this.emitFile({ type: 'asset', fileName: `nexis-chunks/${fileName}`, source })
+        this.emitFile({ type: 'asset', fileName: `nexil-chunks/${fileName}`, source })
       }
       if (generatedChunks.size > 0 || hasBindings) {
         this.emitFile({
           type: 'asset',
-          fileName: 'nexis-bootstrap.js',
+          fileName: 'nexil-bootstrap.js',
           source: RESUMABILITY_BOOTSTRAP,
         })
       }
       if (hasBindings) {
         this.emitFile({
           type: 'asset',
-          fileName: 'nexis-bindings.js',
+          fileName: 'nexil-bindings.js',
           source: RESUMABILITY_BINDINGS,
         })
       }
       if (generatedCss.size > 0) {
         this.emitFile({
           type: 'asset',
-          fileName: 'assets/nexis.css',
+          fileName: 'assets/nexil.css',
           source: [...generatedCss].join(''),
         })
       }
@@ -1124,4 +1124,4 @@ export function nexis(options: { readonly root?: string } = {}): Plugin {
   }
 }
 
-export default nexis
+export default nexil

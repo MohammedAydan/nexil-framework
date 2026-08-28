@@ -8,15 +8,15 @@
 - **Decision:** Use `pnpm -r --sort build` alone; per-package builds already clean their outputs. Keep `.gitignore` covering `dist/`.
 - **Consequences:** Works on all platforms; no cleanup script needed for correctness.
 
-## ADR-002: create-nexis is the public scaffolder; create-nexis-app is superseded
+## ADR-002: create-nexil is the public scaffolder; create-nexil-app is superseded
 
 - **Date:** 2026-08-25
 - **Status:** Accepted
-- **Context:** `packages/create-nexis-app` is a byte-identical duplicate of `packages/create-nexis` except bin name. Publishing both confuses consumers.
-- **Decision:** Keep `@nexil/create-nexis` as the single public initializer. Mark `@nexil/create-nexis-app` `"private": true` (build still runs; never published) and update its README to point at create-nexis. Update root README accordingly.
+- **Context:** `packages/create-nexil-app` is a byte-identical duplicate of `packages/create-nexil` except bin name. Publishing both confuses consumers.
+- **Decision:** Keep `@nexil/create-nexil` as the single public initializer. Mark `@nexil/create-nexil-app` `"private": true` (build still runs; never published) and update its README to point at create-nexil. Update root README accordingly.
 - **Alternatives considered:** Publish both (confusing); delete the package (loses history/reference).
 - **Consequences:** One canonical scaffold command; no accidental duplicate publication.
-- **Amendment (GA):** The `create-nexis-app` NAME survives as a second bin on `@nexil/create-nexis` (`npm exec --package @nexil/create-nexis -- create-nexis-app â€¦`), satisfying initializer-name compatibility without a duplicate package.
+- **Amendment (GA):** The `create-nexil-app` NAME survives as a second bin on `@nexil/create-nexil` (`npm exec --package @nexil/create-nexil -- create-nexil-app â€¦`), satisfying initializer-name compatibility without a duplicate package.
 
 ## ADR-003: Secure registry configuration strategy
 
@@ -31,7 +31,7 @@
 - **Date:** 2026-08-25
 - **Status:** Accepted
 - **Context:** Publishing should be deliberate, not per-push.
-- **Decision:** `publish-packages.yml` triggers on version tags `v*`: install â†’ typecheck/lint/test â†’ build â†’ pack dry-run validation â†’ publish in topological order â†’ smoke-verify create-nexis resolvable. Uses GITHUB_TOKEN with `contents: read` + `packages: write`.
+- **Decision:** `publish-packages.yml` triggers on version tags `v*`: install â†’ typecheck/lint/test â†’ build â†’ pack dry-run validation â†’ publish in topological order â†’ smoke-verify create-nexil resolvable. Uses GITHUB_TOKEN with `contents: read` + `packages: write`.
 - **Consequences:** Reproducible releases; no long-lived secrets.
 
 ## ADR-005: Resumability runtime uses stable absolute chunk URLs
@@ -39,8 +39,8 @@
 - **Date:** 2026-08-25
 - **Status:** Accepted
 - **Context:** The bootstrap imported chunks relatively from build-only paths; dev had no way to serve them, so interactive templates only worked post-build with custom hosting. Also, TypeScript handler expressions leaked type annotations into plain-JS chunks.
-- **Decision:** `RESUMABILITY_BOOTSTRAP` (owned by vite-plugin) imports `/nexis-chunks/<file>`. The plugin's dev middleware serves bootstrap+chunks from live transforms; builds emit identical static paths. TypeScript route chunks pass through esbuild (`loader: 'ts'`) so emitted code is always plain JS. `transformNexilSource` is async accordingly.
-- **Consequences:** Identical interactive behavior in dev and production; self-describing artifacts (`nexis-bootstrap.js`, `nexis-chunks/`, `nexis-manifest.json`).
+- **Decision:** `RESUMABILITY_BOOTSTRAP` (owned by vite-plugin) imports `/nexil-chunks/<file>`. The plugin's dev middleware serves bootstrap+chunks from live transforms; builds emit identical static paths. TypeScript route chunks pass through esbuild (`loader: 'ts'`) so emitted code is always plain JS. `transformNexilSource` is async accordingly.
+- **Consequences:** Identical interactive behavior in dev and production; self-describing artifacts (`nexil-bootstrap.js`, `nexil-chunks/`, `nexil-manifest.json`).
 
 ## ADR-006: v2.0.0 GA aligns repo tag with the package version line
 
@@ -54,8 +54,8 @@
 
 - **Date:** 2026-08-25
 - **Status:** Accepted
-- **Context:** Audit found the "ghost static file" bypass: scaffolded `index.html` carried a full pre-baked landing page, so `nexis dev`/`start` displayed static markup while `src/routes/index.tsx` was never parsed or rendered â€” the renderer, JSX runtime, signals, and resumability serializer were all bypassed.
-- **Decision:** (1) Templates ship a minimal shell containing only `<!--nexis-head-outlet-->`, `<!--nexis-app-outlet-->`, `<!--nexis-scripts-outlet-->`. (2) `@nexil/dev-server` exports `nexisSSRPlugin(root)`: a Vite SSR middleware that matches requests via `@nexil/router`, loads route modules through `ssrLoadModule`, renders via `@nexil/renderer`'s `renderToString`, injects SEO head via `renderHead`, and injects the resumability bootstrap when `data-nx-on-click` is present. (3) `nexis build` executes the same engine at build time, prerendering per-route HTML into `dist/client/<route>/index.html` plus mirrored preview roots. (4) `core` re-exports `component`/`state`/`computed`/`batch` (signals from `@nexil/reactivity`) so templates can use the documented API surface.
+- **Context:** Audit found the "ghost static file" bypass: scaffolded `index.html` carried a full pre-baked landing page, so `nexil dev`/`start` displayed static markup while `src/routes/index.tsx` was never parsed or rendered â€” the renderer, JSX runtime, signals, and resumability serializer were all bypassed.
+- **Decision:** (1) Templates ship a minimal shell containing only `<!--nexil-head-outlet-->`, `<!--nexil-app-outlet-->`, `<!--nexil-scripts-outlet-->`. (2) `@nexil/dev-server` exports `nexilSSRPlugin(root)`: a Vite SSR middleware that matches requests via `@nexil/router`, loads route modules through `ssrLoadModule`, renders via `@nexil/renderer`'s `renderToString`, injects SEO head via `renderHead`, and injects the resumability bootstrap when `data-nx-on-click` is present. (3) `nexil build` executes the same engine at build time, prerendering per-route HTML into `dist/client/<route>/index.html` plus mirrored preview roots. (4) `core` re-exports `component`/`state`/`computed`/`batch` (signals from `@nexil/reactivity`) so templates can use the documented API surface.
 - **Alternatives considered:** keeping the marketing HTML as the served shell (rejected: it is precisely the bypass); separate dev HTTP server inside dev-server (rejected: duplicates Vite, breaks HMR).
 - **Consequences:** JSX runtime and signals execute during every render path; handler chunks resolve to real emitted files (chunk hashes normalized across transform/build contexts); interactive proof is enforced by `tests/e2e/engine-proof.spec.ts`.
 

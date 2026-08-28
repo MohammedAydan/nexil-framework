@@ -63,7 +63,7 @@ describe('Nexil Vite transform', () => {
         "import session from '../server/session'\nexport const view = <div />",
         '/app/src/client/view.tsx',
       ),
-    ).rejects.toThrow(/NEXIS_SERVER_IMPORT_IN_CLIENT/)
+    ).rejects.toThrow(/nexil_SERVER_IMPORT_IN_CLIENT/)
   })
 
   it('rejects secret-like environment access in client modules', async () => {
@@ -72,7 +72,7 @@ describe('Nexil Vite transform', () => {
         'export const key = import.meta.env.PUBLIC_API_SECRET',
         '/app/src/client/config.ts',
       ),
-    ).rejects.toThrow(/NEXIS_SECRET_EXPOSURE/)
+    ).rejects.toThrow(/nexil_SECRET_EXPOSURE/)
   })
 
   it('extracts static JSX styles into CSS output', async () => {

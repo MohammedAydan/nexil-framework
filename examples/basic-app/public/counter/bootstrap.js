@@ -1,4 +1,4 @@
-window.__nexisCounterSetupRuns = 0
+window.__nexilCounterSetupRuns = 0
 
 const button = document.querySelector('#counter')
 button.addEventListener('click', async () => {

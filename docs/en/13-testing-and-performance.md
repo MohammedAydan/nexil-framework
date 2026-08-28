@@ -39,8 +39,8 @@ In E2E, verify that:
 - No application handler or binding effect runs during initial paint when the route is static.
 - Static routes request no JavaScript.
 - The event bootstrap loads only when an event boundary is present.
-- `nexis-bindings.js` is emitted and injected only for routes containing binding metadata.
-- `nexis-forms.js` is emitted only for routes containing `Form` metadata.
+- `nexil-bindings.js` is emitted and injected only for routes containing binding metadata.
+- `nexil-forms.js` is emitted only for routes containing `Form` metadata.
 - Identical handler chunks are emitted once even when multiple boundaries use the same expression.
 - Repeated identical scope envelopes are lifted to a shared ancestor.
 - Nested layouts contribute one effective shell and inherited metadata without duplicate structural head tags.
@@ -60,7 +60,7 @@ Interactive route  → bootstrap + smallest lazy chunk
 
 ## Static asset inventory
 
-Run `nexis analyze` after `nexis build` to inspect emitted delivery assets alongside route JavaScript budgets. The command reports the non-HTML file count, total bytes, image subtotal, and five largest emitted files. Image files of at least 256 KiB receive a build-time advisory. The advisory is intentionally non-blocking because an appropriate threshold depends on the route, content, and image role.
+Run `nexil analyze` after `nexil build` to inspect emitted delivery assets alongside route JavaScript budgets. The command reports the non-HTML file count, total bytes, image subtotal, and five largest emitted files. Image files of at least 256 KiB receive a build-time advisory. The advisory is intentionally non-blocking because an appropriate threshold depends on the route, content, and image role.
 
 ```text
 Static asset delivery
@@ -117,4 +117,4 @@ Every report should state the commit, Node, pnpm, and browser versions; the rout
 
 ## Workbench lab
 
-Start with `pnpm --filter @nexil/example-nexis-workbench verify`. Then add browser assertions for initial HTML, no-JavaScript anchors, Link history and bypasses, the first filter interaction, 404 handling, and native support-form submission. Keep those assertions separate from any provider-specific authentication or database tests, and record the environment alongside performance measurements.
+Start with `pnpm --filter @nexil/example-nexil-workbench verify`. Then add browser assertions for initial HTML, no-JavaScript anchors, Link history and bypasses, the first filter interaction, 404 handling, and native support-form submission. Keep those assertions separate from any provider-specific authentication or database tests, and record the environment alongside performance measurements.

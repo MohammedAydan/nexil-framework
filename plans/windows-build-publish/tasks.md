@@ -8,12 +8,12 @@
 - [x] Run typecheck / lint / unit tests (80 pass)
 - [x] Run e2e (6 pass) + node/edge smokes; deno unavailable (documented)
 - [x] Audit all package.json metadata for publishability
-- [x] Public list = all packages/* except create-nexis-app (now private)
+- [x] Public list = all packages/* except create-nexil-app (now private)
 - [x] Exclude compiled _.test._ from tarballs via files negation
 - [x] Add project .npmrc (scope routing only); verify no secrets
 - [x] Fix recursive publish filter failure (quote stripping) via pnpm -C packages
 - [x] Dry-run publish + inspect tarballs (no workspace:* leaks)
-- [x] Publish 18 public packages v0.1.0; cli+create-nexis bumped to 0.1.2
+- [x] Publish 18 public packages v0.1.0; cli+create-nexil bumped to 0.1.2
 - [x] Verify npm view from GitHub Packages
 - [x] Scaffold app OUTSIDE repo via pnpm dlx; install/build/dev/start/smoke OK
 - [x] Verify generated consumer has no local/workspace deps (pkg.json + lockfile)

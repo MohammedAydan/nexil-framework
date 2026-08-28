@@ -44,4 +44,4 @@ const middleware = composeMiddleware(
 
 ## مختبر Workbench
 
-يعلن [`session-policy.ts`](../../examples/nexis-workbench/src/server/session-policy.ts) عن `SessionStore` التي يملكها التطبيق ويستعمل `sessions.require` و`requirePermission` و`requireAccess` قبل تعديل مقال. ويعرض [`support-action.ts`](../../examples/nexis-workbench/src/server/support-action.ts) شكل Action المقابل. استبدل session store المعلنة بتنفيذ durable، ثم اختبر الطلبات ذات الجلسة الغائبة والمنتهية والملغاة والصلاحية أو المستأجر الخاطئين. client control أو hidden field ليسا دليل authorization.
+يعلن [`session-policy.ts`](../../examples/nexil-workbench/src/server/session-policy.ts) عن `SessionStore` التي يملكها التطبيق ويستعمل `sessions.require` و`requirePermission` و`requireAccess` قبل تعديل مقال. ويعرض [`support-action.ts`](../../examples/nexil-workbench/src/server/support-action.ts) شكل Action المقابل. استبدل session store المعلنة بتنفيذ durable، ثم اختبر الطلبات ذات الجلسة الغائبة والمنتهية والملغاة والصلاحية أو المستأجر الخاطئين. client control أو hidden field ليسا دليل authorization.

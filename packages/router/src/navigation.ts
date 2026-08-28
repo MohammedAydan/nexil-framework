@@ -3,10 +3,10 @@
  * only the framework-owned #app outlet after successfully parsing a normal HTML
  * response; it neither mounts components nor diffs a virtual tree.
  */
-export const NEXIS_NAVIGATION_RUNTIME = String.raw`
+export const NEXIL_NAVIGATION_RUNTIME = String.raw`
 (() => {
-  if (globalThis.__nexisNavigationInstalled) return
-  globalThis.__nexisNavigationInstalled = true
+  if (globalThis.__nexilNavigationInstalled) return
+  globalThis.__nexilNavigationInstalled = true
 
 	const cache = new Map()
 	const prefetchedAnchors = new WeakSet()
@@ -24,9 +24,9 @@ export const NEXIS_NAVIGATION_RUNTIME = String.raw`
   let activeUrl = location.href
 
   const sameOrigin = (url) => url.origin === location.origin
-  const emit = (type, detail) => dispatchEvent(new CustomEvent('nexis:navigation-' + type, { detail }))
+  const emit = (type, detail) => dispatchEvent(new CustomEvent('nexil:navigation-' + type, { detail }))
   const storeScroll = () => {
-    history.replaceState({ ...history.state, __nexisScroll: { x: scrollX, y: scrollY } }, '', location.href)
+    history.replaceState({ ...history.state, __nexilScroll: { x: scrollX, y: scrollY } }, '', location.href)
   }
   const canIntercept = (event, anchor) => {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return false
@@ -56,7 +56,7 @@ export const NEXIS_NAVIGATION_RUNTIME = String.raw`
   const loadDestinationRuntime = async (next) => {
     const moduleSources = [...next.querySelectorAll('script[type="module"][src]')]
       .map((node) => new URL(node.getAttribute('src'), location.origin).href)
-      .filter((src) => /\/nexis-(?:state|bootstrap|bindings|forms)\.js$/.test(new URL(src).pathname))
+      .filter((src) => /\/nexil-(?:state|bootstrap|bindings|forms)\.js$/.test(new URL(src).pathname))
     for (const source of moduleSources) await import(source)
   }
   const syncHead = (next) => {
@@ -73,11 +73,11 @@ export const NEXIS_NAVIGATION_RUNTIME = String.raw`
     if (!incoming || !current) throw new Error('Nexil navigation document is missing #app.')
     await loadDestinationRuntime(next)
     const commit = () => {
-      globalThis.__nexisDisposeBindings?.()
+      globalThis.__nexilDisposeBindings?.()
       syncHead(next)
       current.replaceChildren(...[...incoming.childNodes].map((node) => document.importNode(node, true)))
-      globalThis.__nexisRefreshBindings?.()
-      document.dispatchEvent(new CustomEvent('nexis:navigation-commit', { detail: { url } }))
+      globalThis.__nexilRefreshBindings?.()
+      document.dispatchEvent(new CustomEvent('nexil:navigation-commit', { detail: { url } }))
     }
     const transition = options.transition !== false && document.startViewTransition?.(commit)
     if (transition) await transition.finished
@@ -141,7 +141,7 @@ export const NEXIS_NAVIGATION_RUNTIME = String.raw`
       return
     }
     void visit(location.href, { history: 'none', scroll: false, transition: false, persistCurrent: false }).then(() => {
-      const point = event.state?.__nexisScroll
+      const point = event.state?.__nexilScroll
       if (point) scrollTo(point.x, point.y)
       else if (location.hash) document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView()
       else scrollTo(0, 0)
@@ -164,10 +164,11 @@ export const NEXIS_NAVIGATION_RUNTIME = String.raw`
     }, { rootMargin: '240px' })
     for (const anchor of document.querySelectorAll('a[data-nx-link][data-nx-prefetch="viewport"]')) observer.observe(anchor)
   }
-  globalThis.__nexisNavigate = (href, options) => visit(href, {
+  globalThis.__nexilNavigate = (href, options) => visit(href, {
     history: options?.replace ? 'replace' : 'push',
     scroll: options?.scroll,
     transition: options?.transition,
   })
 })()
 `
+export const nexil_NAVIGATION_RUNTIME = NEXIL_NAVIGATION_RUNTIME

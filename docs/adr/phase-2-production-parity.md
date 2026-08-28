@@ -12,11 +12,11 @@ The browser registry is content-addressed, inspectable, and disposable. A route 
 
 ## Action transport
 
-Actions are exposed as `POST /__nexis/actions/<route>/<name>`. The transport accepts JSON and `application/x-www-form-urlencoded` or multipart form data, validates before handling, checks same-origin or an explicit origin allowlist, and applies an idempotency key when supplied. Responses use `{ ok: true, data }` or `{ ok: false, errors }`. Progressive-enhancement forms remain valid when JavaScript is unavailable.
+Actions are exposed as `POST /__nexil/actions/<route>/<name>`. The transport accepts JSON and `application/x-www-form-urlencoded` or multipart form data, validates before handling, checks same-origin or an explicit origin allowlist, and applies an idempotency key when supplied. Responses use `{ ok: true, data }` or `{ ok: false, errors }`. Progressive-enhancement forms remain valid when JavaScript is unavailable.
 
 ## Production serving and runtime parity
 
-`@nexil/serve` is the official Node-compatible static server. It maps generated route directories to `index.html`, serves a framework 404 document, supports `GET` and `HEAD`, rejects other methods with `405`, prevents traversal, and applies revalidation caching to HTML and immutable caching to hashed assets. The CLI `nexis serve` command uses this package. Node, Cloudflare-style, and Deno-style adapters continue to expose the same request/response contract. Stream rendering is bounded, cancellation-aware, and byte-identical to buffered rendering.
+`@nexil/serve` is the official Node-compatible static server. It maps generated route directories to `index.html`, serves a framework 404 document, supports `GET` and `HEAD`, rejects other methods with `405`, prevents traversal, and applies revalidation caching to HTML and immutable caching to hashed assets. The CLI `nexil serve` command uses this package. Node, Cloudflare-style, and Deno-style adapters continue to expose the same request/response contract. Stream rendering is bounded, cancellation-aware, and byte-identical to buffered rendering.
 
 ## Media, telemetry, and SEO
 

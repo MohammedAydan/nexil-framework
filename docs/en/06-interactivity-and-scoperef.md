@@ -8,10 +8,10 @@ Traditional hydration reruns application code in the browser to discover events 
 SSR HTML
   + data-nx-on-click="chunk-id#handler"
   + data-nx-scope="nx:scope:<opaque-key>"
-  + nexis-state.js (only when captured browser state is needed)
-  + nexis-bootstrap.js
-  + nexis-bindings.js (binding routes only)
-  + nexis-forms.js (progressive Form routes only)
+  + nexil-state.js (only when captured browser state is needed)
+  + nexil-bootstrap.js
+  + nexil-bindings.js (binding routes only)
+  + nexil-forms.js (progressive Form routes only)
         │
         └── click → import lazy chunk → resolve scope → execute handler
 ```
@@ -46,7 +46,7 @@ The supported targets are `text`, `value`, `checked`, `disabled`, `hidden`, `cla
 
 Automatic lowering is deliberately conservative. Direct `{signal()}`, `{signal.value}`, and direct scalar-attribute reads are supported. Equivalent handler expressions share one canonical lazy chunk, and repeated identical scope envelopes are lifted to their nearest shared HTML ancestor. An expression such as `{count() + ' items'}` is left as normal SSR output and emits a diagnostic recommending an explicit `bindText$`; the compiler does not guess a dependency graph for arbitrary expressions.
 
-A route containing only ordinary SSR markup does not receive `nexis-bindings.js`. The CLI and Vite plugin emit and inject the separate binding runtime only when transformed route metadata contains a binding.
+A route containing only ordinary SSR markup does not receive `nexil-bindings.js`. The CLI and Vite plugin emit and inject the separate binding runtime only when transformed route metadata contains a binding.
 
 ## Writing a lazy handler
 
@@ -103,7 +103,7 @@ The handler must be a direct local identifier whose declaration appears before t
 
 You do not write `data-nx-scope` by hand. When a lazy handler captures a signal,
 store, or action, production builds replace the named inline payload with an opaque
-scope key and write the browser-required payload to `nexis-state.js`, loaded before
+scope key and write the browser-required payload to `nexil-state.js`, loaded before
 the resumability runtime. The browser resolves that key on first interaction:
 
 ```tsx
@@ -117,7 +117,7 @@ its scope id.
 
 This reduces document-source verbosity and avoids exposing capture names, kinds,
 stable IDs, and initial values directly in the initial HTML. It is **not encryption**
-or authorization: a browser can fetch `nexis-state.js`, so captured values remain
+or authorization: a browser can fetch `nexil-state.js`, so captured values remain
 public browser data. Never capture secrets, private profiles, credentials, or
 request-only information. Inline JSON ScopeRefs remain supported for manually
 authored and compatibility boundaries.
@@ -153,7 +153,7 @@ Bootstrap delegates events at the document level and finds Nexil event attribute
 - Narrow `event.target` before using it.
 - Prevent native form submission synchronously before awaiting a lazy import.
 - Keep a real `action` and `method` so progressive enhancement remains available.
-- Use `Form` and `SubmitButton` for native-first forms; the generated `nexis-forms.js` runtime adds idempotency, optional CSRF, loading state, and success/error events.
+- Use `Form` and `SubmitButton` for native-first forms; the generated `nexil-forms.js` runtime adds idempotency, optional CSRF, loading state, and success/error events.
 
 ## Interaction boundaries
 

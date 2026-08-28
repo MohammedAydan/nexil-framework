@@ -14,7 +14,7 @@ describe('dev server', () => {
   })
 
   it('honors forwarded origin headers only when the proxy is explicitly trusted', async () => {
-    const previous = process.env.NEXIS_TRUST_PROXY
+    const previous = process.env.NEXIL_TRUST_PROXY
     const request = Readable.from([]) as IncomingMessage
     Object.assign(request, {
       headers: {
@@ -23,22 +23,22 @@ describe('dev server', () => {
         'x-forwarded-proto': 'https',
       },
       method: 'POST',
-      url: '/__nexis/actions/labs/submit',
+      url: '/__nexil/actions/labs/submit',
     })
 
     try {
-      delete process.env.NEXIS_TRUST_PROXY
+      delete process.env.NEXIL_TRUST_PROXY
       expect((await nodeRequest(request)).url).toBe(
-        'http://internal.test:5173/__nexis/actions/labs/submit',
+        'http://internal.test:5173/__nexil/actions/labs/submit',
       )
 
-      process.env.NEXIS_TRUST_PROXY = '1'
+      process.env.NEXIL_TRUST_PROXY = '1'
       expect((await nodeRequest(request)).url).toBe(
-        'https://public.test/__nexis/actions/labs/submit',
+        'https://public.test/__nexil/actions/labs/submit',
       )
     } finally {
-      if (previous === undefined) delete process.env.NEXIS_TRUST_PROXY
-      else process.env.NEXIS_TRUST_PROXY = previous
+      if (previous === undefined) delete process.env.NEXIL_TRUST_PROXY
+      else process.env.NEXIL_TRUST_PROXY = previous
     }
   })
 })

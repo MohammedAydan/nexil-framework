@@ -68,7 +68,7 @@ describe('ScopeRef ABI', () => {
       value: { kind: 'value', data: { mode: 'deep-sea' } },
       signal: { kind: 'signal', id: 'nx:signal:one', initial: 1 },
       store: { kind: 'store', id: 'nx:store:one', initial: { count: 1 } },
-      action: { kind: 'action', id: 'nx:action:one', endpoint: '/__nexis/actions/labs/submit' },
+      action: { kind: 'action', id: 'nx:action:one', endpoint: '/__nexil/actions/labs/submit' },
       unsupported: { kind: 'unsupported', reason: 'class instance' },
     })
     expect(deserializeScopeRefs(payload)).toMatchObject({
@@ -256,7 +256,7 @@ describe('bootstrapResumability scope materialization', () => {
     element.dispatch('click')
     await vi.waitFor(() => expect(scopes).toHaveLength(1))
     expect(scopes[0]).toEqual({})
-    expect(warn).toHaveBeenCalledWith('[nexis] unsupported scope:', 'closure over db')
+    expect(warn).toHaveBeenCalledWith('[nexil] unsupported scope:', 'closure over db')
     warn.mockRestore()
   })
 })

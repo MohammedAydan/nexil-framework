@@ -21,20 +21,20 @@
 هيئ صلاحية نطاق `@nexil` في بيئة المستخدم أو CI. لا تضع registry token في المستودع أو في `.npmrc` المتتبع. أنشئ المشروع بالإصدار الحالي وثبّت lockfile الناتج من تثبيتك أنت.
 
 ```bash
-pnpm dlx @nexil/create-nexis@1.0.0 nexis-workbench --yes --ts --template interactive
-cd nexis-workbench
+pnpm dlx @nexil/create-nexil@1.0.0 nexil-workbench --yes --ts --template interactive
+cd nexil-workbench
 pnpm install
 pnpm dev
 ```
 
-ينشئ Starter HTML shell فيه `#app` و`<!--nexis-app-outlet-->`، وroutes وCSS وscripts لـ`dev` و`build` و`start` و`typecheck` و`check` و`analyze`. راجع `package.json` قبل إضافة dependencies. الحزم المولدة ليست مكانًا لوضع credentials.
+ينشئ Starter HTML shell فيه `#app` و`<!--nexil-app-outlet-->`، وroutes وCSS وscripts لـ`dev` و`build` و`start` و`typecheck` و`check` و`analyze`. راجع `package.json` قبل إضافة dependencies. الحزم المولدة ليست مكانًا لوضع credentials.
 
 ```bash
 pnpm typecheck
 pnpm check
 ```
 
-النتيجة المتوقعة: ينجح TypeScript وتظهر نتيجة passing من `nexis check --budget`. أصلح scaffold قبل إضافة كود التطبيق إن فشل أحدهما.
+النتيجة المتوقعة: ينجح TypeScript وتظهر نتيجة passing من `nexil check --budget`. أصلح scaffold قبل إضافة كود التطبيق إن فشل أحدهما.
 
 ## 1. ارندر الوثيقة أولًا
 
@@ -327,7 +327,7 @@ pnpm build
 pnpm start
 ```
 
-في Node استخدم `nexis start` المولد أو `@nexil/serve`. استعمل Deno أو Cloudflare adapter عندما يكون runtime Fetch-native هو هدف النشر الحقيقي. عرّف `siteOrigin` وredirects وcache وheaders وtrusted-proxy في config مراجع. فعّل trust للـproxy فقط عندما ينظف forwarded headers ويعيد بناءها بأمان.
+في Node استخدم `nexil start` المولد أو `@nexil/serve`. استعمل Deno أو Cloudflare adapter عندما يكون runtime Fetch-native هو هدف النشر الحقيقي. عرّف `siteOrigin` وredirects وcache وheaders وtrusted-proxy في config مراجع. فعّل trust للـproxy فقط عندما ينظف forwarded headers ويعيد بناءها بأمان.
 
 | المجال     | فحص Production                                                                                      |
 | ---------- | --------------------------------------------------------------------------------------------------- |

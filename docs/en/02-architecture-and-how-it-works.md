@@ -23,13 +23,13 @@ Nexil is organized as focused packages. Each package owns a specific responsibil
 
 ## Development stage
 
-During development, the Vite dev server runs the application. The Vite plugin discovers routes, analyzes handlers ending in `$`, and generates temporary chunks. When a page is requested, the dev server reconstructs a Web Request and sends it through the render pipeline. In a proxy preview, `NEXIS_TRUST_PROXY=1` may be enabled only behind a trusted proxy that sanitizes forwarded headers.
+During development, the Vite dev server runs the application. The Vite plugin discovers routes, analyzes handlers ending in `$`, and generates temporary chunks. When a page is requested, the dev server reconstructs a Web Request and sends it through the render pipeline. In a proxy preview, `NEXIL_TRUST_PROXY=1` may be enabled only behind a trusted proxy that sanitizes forwarded headers.
 
 ## Build stage
 
-`nexis build` performs the following operations:
+`nexil build` performs the following operations:
 
-1. Load `nexis.config.json`, `.js`, `.mjs`, or `.ts`.
+1. Load `nexil.config.json`, `.js`, `.mjs`, or `.ts`.
 2. Discover route files and convert them into route records.
 3. Build the route template and shared head.
 4. Render each route using its configured mode.
@@ -38,7 +38,7 @@ During development, the Vite dev server runs the application. The Vite plugin di
 7. Emit Bootstrap and lazy chunks only for interactive routes.
 8. Generate sitemap, robots, RSS, Atom, and redirect artifacts.
 9. Generate OG cards and media variants when configured.
-10. Write `nexis-manifest.json` and asset metadata.
+10. Write `nexil-manifest.json` and asset metadata.
 
 ## Request processing
 

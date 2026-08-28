@@ -23,7 +23,7 @@ Every public capability documented in the framework and on the official site mus
 
 | Stage             | Workbench capability                                                 | Nexil surface                        | Required proof                                                                     |
 | ----------------- | -------------------------------------------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------- |
-| 00 — Start        | Create and inspect a project                                         | `create-nexis`, Starter, CLI         | Generated files, lockfile, `pnpm dev`                                              |
+| 00 — Start        | Create and inspect a project                                         | `create-nexil`, Starter, CLI         | Generated files, lockfile, `pnpm dev`                                              |
 | 01 — Document     | Render a public home and shared shell                                | Core, JSX runtime, Renderer, layouts | HTML contains title, heading, navigation, and skip link without JavaScript         |
 | 02 — Route        | Add static paths, a 404, render modes, and metadata inheritance      | Router, Renderer, CLI                | Generated directories, correct 404/HEAD, route manifest                            |
 | 03 — Navigate     | Enhance eligible internal navigation without breaking anchors        | Router `Link`                        | Link is an anchor; direct `#app` swap, history, bypasses, and no-JS fallback       |
@@ -40,7 +40,7 @@ The framework documentation remains the normative, bilingual reference. The offi
 
 ## Example policy
 
-Use real Nexil APIs only. When a complete application needs a persistence layer, email service, identity provider, or deployment secret, expose it as an application-owned interface and explain the integration point. Never represent a placeholder as a shipped framework subsystem. Do not place credentials, personal data, authorization decisions, or request-private values in JSX, generated HTML, `nexis-state.js`, client chunks, examples, or logs.
+Use real Nexil APIs only. When a complete application needs a persistence layer, email service, identity provider, or deployment secret, expose it as an application-owned interface and explain the integration point. Never represent a placeholder as a shipped framework subsystem. Do not place credentials, personal data, authorization decisions, or request-private values in JSX, generated HTML, `nexil-state.js`, client chunks, examples, or logs.
 
 ## Completion criteria
 

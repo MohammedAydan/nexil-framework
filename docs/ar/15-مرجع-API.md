@@ -28,7 +28,7 @@
 | `matchRoute(route, pathname)`    | مطابقة URL واستخراج params                             |
 | `resolveRoute(routes, pathname)` | اختيار route من مجموعة                                 |
 | `Link(props)`                    | anchor داخلي دلالي typed مع navigation مباشر وprefetch |
-| `NEXIS_NAVIGATION_RUNTIME`       | مصدر runtime يخرجه البناء فقط للصفحات التي ترندر Link  |
+| `NEXIL_NAVIGATION_RUNTIME`       | مصدر runtime يخرجه البناء فقط للصفحات التي ترندر Link  |
 | `parseUrlParts(url)`             | تحليل pathname وquery وhash                            |
 
 ## Reactivity
@@ -103,12 +103,12 @@
 
 | API                                          | الاستخدام                                                                                      |
 | -------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `nexis(options)`                             | Vite plugin                                                                                    |
+| `nexil(options)`                             | Vite plugin                                                                                    |
 | `transformNexilSource(source, id, options?)` | تحليل source؛ وخيار `scopeSerialization: 'external'` ينتج مفاتيح ScopeRef معتمة وحمولات خارجية |
 | `externalizeScopeAttributes(html, id)`       | استبدال ScopeRef المضمنة في HTML بمفاتيح معتمة وإرجاع الحمولات الخارجية                        |
 | `classifyScopeCaptures(...)`                 | تصنيف value/signal/store/action/unsupported                                                    |
 | `RESUMABILITY_BOOTSTRAP`                     | bootstrap الأساسي                                                                              |
-| `RESUMABILITY_BOOTSTRAP_EXTERNAL`            | runtime production لحل مفاتيح ScopeRef من `nexis-state.js`                                     |
+| `RESUMABILITY_BOOTSTRAP_EXTERNAL`            | runtime production لحل مفاتيح ScopeRef من `nexil-state.js`                                     |
 | `RESUMABILITY_FORMS`                         | runtime للنماذج التدريجية                                                                      |
 | `enhanceForms(options)`                      | تحسين Form مع native fallback                                                                  |
 | `bindSignalToDOM(scopeId, node, target)`     | ربط Signal بهدف DOM                                                                            |
@@ -136,4 +136,4 @@
 
 ## CLI
 
-CLI يكتشف routes، يركّب `_layout.*` بشكل متداخل، يقرأ config، يبني HTML وassets والـ lazy chunks والـ runtimes، يولد feeds وsitemap وrobots وredirect manifest وOG cards، ويكتب manifest. `nexis-navigation.js` لا يخرج إلا لصفحات تحتوي Link و`BuildRouteRecord.navigationGzipBytes` يسجل تكلفته لكل route كـ`0` عند غياب Link. في v1.3.1 يدعم `create` القوالب `minimal` و`interactive` و`secure-node`، وتُصدر `nexis doctor --json` تقرير `DoctorReport` مُرقمًا. تصدّر الحزمة كذلك `diagnoseProject(root): Promise<DoctorReport>`. التقرير وسيلة مراجعة محلية وليس إثباتًا لسلامة proxy أو TLS أو CSP في البنية التحتية. استخدم CLI عبر scripts بدل استدعاء helpers الداخلية من التطبيق دون سبب.
+CLI يكتشف routes، يركّب `_layout.*` بشكل متداخل، يقرأ config، يبني HTML وassets والـ lazy chunks والـ runtimes، يولد feeds وsitemap وrobots وredirect manifest وOG cards، ويكتب manifest. `nexil-navigation.js` لا يخرج إلا لصفحات تحتوي Link و`BuildRouteRecord.navigationGzipBytes` يسجل تكلفته لكل route كـ`0` عند غياب Link. في v1.3.1 يدعم `create` القوالب `minimal` و`interactive` و`secure-node`، وتُصدر `nexil doctor --json` تقرير `DoctorReport` مُرقمًا. تصدّر الحزمة كذلك `diagnoseProject(root): Promise<DoctorReport>`. التقرير وسيلة مراجعة محلية وليس إثباتًا لسلامة proxy أو TLS أو CSP في البنية التحتية. استخدم CLI عبر scripts بدل استدعاء helpers الداخلية من التطبيق دون سبب.

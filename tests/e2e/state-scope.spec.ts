@@ -68,13 +68,13 @@ test.beforeAll(async () => {
   if (html.includes('&quot;initial&quot;') || html.includes('"initial"')) {
     throw new Error('Build output exposes inline initial state metadata')
   }
-  if (!html.includes('src="/nexis-state.js"')) {
+  if (!html.includes('src="/nexil-state.js"')) {
     throw new Error('Build output missing external state runtime')
   }
   if (!html.includes('data-nx-bind=') || !html.includes('#text')) {
     throw new Error('Build output missing automatic Signal text binding')
   }
-  const chunkDirectory = join(appDir, 'dist', 'client', 'nexis-chunks')
+  const chunkDirectory = join(appDir, 'dist', 'client', 'nexil-chunks')
   const eventReference = /data-nx-on-click="([^"]+)"/.exec(html)?.[1]
   const chunkName = eventReference?.split('#')[0]
   const availableChunks = await readdir(chunkDirectory)
@@ -116,7 +116,7 @@ test('a named local handler resumes its captured signal lazily and persists acro
 }) => {
   const chunkRequests: string[] = []
   page.on('request', (request) => {
-    if (request.url().includes('/nexis-chunks/')) chunkRequests.push(request.url())
+    if (request.url().includes('/nexil-chunks/')) chunkRequests.push(request.url())
   })
 
   await page.goto('http://127.0.0.1:4319/')
@@ -125,7 +125,7 @@ test('a named local handler resumes its captured signal lazily and persists acro
     'data-nx-scope',
     /^nx:scope:[a-f0-9]{12}$/,
   )
-  const stateResponse = await page.request.get('http://127.0.0.1:4319/nexis-state.js')
+  const stateResponse = await page.request.get('http://127.0.0.1:4319/nexil-state.js')
   expect(stateResponse.ok()).toBe(true)
 
   // Resumability contract: nothing interactive has loaded before interaction.

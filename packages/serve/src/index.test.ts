@@ -11,7 +11,7 @@ import {
 } from './index.js'
 
 async function withServer(run: (base: string) => Promise<void>): Promise<void> {
-  const root = await mkdtemp(join(tmpdir(), 'nexis-serve-'))
+  const root = await mkdtemp(join(tmpdir(), 'nexil-serve-'))
   await mkdir(join(root, 'features'), { recursive: true })
   await mkdir(join(root, 'assets'), { recursive: true })
   await writeFile(join(root, 'index.html'), '<h1>home</h1>')
@@ -31,7 +31,7 @@ async function withServer(run: (base: string) => Promise<void>): Promise<void> {
 
 describe('official production server', () => {
   it('serves configured redirects with safe status and location headers', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'nexis-serve-redirect-'))
+    const root = await mkdtemp(join(tmpdir(), 'nexil-serve-redirect-'))
     await writeFile(join(root, 'index.html'), '<h1>home</h1>')
     const app = createProductionServer(root, {
       host: '127.0.0.1',
@@ -64,7 +64,7 @@ describe('official production server', () => {
   })
 
   it('accepts valid telemetry events and rejects malformed payloads', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'nexis-serve-telemetry-'))
+    const root = await mkdtemp(join(tmpdir(), 'nexil-serve-telemetry-'))
     await writeFile(join(root, 'index.html'), '<h1>home</h1>')
     const events: unknown[] = []
     const app = createProductionServer(root, {
@@ -76,13 +76,13 @@ describe('official production server', () => {
     const address = app.server.address()
     if (!address || typeof address === 'string') throw new Error('Missing test server address.')
     try {
-      const valid = await fetch(`http://127.0.0.1:${address.port}/__nexis/telemetry`, {
+      const valid = await fetch(`http://127.0.0.1:${address.port}/__nexil/telemetry`, {
         method: 'POST',
         body: JSON.stringify({ name: 'web-vital', value: 123 }),
       })
       expect(valid.status).toBe(202)
       expect(events).toHaveLength(1)
-      const invalid = await fetch(`http://127.0.0.1:${address.port}/__nexis/telemetry`, {
+      const invalid = await fetch(`http://127.0.0.1:${address.port}/__nexil/telemetry`, {
         method: 'POST',
         body: '[]',
       })
@@ -94,7 +94,7 @@ describe('official production server', () => {
   })
 
   it('applies opt-in security headers and trusts forwarded identity only when configured', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'nexis-serve-security-'))
+    const root = await mkdtemp(join(tmpdir(), 'nexil-serve-security-'))
     const serverDir = join(root, 'server')
     await mkdir(serverDir, { recursive: true })
     await writeFile(join(root, 'index.html'), '<h1>home</h1>')
@@ -122,7 +122,7 @@ describe('official production server', () => {
     try {
       const untrusted = await launch(false)
       try {
-        const response = await fetch(`${untrusted.base}/__nexis/actions/labs/inspect`, {
+        const response = await fetch(`${untrusted.base}/__nexil/actions/labs/inspect`, {
           method: 'POST',
           headers: {
             Origin: 'https://portal.example',
@@ -141,13 +141,13 @@ describe('official production server', () => {
 
       const trusted = await launch(true)
       try {
-        const forbidden = await fetch(`${trusted.base}/__nexis/actions/labs/inspect`, {
+        const forbidden = await fetch(`${trusted.base}/__nexil/actions/labs/inspect`, {
           method: 'POST',
           headers: { Origin: 'https://attacker.example' },
           body: '{}',
         })
         expect(forbidden.status).toBe(403)
-        const response = await fetch(`${trusted.base}/__nexis/actions/labs/inspect`, {
+        const response = await fetch(`${trusted.base}/__nexil/actions/labs/inspect`, {
           method: 'POST',
           headers: {
             Origin: 'https://portal.example',
@@ -162,7 +162,7 @@ describe('official production server', () => {
         expect(response.headers.get('x-frame-options')).toBe('DENY')
         expect(response.headers.get('referrer-policy')).toBe('strict-origin-when-cross-origin')
         expect(((await response.json()) as { data: { url: string } }).data.url).toBe(
-          'https://portal.example/__nexis/actions/labs/inspect',
+          'https://portal.example/__nexil/actions/labs/inspect',
         )
       } finally {
         await trusted.app.close()
@@ -204,7 +204,7 @@ describe('official production server', () => {
   })
 
   it('exposes concise server and middleware APIs for application composition', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'nexis-serve-composed-'))
+    const root = await mkdtemp(join(tmpdir(), 'nexil-serve-composed-'))
     await writeFile(join(root, 'index.html'), '<h1>home</h1>')
     const app = createServer(root, {
       host: '127.0.0.1',

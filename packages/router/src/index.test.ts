@@ -65,8 +65,8 @@ it('omits route groups from URLs and records nested layouts', () => {
 
 it('matches URLs while exposing query parameters and hash fragments', () => {
   const route = routeFromFile('src/routes/search.tsx')
-  const match = matchRoute(route, '/search?q=nexis&page=2#results')
-  expect(match?.query.get('q')).toBe('nexis')
+  const match = matchRoute(route, '/search?q=nexil&page=2#results')
+  expect(match?.query.get('q')).toBe('nexil')
   expect(match?.query.get('page')).toBe('2')
   expect(match?.hash).toBe('results')
 })

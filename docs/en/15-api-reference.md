@@ -28,7 +28,7 @@ This is a practical map of the public APIs. The installed TypeScript declaration
 | `matchRoute(route, pathname)`    | Match a pathname and extract parameters                                            |
 | `resolveRoute(routes, pathname)` | Select a route from a collection                                                   |
 | `Link(props)`                    | Emit a typed semantic internal anchor and opt into delegated direct-DOM navigation |
-| `NEXIS_NAVIGATION_RUNTIME`       | Build-time runtime source emitted only for pages that render Link markup           |
+| `NEXIL_NAVIGATION_RUNTIME`       | Build-time runtime source emitted only for pages that render Link markup           |
 | `parseUrlParts(url)`             | Parse pathname, query, and hash parts                                              |
 
 ## Reactivity
@@ -113,12 +113,12 @@ termination boundary is known.
 
 | API                                          | Purpose                                                                                               |
 | -------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `nexis(options)`                             | Vite plugin                                                                                           |
+| `nexil(options)`                             | Vite plugin                                                                                           |
 | `transformNexilSource(source, id, options?)` | Extract lazy chunks; `{ scopeSerialization: 'external' }` emits opaque scope keys and payload records |
 | `externalizeScopeAttributes(html, id)`       | Replace inline ScopeRef HTML attributes with opaque keys and return external payloads                 |
 | `classifyScopeCaptures(...)`                 | Classify values, signals, stores, actions, and unsupported captures                                   |
-| `RESUMABILITY_BOOTSTRAP`                     | The delegated resumability runtime served as `nexis-bootstrap.js`                                     |
-| `RESUMABILITY_BOOTSTRAP_EXTERNAL`            | Production runtime that resolves opaque ScopeRef keys from `nexis-state.js`                           |
+| `RESUMABILITY_BOOTSTRAP`                     | The delegated resumability runtime served as `nexil-bootstrap.js`                                     |
+| `RESUMABILITY_BOOTSTRAP_EXTERNAL`            | Production runtime that resolves opaque ScopeRef keys from `nexil-state.js`                           |
 | `bootstrapResumability(root, load)`          | Bind boundaries in a DOM root; parity with the shipped bootstrap                                      |
 | `serializeResumeState`                       | Serialize bounded resume data                                                                         |
 | `deserializeResumeState`                     | Deserialize resume data                                                                               |
@@ -138,7 +138,7 @@ boundary that captures the same declaration.
 
 `@nexil/starter` exports `STARTER_TEMPLATES`, `resolveStarterOptions`, and `createStarterFiles(options)`. Its root API is portable and returns only typed `{ path, content }` records. `@nexil/starter/node` additionally exports `parseScaffoldArgs()` and `scaffoldProject()` for filesystem-backed CLIs.
 
-`@nexil/cli` exports `diagnoseProject(root): Promise<DoctorReport>`. The command form `nexis doctor --json` serializes that versioned report. Its checks and status are a local configuration review aid, not an attestation of proxy, TLS, CSP, or other deployment controls.
+`@nexil/cli` exports `diagnoseProject(root): Promise<DoctorReport>`. The command form `nexil doctor --json` serializes that versioned report. Its checks and status are a local configuration review aid, not an attestation of proxy, TLS, CSP, or other deployment controls.
 
 The compiler directives `bindText$`, `bindValue$`, `bindChecked$`, `bindDisabled$`, `bindHidden$`, `bindClass$`, `bindStyle$`, `bindHref$`, `bindSrc$`, and `bindAriaLabel$` create fine-grained DOM bindings. The client function has the following contract:
 
@@ -150,7 +150,7 @@ bindSignalToDOM(
 ): () => void
 ```
 
-It resolves a registered `nx:signal:<id>` or `nx:store:<id>` reference, installs an `effect()`, applies the current value immediately, and returns a disposer. Binding updates mutate the target directly; they do not rerun a component or reconcile a virtual DOM. `nexis-bindings.js` is emitted only for routes whose transformed output contains binding metadata; `nexis-forms.js` is emitted only when a route contains a progressive `Form`; and `nexis-navigation.js` is emitted only when rendered HTML contains a semantic Link. `BuildRouteRecord.navigationGzipBytes` records the runtime cost per route as `0` when Link is absent.
+It resolves a registered `nx:signal:<id>` or `nx:store:<id>` reference, installs an `effect()`, applies the current value immediately, and returns a disposer. Binding updates mutate the target directly; they do not rerun a component or reconcile a virtual DOM. `nexil-bindings.js` is emitted only for routes whose transformed output contains binding metadata; `nexil-forms.js` is emitted only when a route contains a progressive `Form`; and `nexil-navigation.js` is emitted only when rendered HTML contains a semantic Link. `BuildRouteRecord.navigationGzipBytes` records the runtime cost per route as `0` when Link is absent.
 
 ## Media
 

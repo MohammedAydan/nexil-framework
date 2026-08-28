@@ -11,7 +11,7 @@ The interactive Starter now demonstrates the supported named-handler form and de
 Upgrade the coordinated Nexil packages to `1.3.2` together, regenerate the lockfile, and build from a clean `dist` directory. Existing inline handlers require no migration. You may replace an inline handler with a direct local named declaration when it improves clarity, provided all captures remain supported ScopeRef values.
 
 ```bash
-pnpm dlx @nexil/create-nexis@1.3.2 portal --yes --ts
+pnpm dlx @nexil/create-nexil@1.3.2 portal --yes --ts
 pnpm install
 pnpm build
 ```
