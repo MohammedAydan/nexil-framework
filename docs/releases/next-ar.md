@@ -19,3 +19,21 @@ pnpm build
 ## التوافق
 
 هذا تصحيح patch متوافق مع الإصدارات السابقة. لا يغير عقد `Link` الدلالي، أو سلوك استبدال `#app` المباشر، أو رندر SSR/SSG، أو نموذج ContextScope، أو حدود Store العالمي في المتصفح، أو القاعدة التي تمنع التقاط الأسرار والموارد الخادمية داخل Handler عميل.
+
+## Nexis v1.3.3 — مزامنة CSS الخاص بالمسار أثناء تنقل Link
+
+يضيف هذا التصحيح معالجة للـstylesheets الخاصة بالمسار. عند وضع الخاصية `data-nx-route-style` على stylesheet، يحذفها runtime القديمة ويتبنى stylesheet الموجودة في HTML الوجهة أثناء تنقل `Link`. يبقى CSS المشترك كما هو، ويظل fallback الخاص برابط `<a href>` العادي متاحًا دون JavaScript.
+
+يضيف الإصدار أيضًا تغطية compiler لصيغة المعالج المحلي متعدد الأسطر:
+
+```tsx
+export default component(() => {
+  const count = state(0)
+  const increment = () => {
+    count.set(count() + 1)
+  }
+  return <button onClick$={increment}>Increment</button>
+})
+```
+
+استخدم marker الخاص بالمسار فقط للـCSS الذي يخص route محددًا. يجب أن يحتوي المستند الأولي على stylesheet أيضًا حتى يعمل الوصول المباشر والتنقل دون JavaScript.

@@ -48,6 +48,8 @@ export default function DocumentationIndex() {
 
 The build emits `nexis-navigation.js` only when rendered output contains Link markup. It delegates unmodified primary clicks for marked same-origin anchors, fetches a normal HTML response, validates `#app`, updates owned metadata, and replaces only that outlet. It uses the History API and scroll restoration; it can use `document.startViewTransition()` when the browser supports it. This is direct DOM replacement, not a virtual-DOM diff or a client component renderer.
 
+If a deployment has route-owned stylesheets, mark each one with `data-nx-route-style`. Link navigation removes the previous marked stylesheets and adopts the destination document's marked stylesheets while leaving shared stylesheets untouched. This keeps route-specific CSS correct after a no-reload navigation; the initial HTML must still include the stylesheet for direct visits and no-JavaScript fallback.
+
 Modified clicks, middle clicks, external origins, `target`, `download`, `rel="external"`, already-prevented events, and same-document hash links retain native browser behavior. A failed fetch, non-HTML response, missing outlet, or incomplete navigation falls back to ordinary navigation. `prefetch="intent"` may cache a public response after hover or focus; `viewport` uses `IntersectionObserver`; `private` and `no-store` responses are never retained.
 
 > A Link does not turn a route into a client-only application. Keep every destination independently correct as SSR/SSG HTML, and never place secrets in rendered output or public state assets.

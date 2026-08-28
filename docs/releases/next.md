@@ -19,3 +19,21 @@ pnpm build
 ## Compatibility
 
 This is a backward-compatible patch correction. It does not alter the semantic `Link` contract, direct `#app` replacement behavior, SSR/SSG rendering, ContextScope model, browser-global Store limits, or the rule that secrets and server-only resources cannot be captured by a client handler.
+
+## Nexis v1.3.3 — route-owned CSS during Link navigation
+
+This patch release adds a navigation correction for route-owned stylesheets. A stylesheet marked with `data-nx-route-style` is now removed and adopted with the destination HTML during semantic `Link` navigation. Shared stylesheets remain untouched, and the normal `<a href>` fallback remains available without JavaScript.
+
+The release also adds compiler coverage for the multiline named handler shape:
+
+```tsx
+export default component(() => {
+  const count = state(0)
+  const increment = () => {
+    count.set(count() + 1)
+  }
+  return <button onClick$={increment}>Increment</button>
+})
+```
+
+Use the route-owned marker only for CSS that belongs to a specific route. The initial document must still include that stylesheet for direct loads and no-JavaScript navigation.
