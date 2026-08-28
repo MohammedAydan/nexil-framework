@@ -21,10 +21,18 @@ const SOURCE_EXTENSIONS = ['.tsx', '.ts', '.jsx', '.js'] as const
 
 type RouteComponent =
   | Child
-  | ((props: Readonly<Record<string, string | string[]>>, context?: ComponentContext) => Child | Promise<Child>)
+  | ((
+      props: Readonly<Record<string, string | string[]>>,
+      context?: ComponentContext,
+    ) => Child | Promise<Child>)
 
 interface DevRouteModule {
-  readonly default?: RouteComponent | ((props: Readonly<Record<string, unknown>>, context?: ComponentContext) => Child | Promise<Child>)
+  readonly default?:
+    | RouteComponent
+    | ((
+        props: Readonly<Record<string, unknown>>,
+        context?: ComponentContext,
+      ) => Child | Promise<Child>)
   readonly seo?: SeoMetadata | ((context: { readonly pathname: string }) => SeoMetadata)
   readonly metadata?: Partial<SeoMetadata>
 }
@@ -210,7 +218,10 @@ async function applyLayouts(
       continue
     }
     const Layout = mod.default as
-      | ((props: Readonly<Record<string, unknown> & { readonly children?: Child }>, ctx?: ComponentContext) => Child | Promise<Child>)
+      | ((
+          props: Readonly<Record<string, unknown> & { readonly children?: Child }>,
+          ctx?: ComponentContext,
+        ) => Child | Promise<Child>)
       | undefined
     if (typeof Layout === 'function') {
       const next = await Layout({ ...props, children: current }, context)
@@ -246,7 +257,10 @@ async function resolveInheritedSeo(
     }
     // Legacy: layout may export seo instead of metadata
     if (layoutModule.seo) {
-      const raw = typeof layoutModule.seo === 'function' ? (layoutModule.seo as (c: { pathname: string }) => SeoMetadata)({ pathname }) : layoutModule.seo
+      const raw =
+        typeof layoutModule.seo === 'function'
+          ? (layoutModule.seo as (c: { pathname: string }) => SeoMetadata)({ pathname })
+          : layoutModule.seo
       if (raw) {
         Object.assign(inherited, raw)
         if (raw.openGraph) inheritedOpenGraph = { ...inheritedOpenGraph, ...raw.openGraph }
@@ -254,7 +268,11 @@ async function resolveInheritedSeo(
     }
   }
   const rawSeo = routeModule.seo
-  const legacy = rawSeo ? (typeof rawSeo === 'function' ? (rawSeo as (c: { pathname: string }) => SeoMetadata)({ pathname }) : rawSeo) : undefined
+  const legacy = rawSeo
+    ? typeof rawSeo === 'function'
+      ? (rawSeo as (c: { pathname: string }) => SeoMetadata)({ pathname })
+      : rawSeo
+    : undefined
   const own = routeModule.metadata ?? {}
   const merged: Partial<SeoMetadata> = {
     ...inherited,
@@ -369,7 +387,14 @@ export function nexisSSRPlugin(root: string): Plugin {
           }
 
           const siteOrigin = process.env.NEXIS_SITE_ORIGIN ?? 'https://nexis-showcase.example'
-          const seo = await resolveInheritedSeo(server, root, filePath, routeModule, pathname, siteOrigin)
+          const seo = await resolveInheritedSeo(
+            server,
+            root,
+            filePath,
+            routeModule,
+            pathname,
+            siteOrigin,
+          )
           const head = (() => {
             try {
               if (seo?.title) return renderHead(seo)
@@ -381,7 +406,10 @@ export function nexisSSRPlugin(root: string): Plugin {
           })()
 
           const Component = routeModule.default as
-            | ((props: Readonly<Record<string, string | string[]>>, ctx?: ComponentContext) => Child | Promise<Child>)
+            | ((
+                props: Readonly<Record<string, string | string[]>>,
+                ctx?: ComponentContext,
+              ) => Child | Promise<Child>)
             | Child
             | undefined
 
@@ -396,10 +424,12 @@ export function nexisSSRPlugin(root: string): Plugin {
           if (typeof Component === 'function') {
             // Defer sync page execution so layout Providers can wrap it (deepResolve).
             const pageThunk = () =>
-              (Component as (p: Readonly<Record<string, string | string[]>>, c?: ComponentContext) => Child | Promise<Child>)(
-                matched.params ?? {},
-                normalizedContext,
-              ) as Child
+              (
+                Component as (
+                  p: Readonly<Record<string, string | string[]>>,
+                  c?: ComponentContext,
+                ) => Child | Promise<Child>
+              )(matched.params ?? {}, normalizedContext) as Child
             child = pageThunk as unknown as Child
             isThunk = true
           } else if (Component) {
@@ -410,17 +440,33 @@ export function nexisSSRPlugin(root: string): Plugin {
 
           let composedRaw: Child
           try {
-            composedRaw = await applyLayouts(server, root, filePath, child, matched.params ?? {}, normalizedContext)
+            composedRaw = await applyLayouts(
+              server,
+              root,
+              filePath,
+              child,
+              matched.params ?? {},
+              normalizedContext,
+            )
           } catch (err) {
             // If Provider rejected async thunk, fallback to eager async handling
             if (err instanceof TypeError && /synchronously/.test(err.message)) {
-              const eager = await (Component as (p: Readonly<Record<string, string | string[]>>, c?: ComponentContext) => Child | Promise<Child>)(
+              const eager = await (
+                Component as (
+                  p: Readonly<Record<string, string | string[]>>,
+                  c?: ComponentContext,
+                ) => Child | Promise<Child>
+              )(matched.params ?? {}, normalizedContext)
+              child = eager as Child
+              isThunk = false
+              composedRaw = await applyLayouts(
+                server,
+                root,
+                filePath,
+                child,
                 matched.params ?? {},
                 normalizedContext,
               )
-              child = eager as Child
-              isThunk = false
-              composedRaw = await applyLayouts(server, root, filePath, child, matched.params ?? {}, normalizedContext)
             } else {
               throw err
             }
@@ -435,13 +481,16 @@ export function nexisSSRPlugin(root: string): Plugin {
               }
               return resolveThunk(res as Child)
             }
-            if (Array.isArray(node)) return node.map((entry) => resolveThunk(entry as Child)) as unknown as Child
+            if (Array.isArray(node))
+              return node.map((entry) => resolveThunk(entry as Child)) as unknown as Child
             if (node && typeof node === 'object' && 'kind' in node) {
               const renderNode = node as unknown as { kind: string; children?: readonly Child[] }
               if (renderNode.kind === 'element' && renderNode.children) {
                 return {
                   ...(node as object),
-                  children: (renderNode.children as readonly Child[]).map((c) => resolveThunk(c as Child)),
+                  children: (renderNode.children as readonly Child[]).map((c) =>
+                    resolveThunk(c as Child),
+                  ),
                 } as unknown as Child
               }
             }
@@ -450,18 +499,30 @@ export function nexisSSRPlugin(root: string): Plugin {
           let composed: Child = composedRaw
           if (isThunk) {
             try {
-              composed = typeof composedRaw === 'function' ? resolveThunk(composedRaw) : (() => {
-                // Also deep-resolve any remaining function children inside composed tree
-                const deep = resolveThunk(composedRaw)
-                return deep
-              })()
+              composed =
+                typeof composedRaw === 'function'
+                  ? resolveThunk(composedRaw)
+                  : (() => {
+                      // Also deep-resolve any remaining function children inside composed tree
+                      const deep = resolveThunk(composedRaw)
+                      return deep
+                    })()
             } catch (e) {
               if (e instanceof TypeError && /Async page/.test((e as Error).message)) {
-                const eager = await (Component as (p: Readonly<Record<string, string | string[]>>, c?: ComponentContext) => Child | Promise<Child>)(
+                const eager = await (
+                  Component as (
+                    p: Readonly<Record<string, string | string[]>>,
+                    c?: ComponentContext,
+                  ) => Child | Promise<Child>
+                )(matched.params ?? {}, normalizedContext)
+                composed = await applyLayouts(
+                  server,
+                  root,
+                  filePath,
+                  eager as Child,
                   matched.params ?? {},
                   normalizedContext,
                 )
-                composed = await applyLayouts(server, root, filePath, eager as Child, matched.params ?? {}, normalizedContext)
               } else {
                 throw e
               }

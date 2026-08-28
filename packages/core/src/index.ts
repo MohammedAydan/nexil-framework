@@ -214,7 +214,9 @@ function deepResolve(child: Child): Child {
       const elementNode = node as ElementNode
       return {
         ...elementNode,
-        children: elementNode.children.map((entry) => deepResolve(entry as Child)) as readonly Child[],
+        children: elementNode.children.map((entry) =>
+          deepResolve(entry as Child),
+        ) as readonly Child[],
       } as RenderNode as Child
     }
     if (node.kind === 'suspense') {
