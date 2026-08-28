@@ -1,0 +1,47 @@
+:root {
+  color-scheme: light;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  color: #172033;
+  background: #f8fafc;
+}
+body {
+  margin: 0;
+}
+header,
+main,
+footer {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid #d8e0ec;
+}
+nav {
+  display: flex;
+  gap: 1rem;
+}
+a {
+  color: #0f5cc0;
+}
+button {
+  padding: 0.65rem 0.9rem;
+  color: white;
+  background: #0f5cc0;
+  border: 0;
+  border-radius: 0.35rem;
+}
+article,
+section {
+  margin-block: 1.5rem;
+}
+.skip-link {
+  position: absolute;
+  left: -9999px;
+}
+.skip-link:focus {
+  position: static;
+}

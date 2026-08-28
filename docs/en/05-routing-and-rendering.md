@@ -62,8 +62,8 @@ export async function getStaticPaths() {
   return slugs.map((slug) => ({ params: { slug } }))
 }
 
-export default async function DocumentationPage({ params }: { params: { slug: string } }) {
-  const page = await getDocumentationPage(params.slug)
+export default async function DocumentationPage({ slug }: { readonly slug?: string }) {
+  const page = slug ? await getDocumentationPage(slug) : undefined
   if (!page) return <NotFound />
   return (
     <article>
@@ -139,3 +139,7 @@ A route should define what to render, a component should define how to render it
 ## v1.1 layout and streaming additions
 
 Nexis v1.1.0 discovers `_layout.*` files recursively and composes them around route content. Route groups preserve layout context without adding URL segments. Parent `seo` exports can provide `titleTemplate` and `openGraph.siteName`; child routes override only the fields they need. The `Suspense` render node sends a fallback in the initial shell and flushes completed asynchronous boundaries out of order. See the [v1.1.0 release and migration guide](../releases/v1.1.0.md) for a complete example.
+
+## Workbench lab
+
+The executable [`examples/nexis-workbench`](../../examples/nexis-workbench) contains an `_layout.tsx`, a static article index, and `articles/[slug].tsx` with `getStaticPaths()`. Run `pnpm --filter @mohammedaydan/example-nexis-workbench verify`, then inspect `dist/client/articles/first-boundary/index.html` and `dist/client/articles/release-check/index.html`. The same project uses semantic `Link` elements in its layout; disable JavaScript once to confirm that every link remains a normal document link.

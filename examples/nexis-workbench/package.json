@@ -1,0 +1,33 @@
+{
+  "name": "@mohammedaydan/example-nexis-workbench",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.15.0",
+  "scripts": {
+    "dev": "node ../../packages/cli/dist/bin.js dev",
+    "build": "node ../../packages/cli/dist/bin.js build",
+    "start": "node ../../packages/cli/dist/bin.js start",
+    "typecheck": "tsc --noEmit",
+    "check": "node ../../packages/cli/dist/bin.js check --budget",
+    "test": "vitest run tests/support-action.test.ts",
+    "verify": "pnpm typecheck && pnpm test && pnpm check && pnpm build"
+  },
+  "dependencies": {
+    "@mohammedaydan/actions": "workspace:*",
+    "@mohammedaydan/cli": "workspace:*",
+    "@mohammedaydan/core": "workspace:*",
+    "@mohammedaydan/jsx-runtime": "workspace:*",
+    "@mohammedaydan/reactivity": "workspace:*",
+    "@mohammedaydan/router": "workspace:*",
+    "@mohammedaydan/security": "workspace:*",
+    "@mohammedaydan/seo": "workspace:*",
+    "@mohammedaydan/server": "workspace:*",
+    "@mohammedaydan/state": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0",
+    "vite": "^7.3.6",
+    "vitest": "^3.0.0"
+  }
+}

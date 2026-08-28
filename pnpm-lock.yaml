@@ -169,6 +169,49 @@ importers:
         specifier: ^7.3.6
         version: 7.3.6(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0)
 
+  examples/nexis-workbench:
+    dependencies:
+      '@mohammedaydan/actions':
+        specifier: workspace:*
+        version: link:../../packages/actions
+      '@mohammedaydan/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
+      '@mohammedaydan/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@mohammedaydan/jsx-runtime':
+        specifier: workspace:*
+        version: link:../../packages/jsx-runtime
+      '@mohammedaydan/reactivity':
+        specifier: workspace:*
+        version: link:../../packages/reactivity
+      '@mohammedaydan/router':
+        specifier: workspace:*
+        version: link:../../packages/router
+      '@mohammedaydan/security':
+        specifier: workspace:*
+        version: link:../../packages/security
+      '@mohammedaydan/seo':
+        specifier: workspace:*
+        version: link:../../packages/seo
+      '@mohammedaydan/server':
+        specifier: workspace:*
+        version: link:../../packages/server
+      '@mohammedaydan/state':
+        specifier: workspace:*
+        version: link:../../packages/state
+    devDependencies:
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+      vite:
+        specifier: ^7.3.6
+        version: 7.3.6(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0)
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.7(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0)
+
   examples/practical-app:
     dependencies:
       '@mohammedaydan/actions':

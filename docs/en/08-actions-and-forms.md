@@ -107,3 +107,7 @@ The production server can expose an optional `POST /__nexis/telemetry` receiver.
 ## Action testing
 
 Test success, invalid input, rejected Origin, unsupported methods, duplicate idempotency keys, oversized bodies, and disconnects. Also test that the native form works when JavaScript is disabled.
+
+## Workbench lab
+
+[`examples/nexis-workbench/src/routes/support/index.tsx`](../../examples/nexis-workbench/src/routes/support/index.tsx) starts with an ordinary `<form action="/api/support" method="post">`. Its sibling [`support-action.ts`](../../examples/nexis-workbench/src/server/support-action.ts) demonstrates the Action transport, input validation, Origin validation, and bounded in-memory idempotency for one process. Replace its persistence seam with an application-owned durable store before horizontal deployment, then add deny-path tests before exposing the endpoint.

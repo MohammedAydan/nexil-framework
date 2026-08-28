@@ -204,3 +204,7 @@ When state crosses a lazy boundary, prefer compiler inference over manual ScopeR
 - Is the store serializable when it crosses a boundary?
 - Is disposal called during route transitions?
 - Is user state isolated from other requests?
+
+## Workbench lab
+
+Run `pnpm --filter @mohammedaydan/example-nexis-workbench build` and inspect the home output and manifest. Its `ArticleFilter` is deliberately one Signal-driven boundary, so it is a small place to confirm the initial HTML, lazy interaction marker, and direct binding behavior. Extend it with the ContextScope test from this guide only after writing two independent scopes; do not turn the example's browser UI state into a module-level request singleton.

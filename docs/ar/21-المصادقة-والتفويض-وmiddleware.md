@@ -9,10 +9,7 @@
 ```ts
 import { createSession } from '@mohammedaydan/security'
 
-const session = createSession({
-  store: sessionStore,
-  secret: process.env.SESSION_SECRET!,
-})
+const session = createSession(sessionStore)
 ```
 
 تكون إعدادات cookie الآمنة افتراضيًا هي `httpOnly: true` و`secure: true` و`sameSite: 'Lax'` و`path: '/'`. اضبط `secure: false` فقط في التطوير المحلي الذي يعمل عبر HTTP.
@@ -24,8 +21,8 @@ const session = createSession({
 ```ts
 import { requireAccess, requirePermission } from '@mohammedaydan/security'
 
-await requirePermission(actor, 'billing:write')
-await requireAccess(actor, invoice, ({ actor, resource }) => actor.tenantId === resource.tenantId)
+requirePermission(actor, 'billing:write')
+await requireAccess(actor, invoice, (user, resource) => user.tenantId === resource.tenantId)
 ```
 
 ## Middleware على خادم Node
@@ -33,14 +30,18 @@ await requireAccess(actor, invoice, ({ actor, resource }) => actor.tenantId === 
 استخدم `createMiddleware` و`composeMiddleware` من `@mohammedaydan/serve` لتكوين سياسات عامة، مثل قراءة الجلسة وإرفاق السياق وفرض ترويسات الأمان. يجب استدعاء `next()` مرة واحدة على الأكثر. هذه الواجهة مبنية على `IncomingMessage` و`ServerResponse` الخاصة بـ Node؛ في بيئات Edge أو Deno أنشئ تكوينًا مكافئًا بمعالجات Fetch.
 
 ```ts
-import { composeMiddleware, createMiddleware } from '@mohammedaydan/serve'
+import { composeMiddleware, createMiddleware, createSecurityHeaders } from '@mohammedaydan/serve'
 
-const withRequestContext = createMiddleware(async (request, response, next) => {
-  response.setHeader('X-Content-Type-Options', 'nosniff')
-  await next()
-})
-
-const middleware = composeMiddleware(withRequestContext)
+const middleware = composeMiddleware(
+  createSecurityHeaders(),
+  createMiddleware('./dist/client', {
+    actionOrigins: ['https://app.example.com'],
+  }),
+)
 ```
 
 > المصادقة تحدد الهوية، والتفويض يقرر ما يمكن لتلك الهوية فعله. لا تجعل وجود cookie بديلًا عن فحص الملكية أو المستأجر أو الصلاحية في العملية التي تعدّل البيانات.
+
+## مختبر Workbench
+
+يعلن [`session-policy.ts`](../../examples/nexis-workbench/src/server/session-policy.ts) عن `SessionStore` التي يملكها التطبيق ويستعمل `sessions.require` و`requirePermission` و`requireAccess` قبل تعديل مقال. ويعرض [`support-action.ts`](../../examples/nexis-workbench/src/server/support-action.ts) شكل Action المقابل. استبدل session store المعلنة بتنفيذ durable، ثم اختبر الطلبات ذات الجلسة الغائبة والمنتهية والملغاة والصلاحية أو المستأجر الخاطئين. client control أو hidden field ليسا دليل authorization.

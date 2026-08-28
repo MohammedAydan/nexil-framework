@@ -160,3 +160,7 @@ Before exposing traffic:
 5. Verify Origin and Idempotency behavior, including a rejected cross-origin Action.
 6. Review CSP in a browser and validate cookie behavior over real HTTPS.
 7. Monitor the first release and keep a rollback artifact ready.
+
+## Workbench lab
+
+`pnpm --filter @mohammedaydan/example-nexis-workbench verify` runs TypeScript, the Nexis budget check, and the production build for the full example. Start only the generated artifact with `pnpm --filter @mohammedaydan/example-nexis-workbench start`; do not use a development server as production evidence. The Workbench server modules illustrate integration boundaries, not a hosted database, identity provider, or durable session store.

@@ -114,3 +114,7 @@ Do not rerun a test until it passes and hide the issue. Record the environment, 
 ## Performance report
 
 Every report should state the commit, Node, pnpm, and browser versions; the routes tested; raw and gzip bytes; whether the test was local or remote; thresholds and results; and limitations that prevent overclaiming.
+
+## Workbench lab
+
+Start with `pnpm --filter @mohammedaydan/example-nexis-workbench verify`. Then add browser assertions for initial HTML, no-JavaScript anchors, Link history and bypasses, the first filter interaction, 404 handling, and native support-form submission. Keep those assertions separate from any provider-specific authentication or database tests, and record the environment alongside performance measurements.

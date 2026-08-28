@@ -88,3 +88,7 @@ Middleware runs in order and must call `next()` at most once. Use it for request
 | Caching    | Never shared-cache private/session responses or Actions.                      |
 | Scale      | Durable sessions, rate limits, idempotency, and audit storage.                |
 | Secrets    | Secret manager, no client injection, no token logging, rotation runbook.      |
+
+## Workbench lab
+
+[`session-policy.ts`](../../examples/nexis-workbench/src/server/session-policy.ts) declares the required application-owned `SessionStore` and uses `sessions.require`, `requirePermission`, and `requireAccess` before an article edit. [`support-action.ts`](../../examples/nexis-workbench/src/server/support-action.ts) gives the corresponding Action shape. Replace the declared session store with a durable implementation, then test missing, expired, revoked, wrong-permission, and wrong-tenant requests. A client-side control or a hidden field is not evidence of authorization.
