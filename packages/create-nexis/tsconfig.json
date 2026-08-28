@@ -5,7 +5,13 @@
     "declaration": true,
     "declarationMap": true,
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    "baseUrl": ".",
+    "paths": {
+      "@mohammedaydan/starter/node": ["../starter/src/node.ts"],
+      "@mohammedaydan/starter": ["../starter/src/index.ts"]
+    }
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "references": [{ "path": "../starter" }]
 }

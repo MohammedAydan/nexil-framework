@@ -1025,7 +1025,8 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
   ): Promise<Child> {
     let current = child
     const layouts = await discoverLayouts(route)
-    for (const layout of layouts) {
+    for (let index = layouts.length - 1; index >= 0; index -= 1) {
+      const layout = layouts[index]!
       const module = await loadServerModule(layout)
       const Layout = module.default
       if (typeof Layout === 'function')

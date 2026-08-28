@@ -1,9 +1,11 @@
+import { existsSync } from 'node:fs'
 import { readFile, readdir } from 'node:fs/promises'
 import { join, relative } from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Plugin } from 'vite'
 import { escapeHtml, renderToString } from '@mohammedaydan/renderer'
-import type { Child } from '@mohammedaydan/core'
+import type { Child, ComponentContext } from '@mohammedaydan/core'
+import { createRequestContext } from '@mohammedaydan/core'
 import { renderHead, withCanonical } from '@mohammedaydan/seo'
 import type { SeoMetadata } from '@mohammedaydan/seo'
 import { routeFromFile, resolveRoute, matchRoute } from '@mohammedaydan/router'
@@ -15,12 +17,16 @@ import nexis from '@mohammedaydan/vite-plugin'
 const routeCache = new Map<string, ReturnType<typeof routeFromFile>[]>()
 const devIdempotency = createMemoryIdempotencyStore()
 
+const SOURCE_EXTENSIONS = ['.tsx', '.ts', '.jsx', '.js'] as const
+
 type RouteComponent =
-  Child | ((props: Readonly<Record<string, string | string[]>>) => Child | Promise<Child>)
+  | Child
+  | ((props: Readonly<Record<string, string | string[]>>, context?: ComponentContext) => Child | Promise<Child>)
 
 interface DevRouteModule {
-  readonly default?: RouteComponent
+  readonly default?: RouteComponent | ((props: Readonly<Record<string, unknown>>, context?: ComponentContext) => Child | Promise<Child>)
   readonly seo?: SeoMetadata | ((context: { readonly pathname: string }) => SeoMetadata)
+  readonly metadata?: Partial<SeoMetadata>
 }
 
 function routeModuleFromUnknown(value: unknown): DevRouteModule {
@@ -107,6 +113,11 @@ export function createDevServer(handler: NexisHandler): DevServer {
   }
 }
 
+export function invalidateRouteCache(root?: string): void {
+  if (root) routeCache.delete(root)
+  else routeCache.clear()
+}
+
 async function discoverRouteRecords(root: string) {
   const cached = routeCache.get(root)
   if (cached) return cached
@@ -126,7 +137,8 @@ async function discoverRouteRecords(root: string) {
       } else if (
         /\.(tsx|jsx|ts|js)$/.test(entry.name) &&
         !/\.(?:d|spec|test)\.(?:tsx|jsx|ts|js)$/.test(entry.name) &&
-        !entry.name.startsWith('layout.')
+        !entry.name.startsWith('layout.') &&
+        !entry.name.startsWith('_layout.')
       ) {
         files.push(relative(base, full))
       }
@@ -151,10 +163,135 @@ async function discoverRouteRecords(root: string) {
   }
 }
 
+function toRelativeRouteFile(routeFile: string): string {
+  return routeFile.replace(/\\/g, '/').replace(/^src\/routes\//, '')
+}
+
+async function discoverLayouts(root: string, routeFile: string): Promise<readonly string[]> {
+  const routeRoot = join(root, 'src', 'routes')
+  const normalized = toRelativeRouteFile(routeFile)
+  const routeParts = normalized.split('/')
+  const directories = routeParts.slice(0, -1)
+  const candidates: string[] = []
+  for (let index = 0; index <= directories.length; index += 1) {
+    const directory = directories.slice(0, index).join('/')
+    for (const stem of ['_layout', 'layout'] as const) {
+      for (const extension of SOURCE_EXTENSIONS) {
+        const relativePath = [directory, `${stem}${extension}`].filter(Boolean).join('/')
+        if (existsSync(join(routeRoot, relativePath))) {
+          candidates.push(relativePath)
+          break
+        }
+      }
+      if (candidates.at(-1)?.startsWith([directory, stem].filter(Boolean).join('/'))) break
+    }
+  }
+  return candidates
+}
+
+async function applyLayouts(
+  server: { readonly ssrLoadModule: (path: string) => Promise<unknown> },
+  root: string,
+  routeFile: string,
+  child: Child,
+  props: Readonly<Record<string, unknown>> = {},
+  context?: ComponentContext,
+): Promise<Child> {
+  let current = child
+  const layouts = await discoverLayouts(root, routeFile)
+  // Apply from innermost to outermost so root remains outermost (mirrors production intent)
+  for (let index = layouts.length - 1; index >= 0; index -= 1) {
+    const layout = layouts[index]!
+    const modulePath = `/src/routes/${layout}`
+    let mod: DevRouteModule
+    try {
+      mod = routeModuleFromUnknown(await server.ssrLoadModule(modulePath))
+    } catch {
+      continue
+    }
+    const Layout = mod.default as
+      | ((props: Readonly<Record<string, unknown> & { readonly children?: Child }>, ctx?: ComponentContext) => Child | Promise<Child>)
+      | undefined
+    if (typeof Layout === 'function') {
+      const next = await Layout({ ...props, children: current }, context)
+      // Layout may return null/undefined to indicate passthrough
+      if (next !== undefined && next !== null) current = next as Child
+    }
+  }
+  return current
+}
+
+async function resolveInheritedSeo(
+  server: { readonly ssrLoadModule: (path: string) => Promise<unknown> },
+  root: string,
+  routeFile: string,
+  routeModule: DevRouteModule,
+  pathname: string,
+  siteOrigin: string,
+): Promise<SeoMetadata | undefined> {
+  const inherited: Partial<SeoMetadata> = {}
+  let inheritedOpenGraph: SeoMetadata['openGraph'] | undefined
+  for (const layout of await discoverLayouts(root, routeFile)) {
+    let layoutModule: DevRouteModule
+    try {
+      layoutModule = routeModuleFromUnknown(await server.ssrLoadModule(`/src/routes/${layout}`))
+    } catch {
+      continue
+    }
+    if (layoutModule.metadata) {
+      Object.assign(inherited, layoutModule.metadata)
+      if (layoutModule.metadata.openGraph) {
+        inheritedOpenGraph = { ...inheritedOpenGraph, ...layoutModule.metadata.openGraph }
+      }
+    }
+    // Legacy: layout may export seo instead of metadata
+    if (layoutModule.seo) {
+      const raw = typeof layoutModule.seo === 'function' ? (layoutModule.seo as (c: { pathname: string }) => SeoMetadata)({ pathname }) : layoutModule.seo
+      if (raw) {
+        Object.assign(inherited, raw)
+        if (raw.openGraph) inheritedOpenGraph = { ...inheritedOpenGraph, ...raw.openGraph }
+      }
+    }
+  }
+  const rawSeo = routeModule.seo
+  const legacy = rawSeo ? (typeof rawSeo === 'function' ? (rawSeo as (c: { pathname: string }) => SeoMetadata)({ pathname }) : rawSeo) : undefined
+  const own = routeModule.metadata ?? {}
+  const merged: Partial<SeoMetadata> = {
+    ...inherited,
+    ...(legacy ?? {}),
+    ...own,
+    ...(inheritedOpenGraph || legacy?.openGraph || own.openGraph
+      ? {
+          openGraph: {
+            ...inheritedOpenGraph,
+            ...legacy?.openGraph,
+            ...own.openGraph,
+          },
+        }
+      : {}),
+  }
+  if (typeof merged.title !== 'string' || merged.title.trim().length === 0) return undefined
+  return withCanonical(merged as SeoMetadata, pathname, siteOrigin)
+}
+
 export function nexisSSRPlugin(root: string): Plugin {
   return {
     name: 'nexis-ssr',
     configureServer(server) {
+      const invalidate = (file?: string) => {
+        if (!file) {
+          invalidateRouteCache(root)
+          return
+        }
+        const normalized = file.replace(/\\/g, '/')
+        if (normalized.includes('src/routes')) {
+          invalidateRouteCache(root)
+        }
+      }
+      server.watcher.on('add', (file) => invalidate(file))
+      server.watcher.on('unlink', (file) => invalidate(file))
+      server.watcher.on('change', (file) => invalidate(file))
+
       server.middlewares.use(async (req, res, next) => {
         try {
           const requestUrl = req.url || '/'
@@ -231,15 +368,8 @@ export function nexisSSRPlugin(root: string): Plugin {
             return next(error)
           }
 
-          const rawSeo = routeModule.seo
-          const resolvedSeo = typeof rawSeo === 'function' ? rawSeo({ pathname }) : rawSeo
-          const seo = resolvedSeo
-            ? withCanonical(
-                resolvedSeo,
-                pathname,
-                process.env.NEXIS_SITE_ORIGIN ?? 'https://nexis-showcase.example',
-              )
-            : undefined
+          const siteOrigin = process.env.NEXIS_SITE_ORIGIN ?? 'https://nexis-showcase.example'
+          const seo = await resolveInheritedSeo(server, root, filePath, routeModule, pathname, siteOrigin)
           const head = (() => {
             try {
               if (seo?.title) return renderHead(seo)
@@ -250,14 +380,94 @@ export function nexisSSRPlugin(root: string): Plugin {
             return '<title>Nexis App</title>'
           })()
 
-          const Component = routeModule.default
-          let renderedHtml = ''
+          const Component = routeModule.default as
+            | ((props: Readonly<Record<string, string | string[]>>, ctx?: ComponentContext) => Child | Promise<Child>)
+            | Child
+            | undefined
+
+          const normalizedContext: ComponentContext = (() => {
+            const req = new Request(new URL(pathname, siteOrigin).href)
+            const rc = createRequestContext(req, `dev:${pathname}`)
+            return { requestId: rc.id, scope: rc.scope }
+          })()
+
+          let child: Child
+          let isThunk = false
           if (typeof Component === 'function') {
-            const result = await Component(matched.params ?? {})
-            renderedHtml = renderToString(result)
+            // Defer sync page execution so layout Providers can wrap it (deepResolve).
+            const pageThunk = () =>
+              (Component as (p: Readonly<Record<string, string | string[]>>, c?: ComponentContext) => Child | Promise<Child>)(
+                matched.params ?? {},
+                normalizedContext,
+              ) as Child
+            child = pageThunk as unknown as Child
+            isThunk = true
           } else if (Component) {
-            renderedHtml = renderToString(Component)
+            child = Component as Child
+          } else {
+            child = '' as unknown as Child
           }
+
+          let composedRaw: Child
+          try {
+            composedRaw = await applyLayouts(server, root, filePath, child, matched.params ?? {}, normalizedContext)
+          } catch (err) {
+            // If Provider rejected async thunk, fallback to eager async handling
+            if (err instanceof TypeError && /synchronously/.test(err.message)) {
+              const eager = await (Component as (p: Readonly<Record<string, string | string[]>>, c?: ComponentContext) => Child | Promise<Child>)(
+                matched.params ?? {},
+                normalizedContext,
+              )
+              child = eager as Child
+              isThunk = false
+              composedRaw = await applyLayouts(server, root, filePath, child, matched.params ?? {}, normalizedContext)
+            } else {
+              throw err
+            }
+          }
+          // If child was a thunk and no layout consumed it, resolve it now
+          const resolveThunk = (node: Child): Child => {
+            if (typeof node === 'function') {
+              const res = (node as () => Child)()
+              // If thunk returned a Promise (async page), we need to handle it as eager
+              if (res && typeof (res as unknown as { then?: unknown }).then === 'function') {
+                throw new TypeError('Async page with Provider requires explicit ContextScope')
+              }
+              return resolveThunk(res as Child)
+            }
+            if (Array.isArray(node)) return node.map((entry) => resolveThunk(entry as Child)) as unknown as Child
+            if (node && typeof node === 'object' && 'kind' in node) {
+              const renderNode = node as unknown as { kind: string; children?: readonly Child[] }
+              if (renderNode.kind === 'element' && renderNode.children) {
+                return {
+                  ...(node as object),
+                  children: (renderNode.children as readonly Child[]).map((c) => resolveThunk(c as Child)),
+                } as unknown as Child
+              }
+            }
+            return node
+          }
+          let composed: Child = composedRaw
+          if (isThunk) {
+            try {
+              composed = typeof composedRaw === 'function' ? resolveThunk(composedRaw) : (() => {
+                // Also deep-resolve any remaining function children inside composed tree
+                const deep = resolveThunk(composedRaw)
+                return deep
+              })()
+            } catch (e) {
+              if (e instanceof TypeError && /Async page/.test((e as Error).message)) {
+                const eager = await (Component as (p: Readonly<Record<string, string | string[]>>, c?: ComponentContext) => Child | Promise<Child>)(
+                  matched.params ?? {},
+                  normalizedContext,
+                )
+                composed = await applyLayouts(server, root, filePath, eager as Child, matched.params ?? {}, normalizedContext)
+              } else {
+                throw e
+              }
+            }
+          }
+          const renderedHtml = renderToString(composed as Child)
 
           const hasEventHandlers = renderedHtml.includes('data-nx-on')
           const hasBindings = renderedHtml.includes('data-nx-bind')

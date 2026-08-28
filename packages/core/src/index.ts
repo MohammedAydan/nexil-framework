@@ -198,6 +198,36 @@ interface ContextInternal<T> extends Context<T> {
   readonly [CONTEXT_KEY]: symbol
 }
 
+function deepResolve(child: Child): Child {
+  if (typeof child === 'function') {
+    const result = (child as () => Child)()
+    if (isPromiseLike(result))
+      throw new TypeError(
+        'Context.Provider children must resolve synchronously; pass ContextScope explicitly to async work.',
+      )
+    return deepResolve(result as Child)
+  }
+  if (Array.isArray(child)) return child.map((entry) => deepResolve(entry as Child)) as Child
+  if (child && typeof child === 'object' && 'kind' in child) {
+    const node = child as RenderNode
+    if (node.kind === 'element') {
+      const elementNode = node as ElementNode
+      return {
+        ...elementNode,
+        children: elementNode.children.map((entry) => deepResolve(entry as Child)) as readonly Child[],
+      } as RenderNode as Child
+    }
+    if (node.kind === 'suspense') {
+      const suspenseNode = node as SuspenseNode
+      return {
+        ...suspenseNode,
+        fallback: deepResolve(suspenseNode.fallback),
+      } as SuspenseNode as Child
+    }
+  }
+  return child
+}
+
 export function createContext<T>(defaultValue: T): Context<T> {
   const key = Symbol('nexis.context.value')
   const context: ContextInternal<T> = {
@@ -206,7 +236,7 @@ export function createContext<T>(defaultValue: T): Context<T> {
       const previous = activeContextScope
       activeContextScope = provideContext(scope ?? previous ?? createContextScope(), context, value)
       try {
-        const result = resolveChild(children)
+        const result = deepResolve(children as Child)
         if (isPromiseLike(result))
           throw new TypeError(
             'Context.Provider children must resolve synchronously; pass ContextScope explicitly to async work.',
