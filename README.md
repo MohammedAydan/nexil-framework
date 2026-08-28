@@ -1,6 +1,6 @@
 ﻿# Nexil Framework
 
-> **Migrated from `@mohammedaydan` to `@nexil` at `1.0.0` on npm (previously `1.3.x` on GitHub Packages).**
+> **Migrated from `@mohammedaydan` to `@nexil` at `0.0.1` on npm (previously `1.3.x` on GitHub Packages).**
 
 **Nexil is an HTML-first, resumable TypeScript framework for building server-rendered web applications.** It produces useful HTML first, keeps static routes free of route-specific client JavaScript, and loads interaction code only when a user reaches an interactive boundary. Nexil has no virtual DOM and does not hydrate or reconcile an entire component tree.
 
@@ -45,7 +45,7 @@ npm login
 Create a TypeScript application with the current initializer:
 
 ```bash
-pnpm dlx @nexil/create-nexil@1.0.0 my-nexil-app --yes --ts
+pnpm dlx @nexil/create-nexil@0.0.1 my-nexil-app --yes --ts
 cd my-nexil-app
 pnpm install
 pnpm dev
@@ -54,10 +54,10 @@ pnpm dev
 Equivalent forms (all create the same `my-nexil-app` via `@nexil/create-nexil`):
 
 ```bash
-npx --yes @nexil/create-nexil@1.0.0 my-nexil-app --yes --ts
-yarn dlx @nexil/create-nexil@1.0.0 my-nexil-app --yes --ts
-npm create @nexil/nexil@1.0.0 my-nexil-app -- --yes --ts
-pnpm create @nexil/nexil@1.0.0 my-nexil-app -- --yes --ts
+npx --yes @nexil/create-nexil@0.0.1 my-nexil-app --yes --ts
+yarn dlx @nexil/create-nexil@0.0.1 my-nexil-app --yes --ts
+npm create @nexil/nexil@0.0.1 my-nexil-app -- --yes --ts
+pnpm create @nexil/nexil@0.0.1 my-nexil-app -- --yes --ts
 # inside an existing Nexil workspace or after installing @nexil/cli:
 nexil create my-nexil-app --yes --ts
 ```

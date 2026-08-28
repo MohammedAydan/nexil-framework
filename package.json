@@ -1,6 +1,6 @@
 {
   "name": "nexil",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "HTML-first, resumable TypeScript web framework",
   "license": "MIT",

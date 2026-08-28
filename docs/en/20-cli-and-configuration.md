@@ -7,7 +7,7 @@ Start with the scripts in `package.json` and the CLI help for the installed rele
 ```bash
 # For the published scoped initializer, configure GitHub Packages when required.
 npm config set @nexil:registry https://registry.npmjs.org/
-pnpm dlx @nexil/create-nexil@1.0.0 my-app --yes --ts
+pnpm dlx @nexil/create-nexil@0.0.1 my-app --yes --ts
 cd my-app
 pnpm install
 pnpm dev

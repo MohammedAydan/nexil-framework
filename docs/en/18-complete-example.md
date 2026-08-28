@@ -6,7 +6,7 @@ This chapter assembles the patterns from the previous guides into a small docume
 
 ```bash
 npm config set @nexil:registry https://registry.npmjs.org/
-pnpm dlx @nexil/create-nexil@1.0.0 my-docs --yes --ts
+pnpm dlx @nexil/create-nexil@0.0.1 my-docs --yes --ts
 cd my-docs
 pnpm install
 ```

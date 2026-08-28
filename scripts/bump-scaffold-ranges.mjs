@@ -2,7 +2,7 @@
 import { readFile, writeFile } from 'node:fs/promises'
 
 const OLD = "'^0.1.0'"
-const NEW = "'^1.0.0'"
+const NEW = "'^0.0.1'"
 const files = [
   'packages/create-nexil/src/scaffold.ts',
   'packages/cli/src/scaffold.ts',

@@ -1,6 +1,6 @@
 {
   "name": "@nexil/starter",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Typed, portable Nexil starter project templates",
   "type": "module",
   "exports": {

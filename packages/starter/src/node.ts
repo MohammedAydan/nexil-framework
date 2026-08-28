@@ -167,7 +167,7 @@ export async function scaffoldProject(
     language: resolved.language,
     tailwind: resolved.tailwind,
     template: resolved.template,
-    dependencyVersion: frameworkRoot ? 'workspace:*' : '^1.0.0',
+    dependencyVersion: frameworkRoot ? 'workspace:*' : '^0.0.1',
   })
   await mkdir(directory, { recursive: true })
   for (const file of files) {
