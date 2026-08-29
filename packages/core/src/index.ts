@@ -300,7 +300,8 @@ export function createContext<T>(defaultValue: T, stableId?: string): Context<T>
     if (cached) return cached as Context<T>
   }
   const key = Symbol('nexil.context.value')
-  const id = stableId ?? `nx:ctx:dyn:${hashStr(`${ctxCounter++}:${String(defaultValue).slice(0, 40)}`)}`
+  const id =
+    stableId ?? `nx:ctx:dyn:${hashStr(`${ctxCounter++}:${String(defaultValue).slice(0, 40)}`)}`
   const context: ContextInternal<T> = {
     [CONTEXT_KEY]: key,
     id,

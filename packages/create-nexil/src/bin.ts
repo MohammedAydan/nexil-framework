@@ -107,7 +107,9 @@ async function main(): Promise<void> {
   }
 
   if (!name) {
-    console.error(`Error: Missing <project-name>. Usage: ${invokedAs} <project-name> [--yes] [--ts|--js] [--tailwind] [--template minimal|interactive|secure-node]`)
+    console.error(
+      `Error: Missing <project-name>. Usage: ${invokedAs} <project-name> [--yes] [--ts|--js] [--tailwind] [--template minimal|interactive|secure-node]`,
+    )
     console.error(`Run '${invokedAs} --help' for usage.`)
     process.exit(1)
   }
@@ -193,7 +195,8 @@ async function main(): Promise<void> {
     // Provide actionable hints for common system errors
     let hint = ''
     const code = (error as NodeJS.ErrnoException).code
-    if (code === 'EACCES' || code === 'EPERM') hint = ' (permission denied — check directory permissions)'
+    if (code === 'EACCES' || code === 'EPERM')
+      hint = ' (permission denied — check directory permissions)'
     else if (code === 'ENOSPC') hint = ' (no space left on device)'
     else if (code === 'EEXIST') hint = ' (file already exists — possible race, try again)'
     console.error(`Error: ${msg}${hint}`)

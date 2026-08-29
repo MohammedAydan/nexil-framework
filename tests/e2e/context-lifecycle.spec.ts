@@ -73,7 +73,11 @@ test.beforeAll(async () => {
   try {
     execSync('pnpm install --silent', { cwd: appDir, stdio: 'inherit', timeout: 90_000 })
   } catch {
-    execSync('pnpm install --no-frozen-lockfile --silent', { cwd: appDir, stdio: 'inherit', timeout: 90_000 })
+    execSync('pnpm install --no-frozen-lockfile --silent', {
+      cwd: appDir,
+      stdio: 'inherit',
+      timeout: 90_000,
+    })
   }
   await runCli(['build'], appDir)
   const settingsHtml = await readFile(join(appDir, 'dist', 'client', 'index.html'), 'utf8')
@@ -82,13 +86,20 @@ test.beforeAll(async () => {
     throw new Error('SSR did not resolve Context values: ' + settingsHtml.slice(0, 500))
   }
   // Dashboard static must also contain
-  const dashHtml = await readFile(join(appDir, 'dist', 'client', 'dashboard', 'index.html'), 'utf8').catch(() => readFile(join(appDir, 'dist', 'client', 'dashboard.html'), 'utf8').catch(() => ''))
+  const dashHtml = await readFile(
+    join(appDir, 'dist', 'client', 'dashboard', 'index.html'),
+    'utf8',
+  ).catch(() => readFile(join(appDir, 'dist', 'client', 'dashboard.html'), 'utf8').catch(() => ''))
   if (dashHtml && !dashHtml.includes('Theme: dark')) {
     // dashboard may be at /dashboard/index.html
   }
   // Budget gate
   await expect(runCli(['check', '--budget'], appDir)).resolves.toContain('checks passed')
-  const vitePreview = await preview({ root: appDir, build: { outDir: 'dist/client' }, preview: { port: 4321, host: '127.0.0.1' } })
+  const vitePreview = await preview({
+    root: appDir,
+    build: { outDir: 'dist/client' },
+    preview: { port: 4321, host: '127.0.0.1' },
+  })
   server = vitePreview
   await new Promise((r) => setTimeout(r, 1500))
 })
@@ -99,7 +110,10 @@ test.afterAll(async () => {
   await rm(tempDir, { recursive: true, force: true })
 })
 
-test('canonical lifecycle: SSR → JS-disabled → interactive → Link → reload', async ({ page, browser }) => {
+test('canonical lifecycle: SSR → JS-disabled → interactive → Link → reload', async ({
+  page,
+  browser,
+}) => {
   // 1. SSR initial
   await page.goto('http://127.0.0.1:4321/')
   await expect(page.locator('#theme-indicator')).toHaveText('Theme: dark')
@@ -115,7 +129,9 @@ test('canonical lifecycle: SSR → JS-disabled → interactive → Link → relo
 
   // 3. Interactive mutation + chunk evidence (layout-owned Context)
   const chunkRequests: string[] = []
-  page.on('request', (r) => { if (r.url().includes('/nexil-chunks/')) chunkRequests.push(r.url()) })
+  page.on('request', (r) => {
+    if (r.url().includes('/nexil-chunks/')) chunkRequests.push(r.url())
+  })
   expect(chunkRequests).toHaveLength(0)
   await page.click('#toggle-theme')
   await expect(page.locator('#theme-indicator')).toHaveText('Theme: light')
@@ -131,14 +147,17 @@ test('canonical lifecycle: SSR → JS-disabled → interactive → Link → relo
   await expect(page.locator('#user-name')).toHaveText('User: Alice')
   // DOM for theme is server-rendered dark after #app replacement, but registry retains light
   const persisted = await page.evaluate(() => {
-    const reg = (globalThis as unknown as { __nexilScopeRegistry?: Map<string, { value: unknown }> }).__nexilScopeRegistry
+    const reg = (
+      globalThis as unknown as { __nexilScopeRegistry?: Map<string, { value: unknown }> }
+    ).__nexilScopeRegistry
     return reg?.get('nx:ctx:e8fc8426d971')?.value ?? null
   })
   expect(persisted).toBe('light')
   // Also verify that after nav, a fresh read of ThemeContext via a new handler would see light
   // by checking that the global registry entry has g:true (layout-owned)
   const isGlobal = await page.evaluate(() => {
-    const reg = (globalThis as unknown as { __nexilScopeRegistry?: Map<string, { g?: boolean }> }).__nexilScopeRegistry
+    const reg = (globalThis as unknown as { __nexilScopeRegistry?: Map<string, { g?: boolean }> })
+      .__nexilScopeRegistry
     return reg?.get('nx:ctx:e8fc8426d971')?.g ?? false
   })
   expect(isGlobal).toBe(true)
@@ -147,7 +166,9 @@ test('canonical lifecycle: SSR → JS-disabled → interactive → Link → relo
   await page.goBack()
   await expect(page.locator('#user-name')).toHaveText('User: Alice')
   const backPersisted = await page.evaluate(() => {
-    const reg = (globalThis as unknown as { __nexilScopeRegistry?: Map<string, { value: unknown }> }).__nexilScopeRegistry
+    const reg = (
+      globalThis as unknown as { __nexilScopeRegistry?: Map<string, { value: unknown }> }
+    ).__nexilScopeRegistry
     return reg?.get('nx:ctx:e8fc8426d971')?.value ?? null
   })
   expect(backPersisted).toBe('light')
@@ -168,7 +189,9 @@ test('canonical lifecycle: SSR → JS-disabled → interactive → Link → relo
   await expect(page.locator('#theme-indicator')).toHaveText('Theme: dark')
   await expect(page.locator('#user-name')).toHaveText('User: Alice')
   const reloadedVal = await page.evaluate(() => {
-    const reg = (globalThis as unknown as { __nexilScopeRegistry?: Map<string, { value: unknown }> }).__nexilScopeRegistry
+    const reg = (
+      globalThis as unknown as { __nexilScopeRegistry?: Map<string, { value: unknown }> }
+    ).__nexilScopeRegistry
     return reg?.get('nx:ctx:e8fc8426d971')?.value ?? null
   })
   // After reload, registry is fresh (null before any handler) or dark; must not be stale light

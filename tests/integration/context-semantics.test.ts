@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { createContext, createContextScope, element, provideContext, text } from '../../packages/core/src/index'
+import {
+  createContext,
+  createContextScope,
+  element,
+  provideContext,
+  text,
+} from '../../packages/core/src/index'
 import { renderToString } from '../../packages/renderer/src/index'
 
 describe('Context provider semantics (§3, §4)', () => {
@@ -14,7 +20,12 @@ describe('Context provider semantics (§3, §4)', () => {
     const out = renderToString(
       Ctx.Provider({
         value: 'root',
-        children: () => element('div', {}, [text(Ctx.use()), Ctx.Provider({ value: 'layout', children: () => element('span', {}, text(Ctx.use())) }), text(Ctx.use())]),
+        children: () =>
+          element('div', {}, [
+            text(Ctx.use()),
+            Ctx.Provider({ value: 'layout', children: () => element('span', {}, text(Ctx.use())) }),
+            text(Ctx.use()),
+          ]),
       }),
     )
     expect(out).toBe('<div>root<span>layout</span>root</div>')
@@ -30,7 +41,16 @@ describe('Context provider semantics (§3, §4)', () => {
   it('two distinct Contexts independent', () => {
     const A = createContext<string>('a-default')
     const B = createContext<string>('b-default')
-    const html = renderToString(A.Provider({ value: 'a1', children: () => B.Provider({ value: 'b1', children: () => element('div', {}, [text(A.use()), text(B.use())]) }) }))
+    const html = renderToString(
+      A.Provider({
+        value: 'a1',
+        children: () =>
+          B.Provider({
+            value: 'b1',
+            children: () => element('div', {}, [text(A.use()), text(B.use())]),
+          }),
+      }),
+    )
     expect(html).toBe('<div>a1b1</div>')
   })
 })

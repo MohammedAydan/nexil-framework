@@ -14,7 +14,10 @@ import {
 
 const binPath = resolve(dirname(fileURLToPath(import.meta.url)), '../dist/bin.js')
 
-function runBin(args: string[], cwd?: string): Promise<{ code: number; stdout: string; stderr: string }> {
+function runBin(
+  args: string[],
+  cwd?: string,
+): Promise<{ code: number; stdout: string; stderr: string }> {
   return new Promise((resolvePromise) => {
     const child = spawn(process.execPath, [binPath, ...args], {
       cwd: cwd ?? process.cwd(),
@@ -31,12 +34,17 @@ function runBin(args: string[], cwd?: string): Promise<{ code: number; stdout: s
 
 describe('create-nexil — argument parsing', () => {
   it('parses --yes, --ts, --js, --tailwind, --template', () => {
-    expect(parseScaffoldArgs(['my-app', '--yes', '--ts']).options).toMatchObject({ yes: true, language: 'ts' })
+    expect(parseScaffoldArgs(['my-app', '--yes', '--ts']).options).toMatchObject({
+      yes: true,
+      language: 'ts',
+    })
     expect(parseScaffoldArgs(['my-app', '--js']).options.language).toBe('js')
     expect(parseScaffoldArgs(['my-app', '--tailwind']).options.tailwind).toBe(true)
     expect(parseScaffoldArgs(['my-app', '--no-tailwind']).options.tailwind).toBe(false)
     expect(parseScaffoldArgs(['my-app', '--template', 'minimal']).options.template).toBe('minimal')
-    expect(parseScaffoldArgs(['my-app', '--template=secure-node']).options.template).toBe('secure-node')
+    expect(parseScaffoldArgs(['my-app', '--template=secure-node']).options.template).toBe(
+      'secure-node',
+    )
   })
 
   it('rejects unknown options and mutually exclusive flags', () => {
@@ -85,7 +93,11 @@ describe('create-nexil — scaffold success', () => {
   it('scaffolds minimal template ts', async () => {
     const parent = await mkdtemp(join(tmpdir(), 'nexil-minimal-'))
     try {
-      const { directory } = await scaffoldProject('my-nexil-app', parent, { yes: true, template: 'minimal', language: 'ts' })
+      const { directory } = await scaffoldProject('my-nexil-app', parent, {
+        yes: true,
+        template: 'minimal',
+        language: 'ts',
+      })
       const pkg = JSON.parse(await readFile(join(directory, 'package.json'), 'utf8'))
       expect(pkg.scripts.dev).toBe('nexil dev')
       expect(pkg.dependencies['@nexil/cli']).toBe('^0.0.1')
@@ -103,7 +115,11 @@ describe('create-nexil — scaffold success', () => {
   it('scaffolds interactive template with counter', async () => {
     const parent = await mkdtemp(join(tmpdir(), 'nexil-inter-'))
     try {
-      const { directory } = await scaffoldProject('my-nexil-app', parent, { yes: true, template: 'interactive', language: 'ts' })
+      const { directory } = await scaffoldProject('my-nexil-app', parent, {
+        yes: true,
+        template: 'interactive',
+        language: 'ts',
+      })
       const files = await readdir(join(directory, 'src/routes'))
       expect(files).toContain('index.tsx')
       expect(files).toContain('counter.tsx')
@@ -117,7 +133,11 @@ describe('create-nexil — scaffold success', () => {
   it('scaffolds secure-node with nexil.config.ts', async () => {
     const parent = await mkdtemp(join(tmpdir(), 'nexil-secure-'))
     try {
-      const { directory } = await scaffoldProject('my-nexil-app', parent, { yes: true, template: 'secure-node', language: 'ts' })
+      const { directory } = await scaffoldProject('my-nexil-app', parent, {
+        yes: true,
+        template: 'secure-node',
+        language: 'ts',
+      })
       const cfg = await readFile(join(directory, 'nexil.config.ts'), 'utf8')
       expect(cfg).toContain('securityHeaders')
       expect(cfg).toContain('trustProxy: false')
@@ -129,7 +149,11 @@ describe('create-nexil — scaffold success', () => {
   it('scaffolds js language', async () => {
     const parent = await mkdtemp(join(tmpdir(), 'nexil-js-'))
     try {
-      const { directory } = await scaffoldProject('my-nexil-app', parent, { yes: true, template: 'minimal', language: 'js' })
+      const { directory } = await scaffoldProject('my-nexil-app', parent, {
+        yes: true,
+        template: 'minimal',
+        language: 'js',
+      })
       const files = await readdir(join(directory, 'src/routes'))
       expect(files).toContain('index.jsx')
     } finally {
@@ -140,9 +164,18 @@ describe('create-nexil — scaffold success', () => {
   it('creates valid runnable project markers', async () => {
     const parent = await mkdtemp(join(tmpdir(), 'nexil-markers-'))
     try {
-      const { directory } = await scaffoldProject('my-nexil-app', parent, { yes: true, template: 'interactive', language: 'ts', tailwind: false })
+      const { directory } = await scaffoldProject('my-nexil-app', parent, {
+        yes: true,
+        template: 'interactive',
+        language: 'ts',
+        tailwind: false,
+      })
       const pkg = JSON.parse(await readFile(join(directory, 'package.json'), 'utf8'))
-      expect(pkg.scripts).toMatchObject({ dev: 'nexil dev', build: 'nexil build', start: 'nexil start' })
+      expect(pkg.scripts).toMatchObject({
+        dev: 'nexil dev',
+        build: 'nexil build',
+        start: 'nexil start',
+      })
       const html = await readFile(join(directory, 'index.html'), 'utf8')
       expect(html).toContain('<!--nexil-head-outlet-->')
       expect(html).toContain('<!--nexil-app-outlet-->')
@@ -161,7 +194,9 @@ describe('create-nexil — scaffold failures and rollback', () => {
     const parent = await mkdtemp(join(tmpdir(), 'nexil-exist-'))
     const target = join(parent, 'my-nexil-app')
     await scaffoldProject('my-nexil-app', parent, { yes: true })
-    await expect(scaffoldProject('my-nexil-app', parent, { yes: true })).rejects.toThrow(/not empty/)
+    await expect(scaffoldProject('my-nexil-app', parent, { yes: true })).rejects.toThrow(
+      /not empty/,
+    )
     // Ensure original still intact and not deleted
     const entries = await readdir(target)
     expect(entries.length).toBeGreaterThan(0)
@@ -170,7 +205,9 @@ describe('create-nexil — scaffold failures and rollback', () => {
 
   it('rejects path traversal', async () => {
     const parent = await mkdtemp(join(tmpdir(), 'nexil-traverse-'))
-    await expect(scaffoldProject('../escape', parent, { yes: true })).rejects.toThrow(/Project name|contained/)
+    await expect(scaffoldProject('../escape', parent, { yes: true })).rejects.toThrow(
+      /Project name|contained/,
+    )
     await rm(parent, { recursive: true, force: true })
   })
 
@@ -192,7 +229,12 @@ describe('create-nexil — scaffold failures and rollback', () => {
 
 describe('create-nexil — dry-run', () => {
   it('createStarterFiles is pure and lists files without FS', () => {
-    const files = createStarterFiles({ projectName: 'my-nexil-app', template: 'interactive', language: 'ts', tailwind: false })
+    const files = createStarterFiles({
+      projectName: 'my-nexil-app',
+      template: 'interactive',
+      language: 'ts',
+      tailwind: false,
+    })
     expect(files.length).toBeGreaterThan(5)
     expect(files.map((f) => f.path)).toContain('package.json')
     expect(files.map((f) => f.path)).toContain('index.html')
@@ -258,7 +300,10 @@ describe('create-nexil — CLI exit codes and error formatting', () => {
   })
   it('successful create exits 0 and prints Created', async () => {
     const parent = await mkdtemp(join(tmpdir(), 'nexil-success-'))
-    const { code, stdout, stderr } = await runBin(['my-nexil-app', '--yes', '--template', 'minimal'], parent)
+    const { code, stdout, stderr } = await runBin(
+      ['my-nexil-app', '--yes', '--template', 'minimal'],
+      parent,
+    )
     expect(code).toBe(0)
     expect(stdout).toContain('Created')
     expect(stderr).toBe('')

@@ -1210,7 +1210,11 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
       const Component = mod.default
       if (typeof Component === 'function') {
         const context = createBuildComponentContext(routePath)
-        const thunk = () => (Component as (p: Record<string, string | string[]>, c?: unknown) => unknown)({}, context) as unknown as Child
+        const thunk = () =>
+          (Component as (p: Record<string, string | string[]>, c?: unknown) => unknown)(
+            {},
+            context,
+          ) as unknown as Child
         // Pass thunk so layout Providers can wrap it with correct ContextScope (deepResolve)
         let composed: Child
         try {
@@ -1218,7 +1222,9 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
           renderedHtml = renderToString(composed)
         } catch (err) {
           if (err instanceof TypeError && /synchronously/.test((err as Error).message)) {
-            const eager = await (Component as (p: Record<string, string | string[]>, c?: unknown) => unknown)({}, context)
+            const eager = await (
+              Component as (p: Record<string, string | string[]>, c?: unknown) => unknown
+            )({}, context)
             composed = await applyLayouts(route, eager as Child, {}, context)
             renderedHtml = renderToString(composed)
           } else throw err

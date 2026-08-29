@@ -1297,7 +1297,10 @@ export async function transformNexilSource(
       if (node.type !== 'VariableDeclarator') return
       const decl = node as unknown as {
         readonly id?: AstNode
-        readonly init?: AstNode & { readonly callee?: AstNode; readonly arguments?: readonly AstNode[] }
+        readonly init?: AstNode & {
+          readonly callee?: AstNode
+          readonly arguments?: readonly AstNode[]
+        }
       }
       const varName = astIdentifierName(decl.id)
       const init = decl.init

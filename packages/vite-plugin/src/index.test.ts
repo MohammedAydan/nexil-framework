@@ -407,6 +407,12 @@ import { userStore as store } from '../lib/userStore'
 export const view = <div><button onClick$={() => store.set({} as any)}>A</button><button onClick$={() => myStore.set({} as any)}>B</button></div>`,
     '/app/src/routes/alias.tsx',
   )
-  expect(result.chunks.some((c) => c.source.includes('import { userStore as store } from "../lib/userStore"'))).toBe(true)
-  expect(result.chunks.some((c) => c.source.includes('import myStore from "../lib/store"'))).toBe(true)
+  expect(
+    result.chunks.some((c) =>
+      c.source.includes('import { userStore as store } from "../lib/userStore"'),
+    ),
+  ).toBe(true)
+  expect(result.chunks.some((c) => c.source.includes('import myStore from "../lib/store"'))).toBe(
+    true,
+  )
 })
