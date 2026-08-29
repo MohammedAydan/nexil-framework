@@ -35,8 +35,8 @@
     "publish:github": "pnpm -C packages publish -r --no-git-checks --access public",
     "publish:github:dry": "pnpm -C packages publish -r --no-git-checks --dry-run --access public",
     "release:check": "pnpm -C packages publish -r --no-git-checks --dry-run --tag next --access public",
-    "publish:npm": "pnpm -r publish --access public --registry https://registry.npmjs.org/ --no-git-checks",
-    "publish:npm:dry": "pnpm -r publish --dry-run --access public --registry https://registry.npmjs.org/ --no-git-checks"
+    "publish:npm": "pnpm -r publish --access public --registry https://registry.npmjs.org/ --no-git-checks --no-provenance",
+    "publish:npm:dry": "pnpm -r publish --dry-run --access public --registry https://registry.npmjs.org/ --no-git-checks --no-provenance"
   },
   "devDependencies": {
     "@babel/parser": "^7.29.8",
