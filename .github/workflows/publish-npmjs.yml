@@ -1,22 +1,8 @@
 name: Publish to npmjs
-
-# Immediate publish: as soon as code is pushed to main, build and publish
-# all public packages to https://registry.npmjs.org in dependency order.
-# Also available via manual dispatch. Keeps the tag-driven workflow
-# (publish-packages.yml) for versioned releases; this workflow is for
-# continuous delivery on main.
-#
-# ── ACTION REQUIRED BEFORE THIS CAN WORK ──────────────────────────────
-# The last run failed with:
-#   npm error 403 Two-factor authentication or granular access token
-#   with bypass 2fa enabled is required to publish packages.
-# The NPM_TOKEN secret must be regenerated on npmjs.com as either:
-#   - a Granular Access Token with "Bypass two-factor authentication"
-#     enabled, or
-#   - a classic "Automation" token (bypasses 2FA by default),
-# with Read & Write permission on the @nexil scope, then saved back
-# into the repo secret NPM_TOKEN.
-# ────────────────────────────────────────────────────────────────────
+# Immediate publish on push to main (and manual dispatch).
+# Versions come ONLY from package.json in the repo.
+# If the exact version is already published, only the patch is bumped until free.
+# Keeps the tag-driven workflow (publish-packages.yml) for versioned releases.
 
 on:
   push:
@@ -37,6 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     if: github.repository == 'MohammedAydan/nexil-framework'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -59,92 +46,38 @@ jobs:
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
 
-      # Replaces the old "check if the local version happens to already
-      # exist" loop. That version only protected against re-publishing the
-      # exact same version — it did nothing to stop publishing a version
-      # *lower* than what's already live (which is exactly what happened:
-      # the registry already had 1.0.0 for every package while package.json
-      # still said 0.0.2). This step instead reads the true highest
-      # published version for each package and always bumps past it, so a
-      # stale local version number can never regress npm's "latest" tag.
-      - name: Compute next publishable versions
+      # Respect package.json versions. Only bump the patch if *this exact*
+      # version is already published (so we never re-publish the same number).
+      # Does NOT look at the highest published version and invent a new one.
+      - name: Auto-bump patch only if exact version already exists
         run: |
-          cat > /tmp/bump-versions.mjs <<'EOF'
-          import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
-          import path from 'node:path';
-
-          const PACKAGES_DIR = 'packages';
-          const REGISTRY = 'https://registry.npmjs.org';
-
-          function parseVersion(v) {
-            const core = v.split('-')[0]; // ignore any prerelease suffix
-            return core.split('.').map(Number);
-          }
-
-          function cmp(a, b) {
-            const pa = parseVersion(a);
-            const pb = parseVersion(b);
-            for (let i = 0; i < 3; i++) {
-              const diff = (pa[i] || 0) - (pb[i] || 0);
-              if (diff !== 0) return diff;
-            }
-            return 0;
-          }
-
-          function bumpPatch(v) {
-            const [maj, min, pat] = parseVersion(v);
-            return `${maj}.${min}.${(pat || 0) + 1}`;
-          }
-
-          async function highestPublished(name) {
-            const res = await fetch(`${REGISTRY}/${encodeURIComponent(name)}`);
-            if (res.status === 404) return null;
-            if (!res.ok) throw new Error(`Registry lookup failed for ${name}: ${res.status}`);
-            const data = await res.json();
-            const versions = Object.keys(data.versions || {});
-            if (versions.length === 0) return null;
-            return versions.reduce((max, v) => (cmp(v, max) > 0 ? v : max), versions[0]);
-          }
-
-          const dirs = readdirSync(PACKAGES_DIR).filter((d) =>
-            existsSync(path.join(PACKAGES_DIR, d, 'package.json'))
-          );
-
-          const results = [];
-
-          for (const dir of dirs) {
-            const pkgPath = path.join(PACKAGES_DIR, dir, 'package.json');
-            const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
-
-            if (pkg.private) {
-              console.log(`skip private ${pkg.name}`);
-              continue;
-            }
-
-            const highest = await highestPublished(pkg.name);
-            let nextVersion = pkg.version;
-
-            if (highest && cmp(pkg.version, highest) <= 0) {
-              nextVersion = bumpPatch(highest);
-              console.log(`${pkg.name}: local ${pkg.version} <= published ${highest} -> bumping to ${nextVersion}`);
-            } else {
-              console.log(`${pkg.name}: local ${pkg.version} ahead of published (${highest ?? 'none'}), keeping as-is`);
-            }
-
-            if (nextVersion !== pkg.version) {
-              pkg.version = nextVersion;
-              writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
-            }
-
-            results.push({ name: pkg.name, version: nextVersion });
-          }
-
-          writeFileSync('/tmp/expected-versions.json', JSON.stringify(results, null, 2));
-
-          console.log('\nFinal versions to publish:');
-          for (const r of results) console.log(` - ${r.name}@${r.version}`);
-          EOF
-          node /tmp/bump-versions.mjs
+          for dir in packages/*; do
+            [ -f "$dir/package.json" ] || continue
+            name=$(node -p "require('./$dir/package.json').name")
+            if node -e "const p=require('./$dir/package.json'); process.exit(p.private ? 0 : 1)"; then
+              echo "skip private $name"
+              continue
+            fi
+            ver=$(node -p "require('./$dir/package.json').version")
+            while npm view "$name@$ver" version --registry https://registry.npmjs.org >/dev/null 2>&1; do
+              echo "Version $ver already exists for $name, bumping patch"
+              node -e "
+                const fs = require('fs');
+                const f = './$dir/package.json';
+                const p = require(f);
+                const v = p.version.split('.').map(Number);
+                v[2] = (v[2] || 0) + 1;
+                p.version = v.join('.');
+                fs.writeFileSync(f, JSON.stringify(p, null, 2) + '\n');
+              "
+              ver=$(node -p "require('./$dir/package.json').version")
+              echo " -> new version for $name: $ver"
+            done
+          done
+          echo "Final versions to publish (from package.json + any necessary patch bumps):"
+          for dir in packages/*; do
+            [ -f "$dir/package.json" ] && echo " - $(node -p "require('./$dir/package.json').name")@$(node -p "require('./$dir/package.json').version")"
+          done
 
       - name: Build workspace
         run: pnpm build
@@ -186,15 +119,9 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Fix vs. the previous version: this job's default shell is
-      # `bash -e` (no pipefail — confirmed from the actual run logs), so
-      # `pnpm publish | tee publish.log` was reporting the exit code of
-      # `tee` (always 0) instead of pnpm's. `set -o pipefail` makes the
-      # step fail for real when a publish fails. The redundant/mismatched
-      # `--registry` flag (no trailing slash vs. the trailing-slash value
-      # in each package's publishConfig) is dropped — publishConfig +
-      # ~/.npmrc already pin the registry, so there's nothing for the
-      # flag to add except a possible source of confusion.
+      # Critical fix: default shell is bash -e (no pipefail).
+      # Without set -o pipefail, `pnpm ... | tee` always reports success
+      # because tee exits 0 even when pnpm fails with E403.
       - name: Publish public packages to npmjs (dependency order)
         run: |
           set -o pipefail
@@ -204,55 +131,53 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_USERCONFIG: ~/.npmrc
 
-      # Belt-and-braces on top of pipefail: explicitly scan the log for
-      # registry errors and surface a clear, specific message for the
-      # 2FA/bypass-token case so this never again looks like a silent
-      # no-op.
+      # Always surface real publish failures (especially the 2FA case)
+      # so the job never looks successful when nothing was published.
       - name: Fail loudly on any publish error
         if: always()
         run: |
+          if [ ! -f publish.log ]; then
+            echo "::error::publish.log was not created"
+            exit 1
+          fi
           if grep -qE 'npm error|E403|E401|EOTP' publish.log; then
             echo "::error::One or more packages failed to publish:"
-            grep -E 'npm error|E403|E401|EOTP' publish.log
+            grep -E 'npm error|E403|E401|EOTP' publish.log || true
             if grep -q 'Two-factor authentication or granular access token' publish.log; then
-              echo "::error::NPM_TOKEN lacks 2FA-bypass permission. Regenerate it as a Granular Access Token with 'Bypass two-factor authentication' enabled (or a classic Automation token) and update the NPM_TOKEN secret."
+              echo "::error::NPM_TOKEN lacks 2FA-bypass permission."
+              echo "::error::Regenerate it on npmjs.com as either:"
+              echo "::error::  - Granular Access Token with 'Bypass two-factor authentication' enabled, or"
+              echo "::error::  - classic Automation token (bypasses 2FA by default)"
+              echo "::error::Give it Read and Write on the @nexil scope, then update the GitHub secret NPM_TOKEN."
             fi
             exit 1
           fi
           echo "No publish errors detected in publish.log"
 
-      # Confirms the versions computed earlier are genuinely live on the
-      # registry, not just that pnpm exited 0. Retries a few times to
-      # allow for registry replication lag.
       - name: Verify published versions are live on the registry
         if: success()
         run: |
-          cat > /tmp/verify-versions.mjs <<'EOF'
-          import { readFileSync } from 'node:fs';
-
-          const REGISTRY = 'https://registry.npmjs.org';
-          const expected = JSON.parse(readFileSync('/tmp/expected-versions.json', 'utf8'));
-          const missing = [];
-
-          async function exists(name, version) {
-            for (let attempt = 0; attempt < 5; attempt++) {
-              const res = await fetch(`${REGISTRY}/${encodeURIComponent(name)}/${version}`);
-              if (res.ok) return true;
-              await new Promise((r) => setTimeout(r, 3000));
-            }
-            return false;
-          }
-
-          for (const { name, version } of expected) {
-            const ok = await exists(name, version);
-            console.log(`${ok ? '✔' : '✘'} ${name}@${version}`);
-            if (!ok) missing.push(`${name}@${version}`);
-          }
-
-          if (missing.length > 0) {
-            console.log('\n::error::These versions are not live on the registry despite the publish step reporting success:');
-            console.log(missing.join('\n'));
-            process.exit(1);
-          }
-          EOF
-          node /tmp/verify-versions.mjs
+          echo "Checking that the versions from package.json are actually on the registry..."
+          for dir in packages/*; do
+            [ -f "$dir/package.json" ] || continue
+            name=$(node -p "require('./$dir/package.json').name")
+            ver=$(node -p "require('./$dir/package.json').version")
+            if node -e "const p=require('./$dir/package.json'); process.exit(p.private ? 0 : 1)"; then
+              continue
+            fi
+            ok=false
+            for i in 1 2 3 4 5; do
+              if npm view "$name@$ver" version --registry https://registry.npmjs.org >/dev/null 2>&1; then
+                ok=true
+                break
+              fi
+              sleep 3
+            done
+            if [ "$ok" = true ]; then
+              echo "✔ $name@$ver"
+            else
+              echo "✘ $name@$ver not found on registry"
+              echo "::error::$name@$ver is not live on the registry"
+              exit 1
+            fi
+          done
