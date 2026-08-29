@@ -1,4 +1,6 @@
 import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
 import { parse } from '@babel/parser'
 import traverseModule from '@babel/traverse'
 import MagicString from 'magic-string'
@@ -36,7 +38,7 @@ export interface LazyChunk {
   readonly source: string
 }
 
-export type ScopeCaptureKind = 'value' | 'signal' | 'store' | 'action' | 'unsupported'
+export type ScopeCaptureKind = 'value' | 'signal' | 'store' | 'action' | 'ctx' | 'unsupported'
 export type ScopeCaptureLifetime = 'route' | 'global'
 
 export type ScopeCaptureInitial =
@@ -131,18 +133,78 @@ const GLOBAL_IDENTIFIERS = new Set([
   'FormData',
   'URLSearchParams',
   'undefined',
+  // DOM / TS type identifiers that appear in `as Type` casts and should not be captured
+  'HTMLElement',
+  'HTMLInputElement',
+  'HTMLButtonElement',
+  'HTMLTextAreaElement',
+  'HTMLSelectElement',
+  'Event',
+  'MouseEvent',
+  'InputEvent',
 ])
 
 function captureExpression(expressionSource: string): {
   readonly code: string
   readonly names: readonly string[]
 } {
+  const r = captureExpressionWithImports(expressionSource, new Map())
+  return { code: r.code, names: r.scopeNames as unknown as readonly string[] }
+}
+
+function collectImportMap(
+  source: string,
+  id: string,
+): Map<string, { source: string; imported: string; kind: 'named' | 'default' | 'namespace' }> {
+  const map = new Map<
+    string,
+    { source: string; imported: string; kind: 'named' | 'default' | 'namespace' }
+  >()
+  try {
+    const ast = parseSource(source, id)
+    walk(ast, (node) => {
+      if (node.type !== 'ImportDeclaration' || typeof node.source?.value !== 'string') return
+      const from = node.source.value as string
+      const specs = (node as unknown as { specifiers?: readonly AstNode[] }).specifiers ?? []
+      for (const spec of specs) {
+        const s = spec as unknown as { type?: string; local?: AstNode; imported?: AstNode }
+        const local = astIdentifierName(s.local)
+        if (!local) continue
+        if (s.type === 'ImportDefaultSpecifier')
+          map.set(local, { source: from, imported: 'default', kind: 'default' })
+        else if (s.type === 'ImportNamespaceSpecifier')
+          map.set(local, { source: from, imported: '*', kind: 'namespace' })
+        else {
+          const imported = astIdentifierName(s.imported) ?? local
+          map.set(local, { source: from, imported, kind: 'named' })
+        }
+      }
+    })
+  } catch {
+    /* ignore parse errors for import collection */
+  }
+  return map
+}
+
+function captureExpressionWithImports(
+  expressionSource: string,
+  importMap: ReadonlyMap<
+    string,
+    { source: string; imported: string; kind: 'named' | 'default' | 'namespace' }
+  >,
+  sourceFileContext?: string,
+): {
+  readonly code: string
+  readonly scopeNames: readonly string[]
+  readonly importNames: readonly string[]
+} {
   const prefix = 'const __nexilHandler = '
   const ast = parse(`${prefix}${expressionSource}`, {
     sourceType: 'module',
     plugins: ['typescript', 'jsx', 'topLevelAwait'],
   })
-  const replacements: Array<{ start: number; end: number; name: string }> = []
+  const scopeReplacements: Array<{ start: number; end: number; name: string }> = []
+  const importNames = new Set<string>()
   traverse(ast, {
     ReferencedIdentifier(path) {
       const name = path.node.name
@@ -160,9 +222,30 @@ function captureExpression(expressionSource: string): {
         path.node.end === undefined
       )
         return
+      if (importMap.has(name)) {
+        const isCtxImport =
+          expressionSource.includes(`${name}.use`) ||
+          new RegExp(`useContext\\s*\\(\\s*${escapeRegExp(name)}\\b`).test(expressionSource) ||
+          /Context$/.test(name)
+        // Imported Contexts must be serialized via ctx registry, not direct ESM import
+        if (isCtxImport && sourceFileContext !== undefined) {
+          // Verify source file actually uses this name as Context (createContext or alias)
+          // Fallback heuristic: treat Context-suffixed imports as ctx
+          const start = path.node.start
+          const end = path.node.end
+          scopeReplacements.push({
+            start: start - prefix.length,
+            end: end - prefix.length,
+            name,
+          })
+          return
+        }
+        importNames.add(name)
+        return
+      }
       const start = path.node.start
       const end = path.node.end
-      replacements.push({
+      scopeReplacements.push({
         start: start - prefix.length,
         end: end - prefix.length,
         name,
@@ -170,14 +253,34 @@ function captureExpression(expressionSource: string): {
     },
   })
   const magic = new MagicString(expressionSource)
-  for (const replacement of replacements.sort((left, right) => right.start - left.start)) {
+  for (const replacement of scopeReplacements.sort((left, right) => right.start - left.start)) {
     if (replacement.start >= 0)
       magic.overwrite(replacement.start, replacement.end, `scope.${replacement.name}`)
   }
   return {
     code: magic.toString(),
-    names: [...new Set(replacements.map((replacement) => replacement.name))],
+    scopeNames: [...new Set(scopeReplacements.map((r) => r.name))],
+    importNames: [...importNames],
   }
+}
+
+function buildImportHeader(
+  importNames: readonly string[],
+  importMap: ReadonlyMap<
+    string,
+    { source: string; imported: string; kind: 'named' | 'default' | 'namespace' }
+  >,
+): string {
+  const lines: string[] = []
+  for (const name of importNames) {
+    const info = importMap.get(name)
+    if (!info) continue
+    if (info.kind === 'namespace') lines.push(`import * as ${name} from "${info.source}";`)
+    else if (info.kind === 'default') lines.push(`import ${name} from "${info.source}";`)
+    else if (info.imported === name) lines.push(`import { ${name} } from "${info.source}";`)
+    else lines.push(`import { ${info.imported} as ${name} } from "${info.source}";`)
+  }
+  return lines.join('\n')
 }
 
 /**
@@ -341,7 +444,99 @@ function extractStaticEndpoint(source: string, name: string): string | undefined
   return quoted[2]
 }
 
-function classifyScopeCaptures(source: string, names: readonly string[]): ScopeCapture[] {
+function extractContextDefault(source: string, name: string): ScopeCaptureInitial | undefined {
+  const ast = parseSource(source, 'nexil-context.tsx')
+  let initial: ScopeCaptureInitial | undefined
+  walk(ast, (node) => {
+    if (initial !== undefined || node.type !== 'VariableDeclarator') return
+    const decl = node as AstNode & { readonly id?: AstNode; readonly init?: AstNode }
+    if (astIdentifierName(decl.id) !== name) return
+    const init = decl.init as
+      (AstNode & { readonly callee?: AstNode; readonly arguments?: readonly AstNode[] }) | undefined
+    if (
+      !init ||
+      init.type !== 'CallExpression' ||
+      astIdentifierName(init.callee) !== 'createContext'
+    )
+      return
+    const arg = init.arguments?.[0] as unknown
+    initial = evaluateStaticLiteral(arg)
+  })
+  return initial
+}
+
+function extractContextAlias(source: string, local: string): string | undefined {
+  const ast = parseSource(source, 'nexil-context-alias.tsx')
+  let ctx: string | undefined
+  walk(ast, (node) => {
+    if (ctx !== undefined || node.type !== 'VariableDeclarator') return
+    const decl = node as AstNode & { readonly id?: AstNode; readonly init?: AstNode }
+    if (astIdentifierName(decl.id) !== local) return
+    const init = decl.init as
+      | (AstNode & {
+          readonly callee?: AstNode
+          readonly object?: AstNode
+          readonly arguments?: readonly AstNode[]
+        })
+      | undefined
+    if (!init) return
+    if (init.type === 'CallExpression') {
+      const callee = init.callee
+      const args = init.arguments ?? []
+      if (astIdentifierName(callee) === 'useContext' && args[0]?.type === 'Identifier') {
+        ctx = astIdentifierName(args[0] as unknown as AstNode)
+        return
+      }
+      if (
+        callee?.type === 'MemberExpression' &&
+        astIdentifierName((callee as unknown as { property?: AstNode }).property) === 'use'
+      ) {
+        const obj = (callee as unknown as { object?: AstNode }).object
+        if (obj?.type === 'Identifier') ctx = astIdentifierName(obj)
+      }
+    }
+  })
+  return ctx
+}
+
+function tryReadContextDefaultFromImport(
+  importSource: string,
+  currentFileId: string,
+  ctxName: string,
+): ScopeCaptureInitial | undefined {
+  try {
+    const baseDir = dirname(currentFileId)
+    // Resolve relative import like "../context" to file path, try .ts/.tsx/.js
+    const candidates = [
+      resolve(baseDir, importSource),
+      resolve(baseDir, `${importSource}.ts`),
+      resolve(baseDir, `${importSource}.tsx`),
+      resolve(baseDir, `${importSource}.js`),
+      resolve(baseDir, `${importSource}/index.ts`),
+      resolve(baseDir, `${importSource}/index.tsx`),
+    ]
+    for (const p of candidates) {
+      try {
+        const content = readFileSync(p, 'utf8')
+        const v = extractContextDefault(content, ctxName)
+        if (v !== undefined) return v
+      } catch {}
+    }
+  } catch {}
+  return undefined
+}
+
+function inferContextLifetime(id: string): ScopeCaptureLifetime {
+  if (id.includes('_layout') || id.includes('/layout')) return 'global'
+  return 'route'
+}
+
+function classifyScopeCaptures(
+  source: string,
+  names: readonly string[],
+  fileId?: string,
+  importMap?: ReadonlyMap<string, { source: string; imported: string; kind: string }>,
+): ScopeCapture[] {
   const captures: ScopeCapture[] = []
   const compactSource = source.replace(/\s+/g, ' ')
   for (const name of names) {
@@ -394,6 +589,73 @@ function classifyScopeCaptures(source: string, names: readonly string[]): ScopeC
         continue
       }
       captures.push({ name, kind, id: `nx:action:${hash(`${name}:${source}`)}`, endpoint })
+      continue
+    }
+    // Context: const Ctx = createContext('default')
+    if (new RegExp(`(?:const|let|var) ${namePattern} = createContext\\(`).test(compactSource)) {
+      const initial = extractContextDefault(source, name)
+      if (initial === undefined) {
+        captures.push({
+          name,
+          kind: 'unsupported',
+          reason: `Context "${name}" needs a JSON-literal default value to resume in the browser.`,
+        })
+        continue
+      }
+      captures.push({
+        name,
+        kind: 'ctx',
+        id: `nx:ctx:${hash(name)}`,
+        initial,
+        lifetime: inferContextLifetime(fileId ?? source),
+      })
+      continue
+    }
+    // Alias: const local = useContext(Ctx) or const local = Ctx.use()
+    const aliasCtx = extractContextAlias(source, name)
+    if (aliasCtx) {
+      const initial = extractContextDefault(source, aliasCtx)
+      if (initial !== undefined) {
+        captures.push({
+          name,
+          kind: 'ctx',
+          id: `nx:ctx:${hash(aliasCtx)}`,
+          initial,
+          lifetime: inferContextLifetime(fileId ?? source),
+        })
+        continue
+      }
+      captures.push({
+        name,
+        kind: 'unsupported',
+        reason: `Context alias "${name}" for "${aliasCtx}" needs a serializable default or a Store/Signal provider.`,
+      })
+      continue
+    }
+    // Imported Context used directly: ThemeContext.use() or useContext(ThemeContext)
+    if (
+      /Context$/.test(name) &&
+      (new RegExp(`useContext\\s*\\(\\s*${namePattern}\\b`).test(compactSource) ||
+        new RegExp(`${namePattern}\\.use\\b`).test(compactSource))
+    ) {
+      let initial: ScopeCaptureInitial | null = null
+      const imp = importMap?.get(name)
+      if (imp && fileId) {
+        const fetched = tryReadContextDefaultFromImport(imp.source, fileId, imp.imported)
+        if (fetched !== undefined) initial = fetched
+      }
+      // Fallback: try local default if same-file re-export
+      if (initial === null) {
+        const localDef = extractContextDefault(source, name)
+        if (localDef !== undefined) initial = localDef
+      }
+      captures.push({
+        name,
+        kind: 'ctx',
+        id: `nx:ctx:${hash(name)}`,
+        initial: initial as ScopeCaptureInitial,
+        lifetime: inferContextLifetime(fileId ?? source),
+      })
       continue
     }
     if (/^(?:true|false|null|undefined|NaN)$/.test(name)) {
@@ -742,6 +1004,67 @@ export async function transformNexilSource(
     if (node.type === 'JSXOpeningElement') {
       const opening = node as AstNode & {
         readonly attributes?: readonly AstNode[]
+        readonly name?: AstNode
+      }
+      // Context Provider: <Ctx.Provider value={...}> — emit ctx scope for client resumability
+      const openingName = (
+        opening as unknown as {
+          name?: AstNode & { type?: string; object?: AstNode; property?: AstNode }
+        }
+      ).name
+      let ctxProviderName: string | undefined
+      if (
+        openingName?.type === 'JSXMemberExpression' &&
+        astIdentifierName((openingName as unknown as { property?: AstNode }).property) ===
+          'Provider'
+      ) {
+        const obj = (openingName as unknown as { object?: AstNode }).object
+        if (obj?.type === 'JSXIdentifier') ctxProviderName = astIdentifierName(obj)
+      }
+      if (ctxProviderName) {
+        const valueAttr = (opening.attributes ?? []).find(
+          (a) => astIdentifierName((a as unknown as { name?: AstNode }).name) === 'value',
+        )
+        let initial: ScopeCaptureInitial | undefined
+        if (valueAttr) {
+          const v = (
+            valueAttr as unknown as {
+              value?: AstNode & { type?: string; value?: unknown; expression?: AstNode }
+            }
+          ).value
+          if (v?.type === 'StringLiteral') initial = v.value as ScopeCaptureInitial
+          else if (v?.type === 'JSXExpressionContainer') {
+            const expr = (v as unknown as { expression?: AstNode }).expression
+            initial = evaluateStaticLiteral(expr as unknown)
+            if (
+              initial === undefined &&
+              (expr as unknown as { type?: string })?.type === 'Identifier'
+            ) {
+              const varName = astIdentifierName(expr)
+              if (varName)
+                initial =
+                  extractStaticInitial(source, varName) ??
+                  extractContextDefault(source, varName) ??
+                  undefined
+            }
+          }
+        }
+        if (initial === undefined) initial = extractContextDefault(source, ctxProviderName) ?? null
+        const capture: ScopeCapture = {
+          name: ctxProviderName,
+          kind: 'ctx',
+          id: `nx:ctx:${hash(ctxProviderName)}`,
+          initial: initial as ScopeCaptureInitial,
+          lifetime: inferContextLifetime(id),
+        }
+        scopeCaptures.push(capture)
+        const payload = buildScopePayload([capture])
+        if (payload && opening.end !== undefined) {
+          bindingRanges.push({
+            offset: bindingInsertionOffset(source, opening.end),
+            attribute: ` data-nx-scope="${toJsonAttribute(payload)}"`,
+          })
+        }
       }
       const attributes = opening.attributes ?? []
       const explicitBindings = attributes.filter((attribute) => {
@@ -966,6 +1289,32 @@ export async function transformNexilSource(
     }
   })
 
+  // Inject stable Context identity so same definition across layout/route shares id via createContext(default, stableId),
+  // while distinct vars with same default remain distinct (hash(name) not hash(default)).
+  {
+    const defs: Array<{ name: string; argEnd: number }> = []
+    walk(ast, (node) => {
+      if (node.type !== 'VariableDeclarator') return
+      const decl = node as unknown as {
+        readonly id?: AstNode
+        readonly init?: AstNode & { readonly callee?: AstNode; readonly arguments?: readonly AstNode[] }
+      }
+      const varName = astIdentifierName(decl.id)
+      const init = decl.init
+      if (!varName || !init || init.type !== 'CallExpression') return
+      if (astIdentifierName(init.callee) !== 'createContext') return
+      const args = init.arguments ?? []
+      if (args.length !== 1) return
+      const first = args[0] as AstNode
+      if (first?.end === undefined) return
+      defs.push({ name: varName, argEnd: first.end })
+    })
+    for (const { name, argEnd } of defs) {
+      const stable = `nx:ctx:${hash(name)}`
+      magic.appendLeft(argEnd, `, "${stable}"`)
+    }
+  }
+
   const secretDiagnostic = findSecretExposure(id, source)
   if (secretDiagnostic)
     moduleDiagnostics.push(`[${secretDiagnostic.code}] ${secretDiagnostic.message}`)
@@ -976,16 +1325,24 @@ export async function transformNexilSource(
   const isTypeScript = /\.tsx?$/.test(id)
   const chunks: LazyChunk[] = []
   const capturesBySpec: ScopeCapture[][] = []
+  const importMap = collectImportMap(source, id)
   for (const { fileName, exportName, expressionSource } of chunkSpecs) {
-    const capturedExpression = captureExpression(expressionSource)
-    const captures = classifyScopeCaptures(source, capturedExpression.names)
+    const capturedExpression = captureExpressionWithImports(expressionSource, importMap, source)
+    const captures = classifyScopeCaptures(
+      source,
+      capturedExpression.scopeNames as unknown as readonly string[],
+      id,
+      importMap,
+    )
     capturesBySpec.push(captures)
     scopeCaptures.push(...captures)
     for (const capture of captures) {
       if (capture.kind === 'unsupported')
         warnings.push(capture.reason ?? `Unsupported capture: ${capture.name}`)
     }
-    const raw = `export async function ${exportName}({ element, scope = {}, event }) { return (${capturedExpression.code})({ element, event, scope }) }\n`
+    const importHeader = buildImportHeader(capturedExpression.importNames, importMap)
+    const header = importHeader ? `${importHeader}\n` : ''
+    const raw = `${header}export async function ${exportName}({ element, scope = {}, event }) { return (${capturedExpression.code})({ element, event, scope }) }\n`
     const source_ = isTypeScript
       ? (
           await transformWithEsbuild(raw, `${fileName}.ts`, {

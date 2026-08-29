@@ -177,11 +177,23 @@ function materializeScope(
   element: HTMLElement,
   cache: Map<string, unknown>,
 ): Record<string, unknown> {
-  const raw = element.getAttribute('data-nx-scope')
-  const parsed = parseScopePayload(raw)
-  if (!parsed) return {}
+  // Merge all ancestor data-nx-scope payloads (layout-owned ctx survives soft nav)
+  const payloads: Array<Readonly<Record<string, ScopeRef>>> = []
+  for (let cur: HTMLElement | null = element; cur; cur = cur.parentElement as HTMLElement | null) {
+    if (typeof (cur as unknown as { getAttribute?: unknown }).getAttribute !== 'function') continue
+    const raw = (cur as HTMLElement).getAttribute('data-nx-scope')
+    const parsed = parseScopePayload(raw)
+    if (parsed) payloads.push(parsed)
+    if (typeof document !== 'undefined' && cur === document.documentElement) break
+  }
+  // Outermost first so Provider wins over handler default
+  payloads.reverse()
+  const merged: Record<string, ScopeRef> = {}
+  for (const p of payloads)
+    for (const k in p) if (merged[k] === undefined) merged[k] = p[k] as ScopeRef
+  if (Object.keys(merged).length === 0) return {}
   const scope: Record<string, unknown> = {}
-  for (const [name, ref] of Object.entries(parsed)) {
+  for (const [name, ref] of Object.entries(merged)) {
     if (!ref || typeof ref.kind !== 'string') continue
     if (ref.kind === 'value') {
       scope[name] = (ref as ScopeRefValue).data
@@ -191,7 +203,7 @@ function materializeScope(
       console.warn('[nexil] unsupported scope:', (ref as ScopeRefUnsupported).reason)
       continue
     }
-    const id = (ref as ScopeRefSignal | ScopeRefStore | ScopeRefAction).id
+    const id = (ref as ScopeRefSignal | ScopeRefStore | ScopeRefAction | ScopeRefCtx).id
     let live = cache.get(id)
     if (!live) {
       if (ref.kind === 'signal') live = createSignal((ref as ScopeRefSignal).initial)
@@ -212,10 +224,30 @@ function materializeScope(
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(input),
           }).then((response) => response.json())
+      } else if (ref.kind === 'ctx') {
+        const ctx = ref as ScopeRefCtx
+        live = cache.get(id)
+        if (!live) {
+          live = {
+            value: ctx.initial,
+            use: () => (cache.get(id) as { value: unknown })?.value ?? ctx.initial,
+            useContext: () => (cache.get(id) as { value: unknown })?.value ?? ctx.initial,
+            g: ctx.lifetime === 'global',
+          } as unknown
+          cache.set(id, live)
+        } else if (ctx.lifetime === 'global' && !(live as { g?: boolean }).g)
+          (live as { g: boolean }).g = true
+        live = cache.get(id)
+        scope[name] = /Context$/.test(name) ? live : (live as { value: unknown }).value
+        continue
       }
       if (live) cache.set(id, live)
     }
-    if (live) scope[name] = live
+    if (live) {
+      if ((ref as ScopeRef).kind === 'ctx') {
+        scope[name] = /Context$/.test(name) ? live : (live as { value: unknown }).value
+      } else scope[name] = live
+    }
   }
   return scope
 }
@@ -434,7 +466,7 @@ export function bootstrapResumability(
   }
 }
 
-export type ScopeRefKind = 'value' | 'signal' | 'store' | 'action' | 'unsupported'
+export type ScopeRefKind = 'value' | 'signal' | 'store' | 'action' | 'ctx' | 'unsupported'
 
 export interface ScopeRefValue {
   readonly kind: 'value'
@@ -459,13 +491,25 @@ export interface ScopeRefAction {
   readonly endpoint: string
 }
 
+export interface ScopeRefCtx {
+  readonly kind: 'ctx'
+  readonly id: string
+  readonly initial: Serializable
+  readonly lifetime?: 'route' | 'global'
+}
+
 export interface ScopeRefUnsupported {
   readonly kind: 'unsupported'
   readonly reason: string
 }
 
 export type ScopeRef =
-  ScopeRefValue | ScopeRefSignal | ScopeRefStore | ScopeRefAction | ScopeRefUnsupported
+  | ScopeRefValue
+  | ScopeRefSignal
+  | ScopeRefStore
+  | ScopeRefAction
+  | ScopeRefCtx
+  | ScopeRefUnsupported
 
 export interface ScopeSignal<T extends Serializable = Serializable> {
   (): T

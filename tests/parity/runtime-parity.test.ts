@@ -4,7 +4,13 @@ import {
   createDenoAdapter,
   createNodeAdapter,
 } from '../../packages/adapters/src/index'
-import { element } from '../../packages/core/src/index'
+import {
+  createContext,
+  createContextScope,
+  element,
+  provideContext,
+  text,
+} from '../../packages/core/src/index'
 import { renderRoute } from '../../packages/renderer/src/index'
 
 async function handler(request: Request): Promise<Response> {
@@ -73,6 +79,47 @@ it('runs shared header, body, and capability conformance across all adapters', a
     expect(response.status).toBe(200)
     expect(response.headers.get('x-runtime')).toBe('portable')
     expect(await response.text()).toBe('ok')
+  }
+})
+
+it('isolates Context per-request across all adapter runtimes (no cross-request leakage)', async () => {
+  const Ctx = createContext<string>('default')
+  const handlerWithCtx = async (request: Request): Promise<Response> => {
+    const id = new URL(request.url).searchParams.get('id') ?? 'default'
+    // Edge runtimes isolate via per-request closure-captured scope (no ALS dependency);
+    // Node additionally benefits from AsyncLocalStorage via process.getBuiltinModule.
+    // Explicit scope threading guarantees runtime-agnostic isolation.
+    const scope = provideContext(createContextScope(), Ctx, id)
+    const out = await renderRoute({
+      key: request.url,
+      mode: { mode: 'server' },
+      render: async () => {
+        await new Promise<void>((r) => setTimeout(r, Math.floor(Math.random() * 5)))
+        return Ctx.Provider({
+          value: id,
+          scope,
+          children: () => element('div', {}, text(Ctx.use(scope))),
+        })
+      },
+    })
+    return new Response(out.html, { headers: { 'content-type': 'text/html' } })
+  }
+  const adapters = [
+    createNodeAdapter(handlerWithCtx),
+    createCloudflareAdapter(handlerWithCtx),
+    createDenoAdapter(handlerWithCtx),
+  ]
+  for (const adapter of adapters) {
+    const ids = Array.from({ length: 30 }, (_, i) => `req-${i}-${adapter.name}`)
+    const results = await Promise.all(
+      ids.map(async (id) => {
+        const res = await adapter.handle(new Request(`https://example.test/page?id=${id}`))
+        return { id, html: await res.text() }
+      }),
+    )
+    for (const { id, html } of results) {
+      expect(html).toBe(`<div>${id}</div>`)
+    }
   }
 })
 

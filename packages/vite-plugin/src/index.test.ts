@@ -378,3 +378,35 @@ export const view = <span>Items: {count()}</span>`,
   ])
   expect(result.code).toContain('<span data-nx-bind="nx:signal:')
 })
+
+it('preserves ES module imports for top-level global stores in extracted chunks', async () => {
+  const result = await transformNexilSource(
+    `import { userStore } from '../lib/userStore'
+import { component } from '@nexil/core'
+export default component(() => {
+  const state = userStore.snapshot()
+  return <div><input onInput$={({ event }) => { const v = (event.target as any).value; userStore.set((s) => ({ ...s, user: { ...s.user, name: v } })) }} /><button onClick$={() => userStore.set((s) => ({ ...s, user: { ...s.user, theme: s.user?.theme === 'dark' ? 'light' : 'dark' } }))}>Toggle</button></div>
+})`,
+    '/app/src/routes/index.tsx',
+  )
+  expect(result.warnings.filter((w) => w.includes('userStore'))).toHaveLength(0)
+  expect(result.scopeCaptures.filter((c) => c.name === 'userStore')).toHaveLength(0)
+  expect(result.code).not.toContain('data-nx-scope')
+  expect(result.chunks).toHaveLength(2)
+  for (const chunk of result.chunks) {
+    expect(chunk.source).toContain('import { userStore } from "../lib/userStore"')
+    expect(chunk.source).toContain('userStore.set')
+    expect(chunk.source).not.toContain('scope.userStore')
+  }
+})
+
+it('supports alias and default imports for resumable handlers', async () => {
+  const result = await transformNexilSource(
+    `import myStore from '../lib/store'
+import { userStore as store } from '../lib/userStore'
+export const view = <div><button onClick$={() => store.set({} as any)}>A</button><button onClick$={() => myStore.set({} as any)}>B</button></div>`,
+    '/app/src/routes/alias.tsx',
+  )
+  expect(result.chunks.some((c) => c.source.includes('import { userStore as store } from "../lib/userStore"'))).toBe(true)
+  expect(result.chunks.some((c) => c.source.includes('import myStore from "../lib/store"'))).toBe(true)
+})

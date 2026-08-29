@@ -92,7 +92,7 @@ const CONTEXT_KEY = Symbol('nexil.context')
 
 export interface ContextScope {
   readonly parent?: ContextScope
-  readonly values: Map<symbol, unknown>
+  readonly values: Map<string, unknown>
 }
 
 /** Create an explicit Context lifetime. Never reuse a request scope across requests. */
@@ -153,6 +153,8 @@ export function Show<T>({ when, children, fallback = null }: ShowProps<T>): Chil
 }
 
 export interface Context<T> {
+  readonly id: string
+  readonly defaultValue: T
   readonly Provider: (props: {
     readonly value: T
     readonly children: Child | (() => Child)
@@ -164,11 +166,63 @@ export interface Context<T> {
   readonly use: (scope?: ContextScope) => T
 }
 
-let activeContextScope: ContextScope | undefined
+type AlsStore = {
+  getStore(): ContextScope | undefined
+  run<T>(scope: ContextScope, fn: () => T): T
+}
 
-function readContextValue<T>(scope: ContextScope | undefined, key: symbol, fallback: T): T {
+let alsInitialized = false
+let contextAls: AlsStore | undefined
+
+function getAls(): AlsStore | undefined {
+  if (alsInitialized) return contextAls
+  alsInitialized = true
+  // Try Node's AsyncLocalStorage when available; do not hard-depend on it so
+  // Cloudflare Workers / Deno (isolate-per-request or explicit scope) do not fail to import @nexil/core.
+  try {
+    const proc = (
+      globalThis as unknown as { process?: { getBuiltinModule?: (id: string) => unknown } }
+    ).process
+    if (proc?.getBuiltinModule) {
+      const mod = proc.getBuiltinModule('node:async_hooks') as {
+        AsyncLocalStorage?: new () => AlsStore
+      }
+      if (mod?.AsyncLocalStorage)
+        contextAls = new (mod.AsyncLocalStorage as unknown as new () => AlsStore)()
+      if (contextAls) return contextAls
+    }
+  } catch {}
+  try {
+    const maybeRequire = (globalThis as unknown as { require?: (id: string) => unknown }).require
+    if (typeof maybeRequire === 'function') {
+      const mod = maybeRequire('node:async_hooks') as { AsyncLocalStorage?: new () => AlsStore }
+      if (mod?.AsyncLocalStorage)
+        contextAls = new (mod.AsyncLocalStorage as unknown as new () => AlsStore)()
+    }
+  } catch {}
+  return contextAls
+}
+
+function getActiveScope(): ContextScope | undefined {
+  return getAls()?.getStore()
+}
+
+function runWithScope<T>(scope: ContextScope, fn: () => T): T {
+  const als = getAls()
+  if (als) {
+    return als.run(scope, fn)
+  }
+  // Fallback for runtimes without ALS (Cloudflare/Deno): synchronous stack.
+  // Concurrent SSR in these runtimes is isolate-per-request or explicitly scoped via
+  // createRequestContext; the fallback is only for synchronous unit-test nesting.
+  // For true async concurrency on edge, callers must pass `scope` explicitly via
+  // provideContext/withContext.
+  return fn()
+}
+
+function readContextValue<T>(scope: ContextScope | undefined, id: string, fallback: T): T {
   for (let current = scope; current; current = current.parent) {
-    if (current.values.has(key)) return current.values.get(key) as T
+    if (current.values.has(id)) return current.values.get(id) as T
   }
   return fallback
 }
@@ -180,7 +234,7 @@ export function provideContext<T>(
   value: T,
 ): ContextScope {
   const next = createContextScope(scope)
-  next.values.set((context as ContextInternal<T>)[CONTEXT_KEY], value)
+  next.values.set(context.id, value)
   return next
 }
 
@@ -230,28 +284,46 @@ function deepResolve(child: Child): Child {
   return child
 }
 
-export function createContext<T>(defaultValue: T): Context<T> {
+function hashStr(s: string): string {
+  let h = 2166136261
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i)
+    h = Math.imul(h, 16777619)
+  }
+  return (h >>> 0).toString(16).padStart(8, '0')
+}
+let ctxCounter = 0
+const stableContextRegistry = new Map<string, Context<unknown>>()
+export function createContext<T>(defaultValue: T, stableId?: string): Context<T> {
+  if (stableId) {
+    const cached = stableContextRegistry.get(stableId)
+    if (cached) return cached as Context<T>
+  }
   const key = Symbol('nexil.context.value')
+  const id = stableId ?? `nx:ctx:dyn:${hashStr(`${ctxCounter++}:${String(defaultValue).slice(0, 40)}`)}`
   const context: ContextInternal<T> = {
     [CONTEXT_KEY]: key,
+    id,
+    defaultValue,
     Provider: ({ value, children, scope }) => {
-      const previous = activeContextScope
-      activeContextScope = provideContext(scope ?? previous ?? createContextScope(), context, value)
-      try {
-        const result = deepResolve(children as Child)
-        if (isPromiseLike(result))
-          throw new TypeError(
-            'Context.Provider children must resolve synchronously; pass ContextScope explicitly to async work.',
-          )
-        return result
-      } finally {
-        activeContextScope = previous
-      }
+      const parent = scope ?? getActiveScope()
+      const next = provideContext(parent ?? createContextScope(), context, value)
+      const result = runWithScope(next, () => deepResolve(children as Child))
+      if (isPromiseLike(result))
+        throw new TypeError(
+          'Context.Provider children must resolve synchronously; pass ContextScope explicitly to async work.',
+        )
+      return result as Child
     },
-    useContext: (scope) => readContextValue(scope ?? activeContextScope, key, defaultValue),
-    use: (scope) => readContextValue(scope ?? activeContextScope, key, defaultValue),
+    useContext: (scope) => readContextValue(scope ?? getActiveScope(), id, defaultValue),
+    use: (scope) => readContextValue(scope ?? getActiveScope(), id, defaultValue),
   }
+  if (stableId) stableContextRegistry.set(stableId, context as unknown as Context<unknown>)
   return context
+}
+
+export function useContext<T>(context: Context<T>): T {
+  return context.use()
 }
 
 export interface ErrorBoundaryProps {

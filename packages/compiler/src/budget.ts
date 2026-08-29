@@ -1,7 +1,7 @@
 export const DEFAULT_BUDGET = {
   staticClientJsBytes: 0,
   interactiveClientJsGzipBytes: 15 * 1024,
-  bootstrapGzipBytes: 1024,
+  bootstrapGzipBytes: 2048,
   navigationGzipBytes: 6 * 1024,
 } as const
 

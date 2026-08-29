@@ -237,6 +237,7 @@ function renderNode(node: RenderNode): string {
 }
 
 export function renderChild(child: Child): string {
+  if (typeof child === 'function') return renderChild((child as () => Child)())
   if (child === null || child === undefined || typeof child === 'boolean') return ''
   if (Array.isArray(child)) return child.map(renderChild).join('')
   if (typeof child === 'string' || typeof child === 'number') return escapeHtml(String(child))
@@ -246,6 +247,7 @@ export function renderChild(child: Child): string {
 }
 
 export async function renderChildAsync(child: Child | Promise<Child>): Promise<string> {
+  if (typeof child === 'function') return renderChildAsync((child as unknown as () => Child)())
   const resolved = await child
   if (Array.isArray(resolved)) return (await Promise.all(resolved.map(renderChildAsync))).join('')
   if (resolved && typeof resolved === 'object' && 'then' in resolved)
