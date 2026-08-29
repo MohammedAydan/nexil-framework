@@ -1,6 +1,6 @@
 {
   "name": "@nexil/dev-server",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "dependencies": {
     "@nexil/actions": "workspace:*",

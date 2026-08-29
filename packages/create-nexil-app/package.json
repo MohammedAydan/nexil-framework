@@ -1,6 +1,6 @@
 {
   "name": "@nexil/create-nexil-app",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "description": "[Superseded by @nexil/create-nexil] Create a Nexil application",
   "type": "module",
