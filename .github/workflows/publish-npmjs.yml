@@ -86,6 +86,8 @@ jobs:
         # For continuous delivery on main, ensure we never try to republish
         # an existing version. If @nexil/core@0.0.1 already exists, bump to
         # 0.0.2 (and repeat until free) so `pnpm publish` actually uploads.
+        # Uses node to edit package.json directly to avoid `npm version`
+        # failing on `workspace:*` dependencies.
         run: |
           for dir in packages/*; do
             [ -f "$dir/package.json" ] || continue
@@ -99,7 +101,7 @@ jobs:
             # loop until version is free on npmjs
             while npm view "$name@$ver" version --registry https://registry.npmjs.org >/dev/null 2>&1; do
               echo "Version $ver already exists for $name, bumping patch"
-              (cd "$dir" && npm version patch --no-git-tag-version --allow-same-version >/dev/null)
+              node -e "const fs=require('fs'); const f='./$dir/package.json'; const p=require('./'+f); const v=p.version.split('.').map(Number); v[2]=(v[2]||0)+1; p.version=v.join('.'); fs.writeFileSync(f, JSON.stringify(p,null,2)+'\n')"
               ver=$(node -p "require('./$dir/package.json').version")
               echo " -> new version for $name: $ver"
             done
