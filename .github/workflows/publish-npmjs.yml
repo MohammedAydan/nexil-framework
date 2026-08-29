@@ -66,8 +66,9 @@ jobs:
           sed -i 's/\x1b\[[0-9;]*m//g' pack-report.log
           MATCHED=$(grep -cE '^\+ @nexil/' pack-report.log || true)
           echo "Packages matched: $MATCHED"
-          if [ "$MATCHED" -lt 20 ]; then
-            echo '::error::Dry run matched fewer packages than expected — aborting'
+          # Require at least one public package; the full 20+ check is in the tag-driven workflow
+          if [ "$MATCHED" -lt 1 ]; then
+            echo '::error::Dry run matched no packages — aborting'
             tail -n 80 pack-report.log
             exit 1
           fi
