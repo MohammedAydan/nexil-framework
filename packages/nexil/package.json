@@ -1,6 +1,6 @@
 {
   "name": "@nexil/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Ultra-fast, zero-VDOM, fine-grained reactive fullstack web framework",
   "type": "module",
   "license": "MIT",

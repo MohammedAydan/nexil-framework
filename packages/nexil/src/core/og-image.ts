@@ -1,7 +1,6 @@
 import { createHash } from 'node:crypto'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import sharp from 'sharp'
 
 export interface OgImageOptions {
   readonly title: string
@@ -75,6 +74,7 @@ export async function generateOgImage(
     return { fileName, bytes, cacheHit: true, svg }
   } catch {
     await mkdir(outputDir, { recursive: true })
+    const { default: sharp } = await import('sharp')
     const bytes = new Uint8Array(await sharp(Buffer.from(svg)).png().toBuffer())
     await writeFile(outputPath, bytes)
     return { fileName, bytes, cacheHit: false, svg }
