@@ -13,7 +13,7 @@
     "examples/*"
   ],
   "scripts": {
-    "build": "pnpm -r --sort build",
+    "build": "pnpm --filter \"./packages/*\" build && pnpm --filter \"./examples/*\" build",
     "check": "pnpm build && pnpm typecheck && pnpm lint && pnpm test",
     "clean": "node scripts/clean.mjs",
     "format:check": "prettier --check .",

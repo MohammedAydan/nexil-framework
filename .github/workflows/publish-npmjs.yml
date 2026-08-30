@@ -95,7 +95,7 @@ jobs:
         run: |
           pnpm publish:npm:dry > pack-report.log 2>&1 || { cat pack-report.log; exit 1; }
           sed -i 's/\x1b\[[0-9;]*m//g' pack-report.log
-          MATCHED=$(grep -cE '^\+ @nexil/' pack-report.log || true)
+          MATCHED=$(grep -cE '^\+ (@nexil/|nexil|create-nexil)' pack-report.log || true)
           echo "Packages matched: $MATCHED"
           if [ "$MATCHED" -lt 1 ]; then
             echo '::error::Dry run matched no packages — aborting'
@@ -123,6 +123,7 @@ jobs:
       # Without set -o pipefail, `pnpm ... | tee` always reports success
       # because tee exits 0 even when pnpm fails with E403.
       - name: Publish public packages to npmjs (dependency order)
+        id: publish
         run: |
           set -o pipefail
           pnpm -r publish --access public --no-git-checks --no-provenance 2>&1 | tee publish.log
@@ -134,7 +135,7 @@ jobs:
       # Always surface real publish failures (especially the 2FA case)
       # so the job never looks successful when nothing was published.
       - name: Fail loudly on any publish error
-        if: always()
+        if: always() && steps.publish.outcome != 'skipped'
         run: |
           if [ ! -f publish.log ]; then
             echo "::error::publish.log was not created"

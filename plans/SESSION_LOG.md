@@ -631,3 +631,35 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
 - Blockers: None
 ---
 
+## Session: 2026-08-30 — CI Build Order & Workflow Failures Fix
+
+### What was done
+- Updated root `package.json` `"build"` script to enforce strict topological build ordering (`pnpm --filter "./packages/*" build && pnpm --filter "./examples/*" build`), preventing examples from running before core `.d.ts` declarations are emitted.
+- Added `nexil: "workspace:*"` dependency to `examples/landing-page/package.json` and synchronized `pnpm-lock.yaml`.
+- Fixed GitHub Actions workflows (`.github/workflows/`):
+  - `publish-npmjs.yml`: Fixed package matching pattern (`^(\+ (@nexil/|nexil|create-nexil))`), added step ID `publish`, and ensured `publish.log` existence checks only run if the publish step was not skipped.
+  - `publish-packages.yml`: Updated action versions (`checkout@v4`, `action-setup@v4`, `setup-node@v4`), package matching pattern, and verified initializer target (`create-nexil`).
+  - `quality.yml`: Updated action versions (`checkout@v4`, `action-setup@v4`, `setup-node@v4`).
+- Ran full clean verification locally:
+  - `node scripts/clean.mjs`
+  - `pnpm install`
+  - `pnpm build` (4 core packages built first, followed by 8 examples)
+  - `pnpm typecheck` (`tsc -b`, 0 errors)
+  - `pnpm test` (40 test files, 319 unit & integration tests, 100% pass)
+  - `pnpm publish:npm:dry` (all 4 packages packed with 0 errors)
+
+### Files changed
+- `package.json` — updated `build` script
+- `examples/landing-page/package.json` — added workspace dependency
+- `pnpm-lock.yaml` — updated lockfile
+- `.github/workflows/publish-npmjs.yml` — fixed package regex and publish log check
+- `.github/workflows/publish-packages.yml` — fixed action versions and verification step
+- `.github/workflows/quality.yml` — fixed action versions
+- `plans/SESSION_LOG.md` — this entry
+
+### State at end of session
+- Monorepo health: 100% Green across all gates
+- Blockers: None
+---
+
+

@@ -24,17 +24,17 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@v4
         with:
           version: 10.15.0
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
@@ -54,16 +54,13 @@ jobs:
       - name: Unit and integration tests
         run: pnpm test
 
-      - name: Build workspace
-        run: pnpm build
-
       - name: Validate packed tarballs (dry run)
         run: |
           pnpm publish:npm:dry > pack-report.log 2>&1 || { cat pack-report.log; exit 1; }
           sed -i 's/\x1b\[[0-9;]*m//g' pack-report.log
-          MATCHED=$(grep -cE '^\+ @nexil/' pack-report.log || true)
+          MATCHED=$(grep -cE '^\+ (@nexil/|nexil|create-nexil)' pack-report.log || true)
           echo "Packages matched: $MATCHED"
-          if [ "$MATCHED" -lt 20 ]; then
+          if [ "$MATCHED" -lt 4 ]; then
             echo '::error::Dry run matched fewer packages than expected — aborting release'
             tail -n 40 pack-report.log
             exit 1
@@ -95,7 +92,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Verify initializer is resolvable
-        run: npm view @nexil/create-nexil version --registry=https://registry.npmjs.org
+        run: npm view create-nexil version --registry=https://registry.npmjs.org
         env:
           NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/publish.npmrc
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

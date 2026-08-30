@@ -91,7 +91,11 @@ importers:
         specifier: workspace:*
         version: link:../../packages/nexil
 
-  examples/landing-page: {}
+  examples/landing-page:
+    dependencies:
+      nexil:
+        specifier: workspace:*
+        version: link:../../packages/nexil
 
   examples/nexil-showcase:
     dependencies:
