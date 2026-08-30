@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@nexil/cli": "^0.1.0",
-    "nexil": "^0.1.0"
+    "@nexil/nexil": "^0.1.0"
   },
   "devDependencies": {
     "@nexil/vite-plugin": "^0.1.0",

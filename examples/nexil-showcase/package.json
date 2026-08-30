@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@nexil/cli": "workspace:*",
-    "nexil": "workspace:*"
+    "@nexil/nexil": "workspace:*"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

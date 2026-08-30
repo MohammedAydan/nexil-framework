@@ -64,7 +64,7 @@ export function resolveStarterOptions(options: StarterOptions): ResolvedStarterO
 function packageJson(options: ResolvedStarterOptions): string {
   const dependencies: Record<string, string> = {
     '@nexil/cli': options.dependencyVersion,
-    nexil: options.dependencyVersion,
+    '@nexil/nexil': options.dependencyVersion,
   }
   const devDependencies: Record<string, string> = {
     '@nexil/vite-plugin': options.dependencyVersion,
@@ -114,7 +114,7 @@ function tsconfig(options: ResolvedStarterOptions): string {
         module: 'ESNext',
         moduleResolution: 'Bundler',
         jsx: 'react-jsx',
-        jsxImportSource: 'nexil',
+        jsxImportSource: '@nexil/nexil',
         allowJs: options.language === 'js',
         strict: true,
         skipLibCheck: true,

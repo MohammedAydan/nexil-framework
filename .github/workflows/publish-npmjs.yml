@@ -95,10 +95,10 @@ jobs:
         run: |
           pnpm publish:npm:dry > pack-report.log 2>&1 || { cat pack-report.log; exit 1; }
           sed -i 's/\x1b\[[0-9;]*m//g' pack-report.log
-          MATCHED=$(grep -cE '^\+ (@nexil/|nexil|create-nexil)' pack-report.log || true)
+          MATCHED=$(grep -cE '^\+ (@nexil/|create-nexil)' pack-report.log || true)
           echo "Packages matched: $MATCHED"
-          if [ "$MATCHED" -lt 1 ]; then
-            echo '::error::Dry run matched no packages — aborting'
+          if [ "$MATCHED" -lt 4 ]; then
+            echo '::error::Dry run matched fewer packages than expected — aborting'
             tail -n 80 pack-report.log
             exit 1
           fi

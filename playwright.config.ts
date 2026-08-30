@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
   testDir: './tests/e2e',
+  testMatch: '**/*.spec.ts',
   timeout: 30_000,
   fullyParallel: true,
   forbidOnly: true,
@@ -11,7 +12,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
     ...devices['Desktop Chrome'],
   },
-  testIgnore: ['**/deno-runtime.spec.ts'],
+  testIgnore: ['**/deno-runtime.spec.ts', '**/*.test.ts'],
   // Temp-workspace fixtures (engine-proof, state-scope) mutate framework
   // package symlinks during their installs; parallel spec files would race
   // those mutations against each other and the showcase dev server.

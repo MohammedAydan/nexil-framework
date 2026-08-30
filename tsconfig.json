@@ -29,6 +29,8 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["node"],
     "paths": {
+      "@nexil/nexil": ["./packages/nexil/src/index.ts"],
+      "@nexil/nexil/*": ["./packages/nexil/src/*"],
       "nexil": ["./packages/nexil/src/index.ts"],
       "nexil/*": ["./packages/nexil/src/*"],
       "@nexil/vite-plugin": ["./packages/vite-plugin/src/index.ts"],

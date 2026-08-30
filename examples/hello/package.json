@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "nexil": "workspace:*"
+    "@nexil/nexil": "workspace:*"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

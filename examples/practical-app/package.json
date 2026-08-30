@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@nexil/cli": "workspace:*",
-    "nexil": "workspace:*"
+    "@nexil/nexil": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.0",

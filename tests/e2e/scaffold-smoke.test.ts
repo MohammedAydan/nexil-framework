@@ -23,7 +23,7 @@ describe('E2E Monorepo Smoke Test — Scaffold & Template Integrity', () => {
       const pkgRaw = await readFile(join(directory, 'package.json'), 'utf8')
       const pkg = JSON.parse(pkgRaw)
       expect(pkg.name).toBe('test-blank-app')
-      expect(pkg.dependencies['nexil']).toBeDefined()
+      expect(pkg.dependencies['@nexil/nexil'] || pkg.dependencies['nexil']).toBeDefined()
     } finally {
       await rm(parent, { recursive: true, force: true })
     }
@@ -61,7 +61,7 @@ describe('E2E Monorepo Smoke Test — Scaffold & Template Integrity', () => {
       const pkgRaw = await readFile(join(directory, 'package.json'), 'utf8')
       const pkg = JSON.parse(pkgRaw)
       expect(pkg.name).toBe('test-fullstack-app')
-      expect(pkg.dependencies['nexil']).toBeDefined()
+      expect(pkg.dependencies['@nexil/nexil'] || pkg.dependencies['nexil']).toBeDefined()
       expect(pkg.dependencies['@nexil/cli']).toBeDefined()
 
       const layoutContent = await readFile(join(directory, 'src', 'routes', '_layout.tsx'), 'utf8')

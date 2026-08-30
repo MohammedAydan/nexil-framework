@@ -5,8 +5,8 @@
   "dependencies": {
     "@babel/parser": "^7.29.8",
     "@babel/traverse": "^7.29.8",
+    "@nexil/nexil": "workspace:*",
     "magic-string": "^0.30.21",
-    "nexil": "workspace:*",
     "vite": "^7.3.6"
   },
   "exports": {

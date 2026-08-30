@@ -57,13 +57,13 @@ importers:
 
   examples/basic-app:
     dependencies:
-      nexil:
+      '@nexil/nexil':
         specifier: workspace:*
         version: link:../../packages/nexil
 
   examples/blog:
     dependencies:
-      nexil:
+      '@nexil/nexil':
         specifier: workspace:*
         version: link:../../packages/nexil
       zod:
@@ -72,28 +72,28 @@ importers:
 
   examples/ecommerce:
     dependencies:
+      '@nexil/nexil':
+        specifier: workspace:*
+        version: link:../../packages/nexil
       axios:
         specifier: ^1.11.0
         version: 1.19.0
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@opentelemetry/api@1.9.1)
-      nexil:
-        specifier: workspace:*
-        version: link:../../packages/nexil
       zod:
         specifier: ^4.1.0
         version: 4.4.3
 
   examples/hello:
     dependencies:
-      nexil:
+      '@nexil/nexil':
         specifier: workspace:*
         version: link:../../packages/nexil
 
   examples/landing-page:
     dependencies:
-      nexil:
+      '@nexil/nexil':
         specifier: workspace:*
         version: link:../../packages/nexil
 
@@ -102,7 +102,7 @@ importers:
       '@nexil/cli':
         specifier: workspace:*
         version: link:../../packages/cli
-      nexil:
+      '@nexil/nexil':
         specifier: workspace:*
         version: link:../../packages/nexil
     devDependencies:
@@ -124,7 +124,7 @@ importers:
       '@nexil/cli':
         specifier: workspace:*
         version: link:../../packages/cli
-      nexil:
+      '@nexil/nexil':
         specifier: workspace:*
         version: link:../../packages/nexil
     devDependencies:
@@ -143,7 +143,7 @@ importers:
       '@nexil/cli':
         specifier: workspace:*
         version: link:../../packages/cli
-      nexil:
+      '@nexil/nexil':
         specifier: workspace:*
         version: link:../../packages/nexil
     devDependencies:
@@ -159,12 +159,12 @@ importers:
 
   packages/cli:
     dependencies:
+      '@nexil/nexil':
+        specifier: workspace:*
+        version: link:../nexil
       '@nexil/vite-plugin':
         specifier: workspace:*
         version: link:../vite-plugin
-      nexil:
-        specifier: workspace:*
-        version: link:../nexil
       vite:
         specifier: ^7.3.6
         version: 7.3.6(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0)
@@ -188,12 +188,12 @@ importers:
       '@babel/traverse':
         specifier: ^7.29.8
         version: 7.29.8
+      '@nexil/nexil':
+        specifier: workspace:*
+        version: link:../nexil
       magic-string:
         specifier: ^0.30.21
         version: 0.30.21
-      nexil:
-        specifier: workspace:*
-        version: link:../nexil
       vite:
         specifier: ^7.3.6
         version: 7.3.6(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0)

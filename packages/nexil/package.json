@@ -1,5 +1,5 @@
 {
-  "name": "nexil",
+  "name": "@nexil/nexil",
   "version": "0.1.0",
   "description": "Ultra-fast, zero-VDOM, fine-grained reactive fullstack web framework",
   "type": "module",

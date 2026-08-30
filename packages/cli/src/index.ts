@@ -6,8 +6,8 @@ import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs
 import { dirname, extname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { build, createServer, transformWithEsbuild } from 'vite'
-import { createRequestContext, runWithScope, type Child, type ComponentContext } from 'nexil'
-import { __clearAccessedStoreIds, __getStoresScriptTag } from 'nexil'
+import { createRequestContext, runWithScope, type Child, type ComponentContext } from '@nexil/nexil'
+import { __clearAccessedStoreIds, __getStoresScriptTag } from '@nexil/nexil'
 import { assertBudget } from '@nexil/vite-plugin'
 import nexil, {
   externalizeScopeAttributes,
@@ -17,9 +17,9 @@ import nexil, {
   transformNexilSource,
 } from '@nexil/vite-plugin'
 import type { ExternalScopePayload } from '@nexil/vite-plugin'
-import { escapeHtml, renderToString } from 'nexil/server'
-import { generateOgImage } from 'nexil'
-import { buildImageVariants, imageVariantFileBase } from 'nexil'
+import { escapeHtml, renderToString } from '@nexil/nexil/server'
+import { generateOgImage } from '@nexil/nexil'
+import { buildImageVariants, imageVariantFileBase } from '@nexil/nexil'
 import {
   buildRobots,
   buildSitemap,
@@ -28,22 +28,45 @@ import {
   generateFeed,
   renderHead,
   withCanonical,
-} from 'nexil'
-import { matchRoute, NEXIL_NAVIGATION_RUNTIME, routeFromFile } from 'nexil/router'
+} from '@nexil/nexil'
+import { matchRoute, NEXIL_NAVIGATION_RUNTIME, routeFromFile } from '@nexil/nexil/router'
 import { nexilSSRPlugin } from './dev-server.js'
 import { createServer as createProductionServer } from './serve.js'
 import type { NexilConfig, RedirectRule } from './serve.js'
-import type { SeoMetadata } from 'nexil'
+import type { SeoMetadata } from '@nexil/nexil'
 export { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 import { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 
 const FRAMEWORK_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..')
 
-function workspaceAliases(): readonly { readonly find: string; readonly replacement: string }[] {
+function workspaceAliases(): readonly {
+  readonly find: string | RegExp
+  readonly replacement: string
+}[] {
   if (!existsSync(join(FRAMEWORK_ROOT, 'pnpm-workspace.yaml'))) return []
   const nexilSrc = join(FRAMEWORK_ROOT, 'packages/nexil/src')
   const vitePluginSrc = join(FRAMEWORK_ROOT, 'packages/vite-plugin/src')
   return [
+    // @nexil/nexil subpaths – use exact strings for subpaths (prefix match is fine here)
+    {
+      find: '@nexil/nexil/jsx-runtime/jsx-dev-runtime',
+      replacement: join(nexilSrc, 'jsx-runtime/jsx-runtime.ts'),
+    },
+    {
+      find: '@nexil/nexil/jsx-runtime/jsx-runtime',
+      replacement: join(nexilSrc, 'jsx-runtime/jsx-runtime.ts'),
+    },
+    {
+      find: '@nexil/nexil/jsx-dev-runtime',
+      replacement: join(nexilSrc, 'jsx-runtime/jsx-runtime.ts'),
+    },
+    { find: '@nexil/nexil/jsx-runtime', replacement: join(nexilSrc, 'jsx-runtime/index.ts') },
+    { find: '@nexil/nexil/client', replacement: join(nexilSrc, 'client/index.ts') },
+    { find: '@nexil/nexil/server', replacement: join(nexilSrc, 'server/index.ts') },
+    { find: '@nexil/nexil/router', replacement: join(nexilSrc, 'router/index.ts') },
+    // Use RegExp for exact match on the bare package to avoid prefix mis-match
+    { find: /^@nexil\/nexil$/, replacement: join(nexilSrc, 'index.ts') },
+    // Legacy nexil/* aliases (kept for backward compat with user source still importing 'nexil')
     {
       find: 'nexil/jsx-runtime/jsx-dev-runtime',
       replacement: join(nexilSrc, 'jsx-runtime/jsx-runtime.ts'),
@@ -58,7 +81,7 @@ function workspaceAliases(): readonly { readonly find: string; readonly replacem
     { find: 'nexil/server', replacement: join(nexilSrc, 'server/index.ts') },
     { find: 'nexil/router', replacement: join(nexilSrc, 'router/index.ts') },
     { find: '@nexil/vite-plugin', replacement: join(vitePluginSrc, 'index.ts') },
-    { find: 'nexil', replacement: join(nexilSrc, 'index.ts') },
+    { find: /^nexil$/, replacement: join(nexilSrc, 'index.ts') },
   ]
 }
 

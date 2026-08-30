@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@nexil/cli": "workspace:*",
-    "nexil": "workspace:*"
+    "@nexil/nexil": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.8.0",

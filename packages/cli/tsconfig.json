@@ -7,6 +7,12 @@
     "outDir": "dist",
     "rootDir": "src",
     "paths": {
+      "@nexil/nexil": ["../nexil/src/index.ts"],
+      "@nexil/nexil/server": ["../nexil/src/server/index.ts"],
+      "@nexil/nexil/router": ["../nexil/src/router/index.ts"],
+      "@nexil/nexil/client": ["../nexil/src/client/index.ts"],
+      "@nexil/nexil/jsx-runtime": ["../nexil/src/jsx-runtime/index.ts"],
+      "@nexil/nexil/jsx-dev-runtime": ["../nexil/src/jsx-runtime/jsx-runtime.ts"],
       "nexil": ["../nexil/src/index.ts"],
       "nexil/server": ["../nexil/src/server/index.ts"],
       "nexil/router": ["../nexil/src/router/index.ts"],
