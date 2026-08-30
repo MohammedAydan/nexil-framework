@@ -23,7 +23,7 @@
     "test:edge": "node tests/parity/miniflare-smoke.mjs",
     "test:parity": "vitest run tests/parity/runtime-parity.test.ts",
     "test:node-runtime": "node tests/parity/node-smoke.mjs",
-    "test:deno": "deno run --allow-read tests/parity/deno-smoke.ts",
+    "test:deno": "deno run --allow-read --allow-env tests/parity/deno-smoke.ts",
     "test:deno:e2e": "deno run --allow-read --allow-env tests/e2e/deno-runtime.spec.ts",
     "typecheck": "tsc -b",
     "security": "pnpm audit --audit-level high",

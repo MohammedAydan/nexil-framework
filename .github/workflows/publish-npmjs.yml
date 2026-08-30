@@ -135,9 +135,9 @@ jobs:
             exit 1
           fi
           # Verify tarball entry files for each package contain expected dist artifacts
-          for check in "package: @nexil/core" "package: @nexil/vite-plugin" "package: @nexil/cli" "package: create-nexil"; do
-            if ! grep -q "$check" pack-report.log; then
-              echo "::error::Missing tarball header for $check"
+          for pkg_name in "@nexil/core" "@nexil/vite-plugin" "@nexil/cli" "create-nexil"; do
+            if ! grep -qF "$pkg_name" pack-report.log; then
+              echo "::error::Missing tarball header for package: $pkg_name"
               exit 1
             fi
           done
