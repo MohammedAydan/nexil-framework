@@ -1,13 +1,14 @@
-﻿export {
+export {
   assertScaffoldProjectName,
   isContainedPath,
   parseScaffoldArgs,
   scaffoldProject,
-} from '@nexil/starter/node'
+} from './starter/node.js'
 export type {
   PathOperations,
   ResolvedScaffoldOptions,
   ScaffoldLanguage,
   ScaffoldOptions,
   ScaffoldTemplate,
-} from '@nexil/starter/node'
+} from './starter/node.js'
+

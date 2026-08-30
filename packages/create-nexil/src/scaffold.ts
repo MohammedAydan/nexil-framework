@@ -1,15 +1,16 @@
-﻿export {
+export {
   assertScaffoldProjectName,
   isContainedPath,
   parseScaffoldArgs,
   scaffoldProject,
-} from '@nexil/starter/node'
-export { createStarterFiles, resolveStarterOptions } from '@nexil/starter'
+} from './starter/node.js'
+export { createStarterFiles, resolveStarterOptions } from './starter/index.js'
 export type {
   PathOperations,
   ResolvedScaffoldOptions,
   ScaffoldLanguage,
   ScaffoldOptions,
   ScaffoldTemplate,
-} from '@nexil/starter/node'
-export type { StarterFile, StarterOptions, ResolvedStarterOptions } from '@nexil/starter'
+} from './starter/node.js'
+export type { StarterFile, StarterOptions, ResolvedStarterOptions } from './starter/index.js'
+

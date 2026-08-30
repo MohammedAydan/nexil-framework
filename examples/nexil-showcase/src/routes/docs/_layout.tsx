@@ -1,4 +1,4 @@
-import type { Child } from '@nexil/core'
+import type { Child } from 'nexil'
 
 export const metadata = {
   titleTemplate: '%s · Docs · Nexil',

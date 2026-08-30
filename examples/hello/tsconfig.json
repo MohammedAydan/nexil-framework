@@ -6,7 +6,8 @@
     "outDir": "dist",
     "rootDir": "src",
     "jsx": "react-jsx",
-    "jsxImportSource": "@nexil/jsx-runtime"
+    "jsxImportSource": "nexil"
   },
+  "references": [{ "path": "../../packages/nexil" }],
   "include": ["src/**/*.tsx"]
 }

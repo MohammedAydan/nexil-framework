@@ -1,0 +1,57 @@
+{
+  "name": "nexil",
+  "version": "0.1.0",
+  "description": "Ultra-fast, zero-VDOM, fine-grained reactive fullstack web framework",
+  "type": "module",
+  "license": "MIT",
+  "author": "Mohammed Aydan <mohammed@nexil.dev>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MohammedAydan/nexil-framework.git",
+    "directory": "packages/nexil"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./jsx-runtime": {
+      "types": "./dist/jsx-runtime/jsx-runtime.d.ts",
+      "default": "./dist/jsx-runtime/jsx-runtime.js"
+    },
+    "./jsx-dev-runtime": {
+      "types": "./dist/jsx-runtime/jsx-runtime.d.ts",
+      "default": "./dist/jsx-runtime/jsx-runtime.js"
+    },
+    "./client": {
+      "types": "./dist/client/index.d.ts",
+      "default": "./dist/client/index.js"
+    },
+    "./server": {
+      "types": "./dist/server/index.d.ts",
+      "default": "./dist/server/index.js"
+    },
+    "./router": {
+      "types": "./dist/router/index.d.ts",
+      "default": "./dist/router/index.js"
+    }
+  },
+  "dependencies": {
+    "sharp": "0.35.3",
+    "tailwind-merge": "^3.0.2"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "clean": "node -e \"const fs=require('fs');for(const f of ['dist','tsconfig.tsbuildinfo']){try{fs.rmSync(f,{recursive:true,force:true})}catch(e){}}\""
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.test.*",
+    "README.md"
+  ]
+}

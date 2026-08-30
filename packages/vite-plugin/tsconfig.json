@@ -8,5 +8,6 @@
     "rootDir": "src"
   },
   "include": ["src/**/*.ts"],
-  "references": [{ "path": "../compiler" }]
+  "exclude": ["src/**/*.test.ts"],
+  "references": [{ "path": "../nexil" }]
 }

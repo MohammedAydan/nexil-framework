@@ -6,10 +6,17 @@ import traverseModule from '@babel/traverse'
 import MagicString from 'magic-string'
 import { transformWithEsbuild } from 'vite'
 import type { Plugin } from 'vite'
-import { findSecretExposure, validateImport } from '@nexil/compiler'
+import { findSecretExposure, validateImport } from './boundaries.js'
 import { RESUMABILITY_BINDINGS, RESUMABILITY_BOOTSTRAP, RESUMABILITY_FORMS } from './bootstrap.js'
 import { RESUMABILITY_BOOTSTRAP_EXTERNAL } from './external-bootstrap.js'
 import { RESUMABILITY_BINDINGS_EXTERNAL } from './external-bindings.js'
+import {
+  discoverStores,
+  generateVirtualBarrel,
+  writeStoresDTS,
+  wrapActionsWithBatch,
+} from './stores.js'
+import type { StoreDescriptor } from './stores.js'
 
 const traverse = ((traverseModule as unknown as { default?: typeof traverseModule }).default ??
   traverseModule) as typeof traverseModule
@@ -60,6 +67,10 @@ export interface ScopeCapture {
   readonly endpoint?: string
   /** Store lifetime after a Link outlet replacement; defaults to the route. */
   readonly lifetime?: ScopeCaptureLifetime
+  /** For `store.count` member bindings: the store id (e.g. `cart`, `admin/settings`) */
+  readonly storeId?: string
+  /** For `store.count` member bindings: the dot-joined path inside the store (e.g. `count`, `user.profile.name`) */
+  readonly storePath?: string
 }
 
 export type DomBindingTarget =
@@ -383,33 +394,242 @@ function evaluateStaticLiteral(node: unknown): ScopeCaptureInitial | undefined {
   return undefined
 }
 
+function getAtPathStatic(value: unknown, path: readonly string[]): unknown {
+  let cur: unknown = value
+  for (const seg of path) {
+    if (cur == null || typeof cur !== 'object' || Array.isArray(cur)) return undefined
+    cur = (cur as Record<string, unknown>)[seg]
+  }
+  return cur
+}
+
+function tryReadStoreState(
+  storeId: string,
+  currentFileId?: string,
+): ScopeCaptureInitial | undefined {
+  if (!currentFileId) return undefined
+  try {
+    // Find project root by locating `src/stores` prefix in currentFileId (handles both / and \ on Windows)
+    const normalized = currentFileId.replace(/\\/g, '/')
+    const idx = normalized.lastIndexOf('/src/')
+    const root = idx >= 0 ? currentFileId.slice(0, idx) : dirname(currentFileId)
+    const candidates = [
+      resolve(root, 'src', 'stores', `${storeId}.ts`),
+      resolve(root, 'src', 'stores', `${storeId}.js`),
+      resolve(root, 'src', 'stores', `${storeId}/store.ts`),
+      resolve(root, 'src', 'stores', `${storeId}/index.ts`),
+      resolve(root, `src/stores/${storeId}.ts`),
+      resolve(root, `src/stores/${storeId}/store.ts`),
+    ]
+    for (const p of candidates) {
+      try {
+        const content = readFileSync(p, 'utf8')
+        // Look for `state: () => ({ ... })` or `state: () => { return { ... } }`
+        const stateMatch = /state\s*:\s*\(\)\s*=>\s*\(?\s*(\{[\s\S]*?\})\s*\)?[,}]/.exec(content)
+        if (stateMatch?.[1]) {
+          try {
+            // Try to evaluate as JSON after stripping TS types and single quotes
+            const jsonish = stateMatch[1]
+              .replace(/\/\/.*$/gm, '')
+              .replace(/\/\*[\s\S]*?\*\//g, '')
+              .replace(/'/g, '"')
+              .replace(/(\w+)\s*:/g, '"$1":')
+              .replace(/,(\s*[}\]])/g, '$1')
+            const parsed = JSON.parse(jsonish) as ScopeCaptureInitial
+            return parsed
+          } catch {}
+        }
+        // Fallback: try evaluate via AST
+        const ast = parseSource(content, p)
+        let found: ScopeCaptureInitial | undefined
+        walk(ast, (node) => {
+          if (found !== undefined) return
+          if (node.type !== 'ObjectExpression') return
+          // Look for state property inside defineStore
+          const props =
+            (
+              node as unknown as {
+                properties?: Array<{ key?: { name?: string }; value?: unknown }>
+              }
+            ).properties ?? []
+          for (const prop of props) {
+            const key = (prop as unknown as { key?: { name?: string } }).key?.name
+            if (
+              key === 'state' &&
+              (prop as unknown as { value?: { type?: string } }).value?.type ===
+                'ArrowFunctionExpression'
+            ) {
+              const fn = (prop as unknown as { value?: { body?: unknown } }).value as {
+                body?: unknown
+              }
+              const body = fn.body as { type?: string; properties?: unknown[]; body?: unknown }
+              if (body && body.type === 'ObjectExpression') {
+                found = evaluateStaticLiteral(body as unknown) as ScopeCaptureInitial
+              } else if (body && body.type === 'BlockStatement') {
+                // `state: () => { return { ... } }`
+                const ret = (
+                  body as unknown as { body?: Array<{ type?: string; argument?: unknown }> }
+                ).body?.find((s) => s.type === 'ReturnStatement')
+                if (ret)
+                  found = evaluateStaticLiteral(
+                    (ret as unknown as { argument?: unknown }).argument,
+                  ) as ScopeCaptureInitial
+              }
+            }
+          }
+        })
+        if (found !== undefined) return found
+      } catch {}
+    }
+  } catch {}
+  return undefined
+}
+
+function resolveStoreIdForBase(
+  baseName: string,
+  source: string,
+  importMap?: ReadonlyMap<string, { source: string; imported: string; kind: string }>,
+  fileId?: string,
+): string | undefined {
+  // Check `const base = useXStore()`
+  const hookMatch = new RegExp(
+    `(?:const|let|var)\\s+${escapeRegExp(baseName)}\\s*=\\s*(use[A-Za-z0-9_]+Store)\\s*\\(`,
+  ).exec(source.replace(/\s+/g, ' '))
+  if (hookMatch) {
+    const hook = hookMatch[1] ?? ''
+    const imp = importMap?.get(hook)
+    if (imp && imp.source.startsWith('$stores/')) {
+      return imp.source.slice('$stores/'.length)
+    }
+    // Try to find hook definition in same file: `const useXStore = defineStore('id', ...)`
+    const hookDef = new RegExp(
+      `(?:const|let|var)\\s+${escapeRegExp(hook)}\\s*=\\s*(?:defineStore|createStore)\\s*\\(\\s*['"]([^'"]+)['"]`,
+    ).exec(source)
+    if (hookDef?.[1]) return hookDef[1]
+    const hookCreate = new RegExp(
+      `(?:const|let|var)\\s+${escapeRegExp(hook)}\\s*=\\s*createStore\\s*\\(\\s*\\{[^}]*id\\s*:\\s*['"]([^'"]+)['"]`,
+    ).exec(source)
+    if (hookCreate?.[1]) return hookCreate[1]
+    // Fallback: derive from hook name
+    if (hook.startsWith('use') && hook.endsWith('Store')) {
+      const derived = hook.slice(3, -5)
+      // Convert PascalCase to kebab? For now lower case first char
+      return derived.charAt(0).toLowerCase() + derived.slice(1)
+    }
+  }
+  // Check `const base = createStore({id: '...'})` directly
+  const directMatch = new RegExp(
+    `(?:const|let|var)\\s+${escapeRegExp(baseName)}\\s*=\\s*createStore\\s*\\(\\s*\\{[^}]*id\\s*:\\s*['"]([^'"]+)['"]`,
+  ).exec(source)
+  if (directMatch?.[1]) return directMatch[1]
+  return undefined
+}
+
 /**
  * Extracts a JSON-literal initializer for a named signal/store/action
  * declaration so the compiled page can serialize it into `data-nx-scope`.
  * Returns undefined when the initializer is not a pure JSON literal.
  */
-function extractStaticInitial(source: string, name: string): ScopeCaptureInitial | undefined {
+function extractStaticInitial(
+  source: string,
+  name: string,
+  fileId?: string,
+  importMap?: ReadonlyMap<string, { source: string; imported: string; kind: string }>,
+): ScopeCaptureInitial | undefined {
+  const dotIndex = name.indexOf('.')
+  const baseName = dotIndex >= 0 ? name.slice(0, dotIndex) : name
+  const propPath = dotIndex >= 0 ? name.slice(dotIndex + 1).split('.') : undefined
   const ast = parseSource(source, 'nexil-initializer.tsx')
   let initial: ScopeCaptureInitial | undefined
   walk(ast, (node) => {
     if (initial !== undefined || node.type !== 'VariableDeclarator') return
     const declaration = node as AstNode & { readonly id?: AstNode; readonly init?: AstNode }
     const id = declaration.id
-    const isNamed = id?.type === 'Identifier' && astIdentifierName(id) === name
+    const isNamed = id?.type === 'Identifier' && astIdentifierName(id) === baseName
     const isTuple =
       id?.type === 'ArrayPattern' &&
       Array.isArray((id as AstNode & { readonly elements?: readonly AstNode[] }).elements) &&
       (id as AstNode & { readonly elements: readonly AstNode[] }).elements.some(
-        (element) => element?.type === 'Identifier' && astIdentifierName(element) === name,
+        (element) => element?.type === 'Identifier' && astIdentifierName(element) === baseName,
       )
     if (!isNamed && !isTuple) return
     const init = declaration.init
     if (!init || init.type !== 'CallExpression') return
     const callee = (init as AstNode & { readonly callee?: AstNode }).callee
     const calleeName = astIdentifierName(callee)
+    // Handle `useCartStore()` where cartStore is from defineStore/createStore — look up the store's state
+    if (calleeName?.endsWith('Store') && calleeName.startsWith('use')) {
+      const storeId =
+        resolveStoreIdForBase(baseName, source, importMap, fileId) ??
+        calleeName.slice(3, -5).toLowerCase()
+      if (propPath) {
+        // Try to get full initial for the store, then traverse path
+        let storeInitial: ScopeCaptureInitial | undefined
+        // First try to find defineStore in same file
+        const storeDefMatch = new RegExp(
+          `defineStore\\s*\\(\\s*['"]${escapeRegExp(storeId)}['"]\\s*,\\s*\\{[\\s\\S]*?state\\s*:\\s*\\(\\s*\\)\\s*=>\\s*\\(?\\s*(\\{[\\s\\S]*?\\})\\s*\\)?\\s*[,}]`,
+        ).exec(source)
+        if (storeDefMatch?.[1]) {
+          try {
+            const jsonish = storeDefMatch[1]
+              .replace(/'/g, '"')
+              .replace(/(\w+)\s*:/g, '"$1":')
+              .replace(/,(\s*[}\]])/g, '$1')
+            storeInitial = JSON.parse(jsonish) as ScopeCaptureInitial
+          } catch {}
+        }
+        if (storeInitial === undefined) {
+          storeInitial = tryReadStoreState(storeId, fileId)
+        }
+        if (storeInitial && typeof storeInitial === 'object' && !Array.isArray(storeInitial)) {
+          const leaf = getAtPathStatic(storeInitial as Record<string, unknown>, propPath)
+          if (leaf !== undefined) {
+            initial = leaf as ScopeCaptureInitial
+            return
+          }
+        }
+        // Fallback placeholder — actual value will be correct at runtime via __NEXIL_STORES__
+        initial = 0 as unknown as ScopeCaptureInitial
+        return
+      }
+      let storeInitial: ScopeCaptureInitial | undefined
+      const storeDefMatch = new RegExp(
+        `defineStore\\s*\\(\\s*['"]${escapeRegExp(storeId)}['"]\\s*,\\s*\\{[\\s\\S]*?state\\s*:\\s*\\(\\s*\\)\\s*=>\\s*\\(?\\s*(\\{[\\s\\S]*?\\})\\s*\\)?\\s*[,}]`,
+      ).exec(source)
+      if (storeDefMatch?.[1]) {
+        try {
+          const jsonish = storeDefMatch[1]
+            .replace(/'/g, '"')
+            .replace(/(\w+)\s*:/g, '"$1":')
+            .replace(/,(\s*[}\]])/g, '$1')
+          storeInitial = JSON.parse(jsonish) as ScopeCaptureInitial
+        } catch {}
+      }
+      if (storeInitial === undefined) {
+        storeInitial = tryReadStoreState(storeId, fileId)
+      }
+      if (storeInitial !== undefined) {
+        initial = storeInitial
+        return
+      }
+      if (initial === undefined) {
+        initial = { count: 0 } as unknown as ScopeCaptureInitial
+      }
+      return
+    }
     if (!['state', 'createStore', 'computed', 'useState'].includes(calleeName ?? '')) return
     const args = (init as AstNode & { readonly arguments?: readonly AstNode[] }).arguments ?? []
-    initial = evaluateStaticLiteral(args[0])
+    const fullInitial = evaluateStaticLiteral(args[0])
+    if (propPath && fullInitial && typeof fullInitial === 'object' && !Array.isArray(fullInitial)) {
+      const leaf = getAtPathStatic(fullInitial as Record<string, unknown>, propPath)
+      if (leaf !== undefined) {
+        initial = leaf as ScopeCaptureInitial
+      } else {
+        initial = undefined
+      }
+    } else {
+      initial = fullInitial
+    }
   })
   return initial
 }
@@ -540,27 +760,52 @@ function classifyScopeCaptures(
   const captures: ScopeCapture[] = []
   const compactSource = source.replace(/\s+/g, ' ')
   for (const name of names) {
+    // Handle `store.count` where `store` is a store instance (e.g., `cartStore.count`)
+    const dotIndex = name.indexOf('.')
+    const baseName = dotIndex >= 0 ? name.slice(0, dotIndex) : name
+    const propName = dotIndex >= 0 ? name.slice(dotIndex + 1) : undefined
     const namePattern = escapeRegExp(name)
+    const basePattern = escapeRegExp(baseName)
     const declares = (candidate: string): boolean =>
-      new RegExp(`(?:const|let|var) ${namePattern} = ${candidate}\\(`).test(compactSource)
+      new RegExp(`(?:const|let|var) ${basePattern} = ${candidate}\\(`).test(compactSource)
     const declaresStateTuple =
-      new RegExp(`(?:const|let|var) \\[\\s*${namePattern}\\s*,[^\\]]*\\]\\s*=\\s*useState\\(`).test(
+      new RegExp(`(?:const|let|var) \\[\\s*${basePattern}\\s*,[^\\]]*\\]\\s*=\\s*useState\\(`).test(
         compactSource,
       ) ||
       new RegExp(
-        `(?:const|let|var) \\[\\s*[A-Za-z_$][\\w$]*\\s*,\\s*${namePattern}\\s*\\]\\s*=\\s*useState\\(`,
+        `(?:const|let|var) \\[\\s*[A-Za-z_$][\\w$]*\\s*,\\s*${basePattern}\\s*\\]\\s*=\\s*useState\\(`,
       ).test(compactSource)
 
-    const kind: 'signal' | 'store' | 'action' | undefined = declares('createStore')
-      ? 'store'
-      : declares('action')
-        ? 'action'
-        : declares('state') || declares('computed') || declaresStateTuple
-          ? 'signal'
-          : undefined
+    // Check for store created via useXxxStore() where XxxStore is from $stores/* or defineStore/createStore
+    const declaresStoreHook = new RegExp(
+      `(?:const|let|var) ${basePattern} = use[A-Za-z]+Store\\(`,
+    ).test(compactSource)
+    const originalKind: 'signal' | 'store' | 'action' | undefined =
+      declares('createStore') || declaresStoreHook
+        ? 'store'
+        : declares('action')
+          ? 'action'
+          : declares('state') || declares('computed') || declaresStateTuple
+            ? 'signal'
+            : undefined
+    let kind = originalKind
+
+    // For `store.count` where `store` is a store, treat the property as a signal
+    let storeIdForPath: string | undefined
+    let storePathForCapture: string | undefined
+    if (propName && kind === 'store') {
+      kind = 'signal'
+      storeIdForPath = resolveStoreIdForBase(baseName, source, importMap, fileId)
+      storePathForCapture = propName
+    }
 
     if (kind === 'signal' || kind === 'store') {
-      const initial = extractStaticInitial(source, name)
+      // For store captures, also resolve storeId for later materialization as real store
+      let wholeStoreId: string | undefined
+      if (kind === 'store' && !propName) {
+        wholeStoreId = resolveStoreIdForBase(baseName, source, importMap, fileId)
+      }
+      const initial = extractStaticInitial(source, name, fileId, importMap)
       if (initial === undefined) {
         captures.push({
           name,
@@ -575,6 +820,9 @@ function classifyScopeCaptures(
         id: `nx:${kind}:${hash(`${name}:${source}`)}`,
         initial,
         ...(kind === 'store' ? { lifetime: extractStoreLifetime(source, name) } : {}),
+        ...(storeIdForPath ? { storeId: storeIdForPath } : {}),
+        ...(storePathForCapture ? { storePath: storePathForCapture } : {}),
+        ...(wholeStoreId ? { storeId: wholeStoreId } : {}),
       })
       continue
     }
@@ -704,6 +952,23 @@ function astIdentifierName(node: unknown): string | undefined {
   return undefined
 }
 
+function extractMemberPath(node: AstNode | undefined): string | undefined {
+  if (!node) return undefined
+  if (node.type === 'Identifier') return astIdentifierName(node)
+  const member = node as unknown as {
+    readonly type?: string
+    readonly computed?: boolean
+    readonly object?: AstNode
+    readonly property?: AstNode
+  }
+  if (member.type === 'MemberExpression' && member.computed !== true) {
+    const objPath = extractMemberPath(member.object as AstNode)
+    const prop = astIdentifierName(member.property as unknown as AstNode)
+    if (objPath && prop) return `${objPath}.${prop}`
+  }
+  return undefined
+}
+
 function directReactiveIdentifier(expression: AstNode | undefined): string | undefined {
   const node = expression as
     | (AstNode & {
@@ -714,6 +979,16 @@ function directReactiveIdentifier(expression: AstNode | undefined): string | und
         readonly computed?: boolean
       })
     | undefined
+  // Handle `String(store.count)` wrapping — unwrap and treat as `store.count`
+  if (
+    node?.type === 'CallExpression' &&
+    astIdentifierName(node.callee) === 'String' &&
+    node.arguments?.length === 1
+  ) {
+    const arg = (node.arguments[0] as AstNode) ?? undefined
+    const innerPath = extractMemberPath(arg)
+    if (innerPath && innerPath.includes('.')) return innerPath
+  }
   if (
     node?.type === 'CallExpression' &&
     node.arguments?.length === 0 &&
@@ -730,11 +1005,23 @@ function directReactiveIdentifier(expression: AstNode | undefined): string | und
   ) {
     return astIdentifierName(node.object)
   }
+  // Handle store property reads like `store.count` or `store.user.profile.name`
+  const memberPath = extractMemberPath(node as AstNode)
+  if (memberPath && memberPath.includes('.')) {
+    // Heuristic: if it looks like `store.count`, let classifyScopeCaptures decide if base is a store
+    // Return the full path so it can be classified as a store-path signal
+    return memberPath
+  }
   return undefined
 }
 
 function bindingExpressionIdentifier(expression: AstNode | undefined): string | undefined {
-  return expression?.type === 'Identifier' ? astIdentifierName(expression) : undefined
+  if (expression?.type === 'Identifier') return astIdentifierName(expression)
+  const memberPath = extractMemberPath(expression as AstNode)
+  if (memberPath && memberPath.includes('.')) {
+    return memberPath
+  }
+  return undefined
 }
 
 function identifierNamesInAst(expression: AstNode | undefined): readonly string[] {
@@ -950,6 +1237,7 @@ export async function transformNexilSource(
   const bindingAttrRemovals: Array<{ readonly start: number; readonly end: number }> = []
   const warnings: string[] = []
   const magic = new MagicString(source)
+  const importMapEarly = collectImportMap(source, id)
 
   walk(ast, (node) => {
     if (node.type === 'ImportDeclaration' && typeof node.source?.value === 'string') {
@@ -1081,7 +1369,12 @@ export async function transformNexilSource(
         automatic: boolean,
         removeAttribute: boolean,
       ): void => {
-        const capture = classifyScopeCaptures(source, [sourceName])[0]
+        const capture = classifyScopeCaptures(
+          source,
+          [sourceName],
+          id,
+          importMapEarly,
+        )[0] as unknown as ScopeCapture & { storeId?: string; storePath?: string }
         const start = attribute.start
         const end = attribute.end
         if (!capture || !capture.id || capture.kind === 'unsupported') {
@@ -1090,6 +1383,33 @@ export async function transformNexilSource(
           )
           if (removeAttribute && start !== undefined && end !== undefined)
             bindingAttrRemovals.push({ start, end })
+          return
+        }
+        // Store path bindings (e.g., `cartStore.count` or `store.user.profile.name`) use fine-grained
+        // `data-nx-store-bind` backed by the real store's lens, preserving Zero-Hydration and O(1) updates.
+        // They do not need a separate scope signal; the store's `__NEXIL_STORES__` payload already hydrates the root.
+        if (
+          (capture as unknown as { storeId?: string }).storeId &&
+          (capture as unknown as { storePath?: string }).storePath
+        ) {
+          const storeId = (capture as unknown as { storeId: string }).storeId
+          const storePath = (capture as unknown as { storePath: string }).storePath
+          const binding: DomBinding = {
+            id: `nx:store-path:${hash(`${normalizeIdForHash(id)}:${start ?? 0}:${target}:${storeId}:${storePath}`)}`,
+            scopeId: `store:${storeId}:${storePath}`,
+            target,
+            source: sourceName,
+            automatic,
+          }
+          bindings.push(binding)
+          if (removeAttribute && start !== undefined && end !== undefined)
+            bindingAttrRemovals.push({ start, end })
+          if (opening.end !== undefined) {
+            bindingRanges.push({
+              offset: bindingInsertionOffset(source, opening.end),
+              attribute: ` data-nx-store-bind="${storeId}:${storePath}#${target}"`,
+            })
+          }
           return
         }
         if (capture.kind !== 'signal' || capture.initial === undefined) {
@@ -1182,7 +1502,14 @@ export async function transformNexilSource(
           ? (child as AstNode & { readonly expression?: AstNode }).expression
           : undefined
       const sourceName = hasExplicitTextBinding ? undefined : directReactiveIdentifier(expression)
-      const capture = sourceName ? classifyScopeCaptures(source, [sourceName])[0] : undefined
+      const capture = sourceName
+        ? (classifyScopeCaptures(
+            source,
+            [sourceName],
+            id,
+            importMapEarly,
+          )[0] as unknown as ScopeCapture & { storeId?: string; storePath?: string })
+        : undefined
 
       // Preserve authoring-friendly interpolations such as `Items: {count()}` by
       // wrapping each direct signal expression in a tiny independently bound span.
@@ -1193,7 +1520,12 @@ export async function transformNexilSource(
             .expression
           const candidateName = directReactiveIdentifier(candidateExpression)
           const candidateCapture = candidateName
-            ? classifyScopeCaptures(source, [candidateName])[0]
+            ? (classifyScopeCaptures(
+                source,
+                [candidateName],
+                id,
+                importMapEarly,
+              )[0] as unknown as ScopeCapture & { storeId?: string; storePath?: string })
             : undefined
           if (
             !candidateName ||
@@ -1204,6 +1536,27 @@ export async function transformNexilSource(
             candidate.end === undefined
           )
             continue
+          // Store path bindings use `data-nx-store-bind` backed by the real store's lens (fine-grained, zero-hydration)
+          if ((candidateCapture as unknown as { storeId?: string }).storeId) {
+            const storeId = (candidateCapture as unknown as { storeId: string }).storeId
+            const storePath = (candidateCapture as unknown as { storePath: string }).storePath
+            const bindingId = `nx:store-path:${hash(`${normalizeIdForHash(id)}:${candidate.start}:text:${storeId}:${storePath}`)}`
+            const binding: DomBinding = {
+              id: bindingId,
+              scopeId: `store:${storeId}:${storePath}`,
+              target: 'text',
+              source: candidateName,
+              automatic: true,
+            }
+            bindings.push(binding)
+            const expressionSource = source.slice(candidate.start, candidate.end)
+            magic.overwrite(
+              candidate.start,
+              candidate.end,
+              `<span data-nx-store-bind="${storeId}:${storePath}#text">${expressionSource}</span>`,
+            )
+            continue
+          }
           const bindingId = `nx:bind:${hash(`${normalizeIdForHash(id)}:${candidate.start}:text`)}`
           const binding: DomBinding = {
             id: bindingId,
@@ -1227,7 +1580,7 @@ export async function transformNexilSource(
       }
       if (!sourceName && !hasExplicitTextBinding && expression) {
         for (const name of identifierNamesInAst(expression)) {
-          const candidate = classifyScopeCaptures(source, [name])[0]
+          const candidate = classifyScopeCaptures(source, [name], id, importMapEarly)[0]
           if (candidate?.kind === 'signal') {
             warnings.push(
               `Automatic binding for ${name} was skipped because the JSX expression is dynamic; use bindText$ for a direct binding.`,
@@ -1236,7 +1589,26 @@ export async function transformNexilSource(
         }
       }
       if (sourceName && capture) {
-        if (capture.kind === 'signal' && capture.id && capture.initial !== undefined) {
+        // Store path bindings (e.g., `cartStore.count` or `store.user.profile.name`) use `data-nx-store-bind`
+        if ((capture as unknown as { storeId?: string }).storeId) {
+          const storeId = (capture as unknown as { storeId: string }).storeId
+          const storePath = (capture as unknown as { storePath: string }).storePath
+          const bindingId = `nx:store-path:${hash(`${normalizeIdForHash(id)}:${child?.start ?? 0}:text:${storeId}:${storePath}`)}`
+          const binding: DomBinding = {
+            id: bindingId,
+            scopeId: `store:${storeId}:${storePath}`,
+            target: 'text',
+            source: sourceName,
+            automatic: true,
+          }
+          bindings.push(binding)
+          if (element.openingElement?.end !== undefined) {
+            bindingRanges.push({
+              offset: bindingInsertionOffset(source, element.openingElement.end),
+              attribute: ` data-nx-store-bind="${storeId}:${storePath}#text"`,
+            })
+          }
+        } else if (capture.kind === 'signal' && capture.id && capture.initial !== undefined) {
           const binding: DomBinding = {
             id: `nx:bind:${hash(`${normalizeIdForHash(id)}:${child?.start ?? 0}:text`)}`,
             scopeId: capture.id,
@@ -1400,12 +1772,88 @@ export function nexil(options: { readonly root?: string } = {}): Plugin {
   const generatedChunks = new Map<string, string>()
   const generatedCss = new Set<string>()
   let hasBindings = false
+  let storeDescriptors: readonly StoreDescriptor[] = []
+  let storeWarnings: readonly string[] = []
+  let resolvedRoot = options.root ?? process.cwd()
+  const VIRTUAL_NEXIL_STORES = 'virtual:nexil-stores'
+  const VIRTUAL_PREFIX = '\0virtual:nexil-stores'
+  const STORES_PREFIX = '\0$stores/'
+
+  async function refreshStores(root: string): Promise<void> {
+    try {
+      const result = await discoverStores(root)
+      storeDescriptors = result.descriptors
+      storeWarnings = result.warnings
+      // Generate .nexil/stores.d.ts — best effort, never fail the build
+      try {
+        await writeStoresDTS(root, storeDescriptors)
+      } catch {}
+      for (const w of storeWarnings) {
+        // Vite will surface warnings via configResolved/buildStart
+        void w
+      }
+    } catch {
+      storeDescriptors = []
+      storeWarnings = []
+    }
+  }
+
   return {
     name: 'nexil',
     enforce: 'pre',
-    configResolved(config) {
-      void options.root
-      void config.root
+    config() {
+      return {
+        esbuild: {
+          jsx: 'automatic',
+          jsxImportSource: 'nexil',
+        },
+      }
+    },
+    async configResolved(config) {
+      resolvedRoot = options.root ?? config.root ?? process.cwd()
+      await refreshStores(resolvedRoot)
+      for (const w of storeWarnings) {
+        // Use Vite's logger if available, else console.warn
+        const logger = (config as unknown as { logger?: { warn?: (msg: string) => void } }).logger
+        if (logger?.warn) logger.warn(w)
+        else console.warn(`[nexil:stores] ${w}`)
+      }
+    },
+    async buildStart() {
+      // Refresh before each build (covers --watch and config change)
+      await refreshStores(resolvedRoot)
+    },
+    resolveId(id) {
+      if (id === VIRTUAL_NEXIL_STORES || id === 'virtual:nexil-stores') {
+        return VIRTUAL_PREFIX
+      }
+      if (id.startsWith('$stores/')) {
+        const storeId = id.slice('$stores/'.length)
+        const descriptor = storeDescriptors.find((d) => d.id === storeId)
+        if (descriptor) return descriptor.entry
+        // Also handle virtual subpath like $stores/admin/settings
+        // Fallback: let Vite try to resolve as file (will fail with clear message)
+        return null
+      }
+      if (id.startsWith(VIRTUAL_PREFIX) || id.startsWith(STORES_PREFIX)) {
+        return id
+      }
+      return null
+    },
+    load(id) {
+      if (id === VIRTUAL_PREFIX) {
+        return generateVirtualBarrel(storeDescriptors)
+      }
+      if (id.startsWith(STORES_PREFIX)) {
+        const storeId = id.slice(STORES_PREFIX.length)
+        const descriptor = storeDescriptors.find((d) => d.id === storeId)
+        if (descriptor) {
+          // Re-export the store entry — Vite will then load the real file
+          return `export * from '${descriptor.entry.replace(/\\/g, '/')}';\nexport { default } from '${descriptor.entry.replace(/\\/g, '/')}';\n`
+        }
+        return null
+      }
+      return null
     },
     configureServer(server) {
       // Serve the resumability runtime and lazily extracted handler chunks under
@@ -1438,7 +1886,10 @@ export function nexil(options: { readonly root?: string } = {}): Plugin {
     },
     async transform(source, id) {
       if (!/\.(tsx|jsx|ts|js)$/.test(id) || id.includes('/node_modules/')) return null
-      const result = await transformNexilSource(source, id)
+      // Stores: wrap actions with batch() (runtime already batches, but Vite-level ensures consistency)
+      const wrapped = wrapActionsWithBatch(source, id)
+      const effectiveSource = wrapped.code
+      const result = await transformNexilSource(effectiveSource, id)
       hasBindings ||= result.bindings.length > 0
       for (const chunk of result.chunks) {
         const minified = await transformWithEsbuild(chunk.source, chunk.fileName, {
@@ -1448,12 +1899,37 @@ export function nexil(options: { readonly root?: string } = {}): Plugin {
         generatedChunks.set(chunk.fileName, minified.code)
       }
       for (const css of result.css) generatedCss.add(css)
+      // If this was a store file that was batch-wrapped, return the wrapped+transformed code
+      if (wrapped.changed) {
+        // transformNexilSource already produced `result.code` from wrapped source, so return it
+        return { code: result.code, map: result.map }
+      }
       return { code: result.code, map: result.map }
     },
-    handleHotUpdate() {
+    async handleHotUpdate(ctx) {
       // Keep previously emitted chunks available while Vite invalidates modules.
       // The content-addressed filenames prevent stale handlers from colliding with new ones.
       generatedCss.clear()
+      // If a store file changed, refresh descriptors and .nexil/stores.d.ts without resetting signals.
+      // HMR shape changes (adding/removing state keys) are merged via `mergeStateForHMR` in
+      // `@nexil/state` — `useStore()` on next call will preserve live values for existing keys,
+      // add new keys with initial values, and remove deleted keys, avoiding full reload.
+      // Pure logic changes (actions/getters) are hot-swapped via `__nexil_hmrUpdate` without touching state.
+      const isStoreFile =
+        ctx.file.includes(`${'/src/stores/'}`) || ctx.file.includes(`\\src\\stores\\`)
+      if (isStoreFile) {
+        await refreshStores(resolvedRoot)
+        // Invalidate virtual modules so new barrel is served
+        const mods = [...(ctx.server.moduleGraph.getModulesByFile(ctx.file) ?? [])]
+        // Also invalidate virtual:nexil-stores
+        const virtualMod = ctx.server.moduleGraph.getModuleById(VIRTUAL_PREFIX)
+        if (virtualMod) mods.push(virtualMod)
+        // Return mods to let Vite handle HMR — signals are preserved via global registry in @nexil/state
+        // and shape changes are merged live (see `packages/state/src/index.ts:mergeStateForHMR`).
+        // Full reload is only needed for non-serializable shape changes or store id renames.
+        return mods.length > 0 ? mods : undefined
+      }
+      return undefined
     },
     generateBundle() {
       for (const [fileName, source] of generatedChunks) {
@@ -1484,4 +1960,10 @@ export function nexil(options: { readonly root?: string } = {}): Plugin {
   }
 }
 
+export const nexilPlugin = nexil
 export default nexil
+
+export * from './boundaries.js'
+export * from './budget.js'
+export * from './transform.js'
+

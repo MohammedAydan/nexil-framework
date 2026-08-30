@@ -5,8 +5,8 @@ import {
   element,
   provideContext,
   text,
-} from '../../packages/core/src/index'
-import { renderToString } from '../../packages/renderer/src/index'
+} from '../../packages/nexil/src/index.js'
+import { renderToString } from '../../packages/nexil/src/server/index.js'
 
 describe('Context provider semantics (§3, §4)', () => {
   it('3.1 missing Provider => defaultValue', () => {

@@ -1,4 +1,4 @@
-import { component } from '@nexil/core'
+import { component } from 'nexil'
 
 export const seo = {
   title: 'Nexil Features — Runtime surface area',

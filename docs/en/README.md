@@ -32,6 +32,7 @@ This directory contains the complete English documentation for Nexil Framework `
 | Learn the terminology                          | [22-glossary.md](./22-glossary.md)                                                             |
 | Add sessions, authorization, and middleware    | [23-security-authentication-and-middleware.md](./23-security-authentication-and-middleware.md) |
 | Build a complete production application        | [24-production-workbench.md](./24-production-workbench.md)                                     |
+| Manage state with Nexil Stores                 | [25-nexil-stores.md](./25-nexil-stores.md)                                                     |
 | Read the v1.1.0 release and migration guide    | [v1.1.0 release notes](../releases/v1.1.0.md)                                                  |
 | Review v1.3.0 Link and Context release         | [v1.3.0 release notes](../releases/v1.3.0.md)                                                  |
 | Review the v1.3.1 Starter correction           | [next release notes](../releases/next.md)                                                      |

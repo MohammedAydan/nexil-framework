@@ -1,12 +1,12 @@
 {
   "name": "@nexil/vite-plugin",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "type": "module",
   "dependencies": {
     "@babel/parser": "^7.29.8",
     "@babel/traverse": "^7.29.8",
-    "@nexil/compiler": "workspace:*",
     "magic-string": "^0.30.21",
+    "nexil": "workspace:*",
     "vite": "^7.3.6"
   },
   "exports": {
@@ -33,5 +33,7 @@
     "dist",
     "!dist/**/*.test.*",
     "README.md"
-  ]
+  ],
+  "license": "MIT",
+  "author": "Mohammed Aydan <mohammed@nexil.dev>"
 }

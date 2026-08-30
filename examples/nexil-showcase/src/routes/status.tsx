@@ -1,6 +1,6 @@
-import { component } from '@nexil/core'
-import { createSecurityHeaders } from '@nexil/server'
-import { renderTelemetryScript } from '@nexil/telemetry'
+import { component } from 'nexil'
+import { createSecurityHeaders } from 'nexil/server'
+import { renderTelemetryScript } from 'nexil'
 
 export const seo = {
   title: 'Nexil Showcase Status — Runtime health',

@@ -3,10 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm --filter @nexil/media build && node ../../tests/e2e/build-basic-app.mjs",
+    "build": "pnpm --filter nexil build && node ../../tests/e2e/build-basic-app.mjs",
     "clean": "node -e \"const fs=require('fs');for(const f of ['dist','tsconfig.tsbuildinfo']){try{fs.rmSync(f,{recursive:true,force:true})}catch(e){}}\""
   },
   "dependencies": {
-    "@nexil/media": "workspace:*"
+    "nexil": "workspace:*"
   }
 }

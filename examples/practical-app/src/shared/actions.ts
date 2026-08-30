@@ -1,4 +1,4 @@
-import { action } from '@nexil/actions'
+import { action } from 'nexil/server'
 
 export const saveMessage = action(
   (input: unknown) => {

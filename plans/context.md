@@ -6,9 +6,9 @@ HTML-first, resumable TypeScript web framework. Monorepo of scoped packages (`@n
 
 ## Current Status
 
-- Active feature: windows-build-publish (complete — CI green on 0f4210e)
+- Active feature: nexil-stores — **Phases 1–4 MVP COMPLETE (2026-08-30) — Stabilization Mode** — no new major work; docs + gates only
 - Overall health: green
-- Last updated: 2026-08-25
+- Last updated: 2026-08-30
 
 ## Critical Constraints
 
@@ -20,6 +20,7 @@ HTML-first, resumable TypeScript web framework. Monorepo of scoped packages (`@n
 
 ## Active Features
 
+- nexil-stores: **COMPLETE — Stabilization Mode (2026-08-30)** — `createStore`/`defineStore` Proxy (state 23/23 with request-isolation 4 tests), Vite `discoverStores` + `virtual:nexil-stores`/`$stores/*` + `.nexil/stores.d.ts` (vite-plugin 37/37), CLI `nexil g store --split|--unified` (cli 24/24), SSR ALS + `__NEXIL_STORES__` per-route (home `user:42` / cart `cart:7` via `buildArtifacts` + `dev-server` `runWithScope`, client `hydrateNexilStoresFromDocument` before `bootstrapResumability`), reserved-key dev warning + per-request `__nexil:stores:registry`/`__nexil:stores:access` + `globalThis.__nexil_buildRequestContext` fallback. See `plans/nexil-stores/review.md` → **Current Capabilities & Limitations** and **Prioritized Follow-ups**.
 - windows-build-publish: complete
 
 ## Known Issues / Tech Debt

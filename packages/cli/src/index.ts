@@ -6,8 +6,9 @@ import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs
 import { dirname, extname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { build, createServer, transformWithEsbuild } from 'vite'
-import { createRequestContext, type Child, type ComponentContext } from '@nexil/core'
-import { assertBudget } from '@nexil/compiler'
+import { createRequestContext, runWithScope, type Child, type ComponentContext } from 'nexil'
+import { __clearAccessedStoreIds, __getStoresScriptTag } from 'nexil'
+import { assertBudget } from '@nexil/vite-plugin'
 import nexil, {
   externalizeScopeAttributes,
   RESUMABILITY_BINDINGS_EXTERNAL,
@@ -16,9 +17,9 @@ import nexil, {
   transformNexilSource,
 } from '@nexil/vite-plugin'
 import type { ExternalScopePayload } from '@nexil/vite-plugin'
-import { escapeHtml, renderToString } from '@nexil/renderer'
-import { generateOgImage } from '@nexil/og-image'
-import { buildImageVariants, imageVariantFileBase } from '@nexil/media'
+import { escapeHtml, renderToString } from 'nexil/server'
+import { generateOgImage } from 'nexil'
+import { buildImageVariants, imageVariantFileBase } from 'nexil'
 import {
   buildRobots,
   buildSitemap,
@@ -27,12 +28,12 @@ import {
   generateFeed,
   renderHead,
   withCanonical,
-} from '@nexil/seo'
-import { matchRoute, NEXIL_NAVIGATION_RUNTIME, routeFromFile } from '@nexil/router'
-import { nexilSSRPlugin } from '@nexil/dev-server'
-import { createServer as createProductionServer } from '@nexil/serve'
-import type { NexilConfig, RedirectRule } from '@nexil/serve'
-import type { SeoMetadata } from '@nexil/seo'
+} from 'nexil'
+import { matchRoute, NEXIL_NAVIGATION_RUNTIME, routeFromFile } from 'nexil/router'
+import { nexilSSRPlugin } from './dev-server.js'
+import { createServer as createProductionServer } from './serve.js'
+import type { NexilConfig, RedirectRule } from './serve.js'
+import type { SeoMetadata } from 'nexil'
 export { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 import { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 
@@ -40,25 +41,25 @@ const FRAMEWORK_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../.
 
 function workspaceAliases(): readonly { readonly find: string; readonly replacement: string }[] {
   if (!existsSync(join(FRAMEWORK_ROOT, 'pnpm-workspace.yaml'))) return []
-  const packages = ['core', 'jsx-runtime', 'reactivity', 'router', 'state']
-  return packages.flatMap((name) => {
-    const source = join(FRAMEWORK_ROOT, 'packages', name, 'src', 'index.ts')
-    if (!existsSync(source)) return []
-    if (name === 'jsx-runtime') {
-      return [
-        {
-          find: '@nexil/jsx-runtime/jsx-dev-runtime',
-          replacement: join(FRAMEWORK_ROOT, 'packages/jsx-runtime/src/jsx-runtime.ts'),
-        },
-        {
-          find: '@nexil/jsx-runtime/jsx-runtime',
-          replacement: join(FRAMEWORK_ROOT, 'packages/jsx-runtime/src/jsx-runtime.ts'),
-        },
-        { find: '@nexil/jsx-runtime', replacement: source },
-      ]
-    }
-    return [{ find: `@nexil/${name}`, replacement: source }]
-  })
+  const nexilSrc = join(FRAMEWORK_ROOT, 'packages/nexil/src')
+  const vitePluginSrc = join(FRAMEWORK_ROOT, 'packages/vite-plugin/src')
+  return [
+    {
+      find: 'nexil/jsx-runtime/jsx-dev-runtime',
+      replacement: join(nexilSrc, 'jsx-runtime/jsx-runtime.ts'),
+    },
+    {
+      find: 'nexil/jsx-runtime/jsx-runtime',
+      replacement: join(nexilSrc, 'jsx-runtime/jsx-runtime.ts'),
+    },
+    { find: 'nexil/jsx-dev-runtime', replacement: join(nexilSrc, 'jsx-runtime/jsx-runtime.ts') },
+    { find: 'nexil/jsx-runtime', replacement: join(nexilSrc, 'jsx-runtime/index.ts') },
+    { find: 'nexil/client', replacement: join(nexilSrc, 'client/index.ts') },
+    { find: 'nexil/server', replacement: join(nexilSrc, 'server/index.ts') },
+    { find: 'nexil/router', replacement: join(nexilSrc, 'router/index.ts') },
+    { find: '@nexil/vite-plugin', replacement: join(vitePluginSrc, 'index.ts') },
+    { find: 'nexil', replacement: join(nexilSrc, 'index.ts') },
+  ]
 }
 
 const VITE_WORKSPACE_CONFIG = { resolve: { alias: workspaceAliases() } }
@@ -170,6 +171,8 @@ const commands = new Set<NexilCommand>([
 export function parseCommand(argv: readonly string[]): ParsedCommand {
   const [first, ...args] = argv
   if (!first || first === '--help' || first === '-h') return { command: 'help', args }
+  // Alias: `nexil g` → `nexil generate`
+  if (first === 'g') return { command: 'generate' as NexilCommand, args }
   if (!commands.has(first as NexilCommand))
     throw new Error(`Unknown Nexil command: ${first}. Run nexil --help.`)
   return { command: first as NexilCommand, args }
@@ -195,6 +198,8 @@ export function helpText(): string {
     '  routes         List discovered routes',
     '  generate route <name>       Scaffold a route',
     '  generate component <name>  Scaffold a component',
+    '  generate store <name> [--split|--unified]  Scaffold a Nexil store',
+    '                 Alias: g store <name> [--split|--unified]',
     '  add action <name>           Scaffold a server action',
     '  doctor         Diagnose common project configuration issues',
     '                 Flag: --json for a stable CI-readable report',
@@ -260,6 +265,95 @@ async function scaffoldCliArtifact(root: string, kind: string, name: string): Pr
     return relative(root, file).split(sep).join('/')
   }
   throw new Error(`Unknown generator kind: ${kind}`)
+}
+
+export async function scaffoldStore(
+  root: string,
+  name: string,
+  variant: 'split' | 'unified' = 'unified',
+): Promise<readonly string[]> {
+  assertGeneratorPath(name)
+  const normalized = name.replace(/\\/g, '/')
+  const id = normalized
+  const baseName = normalized.split('/').at(-1)!
+  if (!/^[a-z][a-z0-9-]*$/.test(baseName))
+    throw new TypeError(
+      'Store name must start with a lowercase letter and contain only lowercase letters, numbers, and hyphens.',
+    )
+  const capName = baseName
+    .split('-')
+    .map((part) => part[0]!.toUpperCase() + part.slice(1))
+    .join('')
+  const created: string[] = []
+
+  if (variant === 'split') {
+    const dir = join(root, 'src', 'stores', normalized)
+    // Check for existing collision with unified file
+    const unifiedFile = join(root, 'src', 'stores', `${normalized}.ts`)
+    if (existsSync(unifiedFile)) {
+      throw new Error(
+        `Cannot create split store "${normalized}": unified file ${relative(root, unifiedFile).split(sep).join('/')} already exists. Remove it or use a different name.`,
+      )
+    }
+    if (
+      existsSync(join(dir, 'store.ts')) ||
+      existsSync(join(dir, 'types.ts')) ||
+      existsSync(join(dir, 'actions.ts'))
+    ) {
+      throw new Error(
+        `Split store "${normalized}" already exists at ${relative(root, dir).split(sep).join('/')}.`,
+      )
+    }
+    await mkdir(dir, { recursive: true })
+
+    const typesPath = join(dir, 'types.ts')
+    const actionsPath = join(dir, 'actions.ts')
+    const storePath = join(dir, 'store.ts')
+
+    await writeFile(
+      typesPath,
+      `export interface ${capName}State {\n  // TODO: define your state shape\n  count: number\n}\n`,
+      'utf8',
+    )
+    created.push(relative(root, typesPath).split(sep).join('/'))
+
+    await writeFile(
+      actionsPath,
+      `import type { ${capName}State } from './types'\n\nexport const ${baseName}Actions = {\n  increment(state: ${capName}State): void {\n    state.count += 1\n  },\n\n  setCount(state: ${capName}State, count: number): void {\n    state.count = count\n  },\n}\n`,
+      'utf8',
+    )
+    created.push(relative(root, actionsPath).split(sep).join('/'))
+
+    await writeFile(
+      storePath,
+      `import { createStore } from '@nexil/state'\nimport type { ${capName}State } from './types'\nimport { ${baseName}Actions } from './actions'\n\nconst initialState: ${capName}State = {\n  count: 0,\n}\n\nexport const use${capName}Store = createStore({\n  id: '${id}',\n  state: () => initialState,\n  actions: ${baseName}Actions,\n})\n`,
+      'utf8',
+    )
+    created.push(relative(root, storePath).split(sep).join('/'))
+    return created
+  }
+
+  // unified
+  const file = join(root, 'src', 'stores', `${normalized}.ts`)
+  const dirForUnified = join(root, 'src', 'stores', normalized)
+  if (existsSync(file)) {
+    throw new Error(
+      `Unified store "${normalized}" already exists at ${relative(root, file).split(sep).join('/')}.`,
+    )
+  }
+  if (existsSync(join(dirForUnified, 'store.ts'))) {
+    throw new Error(
+      `Cannot create unified store "${normalized}": split store directory ${relative(root, dirForUnified).split(sep).join('/')} already exists. Remove it or use a different name.`,
+    )
+  }
+  await mkdir(dirname(file), { recursive: true })
+  await writeFile(
+    file,
+    `import { defineStore } from '@nexil/state'\n\nexport interface ${capName}State {\n  count: number\n}\n\nexport const use${capName}Store = defineStore('${id}', {\n  state: (): ${capName}State => ({\n    count: 0,\n  }),\n\n  getters: {\n    doubled: (state) => state.count * 2,\n  },\n\n  actions: {\n    increment(): void {\n      this.count += 1\n    },\n\n    setCount(count: number): void {\n      this.count = count\n    },\n  },\n})\n`,
+    'utf8',
+  )
+  created.push(relative(root, file).split(sep).join('/'))
+  return created
 }
 
 export async function diagnoseProject(root: string): Promise<DoctorReport> {
@@ -530,13 +624,21 @@ async function buildConfiguredPublicImages(
     })
     images.push({
       source: publicPath,
-      variants: variants.map((variant) => ({
-        format: variant.format,
-        width: variant.width,
-        path: `/${[relativeDirectory, variant.fileName].filter((part) => part !== '.').join('/')}`,
-        bytes: variant.bytes,
-        cacheHit: variant.cacheHit,
-      })),
+      variants: variants.map(
+        (variant: {
+          format: string
+          width: number
+          fileName: string
+          bytes: number
+          cacheHit: boolean
+        }) => ({
+          format: variant.format as 'avif' | 'webp',
+          width: variant.width,
+          path: `/${[relativeDirectory, variant.fileName].filter((part) => part !== '.').join('/')}`,
+          bytes: variant.bytes,
+          cacheHit: variant.cacheHit,
+        }),
+      ),
     })
   }
   return { version: 1, images }
@@ -1172,6 +1274,18 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     let scriptsHtml = interactive ? `<script type="module" src="/${BOOTSTRAP_FILE}"></script>` : ''
     if (transformed.bindings.length > 0)
       scriptsHtml += `<script type="module" src="/nexil-bindings.js"></script>`
+    const buildRequestContext = createRequestContext(
+      new Request(new URL(routePath, siteOrigin).href),
+      `build:${routePath}`,
+    )
+    const buildContext = {
+      requestId: buildRequestContext.id,
+      scope: buildRequestContext.scope,
+    } as ComponentContext
+    // Fallback for state package when AsyncLocalStorage is not yet propagated (e.g., sync build path)
+    ;(
+      globalThis as unknown as { __nexil_buildRequestContext?: unknown }
+    ).__nexil_buildRequestContext = buildRequestContext as unknown
     try {
       const mod = await loadServerModule(route)
       let routeSeo = await resolveInheritedSeo(route, mod, routePath)
@@ -1208,31 +1322,39 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
         // Support render mode export for future use
       }
       const Component = mod.default
-      if (typeof Component === 'function') {
-        const context = createBuildComponentContext(routePath)
-        const thunk = () =>
-          (Component as (p: Record<string, string | string[]>, c?: unknown) => unknown)(
-            {},
-            context,
-          ) as unknown as Child
-        // Pass thunk so layout Providers can wrap it with correct ContextScope (deepResolve)
-        let composed: Child
-        try {
-          composed = await applyLayouts(route, thunk as unknown as Child, {}, context)
-          renderedHtml = renderToString(composed)
-        } catch (err) {
-          if (err instanceof TypeError && /synchronously/.test((err as Error).message)) {
-            const eager = await (
-              Component as (p: Record<string, string | string[]>, c?: unknown) => unknown
-            )({}, context)
-            composed = await applyLayouts(route, eager as Child, {}, context)
-            renderedHtml = renderToString(composed)
-          } else throw err
-        }
-      } else if (Component) {
-        renderedHtml = renderToString(Component)
-      } else {
-        throw new TypeError(`Route ${routePath} does not export a renderable default component.`)
+      // buildRequestContext / buildContext already created before outer try
+      try {
+        await runWithScope(buildRequestContext.scope, async () => {
+          if (typeof Component === 'function') {
+            const thunk = () =>
+              (Component as (p: Record<string, string | string[]>, c?: unknown) => unknown)(
+                {},
+                buildContext,
+              ) as unknown as Child
+            let composed: Child
+            try {
+              composed = await applyLayouts(route, thunk as unknown as Child, {}, buildContext)
+              renderedHtml = renderToString(composed)
+            } catch (err) {
+              if (err instanceof TypeError && /synchronously/.test((err as Error).message)) {
+                const eager = await (
+                  Component as (p: Record<string, string | string[]>, c?: unknown) => unknown
+                )({}, buildContext)
+                composed = await applyLayouts(route, eager as Child, {}, buildContext)
+                renderedHtml = renderToString(composed)
+              } else throw err
+            }
+          } else if (Component) {
+            renderedHtml = renderToString(Component)
+          } else {
+            throw new TypeError(
+              `Route ${routePath} does not export a renderable default component.`,
+            )
+          }
+        })
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        throw new Error(`SSR failed for ${routePath}: ${message}`, { cause: err })
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
@@ -1255,6 +1377,19 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
       hasFormRoute = true
       scriptsHtml += `<script type="module" src="/nexil-forms.js"></script>`
     }
+
+    // Save base scriptsHtml before store injection for use in staticPaths
+    const scriptsHtmlBeforeStores = scriptsHtml
+    // Inject Nexil Stores state if any stores were accessed during this request
+    // The access log is per-request via AsyncLocalStorage, so this only contains this route's stores
+    const storesScriptTag = await runWithScope(buildRequestContext.scope, () =>
+      __getStoresScriptTag(),
+    )
+    if (storesScriptTag) {
+      scriptsHtml = `${storesScriptTag}${scriptsHtml}`
+    }
+    // Clear per-request access log (scope will be GC'd, but clear global fallback)
+    await runWithScope(buildRequestContext.scope, () => __clearAccessedStoreIds())
     const html = sanitizeDocument(
       routeTemplate
         .replace('<!--nexil-head-outlet-->', headHtml)
@@ -1298,19 +1433,31 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
           if (generatedPath === routePath) continue
           const generatedMatch = matchRoute(routeRecord, generatedPath)
           const GeneratedComponent = staticModule.default
-          const generatedContext = createBuildComponentContext(generatedPath)
-          const generatedResult =
-            typeof GeneratedComponent === 'function'
-              ? await GeneratedComponent(generatedMatch?.params ?? {}, generatedContext)
-              : GeneratedComponent
-          const generatedRenderedHtml = renderToString(
-            await applyLayouts(
-              route,
-              generatedResult,
-              generatedMatch?.params ?? {},
-              generatedContext,
-            ),
+          const generatedRequestContext = createRequestContext(
+            new Request(new URL(generatedPath, siteOrigin).href),
+            `build:${generatedPath}`,
           )
+          const generatedContext = {
+            requestId: generatedRequestContext.id,
+            scope: generatedRequestContext.scope,
+          } as ComponentContext
+          ;(
+            globalThis as unknown as { __nexil_buildRequestContext?: unknown }
+          ).__nexil_buildRequestContext = generatedRequestContext as unknown
+          const { generatedResult, generatedRenderedHtml: rawGeneratedHtml } = await runWithScope(
+            generatedRequestContext.scope,
+            async () => {
+              const result =
+                typeof GeneratedComponent === 'function'
+                  ? await GeneratedComponent(generatedMatch?.params ?? {}, generatedContext)
+                  : GeneratedComponent
+              const html = renderToString(
+                await applyLayouts(route, result, generatedMatch?.params ?? {}, generatedContext),
+              )
+              return { generatedResult: result, generatedRenderedHtml: html }
+            },
+          )
+          let generatedRenderedHtml = rawGeneratedHtml
           let generatedSeo = await resolveInheritedSeo(route, staticModule, generatedPath)
           if (generatedSeo && !generatedSeo.image) {
             const og = await generateOgImage(
@@ -1338,9 +1485,17 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
                   : {}),
               })
             : headHtml
-          const generatedScriptsHtml = generatedRenderedHtml.includes('data-nx-form="progressive"')
-            ? `${scriptsHtml}<script type="module" src="/nexil-forms.js"></script>`
-            : scriptsHtml
+          let generatedScriptsHtml = generatedRenderedHtml.includes('data-nx-form="progressive"')
+            ? `${scriptsHtmlBeforeStores}<script type="module" src="/nexil-forms.js"></script>`
+            : scriptsHtmlBeforeStores
+          // Inject per-generated-path store state
+          const generatedStoresTag = await runWithScope(generatedRequestContext.scope, () =>
+            __getStoresScriptTag(),
+          )
+          if (generatedStoresTag) {
+            generatedScriptsHtml = `${generatedStoresTag}${generatedScriptsHtml}`
+          }
+          await runWithScope(generatedRequestContext.scope, () => __clearAccessedStoreIds())
           if (generatedRenderedHtml.includes('data-nx-form="progressive"')) hasFormRoute = true
           const generatedHtml = sanitizeDocument(
             routeTemplate
@@ -1527,7 +1682,7 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
     const { name, options } = parseScaffoldArgs(parsed.args)
     if (!name)
       throw new Error(
-        'Usage: nexil create <name> [--yes] [--ts|--js] [--tailwind] [--template minimal|interactive|secure-node]',
+        'Usage: nexil create <name> [--yes] [--ts|--js] [--tailwind] [--template fullstack|blank|interactive|minimal|secure-node]',
       )
     return `Created ${(await scaffoldProject(name, cwd, options)).directory}`
   }
@@ -1585,10 +1740,27 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
   if (parsed.command === 'start' || parsed.command === 'preview' || parsed.command === 'serve')
     return startProduction(root)
   if (parsed.command === 'generate') {
-    const [kind, name] = parsed.args
-    if (!kind || !name || !['route', 'component'].includes(kind))
-      throw new Error('Usage: nexil generate <route|component> <name>')
-    return `Created ${await scaffoldCliArtifact(root, kind, name)}`
+    const [kind, name, ...rest] = parsed.args
+    if (!kind || !name)
+      throw new Error('Usage: nexil generate <route|component|store> <name> [--split|--unified]')
+    if (['route', 'component'].includes(kind)) {
+      if (rest.length > 0) throw new Error(`Unknown flag for generate ${kind}: ${rest.join(' ')}`)
+      return `Created ${await scaffoldCliArtifact(root, kind, name)}`
+    }
+    if (kind === 'store') {
+      const flags = rest
+      const hasSplit = flags.includes('--split')
+      const hasUnified = flags.includes('--unified')
+      if (hasSplit && hasUnified)
+        throw new Error('Cannot use both --split and --unified for store generation.')
+      const variant = hasSplit ? 'split' : hasUnified ? 'unified' : 'unified'
+      const unknownFlags = flags.filter((f) => f !== '--split' && f !== '--unified')
+      if (unknownFlags.length > 0)
+        throw new Error(`Unknown flag for generate store: ${unknownFlags.join(' ')}`)
+      const files = await scaffoldStore(root, name, variant as 'split' | 'unified')
+      return `Created ${files.join(', ')}`
+    }
+    throw new Error('Usage: nexil generate <route|component|store> <name> [--split|--unified]')
   }
   if (parsed.command === 'add') {
     const [kind, name] = parsed.args

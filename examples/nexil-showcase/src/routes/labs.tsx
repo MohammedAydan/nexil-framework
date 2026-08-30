@@ -1,15 +1,15 @@
-import { action, assertTrustedOrigin } from '@nexil/actions'
-import { adapterCapabilities } from '@nexil/adapters'
+import { action, assertTrustedOrigin } from 'nexil/server'
+import { adapterCapabilities } from 'nexil/server'
 import {
   createHandlerReference,
   createResumeAttribute,
   deserializeResumeState,
   serializeResumeState,
-} from '@nexil/client'
-import { component, computed, Form, SubmitButton, state } from '@nexil/core'
-import { batch } from '@nexil/reactivity'
-import { createSecurityHeaders, serializeCookie } from '@nexil/server'
-import { createStateRegistry } from '@nexil/state'
+} from 'nexil/client'
+import { component, computed, Form, SubmitButton, state } from 'nexil'
+import { batch } from 'nexil'
+import { createSecurityHeaders, serializeCookie } from 'nexil/server'
+import { createStateRegistry } from 'nexil'
 
 export const seo = {
   title: 'Nexil Labs — Runtime evaluation surface',

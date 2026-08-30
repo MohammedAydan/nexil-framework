@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { assertTrustedOrigin } from '../../packages/actions/src/index'
-import { createDataContext, data, serializeCookie } from '../../packages/server/src/index'
-import { element } from '../../packages/core/src/index'
-import { renderToString } from '../../packages/renderer/src/index'
+import {
+  assertTrustedOrigin,
+  createDataContext,
+  data,
+  serializeCookie,
+  renderToString,
+} from '../../packages/nexil/src/server/index.js'
+import { element } from '../../packages/nexil/src/index.js'
 
 async function sessionFor(request: Request): Promise<string> {
   const context = createDataContext(request)

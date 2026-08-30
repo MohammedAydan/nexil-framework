@@ -1,5 +1,5 @@
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
-import { fontFace, transformImage } from '../../packages/media/dist/index.js'
+import { fontFace, transformImage } from '../../packages/nexil/dist/index.js'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 

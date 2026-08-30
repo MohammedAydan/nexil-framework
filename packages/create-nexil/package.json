@@ -1,10 +1,17 @@
 {
-  "name": "@nexil/create-nexil",
-  "version": "0.0.2",
+  "name": "create-nexil",
+  "version": "0.1.0",
   "description": "Create a Nexil application",
   "type": "module",
-  "dependencies": {
-    "@nexil/starter": "workspace:*"
+  "exports": {
+    ".": {
+      "types": "./dist/scaffold.d.ts",
+      "default": "./dist/scaffold.js"
+    }
+  },
+  "bin": {
+    "create-nexil": "dist/bin.js",
+    "create-nexil-app": "dist/bin.js"
   },
   "files": [
     "dist",
@@ -20,12 +27,11 @@
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
-  "bin": {
-    "create-nexil": "dist/bin.js",
-    "create-nexil-app": "dist/bin.js"
-  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
     "clean": "node -e \"const fs=require('fs');for(const f of ['dist','tsconfig.tsbuildinfo']){try{fs.rmSync(f,{recursive:true,force:true})}catch(e){}}\""
-  }
+  },
+  "license": "MIT",
+  "author": "Mohammed Aydan <mohammed@nexil.dev>"
 }

@@ -1,4 +1,4 @@
-import { Link } from '@nexil/router'
+import { Link } from 'nexil/router'
 import { articles } from '../../lib/articles'
 
 export const seo = {

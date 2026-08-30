@@ -100,7 +100,7 @@ describe('create-nexil — scaffold success', () => {
       })
       const pkg = JSON.parse(await readFile(join(directory, 'package.json'), 'utf8'))
       expect(pkg.scripts.dev).toBe('nexil dev')
-      expect(pkg.dependencies['@nexil/cli']).toBe('^0.0.1')
+      expect(pkg.dependencies['@nexil/cli']).toBe('^0.1.0')
       const html = await readFile(join(directory, 'index.html'), 'utf8')
       expect(html).toContain('<!--nexil-head-outlet-->')
       expect(html).not.toContain('nexis')
@@ -313,5 +313,35 @@ describe('create-nexil — CLI exit codes and error formatting', () => {
     // bin is same file for both bins, invokedAs is basename; we test that help shows invoked name
     const { stdout } = await runBin(['--help'])
     expect(stdout).toContain('create-nexil')
+  })
+
+  it('scaffolds fullstack template with layouts, entry files, and routes', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'nexil-fullstack-'))
+    try {
+      const { directory } = await scaffoldProject('my-fullstack-app', parent, {
+        yes: true,
+        template: 'fullstack',
+        language: 'ts',
+      })
+      const entries = await readdir(directory)
+      expect(entries).toContain('package.json')
+      expect(entries).toContain('src')
+
+      const srcEntries = await readdir(join(directory, 'src'))
+      expect(srcEntries).toContain('routes')
+      expect(srcEntries).toContain('entry-server.ts')
+      expect(srcEntries).toContain('entry-client.tsx')
+
+      const routeEntries = await readdir(join(directory, 'src', 'routes'))
+      expect(routeEntries).toContain('_layout.tsx')
+      expect(routeEntries).toContain('index.tsx')
+      expect(routeEntries).toContain('about.tsx')
+      expect(routeEntries).toContain('items')
+
+      const itemEntries = await readdir(join(directory, 'src', 'routes', 'items'))
+      expect(itemEntries).toContain('[id].tsx')
+    } finally {
+      await rm(parent, { recursive: true, force: true })
+    }
   })
 })

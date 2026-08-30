@@ -1,6 +1,6 @@
-/** @jsxImportSource @nexil/jsx-runtime */
+/** @jsxImportSource nexil */
 
-import { element } from '@nexil/core'
+import { element } from 'nexil'
 
 export const seo = { title: 'Hello Nexil' }
 

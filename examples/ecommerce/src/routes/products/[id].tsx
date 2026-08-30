@@ -1,8 +1,8 @@
-/** @jsxImportSource @nexil/jsx-runtime */
+/** @jsxImportSource nexil */
 
 import { z } from 'zod'
-import { action, assertTrustedOrigin } from '@nexil/actions'
-import { element } from '@nexil/core'
+import { action, assertTrustedOrigin } from 'nexil/server'
+import { element } from 'nexil'
 import { getProduct } from '../../server/catalog.js'
 
 export const render = { mode: 'isr' as const, revalidate: 30 }

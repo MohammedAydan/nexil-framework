@@ -14,16 +14,8 @@
     "verify": "pnpm typecheck && pnpm test && pnpm check && pnpm build"
   },
   "dependencies": {
-    "@nexil/actions": "workspace:*",
     "@nexil/cli": "workspace:*",
-    "@nexil/core": "workspace:*",
-    "@nexil/jsx-runtime": "workspace:*",
-    "@nexil/reactivity": "workspace:*",
-    "@nexil/router": "workspace:*",
-    "@nexil/security": "workspace:*",
-    "@nexil/seo": "workspace:*",
-    "@nexil/server": "workspace:*",
-    "@nexil/state": "workspace:*"
+    "nexil": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.8.0",

@@ -1,4 +1,4 @@
-import { Link } from '@nexil/router'
+import { Link } from 'nexil/router'
 
 export default function WorkbenchLayout({ children }: { readonly children: unknown }) {
   return (

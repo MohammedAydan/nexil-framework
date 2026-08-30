@@ -5,14 +5,21 @@
     "declaration": true,
     "declarationMap": true,
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    "paths": {
+      "nexil": ["../nexil/src/index.ts"],
+      "nexil/server": ["../nexil/src/server/index.ts"],
+      "nexil/router": ["../nexil/src/router/index.ts"],
+      "nexil/client": ["../nexil/src/client/index.ts"],
+      "nexil/jsx-runtime": ["../nexil/src/jsx-runtime/index.ts"],
+      "nexil/jsx-dev-runtime": ["../nexil/src/jsx-runtime/jsx-runtime.ts"],
+      "@nexil/vite-plugin": ["../vite-plugin/src/index.ts"]
+    }
   },
   "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts"],
   "references": [
-    { "path": "../vite-plugin" },
-    { "path": "../compiler" },
-    { "path": "../dev-server" },
-    { "path": "../media" },
-    { "path": "../serve" }
+    { "path": "../nexil" },
+    { "path": "../vite-plugin" }
   ]
 }

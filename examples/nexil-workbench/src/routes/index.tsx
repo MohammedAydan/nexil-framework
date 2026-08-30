@@ -1,4 +1,4 @@
-import { Link } from '@nexil/router'
+import { Link } from 'nexil/router'
 import { ArticleFilter } from '../components/article-filter'
 
 export const seo = {

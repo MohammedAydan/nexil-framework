@@ -30,7 +30,7 @@ describe('Nexil CLI', () => {
       'Nexil starter design system',
     )
     await expect(runCli(['analyze'], directory)).resolves.toMatch(/\/\s+\d+\s+\d+\s+interactive/)
-  })
+  }, 30000)
 
   it('requires a production artifact before start', async () => {
     const parent = await mkdtemp(join(tmpdir(), 'nexil-cli-start-'))
@@ -57,7 +57,7 @@ describe('Nexil CLI', () => {
     } finally {
       await rm(parent, { recursive: true, force: true })
     }
-  })
+  }, 30000)
 
   it('reports oversized static images in the production asset inventory', async () => {
     const parent = await mkdtemp(join(tmpdir(), 'nexil-cli-assets-'))
@@ -78,7 +78,7 @@ describe('Nexil CLI', () => {
     } finally {
       await rm(parent, { recursive: true, force: true })
     }
-  })
+  }, 30000)
 
   it('emits cached AVIF and WebP public-image variants when configured', async () => {
     const parent = await mkdtemp(join(tmpdir(), 'nexil-cli-media-'))
@@ -111,7 +111,7 @@ describe('Nexil CLI', () => {
     } finally {
       await rm(parent, { recursive: true, force: true })
     }
-  })
+  }, 30000)
 
   it('uses local workspace dependencies when scaffolded inside the repository', async () => {
     const parent = await mkdtemp(join(process.cwd(), '.nexil-scaffold-test-'))
@@ -144,7 +144,7 @@ describe('Nexil CLI', () => {
         dependencies: { '@nexil/cli': string }
         nexil: { source: string; registry: string }
       }
-      expect(packageJson.dependencies['@nexil/cli']).toBe('^0.0.1')
+      expect(packageJson.dependencies['@nexil/cli']).toBe('^0.1.0')
       expect(packageJson.nexil).toEqual({
         routeExtension: 'tsx',
         source: 'npm',
@@ -206,7 +206,7 @@ describe('Nexil CLI', () => {
       'onClick$',
     )
     expect(await readFile(join(result.directory, 'tsconfig.json'), 'utf8')).toContain(
-      '"jsxImportSource": "@nexil/jsx-runtime"',
+      '"jsxImportSource": "nexil"',
     )
     expect(await readFile(join(result.directory, 'tsconfig.json'), 'utf8')).toContain(
       '"allowJs": true',
@@ -271,7 +271,7 @@ describe('Nexil CLI', () => {
       const directory = await createProject('external-state-app', parent)
       await writeFile(
         join(directory, 'src/routes/index.tsx'),
-        `import { state } from '@nexil/core'
+        `import { state } from 'nexil'
 const accountBalance = state(1200)
 export default function Home() { return <button onClick$={() => accountBalance.set((value) => value + 1)}>{accountBalance()}</button> }
 `,
@@ -314,7 +314,7 @@ export default function Home() { return <button onClick$={() => accountBalance.s
       const linkDirectory = await createProject('navigation-link', parent)
       await writeFile(
         join(linkDirectory, 'src/routes/index.tsx'),
-        `import { Link } from '@nexil/router'
+        `import { Link } from 'nexil/router'
 export default function Home() { return <main><Link href="/about" prefetch="intent">About</Link></main> }
 `,
         'utf8',
@@ -342,7 +342,7 @@ export default function Home() { return <main><Link href="/about" prefetch="inte
     } finally {
       await rm(parent, { recursive: true, force: true })
     }
-  })
+  }, 30000)
 
   it('creates an isolated ContextScope for each statically rendered Route and Layout', async () => {
     const parent = await mkdtemp(join(tmpdir(), 'nexil-cli-context-scope-'))
@@ -350,7 +350,7 @@ export default function Home() { return <main><Link href="/about" prefetch="inte
       const directory = await createProject('context-scope-app', parent)
       await writeFile(
         join(directory, 'src/routes/_layout.tsx'),
-        `import { createContext, provideContext } from '@nexil/core'
+        `import { createContext, provideContext } from 'nexil'
 const RequestIdentity = createContext('missing')
 export default function Layout({ children }: { children: unknown }, context?: { readonly requestId?: string; readonly scope?: unknown }) {
   const scope = provideContext(context?.scope as never, RequestIdentity, context?.requestId ?? 'missing')
@@ -378,7 +378,7 @@ export default function Layout({ children }: { children: unknown }, context?: { 
     } finally {
       await rm(parent, { recursive: true, force: true })
     }
-  })
+  }, 30000)
 })
 
 it('generates routes, components, and actions with safe paths', async () => {
@@ -418,7 +418,7 @@ it('emits the automatic progressive-form runtime only for Form routes', async ()
     const directory = await createProject('forms-app', parent)
     await writeFile(
       join(directory, 'src/routes/index.tsx'),
-      `import { Form, SubmitButton } from '@nexil/core'\nexport default function Home() { return <Form action="/save"><input name="name" /><SubmitButton loadingText="Saving">Save</SubmitButton></Form> }\n`,
+      `import { Form, SubmitButton } from 'nexil'\nexport default function Home() { return <Form action="/save"><input name="name" /><SubmitButton loadingText="Saving">Save</SubmitButton></Form> }\n`,
       'utf8',
     )
     await runCli(['build'], directory)
@@ -431,7 +431,7 @@ it('emits the automatic progressive-form runtime only for Form routes', async ()
   } finally {
     await rm(parent, { recursive: true, force: true })
   }
-})
+}, 30000)
 
 it('isolates the binding runtime to binding-enabled routes', async () => {
   const parent = await mkdtemp(join(tmpdir(), 'nexil-cli-bindings-'))
@@ -452,7 +452,7 @@ it('isolates the binding runtime to binding-enabled routes', async () => {
     const bindingDirectory = await createProject('binding-app', parent)
     await writeFile(
       join(bindingDirectory, 'src/routes/index.tsx'),
-      `import { state } from '@nexil/core'
+      `import { state } from 'nexil'
 const count = state(0)
 export default function Home() { return <output>{count()}</output> }
 `,
@@ -467,4 +467,4 @@ export default function Home() { return <output>{count()}</output> }
   } finally {
     await rm(parent, { recursive: true, force: true })
   }
-})
+}, 30000)

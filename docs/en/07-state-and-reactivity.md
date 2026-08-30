@@ -113,6 +113,8 @@ console.log(cart.snapshot())
 
 The current Store interface exposes `scope`, `value`, `snapshot`, `set`, `select`, `subscribe`, and `dispose`. Use `setPath(store, ['preferences', 'theme'], 'dark')` for nested immutable updates and `lens(store, ['preferences', 'theme'])` for a writable focused signal. `snapshot()` returns a detached structured clone when the state is serializable.
 
+> For the comprehensive guide on modern Nexil Stores (`defineStore`, modular `createStore`, `$stores/*`, automatic DOM property bindings, and SSR resumability), see [25-nexil-stores.md](./25-nexil-stores.md).
+
 ## Selectors
 
 Selectors should be pure whenever possible. They should not mutate the store or read time or randomness during evaluation, otherwise memoization becomes unstable.

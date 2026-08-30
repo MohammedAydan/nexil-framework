@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { readFile } from 'node:fs/promises'
-import { createProductionServer } from '@nexil/serve'
+import { createProductionServer } from '@nexil/cli'
 
 const root = fileURLToPath(new URL('../dist/client', import.meta.url))
 const config = JSON.parse(await readFile(new URL('../nexil.config.json', import.meta.url), 'utf8'))

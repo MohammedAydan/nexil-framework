@@ -9,13 +9,8 @@
     "check": "node ../../packages/cli/dist/bin.js check --budget"
   },
   "dependencies": {
-    "@nexil/actions": "workspace:*",
     "@nexil/cli": "workspace:*",
-    "@nexil/core": "workspace:*",
-    "@nexil/css": "workspace:*",
-    "@nexil/jsx-runtime": "workspace:*",
-    "@nexil/reactivity": "workspace:*",
-    "@nexil/seo": "workspace:*"
+    "nexil": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.0",

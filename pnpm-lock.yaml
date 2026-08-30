@@ -57,104 +57,50 @@ importers:
 
   examples/basic-app:
     dependencies:
-      '@nexil/media':
+      nexil:
         specifier: workspace:*
-        version: link:../../packages/media
+        version: link:../../packages/nexil
 
   examples/blog:
     dependencies:
-      '@nexil/core':
+      nexil:
         specifier: workspace:*
-        version: link:../../packages/core
-      '@nexil/jsx-runtime':
-        specifier: workspace:*
-        version: link:../../packages/jsx-runtime
-      '@nexil/seo':
-        specifier: workspace:*
-        version: link:../../packages/seo
+        version: link:../../packages/nexil
       zod:
         specifier: ^4.1.0
         version: 4.4.3
 
   examples/ecommerce:
     dependencies:
-      '@nexil/actions':
-        specifier: workspace:*
-        version: link:../../packages/actions
-      '@nexil/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@nexil/jsx-runtime':
-        specifier: workspace:*
-        version: link:../../packages/jsx-runtime
-      '@nexil/server':
-        specifier: workspace:*
-        version: link:../../packages/server
       axios:
         specifier: ^1.11.0
         version: 1.19.0
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@opentelemetry/api@1.9.1)
+      nexil:
+        specifier: workspace:*
+        version: link:../../packages/nexil
       zod:
         specifier: ^4.1.0
         version: 4.4.3
 
   examples/hello:
     dependencies:
-      '@nexil/core':
+      nexil:
         specifier: workspace:*
-        version: link:../../packages/core
-      '@nexil/jsx-runtime':
-        specifier: workspace:*
-        version: link:../../packages/jsx-runtime
+        version: link:../../packages/nexil
 
   examples/landing-page: {}
 
   examples/nexil-showcase:
     dependencies:
-      '@nexil/actions':
-        specifier: workspace:*
-        version: link:../../packages/actions
-      '@nexil/adapters':
-        specifier: workspace:*
-        version: link:../../packages/adapters
       '@nexil/cli':
         specifier: workspace:*
         version: link:../../packages/cli
-      '@nexil/client':
+      nexil:
         specifier: workspace:*
-        version: link:../../packages/client
-      '@nexil/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@nexil/css':
-        specifier: workspace:*
-        version: link:../../packages/css
-      '@nexil/jsx-runtime':
-        specifier: workspace:*
-        version: link:../../packages/jsx-runtime
-      '@nexil/media':
-        specifier: workspace:*
-        version: link:../../packages/media
-      '@nexil/reactivity':
-        specifier: workspace:*
-        version: link:../../packages/reactivity
-      '@nexil/seo':
-        specifier: workspace:*
-        version: link:../../packages/seo
-      '@nexil/serve':
-        specifier: workspace:*
-        version: link:../../packages/serve
-      '@nexil/server':
-        specifier: workspace:*
-        version: link:../../packages/server
-      '@nexil/state':
-        specifier: workspace:*
-        version: link:../../packages/state
-      '@nexil/telemetry':
-        specifier: workspace:*
-        version: link:../../packages/telemetry
+        version: link:../../packages/nexil
     devDependencies:
       '@playwright/test':
         specifier: ^1.62.1
@@ -171,36 +117,12 @@ importers:
 
   examples/nexil-workbench:
     dependencies:
-      '@nexil/actions':
-        specifier: workspace:*
-        version: link:../../packages/actions
       '@nexil/cli':
         specifier: workspace:*
         version: link:../../packages/cli
-      '@nexil/core':
+      nexil:
         specifier: workspace:*
-        version: link:../../packages/core
-      '@nexil/jsx-runtime':
-        specifier: workspace:*
-        version: link:../../packages/jsx-runtime
-      '@nexil/reactivity':
-        specifier: workspace:*
-        version: link:../../packages/reactivity
-      '@nexil/router':
-        specifier: workspace:*
-        version: link:../../packages/router
-      '@nexil/security':
-        specifier: workspace:*
-        version: link:../../packages/security
-      '@nexil/seo':
-        specifier: workspace:*
-        version: link:../../packages/seo
-      '@nexil/server':
-        specifier: workspace:*
-        version: link:../../packages/server
-      '@nexil/state':
-        specifier: workspace:*
-        version: link:../../packages/state
+        version: link:../../packages/nexil
     devDependencies:
       typescript:
         specifier: ^5.8.0
@@ -214,27 +136,12 @@ importers:
 
   examples/practical-app:
     dependencies:
-      '@nexil/actions':
-        specifier: workspace:*
-        version: link:../../packages/actions
       '@nexil/cli':
         specifier: workspace:*
         version: link:../../packages/cli
-      '@nexil/core':
+      nexil:
         specifier: workspace:*
-        version: link:../../packages/core
-      '@nexil/css':
-        specifier: workspace:*
-        version: link:../../packages/css
-      '@nexil/jsx-runtime':
-        specifier: workspace:*
-        version: link:../../packages/jsx-runtime
-      '@nexil/reactivity':
-        specifier: workspace:*
-        version: link:../../packages/reactivity
-      '@nexil/seo':
-        specifier: workspace:*
-        version: link:../../packages/seo
+        version: link:../../packages/nexil
     devDependencies:
       '@tailwindcss/vite':
         specifier: ^4.1.0
@@ -246,206 +153,28 @@ importers:
         specifier: ^6.2.0
         version: 6.4.3(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0)
 
-  packages/actions:
-    dependencies:
-      '@nexil/server':
-        specifier: workspace:*
-        version: link:../server
-
-  packages/adapters: {}
-
   packages/cli:
     dependencies:
-      '@nexil/compiler':
-        specifier: workspace:*
-        version: link:../compiler
-      '@nexil/core':
-        specifier: workspace:*
-        version: link:../core
-      '@nexil/dev-server':
-        specifier: workspace:*
-        version: link:../dev-server
-      '@nexil/media':
-        specifier: workspace:*
-        version: link:../media
-      '@nexil/og-image':
-        specifier: workspace:*
-        version: link:../og-image
-      '@nexil/renderer':
-        specifier: workspace:*
-        version: link:../renderer
-      '@nexil/router':
-        specifier: workspace:*
-        version: link:../router
-      '@nexil/seo':
-        specifier: workspace:*
-        version: link:../seo
-      '@nexil/serve':
-        specifier: workspace:*
-        version: link:../serve
-      '@nexil/starter':
-        specifier: workspace:*
-        version: link:../starter
       '@nexil/vite-plugin':
         specifier: workspace:*
         version: link:../vite-plugin
+      nexil:
+        specifier: workspace:*
+        version: link:../nexil
       vite:
         specifier: ^7.3.6
         version: 7.3.6(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0)
 
-  packages/client:
-    dependencies:
-      '@nexil/core':
-        specifier: workspace:*
-        version: link:../core
-      '@nexil/reactivity':
-        specifier: workspace:*
-        version: link:../reactivity
+  packages/create-nexil: {}
 
-  packages/compiler: {}
-
-  packages/core:
+  packages/nexil:
     dependencies:
-      '@nexil/reactivity':
-        specifier: workspace:*
-        version: link:../reactivity
-
-  packages/create-nexil:
-    dependencies:
-      '@nexil/starter':
-        specifier: workspace:*
-        version: link:../starter
-
-  packages/create-nexil-app:
-    dependencies:
-      '@nexil/starter':
-        specifier: workspace:*
-        version: link:../starter
-
-  packages/css:
-    dependencies:
+      sharp:
+        specifier: 0.35.3
+        version: 0.35.3(@types/node@22.20.1)
       tailwind-merge:
-        specifier: ^3.6.0
+        specifier: ^3.0.2
         version: 3.6.0
-
-  packages/dev-server:
-    dependencies:
-      '@nexil/actions':
-        specifier: workspace:*
-        version: link:../actions
-      '@nexil/adapters':
-        specifier: workspace:*
-        version: link:../adapters
-      '@nexil/core':
-        specifier: workspace:*
-        version: link:../core
-      '@nexil/renderer':
-        specifier: workspace:*
-        version: link:../renderer
-      '@nexil/router':
-        specifier: workspace:*
-        version: link:../router
-      '@nexil/seo':
-        specifier: workspace:*
-        version: link:../seo
-      '@nexil/vite-plugin':
-        specifier: workspace:*
-        version: link:../vite-plugin
-      vite:
-        specifier: ^7.3.6
-        version: 7.3.6(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0)
-
-  packages/jsx-runtime:
-    dependencies:
-      '@nexil/core':
-        specifier: workspace:*
-        version: link:../core
-
-  packages/media:
-    dependencies:
-      '@nexil/core':
-        specifier: workspace:*
-        version: link:../core
-      sharp:
-        specifier: ^0.35.3
-        version: 0.35.3(@types/node@22.20.1)
-
-  packages/og-image:
-    dependencies:
-      sharp:
-        specifier: ^0.35.3
-        version: 0.35.3(@types/node@22.20.1)
-    devDependencies:
-      vitest:
-        specifier: ^3.0.0
-        version: 3.2.7(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0)
-
-  packages/reactivity: {}
-
-  packages/renderer:
-    dependencies:
-      '@nexil/core':
-        specifier: workspace:*
-        version: link:../core
-
-  packages/router:
-    dependencies:
-      '@nexil/core':
-        specifier: workspace:*
-        version: link:../core
-
-  packages/security:
-    dependencies:
-      '@nexil/server':
-        specifier: workspace:*
-        version: link:../server
-
-  packages/seo: {}
-
-  packages/serve:
-    dependencies:
-      '@nexil/actions':
-        specifier: workspace:*
-        version: link:../actions
-
-  packages/serve-cloudflare:
-    dependencies:
-      '@nexil/adapters':
-        specifier: workspace:*
-        version: link:../adapters
-    devDependencies:
-      vitest:
-        specifier: ^3.0.0
-        version: 3.2.7(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0)
-
-  packages/serve-deno:
-    dependencies:
-      '@nexil/adapters':
-        specifier: workspace:*
-        version: link:../adapters
-    devDependencies:
-      vitest:
-        specifier: ^3.0.0
-        version: 3.2.7(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0)
-
-  packages/server:
-    dependencies:
-      '@nexil/core':
-        specifier: workspace:*
-        version: link:../core
-
-  packages/starter: {}
-
-  packages/state:
-    dependencies:
-      '@nexil/core':
-        specifier: workspace:*
-        version: link:../core
-      '@nexil/reactivity':
-        specifier: workspace:*
-        version: link:../reactivity
-
-  packages/telemetry: {}
 
   packages/vite-plugin:
     dependencies:
@@ -455,12 +184,12 @@ importers:
       '@babel/traverse':
         specifier: ^7.29.8
         version: 7.29.8
-      '@nexil/compiler':
-        specifier: workspace:*
-        version: link:../compiler
       magic-string:
         specifier: ^0.30.21
         version: 0.30.21
+      nexil:
+        specifier: workspace:*
+        version: link:../nexil
       vite:
         specifier: ^7.3.6
         version: 7.3.6(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0)

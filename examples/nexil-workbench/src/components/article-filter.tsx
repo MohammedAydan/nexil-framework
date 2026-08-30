@@ -1,4 +1,4 @@
-import { computed, state } from '@nexil/core'
+import { computed, state } from 'nexil'
 
 export function ArticleFilter() {
   const active = state(false)

@@ -1,0 +1,4 @@
+node_modules
+dist
+.nexil
+.DS_Store

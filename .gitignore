@@ -13,5 +13,6 @@ test-results/
 *.log
 .DS_Store
 my-nexil-app/
+.nexil/
 docs/nexil-arabic-documentation.zip
 docs/nexil-english-documentation.zip

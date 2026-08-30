@@ -1,4 +1,4 @@
-import { component } from '@nexil/core'
+import { component } from 'nexil'
 
 export const staticPaths = ['architecture', 'resumability', 'performance']
 export const seo = ({ pathname = '/docs/architecture' }: { pathname?: string } = {}) => ({

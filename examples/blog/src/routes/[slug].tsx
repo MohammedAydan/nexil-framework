@@ -1,7 +1,7 @@
-/** @jsxImportSource @nexil/jsx-runtime */
+/** @jsxImportSource nexil */
 
 import { z } from 'zod'
-import { element } from '@nexil/core'
+import { element } from 'nexil'
 
 export const render = { mode: 'isr' as const, revalidate: 60 }
 

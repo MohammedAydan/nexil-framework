@@ -41,18 +41,20 @@ Options:
       --js                Use JavaScript
       --tailwind          Include Tailwind CSS
       --no-tailwind       Do not include Tailwind (default)
-      --template <name>   minimal | interactive (default) | secure-node
+      --template <name>   fullstack | blank | interactive (default) | minimal | secure-node
       --template=<name>   Same as above
 
 Templates:
-  minimal       Static HTML-first, no resumability boundary
+  fullstack     Fullstack Router, Layouts, Loaders, Actions, Tailwind
+  blank         Minimal Vite + JSX entry setup
   interactive   SSR + one onClick$ boundary (default)
+  minimal       Static HTML-first, no resumability boundary
   secure-node   Static + nexil.config.ts with securityHeaders + trustProxy:false
 
 Examples:
   ${invokedAs} my-nexil-app --yes --ts
-  ${invokedAs} portal --yes --ts --template secure-node --tailwind
-  ${invokedAs} my-app --dry-run --template minimal --js
+  ${invokedAs} portal --yes --ts --template fullstack
+  ${invokedAs} my-app --dry-run --template blank --js
 
 Exit codes:
   0 success, 1 user/system error
@@ -131,14 +133,14 @@ async function main(): Promise<void> {
         template: scaffoldOptions.template,
         language: scaffoldOptions.language,
         tailwind: scaffoldOptions.tailwind,
-        dependencyVersion: '^0.0.1',
+        dependencyVersion: '^0.1.0',
       } as any)
       const files = createStarterFiles({
         projectName: name,
         template: resolved.template,
         language: resolved.language,
         tailwind: resolved.tailwind,
-        dependencyVersion: '^0.0.1',
+        dependencyVersion: '^0.1.0',
       } as any)
       const target = resolve(process.cwd(), name)
       // Validate containment without FS
@@ -185,10 +187,21 @@ async function main(): Promise<void> {
     // scaffoldProject will do its own readdir check and mkdir, but we track creation
     const beforeExists = existedBefore
     const result = await scaffoldProject(name, parent, options as never)
-    // If we reach here, success — but check if directory was newly created
-    // scaffoldProject already created it, we just need to know for rollback on later failure (none)
     createdDirectory = !beforeExists
-    process.stdout.write(`Created ${result.directory}\n`)
+
+    // Attempt git init
+    try {
+      const { exec } = await import('node:child_process')
+      const { promisify } = await import('node:util')
+      const execAsync = promisify(exec)
+      await execAsync('git init', { cwd: result.directory }).catch(() => {})
+    } catch {}
+
+    process.stdout.write(`\n✨ Success! Created ${name} at ${result.directory}\n\n`)
+    process.stdout.write(`Next steps:\n`)
+    process.stdout.write(`  cd ${name}\n`)
+    process.stdout.write(`  pnpm install (or npm install / yarn / bun install)\n`)
+    process.stdout.write(`  pnpm dev\n\n`)
     process.exit(0)
   } catch (error) {
     const msg = formatError(error)
