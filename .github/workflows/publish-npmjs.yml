@@ -170,7 +170,23 @@ jobs:
         id: publish
         run: |
           set -o pipefail
-          pnpm -r publish --access public --no-git-checks --no-provenance 2>&1 | tee publish.log
+          publish_once() {
+            pnpm -r publish --access public --no-git-checks --no-provenance 2>&1 | tee publish.log
+          }
+          if ! publish_once; then
+            if grep -qE 'E409|Failed to save packument' publish.log; then
+              echo "::warning::E409 packument race detected (registry still processing), waiting 15s and retrying once..."
+              sleep 15
+              # retry once; use new log
+              rm -f publish.log
+              if ! publish_once; then
+                echo "::error::Publish failed again after E409 retry"
+                exit 1
+              fi
+            else
+              exit 1
+            fi
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -185,9 +201,9 @@ jobs:
             echo "::error::publish.log was not created"
             exit 1
           fi
-          if grep -qE 'npm error|E403|E401|EOTP' publish.log; then
+          if grep -qE 'npm error|E403|E401|EOTP|E409' publish.log; then
             echo "::error::One or more packages failed to publish:"
-            grep -E 'npm error|E403|E401|EOTP' publish.log || true
+            grep -E 'npm error|E403|E401|EOTP|E409' publish.log || true
             if grep -q 'Two-factor authentication or granular access token' publish.log; then
               echo "::error::NPM_TOKEN lacks 2FA-bypass permission."
               echo "::error::Regenerate it on npmjs.com as either:"
