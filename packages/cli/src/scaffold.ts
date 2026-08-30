@@ -11,4 +11,3 @@ export type {
   ScaffoldOptions,
   ScaffoldTemplate,
 } from './starter/node.js'
-

@@ -124,7 +124,8 @@ it('isolates Context per-request across all adapter runtimes (no cross-request l
 })
 
 it('keeps streamed SSR byte-identical and stops work after disconnect', async () => {
-  const { renderToStream, renderToString } = await import('../../packages/nexil/src/server/index.js')
+  const { renderToStream, renderToString } =
+    await import('../../packages/nexil/src/server/index.js')
   const root = element('article', {}, [element('h1', {}, 'Stream'), element('p', {}, 'Parity')])
   const reader = renderToStream(root, { chunkSize: 4 }).getReader()
   const chunks: Uint8Array[] = []

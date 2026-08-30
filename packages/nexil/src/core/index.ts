@@ -8,14 +8,7 @@ export type Serializable =
   | { readonly [key: string]: Serializable }
 
 export type Child =
-  | RenderNode
-  | string
-  | number
-  | boolean
-  | null
-  | undefined
-  | Child[]
-  | (() => Child)
+  RenderNode | string | number | boolean | null | undefined | Child[] | (() => Child)
 
 export type AsyncChild = Child | Promise<Child>
 
@@ -478,13 +471,7 @@ export {
   resource,
   watch,
 } from './reactivity.js'
-export type {
-  Signal,
-  ReadableSignal,
-  Unsubscribe,
-  Resource,
-  SignalOptions,
-} from './reactivity.js'
+export type { Signal, ReadableSignal, Unsubscribe, Resource, SignalOptions } from './reactivity.js'
 
 export * from './state.js'
 export * from './css.js'
@@ -493,4 +480,3 @@ export * from './og-image.js'
 export * from './seo.js'
 export * from './security.js'
 export * from './telemetry.js'
-

@@ -117,4 +117,3 @@
   - Cleaned up obsolete package directories and unified all 40 test suites.
 - **Alternatives considered:** Keeping 19 micro-packages (rejected: complex release management and heavy consumer configs); Single monolithic package including CLI (rejected: CLI has CLI-specific runtime deps like prompts/sharp/vite not needed in browser runtimes).
 - **Consequences:** Consumer `package.json` only requires `nexil` and `@nexil/vite-plugin` (or `@nexil/cli`); workspace typecheck (`tsc -b`) and Vitest test suites (40 test files, 319 unit/integration tests) pass with 100% success.
-

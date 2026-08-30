@@ -13,4 +13,3 @@ export type {
   ScaffoldTemplate,
 } from './starter/node.js'
 export type { StarterFile, StarterOptions, ResolvedStarterOptions } from './starter/index.js'
-

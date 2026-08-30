@@ -233,7 +233,10 @@ export interface ServerAction<Input, Output> {
   readonly endpoint: string
   run(input: Input, event: RequestEvent): Promise<Output>
   submit(formData: FormData, event: RequestEvent): Promise<Output>
-  execute(context: { readonly request: Request; readonly data?: DataContext }, input: unknown): Promise<Output>
+  execute(
+    context: { readonly request: Request; readonly data?: DataContext },
+    input: unknown,
+  ): Promise<Output>
 }
 
 let actionKeyCounter = 0
@@ -278,7 +281,10 @@ export function serverAction$<Input, Output>(
         })
         return actionFn(data as unknown as Input, event)
       },
-      execute: async (context: { readonly request: Request; readonly data?: DataContext }, input: unknown): Promise<Output> => {
+      execute: async (
+        context: { readonly request: Request; readonly data?: DataContext },
+        input: unknown,
+      ): Promise<Output> => {
         const event = createRequestEvent(context.request)
         return actionFn(input as Input, event)
       },
@@ -475,6 +481,3 @@ export * from './stream.js'
 export * from './actions.js'
 export * from './modes.js'
 export * from './adapters.js'
-
-
-

@@ -343,11 +343,13 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
 - Gates green: `pnpm build` ✅ (34 projects), `pnpm typecheck` ✅ (`tsc -b`), `pnpm test` ✅ (287/287 tests across 38 suites)
 - Overall health: Green
 - Blockers: None
+
 ---
 
 ## Session: 2026-08-30 — Nexil Stores Cleanup, Audit & Documentation Pass
 
 ### What was done
+
 - **Deep Codebase Cleanup:**
   - Removed verbose debug `console.log` statements from `packages/core/src/index.ts` (`getAls`, `getActiveScope`, `runWithScope`) and `packages/state/src/index.ts` (`recordStoreAccess`).
   - Removed unused `effect` import from `packages/state/src/index.ts`.
@@ -369,14 +371,17 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
   - `pnpm exec prettier --write .` ✅
 
 ### State at end of session
+
 - Overall health: Green
 - Active feature: `nexil-stores` (Cleaned, audited, documented, and fully production-ready)
 - Blockers: None
+
 ---
 
 ## Session: 2026-08-30 — AST-to-HTML Serializer & SSR Streaming Engine
 
 ### What was done
+
 - Implemented comprehensive attribute compiler & Signal resolution engine in `@nexil/renderer`:
   - `unwrapSignalValue`: Resolves `MaybeSignal<T>` reactive primitives to their initial SSR values.
   - `normalizeClass`: Normalizes nested class arrays, boolean records, and signals; merges `class` and `className`.
@@ -393,6 +398,7 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
 - Added comprehensive unit tests in `packages/renderer/src/index.test.ts` and `packages/renderer/src/stream.test.ts`.
 
 ### Files changed
+
 - `packages/renderer/src/index.ts` — attribute compiler, signal resolution, class/style normalization, XSS prevention, scope-isolated rendering
 - `packages/renderer/src/stream.ts` — `renderToStream` and `renderToAsyncIterable` with scope preservation
 - `packages/renderer/src/index.test.ts` — exhaustive unit tests for serializer
@@ -401,14 +407,17 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
 - `plans/SESSION_LOG.md` — this entry
 
 ### State at end of session
+
 - Gates green: `pnpm build` ✅ (34 projects), `pnpm typecheck` ✅ (`tsc -b`), `pnpm test` ✅ (305/305 tests across 40 suites)
 - Overall health: Green
 - Blockers: None
+
 ---
 
 ## Session: 2026-08-30 — Client Global Event Delegator & Resumability Dispatcher
 
 ### What was done
+
 - Implemented root-level global event delegation in `@nexil/client`:
   - `initGlobalEventDelegator`: Attaches unified root listeners for standard delegated events (`click`, `input`, `change`, `submit`, `keydown`, `keyup`, `focusin`, `focusout`, `dblclick`, `pointerdown`, `pointerup`, `touchstart`, `touchend`).
   - Target ancestry traversal: Intercepts bubbling events and traverses upwards from `event.target` to root matching `data-nx-on-<event>` and legacy `data-nx-on` attributes.
@@ -423,19 +432,23 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
 - Added comprehensive unit tests in `packages/client/src/index.test.ts` verifying event delegation, chunk caching, state hydration, and DOM mutations.
 
 ### Files changed
+
 - `packages/client/src/index.ts` — global event delegator, cached chunk loader, state deserializer, and resumable handler dispatcher
 - `packages/client/src/index.test.ts` — unit tests for global event delegator, chunk loader cache, and state hydration
 - `plans/SESSION_LOG.md` — this entry
 
 ### State at end of session
+
 - Gates green: `pnpm build` ✅ (34 projects), `pnpm typecheck` ✅ (`tsc -b`), `pnpm test` ✅ (308/308 tests across 40 suites)
 - Overall health: Green
 - Blockers: None
+
 ---
 
 ## Session: 2026-08-30 — Nexil Resumability Compiler & Vite Plugin
 
 ### What was done
+
 - Implemented the AST Transform Engine in `@nexil/compiler`:
   - `transformResumableJSX`: Traverses JSX elements, finds `$` closure attributes (`onClick$`, `onInput$`, `onSubmit$`, `component$`), and extracts them into hoisted resumable chunk modules (`chunk_<hash>.js`).
   - Analyzes lexical scope captures (signals, stores, actions, static values) and emits scope metadata (`data-nx-scope`).
@@ -448,6 +461,7 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
 - Added comprehensive unit test suite in `packages/compiler/src/transform.test.ts`.
 
 ### Files changed
+
 - `packages/compiler/package.json` — added `@babel/parser`, `@babel/traverse`, `magic-string`
 - `packages/compiler/src/transform.ts` — AST transform engine for resumable `$` closures
 - `packages/compiler/src/index.ts` — exported transform module
@@ -456,14 +470,17 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
 - `plans/SESSION_LOG.md` — this entry
 
 ### State at end of session
+
 - Gates green: `pnpm build` ✅ (34 projects), `pnpm typecheck` ✅ (`tsc -b`), `pnpm test` ✅ (313/313 tests across 41 suites)
 - Overall health: Green
 - Blockers: None
+
 ---
 
 ## Session: 2026-08-30 — Fullstack File-Based Router & Server Primitives
 
 ### What was done
+
 - Implemented file-based routing and layout primitives in `@nexil/router`:
   - `routeFromFile`, `matchRoute`, `resolveRoute`: Full tree matching with static segments, dynamic params (`[param]`), catch-all (`[...slug]`), optional catch-all (`[[...slug]]`), and group routes (`(group)`).
   - Nested layout composition: `composeLayouts` and `<Slot />` component.
@@ -477,6 +494,7 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
 - Added unit and integration tests across `packages/router/src/index.test.ts` and `packages/server/src/index.test.ts`.
 
 ### Files changed
+
 - `packages/router/package.json` — added `@nexil/reactivity` dependency
 - `packages/router/src/index.ts` — nested layouts, Slot, and client SPA navigation hooks
 - `packages/router/src/index.test.ts` — unit tests for router composition and hooks
@@ -486,14 +504,17 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
 - `plans/SESSION_LOG.md` — this entry
 
 ### State at end of session
+
 - Gates green: `pnpm build` ✅ (34 projects), `pnpm typecheck` ✅ (`tsc -b`), `pnpm test` ✅ (320/320 tests across 41 suites)
 - Overall health: Green
 - Blockers: None
+
 ---
 
 ## Session: 2026-08-30 — DX Tools, Scaffolding CLI, and Starter Templates
 
 ### What was done
+
 - Implemented root starter templates:
   - `templates/template-blank`: Minimalistic Vite setup with JSX runtime, reactive counter, and TypeScript configuration.
   - `templates/template-fullstack`: Fullstack setup showcasing File-Based Routing, Layouts, Server Loaders (`routeLoader$`), Server Actions (`serverAction$`), SSR Node adapter, and Tailwind CSS.
@@ -508,6 +529,7 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
   - `nexil create`: Integrated template scaffolding.
 
 ### Files changed
+
 - `templates/template-blank/*` — minimal starter template
 - `templates/template-fullstack/*` — fullstack starter template with router, loaders, and actions
 - `packages/starter/src/index.ts` — added fullstack and blank template generation
@@ -519,14 +541,17 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
 - `plans/SESSION_LOG.md` — this entry
 
 ### State at end of session
+
 - Gates green: `pnpm build` ✅ (34 projects), `pnpm typecheck` ✅ (`tsc -b`), `pnpm test` ✅ (321/321 tests across 41 suites)
 - Overall health: Green
 - Blockers: None
+
 ---
 
 ## Session: 2026-08-30 — Launch Readiness & Publishing Setup
 
 ### What was done
+
 - Implemented automated E2E Monorepo Smoke Test (`tests/e2e/scaffold-smoke.test.ts`):
   - Scaffolds `template-blank` and `template-fullstack` into isolated temporary directories.
   - Verifies generated `package.json`, `tsconfig.json`, `vite.config.ts`, entry files, router layouts, and loaders.
@@ -539,6 +564,7 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
   - `pnpm test` ✅ (323/323 tests across 42 suites)
 
 ### Files changed
+
 - `scripts/verify-packages.mjs` — package metadata standardization script
 - `scripts/release.mjs` — semantic version bumper and release script
 - `packages/*/package.json` — verified `publishConfig`, `license`, `author`, `repository`
@@ -547,14 +573,17 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
 - `plans/SESSION_LOG.md` — this entry
 
 ### State at end of session
+
 - Gates green: `pnpm build` ✅ (34 projects), `pnpm typecheck` ✅ (`tsc -b`), `pnpm test` ✅ (323/323 tests across 42 suites)
 - Overall health: Green
 - Blockers: None
+
 ---
 
 ## Session: 2026-08-30 — Monorepo Package Consolidation (4 Core Packages)
 
 ### What was done
+
 - Consolidated 27 granular micro-packages into **4 publishable packages**:
   1. `packages/nexil` (`nexil`): Unified core framework with subpaths `.`, `./jsx-runtime`, `./jsx-dev-runtime`, `./client`, `./server`, `./router`.
   2. `packages/vite-plugin` (`@nexil/vite-plugin`): Merged `@nexil/compiler` and `@nexil/vite-plugin`.
@@ -570,9 +599,11 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
   - `pnpm test` ✅ (40 test files, 319 unit & integration tests, 100% pass)
 
 ### Decisions made
+
 - ADR-011: Monorepo Package Consolidation to 4 Core Packages (see `plans/DECISIONS.md`).
 
 ### Files changed
+
 - `packages/nexil/` — Created consolidated core package (`src/core`, `src/jsx-runtime`, `src/client`, `src/server`, `src/router`)
 - `packages/vite-plugin/` — Integrated compiler AST transform, boundaries, and budget checks
 - `packages/cli/` — Integrated dev server and production serve runtimes
@@ -582,14 +613,17 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
 - `plans/ARCH.md`, `plans/DECISIONS.md`, `plans/SESSION_LOG.md` — Updated architecture documents
 
 ### State at end of session
+
 - Consolidated packages: `packages/nexil`, `packages/vite-plugin`, `packages/cli`, `packages/create-nexil`
 - Monorepo health: 100% Green (`pnpm build`, `pnpm typecheck`, `pnpm test`)
 - Blockers: None
+
 ---
 
 ## Session: 2026-08-30 — Workspace-Wide Version Bump to 0.1.0
 
 ### What was done
+
 - Bumped workspace version to `0.1.0` across all package manifests:
   - `package.json` (root) -> `0.1.0`
   - `packages/nexil/package.json` -> `0.1.0`
@@ -611,6 +645,7 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
   - `pnpm test` ✅ (40 test files, 319 unit & integration tests, 100% pass)
 
 ### Files changed
+
 - `package.json` — bumped to `0.1.0`
 - `packages/nexil/package.json` — bumped to `0.1.0`
 - `packages/vite-plugin/package.json` — bumped to `0.1.0`
@@ -626,14 +661,17 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
 - `plans/SESSION_LOG.md` — this entry
 
 ### State at end of session
+
 - Version: `0.1.0` across all packages, templates, and scaffolding tools
 - Monorepo health: 100% Green (`pnpm build`, `pnpm typecheck`, `pnpm test`)
 - Blockers: None
+
 ---
 
 ## Session: 2026-08-30 — CI Build Order & Workflow Failures Fix
 
 ### What was done
+
 - Updated root `package.json` `"build"` script to enforce strict topological build ordering (`pnpm --filter "./packages/*" build && pnpm --filter "./examples/*" build`), preventing examples from running before core `.d.ts` declarations are emitted.
 - Added `nexil: "workspace:*"` dependency to `examples/landing-page/package.json` and synchronized `pnpm-lock.yaml`.
 - Fixed GitHub Actions workflows (`.github/workflows/`):
@@ -649,6 +687,7 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
   - `pnpm publish:npm:dry` (all 4 packages packed with 0 errors)
 
 ### Files changed
+
 - `package.json` — updated `build` script
 - `examples/landing-page/package.json` — added workspace dependency
 - `pnpm-lock.yaml` — updated lockfile
@@ -658,8 +697,8 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
 - `plans/SESSION_LOG.md` — this entry
 
 ### State at end of session
+
 - Monorepo health: 100% Green across all gates
 - Blockers: None
+
 ---
-
-
