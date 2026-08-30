@@ -702,3 +702,36 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
 - Blockers: None
 
 ---
+
+## Session: 2026-08-30 07:38–07:59 (UTC+3) — @nexil/nexil rename & CI fix
+
+### What was done
+
+- Renamed `packages/nexil` from `"nexil"` → `"@nexil/nexil"` to bypass npm E403 typosquatting block.
+- Updated ALL workspace dependencies across examples, templates, CLI, vite-plugin.
+- Extended `workspaceAliases()` with `@nexil/nexil/*` entries (RegExp exact-match for bare package).
+- Removed double-alias loop from vite-plugin `config()` hook; workspace aliases handle both `nexil` and `@nexil/nexil` directly to source.
+- Updated `jsxImportSource` to `"@nexil/nexil"` in vite-plugin, starter generators, workbench tsconfig.
+- Fixed `nexil-workbench/src/server/support-action.ts`, `build-media.mjs`, and publish workflow regexes.
+- Updated `playwright.config.ts` testMatch to `**/*.spec.ts`.
+- Fixed CLI test assertion for jsxImportSource; updated scaffold-smoke tests.
+
+### Verification
+
+- `pnpm build`: ✅ all 4 packages + 8 examples
+- `pnpm test`: ✅ **319/319 tests pass**
+- `pnpm format:check`: ✅ clean
+- `pnpm publish:npm:dry`: ✅ 4 packages pack cleanly
+
+### State at end of session
+
+- Commit: `778a51b` pushed to `origin/main`
+- All quality gates: 100% Green
+- Blockers: None
+
+### Resume instructions
+
+Monitor the GitHub Actions CI run after `778a51b`. If `npm error E403` appears for
+`@nexil/nexil`, verify that the npm org `@nexil` is configured for the `NPM_TOKEN` secret.
+
+---
