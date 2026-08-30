@@ -100,7 +100,7 @@ describe('create-nexil — scaffold success', () => {
       })
       const pkg = JSON.parse(await readFile(join(directory, 'package.json'), 'utf8'))
       expect(pkg.scripts.dev).toBe('nexil dev')
-      expect(pkg.dependencies['@nexil/cli']).toBe('^0.1.0')
+      expect(pkg.dependencies['@nexil/cli']).toBe('^0.2.0')
       const html = await readFile(join(directory, 'index.html'), 'utf8')
       expect(html).toContain('<!--nexil-head-outlet-->')
       expect(html).not.toContain('nexis')

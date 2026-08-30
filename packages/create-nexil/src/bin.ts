@@ -133,14 +133,14 @@ async function main(): Promise<void> {
         template: scaffoldOptions.template,
         language: scaffoldOptions.language,
         tailwind: scaffoldOptions.tailwind,
-        dependencyVersion: '^0.1.0',
+        dependencyVersion: '^0.2.0',
       } as any)
       const files = createStarterFiles({
         projectName: name,
         template: resolved.template,
         language: resolved.language,
         tailwind: resolved.tailwind,
-        dependencyVersion: '^0.1.0',
+        dependencyVersion: '^0.2.0',
       } as any)
       const target = resolve(process.cwd(), name)
       // Validate containment without FS

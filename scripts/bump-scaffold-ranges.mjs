@@ -2,11 +2,13 @@
 import { readFile, writeFile } from 'node:fs/promises'
 
 const OLD = "'^0.1.0'"
-const NEW = "'^0.0.1'"
+const NEW = "'^0.2.0'"
 const files = [
-  'packages/create-nexil/src/scaffold.ts',
-  'packages/cli/src/scaffold.ts',
-  'packages/create-nexil-app/src/scaffold.ts',
+  'packages/create-nexil/src/starter/index.ts',
+  'packages/create-nexil/src/starter/node.ts',
+  'packages/create-nexil/src/bin.ts',
+  'packages/cli/src/starter/index.ts',
+  'packages/cli/src/starter/node.ts',
 ]
 for (const file of files) {
   const source = await readFile(file, 'utf8')

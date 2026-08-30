@@ -54,8 +54,8 @@
   - Marked `@nexil/create-nexil-app` private (byte-identical legacy duplicate
     of create-nexil); README points to canonical initializer.
   - Added project `.npmrc` (scope routing only, no credentials).
-- Published 18 packages to GitHub Packages at v0.1.0; republished
-  `cli` + `create-nexil` at 0.1.1 then 0.1.2 after scaffold DX fixes.
+- Published 18 packages to GitHub Packages at v0.2.0; republished
+  `cli` + `create-nexil` at 0.2.0 then 0.2.0 after scaffold DX fixes.
 - Scaffold improvements (both cli and create-nexil copies): standalone apps now get
   `pnpm.onlyBuiltDependencies` and a `start` script.
 - End-to-end consumer validation outside the repo via
@@ -71,7 +71,7 @@
 - create-nexil-app superseded by create-nexil (ADR-002) â€” private, kept for reference.
 - Project .npmrc carries scope routing only; tokens stay user-level/env (ADR-003).
 - Tag-driven releases instead of per-push publishing (ADR-004).
-- Bumped cli/create-nexil to 0.1.2 rather than re-publishing immutable versions.
+- Bumped cli/create-nexil to 0.2.0 rather than re-publishing immutable versions.
 
 ### Files changed
 
@@ -620,24 +620,24 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
 
 ---
 
-## Session: 2026-08-30 — Workspace-Wide Version Bump to 0.1.0
+## Session: 2026-08-30 — Workspace-Wide Version Bump to 0.2.0
 
 ### What was done
 
-- Bumped workspace version to `0.1.0` across all package manifests:
-  - `package.json` (root) -> `0.1.0`
-  - `packages/nexil/package.json` -> `0.1.0`
-  - `packages/vite-plugin/package.json` -> `0.1.0`
-  - `packages/cli/package.json` -> `0.1.0`
-  - `packages/create-nexil/package.json` -> `0.1.0`
-- Updated starter templates under `templates/` to depend on `nexil` and `@nexil/vite-plugin` at `^0.1.0`:
+- Bumped workspace version to `0.2.0` across all package manifests:
+  - `package.json` (root) -> `0.2.0`
+  - `packages/nexil/package.json` -> `0.2.0`
+  - `packages/vite-plugin/package.json` -> `0.2.0`
+  - `packages/cli/package.json` -> `0.2.0`
+  - `packages/create-nexil/package.json` -> `0.2.0`
+- Updated starter templates under `templates/` to depend on `nexil` and `@nexil/vite-plugin` at `^0.2.0`:
   - `templates/template-blank/package.json`
   - `templates/template-fullstack/package.json`
 - Updated version injection constants across CLI generators and scaffold engines:
   - `packages/create-nexil/src/starter/index.ts` & `src/starter/node.ts` & `src/bin.ts`
   - `packages/cli/src/starter/index.ts` & `src/starter/node.ts`
   - `scripts/release.mjs`
-- Updated test assertions in `packages/create-nexil` and `packages/cli` test suites to expect `^0.1.0`.
+- Updated test assertions in `packages/create-nexil` and `packages/cli` test suites to expect `^0.2.0`.
 - Verified lockfile and workspace builds:
   - `pnpm install` ✅ (`pnpm-lock.yaml` synced)
   - `pnpm build` ✅ (13 workspace packages & examples built with 0 errors)
@@ -646,15 +646,15 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
 
 ### Files changed
 
-- `package.json` — bumped to `0.1.0`
-- `packages/nexil/package.json` — bumped to `0.1.0`
-- `packages/vite-plugin/package.json` — bumped to `0.1.0`
-- `packages/cli/package.json` — bumped to `0.1.0`
-- `packages/create-nexil/package.json` — bumped to `0.1.0`
-- `templates/template-blank/package.json` — dependencies bumped to `^0.1.0`
-- `templates/template-fullstack/package.json` — dependencies bumped to `^0.1.0`
-- `packages/create-nexil/src/starter/index.ts` & `node.ts` & `bin.ts` — updated default version to `^0.1.0`
-- `packages/cli/src/starter/index.ts` & `node.ts` — updated default version to `^0.1.0`
+- `package.json` — bumped to `0.2.0`
+- `packages/nexil/package.json` — bumped to `0.2.0`
+- `packages/vite-plugin/package.json` — bumped to `0.2.0`
+- `packages/cli/package.json` — bumped to `0.2.0`
+- `packages/create-nexil/package.json` — bumped to `0.2.0`
+- `templates/template-blank/package.json` — dependencies bumped to `^0.2.0`
+- `templates/template-fullstack/package.json` — dependencies bumped to `^0.2.0`
+- `packages/create-nexil/src/starter/index.ts` & `node.ts` & `bin.ts` — updated default version to `^0.2.0`
+- `packages/cli/src/starter/index.ts` & `node.ts` — updated default version to `^0.2.0`
 - `packages/create-nexil/src/starter/index.test.ts` & `src/index.test.ts` — updated version assertions
 - `packages/cli/src/index.test.ts` — updated version assertions and build timeouts
 - `scripts/release.mjs` — updated base version
@@ -662,7 +662,7 @@ Run `pnpm build && pnpm typecheck && pnpm --filter @nexil/state test && pnpm --f
 
 ### State at end of session
 
-- Version: `0.1.0` across all packages, templates, and scaffolding tools
+- Version: `0.2.0` across all packages, templates, and scaffolding tools
 - Monorepo health: 100% Green (`pnpm build`, `pnpm typecheck`, `pnpm test`)
 - Blockers: None
 

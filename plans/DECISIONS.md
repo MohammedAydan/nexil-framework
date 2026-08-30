@@ -46,7 +46,7 @@
 
 - **Date:** 2026-08-25
 - **Status:** Accepted
-- **Context:** Packages sat at 0.1.x while the project narrative declared v2.0.0 GA.
+- **Context:** Packages sat at 0.2.x while the project narrative declared v2.0.0 GA.
 - **Decision:** All 18 public packages move to 2.0.0; scaffold templates depend on ^2.0.0; tag `v2.0.0` triggers publication through the existing pipeline.
 - **Consequences:** Tag ↔ registry versions match; consumers receive coherent ^2.0.0 ranges.
 
@@ -69,7 +69,7 @@
 
 - **Date:** 2026-08-25
 - **Status:** Accepted
-- **Context:** Packages sat at 0.1.x while the project narrative declared v2.0.0 GA.
+- **Context:** Packages sat at 0.2.x while the project narrative declared v2.0.0 GA.
 - **Decision:** All 18 public packages move to 2.0.0; scaffold templates depend on ^2.0.0; tag `v2.0.0` triggers publication through the existing pipeline.
 - **Consequences:** Tag â†” registry versions match; consumers receive coherent ^2.0.0 ranges.
 

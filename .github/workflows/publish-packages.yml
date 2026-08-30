@@ -1,6 +1,6 @@
 name: Publish packages
 
-# Releases are deliberate and tag-driven: push a `v<version>` tag (e.g. v0.1.2)
+# Releases are deliberate and tag-driven: push a `v<version>` tag (e.g. v0.2.0)
 # after updating package versions. Every push of a new tag runs the full gate
 # suite, validates the packed tarballs, then publishes all non-private packages
 # under packages/* to npm (https://registry.npmjs.org/) in dependency-safe (topological) order.
@@ -72,8 +72,8 @@ jobs:
             tail -n 40 pack-report.log
             exit 1
           fi
-          if ! grep -Eq '^\+\s*(@nexil/core@0\.1\.0|@nexil/vite-plugin@0\.1\.0|@nexil/cli@0\.1\.0|create-nexil@0\.1\.0)' pack-report.log; then
-            echo "::error::One or more packages not at expected version 0.1.0"
+          if ! grep -Eq '^\+\s*(@nexil/core@0\.2\.0|@nexil/vite-plugin@0\.2\.0|@nexil/cli@0\.2\.0|create-nexil@0\.2\.0)' pack-report.log; then
+            echo "::error::One or more packages not at expected version 0.2.0"
             grep -E '^\+\s*(@nexil/|create-nexil)' pack-report.log || true
             exit 1
           fi
