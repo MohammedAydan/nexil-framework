@@ -30,7 +30,7 @@ export const NEXIL_NAVIGATION_RUNTIME = String.raw`
   }
   const canIntercept = (event, anchor) => {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return false
-    if ((anchor.target && anchor.target !== '_self') || anchor.hasAttribute('download') || anchor.rel.split(/\s+/).includes('external')) return false
+    if ((anchor.target && anchor.target !== '_self') || anchor.hasAttribute('download') || (anchor.getAttribute('rel') || '').split(/\s+/).includes('external')) return false
     const url = new URL(anchor.href, location.href)
     return sameOrigin(url) && !(url.pathname === location.pathname && url.search === location.search && url.hash)
   }
@@ -56,8 +56,14 @@ export const NEXIL_NAVIGATION_RUNTIME = String.raw`
   const loadDestinationRuntime = async (next) => {
     const moduleSources = [...next.querySelectorAll('script[type="module"][src]')]
       .map((node) => new URL(node.getAttribute('src'), location.origin).href)
-      .filter((src) => /\/nexil-(?:state|bootstrap|bindings|forms)\.js$/.test(new URL(src).pathname))
-    for (const source of moduleSources) await import(source)
+      .filter((src) => /\/nexil-(?:state|bootstrap|bindings|forms|navigation)\.js$/.test(new URL(src).pathname))
+    for (const source of moduleSources) {
+      try {
+        await import(source)
+      } catch {
+        // Non-critical optional module source failure should not abort navigation
+      }
+    }
   }
   const syncHead = (next) => {
     document.title = next.title
@@ -75,6 +81,25 @@ export const NEXIL_NAVIGATION_RUNTIME = String.raw`
     const commit = () => {
       globalThis.__nexilDisposeBindings?.()
       syncHead(next)
+      const incomingStores = next.getElementById('__NEXIL_STORES__')
+      const currentStores = document.getElementById('__NEXIL_STORES__')
+      if (incomingStores) {
+        if (currentStores) currentStores.textContent = incomingStores.textContent
+        else document.body.append(document.importNode(incomingStores, true))
+        globalThis.__nexilHydrateStoresFromDocument?.()
+      }
+      const incomingState = next.getElementById('__NEXIL_STATE__')
+      const currentState = document.getElementById('__NEXIL_STATE__')
+      if (incomingState) {
+        if (currentState) currentState.textContent = incomingState.textContent
+        else document.body.append(document.importNode(incomingState, true))
+      }
+      const incomingSeeds = next.getElementById('__NEXIL_SCOPE_SEEDS__')
+      const currentSeeds = document.getElementById('__NEXIL_SCOPE_SEEDS__')
+      if (incomingSeeds) {
+        if (currentSeeds) currentSeeds.textContent = incomingSeeds.textContent
+        else document.body.append(document.importNode(incomingSeeds, true))
+      }
       current.replaceChildren(...[...incoming.childNodes].map((node) => document.importNode(node, true)))
       globalThis.__nexilRefreshBindings?.()
       document.dispatchEvent(new CustomEvent('nexil:navigation-commit', { detail: { url } }))
@@ -113,7 +138,10 @@ export const NEXIL_NAVIGATION_RUNTIME = String.raw`
 		if (!sameOrigin(url)) return
 		readDocument(url, undefined, true).catch(() => prefetchedAnchors.delete(anchor))
 	}
-  const findLink = (event) => event.target instanceof Element ? event.target.closest('a[data-nx-link]') : null
+  const findLink = (event) => {
+    const target = event.target instanceof Element ? event.target : (event.target && event.target.parentElement instanceof Element ? event.target.parentElement : null)
+    return target ? target.closest('a[data-nx-link]') : null
+  }
 
   document.addEventListener('click', (event) => {
     const anchor = findLink(event)

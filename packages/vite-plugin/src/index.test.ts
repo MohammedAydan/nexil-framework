@@ -416,3 +416,62 @@ export const view = <div><button onClick$={() => store.set({} as any)}>A</button
     true,
   )
 })
+
+it('serves nexil-navigation.js and nexil-forms.js in Vite dev middleware', async () => {
+  const { nexilPlugin, NEXIL_NAVIGATION_RUNTIME, RESUMABILITY_FORMS } = await import('./index')
+  const plugin = nexilPlugin()
+  let middleware:
+    | ((
+        req: { method?: string; url?: string },
+        res: { writeHead: (code: number, headers: unknown) => void; end: (body: unknown) => void },
+        next: () => void,
+      ) => void)
+    | undefined
+  const fakeServer = {
+    middlewares: {
+      use: (fn: typeof middleware) => {
+        middleware = fn
+      },
+    },
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ;(plugin as any).configureServer(fakeServer)
+  expect(middleware).toBeDefined()
+
+  let status = 0
+  let body = ''
+  const fakeRes = {
+    writeHead: (code: number) => {
+      status = code
+    },
+    end: (content: string) => {
+      body = content
+    },
+  }
+  middleware!({ method: 'GET', url: '/nexil-navigation.js' }, fakeRes, () => {})
+  expect(status).toBe(200)
+  expect(body).toBe(NEXIL_NAVIGATION_RUNTIME)
+
+  middleware!({ method: 'GET', url: '/nexil-forms.js' }, fakeRes, () => {})
+  expect(status).toBe(200)
+  expect(body).toBe(RESUMABILITY_FORMS)
+})
+
+it('emits nexil-navigation.js in generateBundle when navigation markup is transformed', async () => {
+  const { nexilPlugin } = await import('./index')
+  const plugin = nexilPlugin()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (plugin as any).transform(
+    '<a href="/about" data-nx-link="push">About</a>',
+    '/app/src/routes/index.tsx',
+  )
+  const emitted: Array<{ type: string; fileName: string; source: string }> = []
+  const context = {
+    emitFile: (file: { type: string; fileName: string; source: string }) => {
+      emitted.push(file)
+    },
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ;(plugin as any).generateBundle.call(context)
+  expect(emitted.some((file) => file.fileName === 'nexil-navigation.js')).toBe(true)
+})

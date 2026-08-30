@@ -735,3 +735,36 @@ Monitor the GitHub Actions CI run after `778a51b`. If `npm error E403` appears f
 `@nexil/nexil`, verify that the npm org `@nexil` is configured for the `NPM_TOKEN` secret.
 
 ---
+
+## Session: 2026-08-30 — Link Navigation Runtime & Dev Server Fix
+
+### What was done
+
+- Fixed dev server (`packages/cli/src/dev-server.ts`) SSR HTML script injection to detect `data-nx-link` (injecting `/nexil-navigation.js`), `data-nx-form="progressive"` (injecting `/nexil-forms.js`), and `data-nx-store-bind` (along with `data-nx-bind`).
+- Fixed Vite dev server middleware in `packages/vite-plugin/src/index.ts` to serve `NEXIL_NAVIGATION_RUNTIME` under `GET /nexil-navigation.js` and `RESUMABILITY_FORMS` under `GET /nexil-forms.js`.
+- Fixed Vite bundle asset emission in `packages/vite-plugin/src/index.ts` to emit `nexil-navigation.js` and `nexil-forms.js` when navigation/form routes are transformed.
+- Enhanced client navigation runtime in `packages/nexil/src/router/navigation.ts`:
+  - `findLink` traverses `parentElement` if `event.target` is not an Element (e.g. text nodes).
+  - Safe `(anchor.getAttribute('rel') || '')` parsing in `canIntercept`.
+  - Error containment in `loadDestinationRuntime` so optional script failures do not abort client SPA transitions and trigger unwanted page refreshes.
+  - Synchronized destination `<script id="__NEXIL_STORES__">`, `__NEXIL_STATE__`, and `__NEXIL_SCOPE_SEEDS__` during outlet swap.
+- Updated `useNavigate` in `packages/nexil/src/router/index.ts` to directly invoke `globalThis.__nexilNavigate` when installed.
+- Added unit tests in `packages/vite-plugin/src/index.test.ts` and `packages/cli/src/dev-server.test.ts`.
+
+### Verification
+
+- `pnpm build`: ✅ (All packages and examples built)
+- `pnpm typecheck`: ✅ (`tsc -b`, 0 errors)
+- `pnpm test`: ✅ (40 test files, 322 tests, 100% pass)
+- `playwright test tests/e2e/link-navigation.spec.ts`: ✅ (6/6 tests passed)
+- `pnpm format:check`: ✅ (Clean formatting)
+
+### State at end of session
+
+- Monorepo health: 100% Green across all gates
+- Blockers: None
+
+### Resume instructions
+
+No active blockers. All tests passing cleanly.
+---

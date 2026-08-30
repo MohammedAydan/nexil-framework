@@ -535,13 +535,20 @@ export function nexilSSRPlugin(root: string): Plugin {
                 }
               }
               const html = renderToString(composed as Child)
+              const hasNavigation = html.includes('data-nx-link')
               const hasEventHandlers = html.includes('data-nx-on')
-              const hasBindings = html.includes('data-nx-bind')
+              const hasBindings =
+                html.includes('data-nx-bind') || html.includes('data-nx-store-bind')
+              const hasForms = html.includes('data-nx-form="progressive"')
               const baseScripts = `${
+                hasNavigation ? '<script type="module" src="/nexil-navigation.js"></script>' : ''
+              }${
                 hasEventHandlers || hasBindings
                   ? '<script type="module" src="/nexil-bootstrap.js"></script>'
                   : ''
-              }${hasBindings ? '<script type="module" src="/nexil-bindings.js"></script>' : ''}`
+              }${hasBindings ? '<script type="module" src="/nexil-bindings.js"></script>' : ''}${
+                hasForms ? '<script type="module" src="/nexil-forms.js"></script>' : ''
+              }`
               return { renderedHtml: html, scripts: baseScripts }
             },
           )

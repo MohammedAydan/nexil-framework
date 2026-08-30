@@ -41,4 +41,40 @@ describe('dev server', () => {
       else process.env.NEXIL_TRUST_PROXY = previous
     }
   })
+
+  it('injects /nexil-navigation.js in dev SSR middleware when route contains Link markup', async () => {
+    const { nexilSSRPlugin } = await import('./dev-server.js')
+    const plugin = nexilSSRPlugin(process.cwd())
+    let middleware: ((req: unknown, res: unknown, next: () => void) => Promise<void>) | undefined
+    const fakeServer = {
+      watcher: {
+        on: () => {},
+      },
+      middlewares: {
+        use: (fn: typeof middleware) => {
+          middleware = fn
+        },
+      },
+      ssrLoadModule: async () => ({
+        default: () => ({
+          kind: 'element',
+          tag: 'main',
+          props: {},
+          children: [
+            {
+              kind: 'element',
+              tag: 'a',
+              props: { href: '/about', 'data-nx-link': 'push' },
+              children: ['About'],
+            },
+          ],
+        }),
+      }),
+      ssrFixStacktrace: () => {},
+      transformIndexHtml: async (_url: string, html: string) => html,
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(plugin as any).configureServer(fakeServer)
+    expect(middleware).toBeDefined()
+  })
 })

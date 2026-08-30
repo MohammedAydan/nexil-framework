@@ -280,6 +280,13 @@ export interface NavigateOptions {
 export function useNavigate(): (to: string, options?: NavigateOptions) => void {
   return (to: string, options: NavigateOptions = {}) => {
     if (typeof window !== 'undefined') {
+      const g = globalThis as typeof globalThis & {
+        __nexilNavigate?: (href: string, opts?: NavigateOptions) => Promise<void>
+      }
+      if (typeof g.__nexilNavigate === 'function') {
+        void g.__nexilNavigate(to, options)
+        return
+      }
       if (options.replace) {
         window.history.replaceState(null, '', to)
       } else {

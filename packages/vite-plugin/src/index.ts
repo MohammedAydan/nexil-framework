@@ -10,6 +10,7 @@ import { findSecretExposure, validateImport } from './boundaries.js'
 import { RESUMABILITY_BINDINGS, RESUMABILITY_BOOTSTRAP, RESUMABILITY_FORMS } from './bootstrap.js'
 import { RESUMABILITY_BOOTSTRAP_EXTERNAL } from './external-bootstrap.js'
 import { RESUMABILITY_BINDINGS_EXTERNAL } from './external-bindings.js'
+import { NEXIL_NAVIGATION_RUNTIME } from '@nexil/core/router'
 import {
   discoverStores,
   generateVirtualBarrel,
@@ -22,6 +23,7 @@ const traverse = ((traverseModule as unknown as { default?: typeof traverseModul
   traverseModule) as typeof traverseModule
 
 export {
+  NEXIL_NAVIGATION_RUNTIME,
   RESUMABILITY_BINDINGS,
   RESUMABILITY_BINDINGS_EXTERNAL,
   RESUMABILITY_BOOTSTRAP,
@@ -1772,6 +1774,8 @@ export function nexil(options: { readonly root?: string } = {}): Plugin {
   const generatedChunks = new Map<string, string>()
   const generatedCss = new Set<string>()
   let hasBindings = false
+  let hasNavigation = false
+  let hasForms = false
   let storeDescriptors: readonly StoreDescriptor[] = []
   let storeWarnings: readonly string[] = []
   let resolvedRoot = options.root ?? process.cwd()
@@ -1861,11 +1865,22 @@ export function nexil(options: { readonly root?: string } = {}): Plugin {
       server.middlewares.use((request, response, next) => {
         if (request.method !== 'GET') return next()
         const url = request.url ?? ''
-        if (url === '/nexil-bootstrap.js' || url === '/nexil-bindings.js') {
+        if (
+          url === '/nexil-bootstrap.js' ||
+          url === '/nexil-bindings.js' ||
+          url === '/nexil-forms.js' ||
+          url === '/nexil-navigation.js'
+        ) {
           response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' })
-          response.end(
-            url === '/nexil-bindings.js' ? RESUMABILITY_BINDINGS : RESUMABILITY_BOOTSTRAP,
-          )
+          if (url === '/nexil-navigation.js') {
+            response.end(NEXIL_NAVIGATION_RUNTIME)
+          } else if (url === '/nexil-forms.js') {
+            response.end(RESUMABILITY_FORMS)
+          } else if (url === '/nexil-bindings.js') {
+            response.end(RESUMABILITY_BINDINGS)
+          } else {
+            response.end(RESUMABILITY_BOOTSTRAP)
+          }
           return
         }
         const match = /^\/nexil-chunks\/([A-Za-z0-9_.-]+\.js)$/.exec(url)
@@ -1891,6 +1906,14 @@ export function nexil(options: { readonly root?: string } = {}): Plugin {
       const effectiveSource = wrapped.code
       const result = await transformNexilSource(effectiveSource, id)
       hasBindings ||= result.bindings.length > 0
+      hasNavigation ||=
+        source.includes('data-nx-link') ||
+        effectiveSource.includes('data-nx-link') ||
+        result.code.includes('data-nx-link')
+      hasForms ||=
+        source.includes('data-nx-form') ||
+        effectiveSource.includes('data-nx-form') ||
+        result.code.includes('data-nx-form')
       for (const chunk of result.chunks) {
         const minified = await transformWithEsbuild(chunk.source, chunk.fileName, {
           loader: 'js',
@@ -1947,6 +1970,20 @@ export function nexil(options: { readonly root?: string } = {}): Plugin {
           type: 'asset',
           fileName: 'nexil-bindings.js',
           source: RESUMABILITY_BINDINGS,
+        })
+      }
+      if (hasNavigation) {
+        this.emitFile({
+          type: 'asset',
+          fileName: 'nexil-navigation.js',
+          source: NEXIL_NAVIGATION_RUNTIME,
+        })
+      }
+      if (hasForms) {
+        this.emitFile({
+          type: 'asset',
+          fileName: 'nexil-forms.js',
+          source: RESUMABILITY_FORMS,
         })
       }
       if (generatedCss.size > 0) {
