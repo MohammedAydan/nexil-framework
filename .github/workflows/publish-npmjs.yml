@@ -111,12 +111,20 @@ jobs:
             tail -n 80 pack-report.log
             exit 1
           fi
-          # Verify version is 0.1.0 for all 4 packages
-          if ! grep -Eq '^\+\s*(@nexil/core@0\.1\.0|@nexil/vite-plugin@0\.1\.0|@nexil/cli@0\.1\.0|create-nexil@0\.1\.0)' pack-report.log; then
-            echo "::error::One or more packages not at expected version 0.1.0"
-            grep -E '^\+\s*(@nexil/|create-nexil)' pack-report.log || true
-            exit 1
-          fi
+          # Verify versions match package.json (after any patch bumps)
+          echo "Verifying pack versions match package.json..."
+          for dir in packages/*; do
+            [ -f "$dir/package.json" ] || continue
+            if node -e "const p=require('./$dir/package.json'); process.exit(p.private ? 0 : 1)"; then continue; fi
+            name=$(node -p "require('./$dir/package.json').name")
+            ver=$(node -p "require('./$dir/package.json').version")
+            if ! grep -qF "+ ${name}@${ver}" pack-report.log; then
+              echo "::error::Expected ${name}@${ver} not found in dry-run output"
+              grep -E '^\+\s*(@nexil/|create-nexil)' pack-report.log || true
+              exit 1
+            fi
+            echo "✔ ${name}@${ver} verified"
+          done
           if grep -q 'workspace:' pack-report.log; then
             echo '::error::Unresolved workspace:* leaked into tarball'
             exit 1

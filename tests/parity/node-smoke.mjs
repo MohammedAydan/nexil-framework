@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
-import { createNodeAdapter } from '../../packages/adapters/dist/index.js'
-import { element } from '../../packages/core/dist/index.js'
-import { renderRoute } from '../../packages/renderer/dist/index.js'
+import { createNodeAdapter } from '../../packages/nexil/dist/server/index.js'
+import { element } from '../../packages/nexil/dist/index.js'
+import { renderRoute } from '../../packages/nexil/dist/server/index.js'
 
 async function handler(request) {
   const isServer = new URL(request.url).searchParams.get('mode') === 'server'

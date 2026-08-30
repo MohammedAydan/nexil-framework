@@ -10,8 +10,8 @@
  * adapters (request/response contracts), renderer (render modes), and the
  * resumability bootstrap contract that production pages depend on.
  */
-import { createDenoAdapter } from '../../packages/adapters/dist/index.js'
-import { renderRoute, renderToString, escapeHtml } from '../../packages/renderer/dist/index.js'
+import { createDenoAdapter } from '../../packages/nexil/dist/server/index.js'
+import { renderRoute, renderToString, escapeHtml } from '../../packages/nexil/dist/server/index.js'
 import { RESUMABILITY_BOOTSTRAP } from '../../packages/vite-plugin/dist/bootstrap.js'
 
 function assert(condition: unknown, message: string): asserts condition {

@@ -1,4 +1,4 @@
-import { createDenoAdapter } from '../../packages/adapters/dist/index.js'
+import { createDenoAdapter } from '../../packages/nexil/dist/server/index.js'
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message)
