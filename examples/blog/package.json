@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@nexil/nexil": "workspace:*",
+    "@nexil/core": "workspace:*",
     "zod": "^4.1.0"
   },
   "scripts": {

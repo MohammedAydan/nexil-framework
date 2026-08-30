@@ -206,7 +206,7 @@ describe('Nexil CLI', () => {
       'onClick$',
     )
     expect(await readFile(join(result.directory, 'tsconfig.json'), 'utf8')).toContain(
-      '"jsxImportSource": "@nexil/nexil"',
+      '"jsxImportSource": "@nexil/core"',
     )
     expect(await readFile(join(result.directory, 'tsconfig.json'), 'utf8')).toContain(
       '"allowJs": true',

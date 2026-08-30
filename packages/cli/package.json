@@ -1,9 +1,13 @@
 {
   "name": "@nexil/cli",
   "version": "0.1.0",
+  "description": "Command-line interface and development tooling for Nexil applications",
   "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "dependencies": {
-    "@nexil/nexil": "workspace:*",
+    "@nexil/core": "workspace:*",
     "@nexil/vite-plugin": "workspace:*",
     "vite": "^7.3.6"
   },

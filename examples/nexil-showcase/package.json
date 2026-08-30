@@ -1,6 +1,6 @@
 {
   "name": "@nexil/example-nexil-showcase",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.15.0",
@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@nexil/cli": "workspace:*",
-    "@nexil/nexil": "workspace:*"
+    "@nexil/core": "workspace:*"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

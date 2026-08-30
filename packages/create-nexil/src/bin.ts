@@ -25,8 +25,8 @@ Usage: ${invokedAs} <project-name> [options]
        npx @nexil/create-nexil@${VERSION} my-app --yes --ts
        pnpm dlx @nexil/create-nexil@${VERSION} my-app --yes --ts
        yarn dlx @nexil/create-nexil@${VERSION} my-app --yes --ts
-       npm create @nexil/nexil@${VERSION} my-app -- --yes --ts
-       pnpm create @nexil/nexil@${VERSION} my-app -- --yes --ts
+       npm create @nexil/core@${VERSION} my-app -- --yes --ts
+       pnpm create @nexil/core@${VERSION} my-app -- --yes --ts
        nexil create my-app --yes --ts
 
 Arguments:

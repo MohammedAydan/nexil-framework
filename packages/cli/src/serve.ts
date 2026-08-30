@@ -6,8 +6,8 @@ import {
   type Server,
   type ServerResponse,
 } from 'node:http'
-import { createMemoryIdempotencyStore, handleActionRequest } from '@nexil/nexil/server'
-import type { IdempotencyStore, ServerAction } from '@nexil/nexil/server'
+import { createMemoryIdempotencyStore, handleActionRequest } from '@nexil/core/server'
+import type { IdempotencyStore, ServerAction } from '@nexil/core/server'
 
 export interface SecurityHeadersOptions {
   /** A reviewed Content-Security-Policy string for this application. CSP is opt-in because script/style requirements are app-specific. */

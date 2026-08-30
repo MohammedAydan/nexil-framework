@@ -119,7 +119,7 @@ test('modular and unified stores build and render via $stores/*', async () => {
 test('reserved-key warning is documented and surfaceable', async () => {
   // The warning is dev-only and emitted when state contains reserved keys like `value`.
   // We verify the runtime helper exists and the docs mention it.
-  const { __getAccessedStoreIds } = await import('../../packages/state/dist/index.js')
+  const { __getAccessedStoreIds } = await import('../../packages/nexil/dist/index.js')
   expect(typeof __getAccessedStoreIds).toBe('function')
   // Access log is ready for Phase 4 SSR serializer
   const ids = __getAccessedStoreIds()

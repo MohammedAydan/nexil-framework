@@ -95,11 +95,26 @@ jobs:
         run: |
           pnpm publish:npm:dry > pack-report.log 2>&1 || { cat pack-report.log; exit 1; }
           sed -i 's/\x1b\[[0-9;]*m//g' pack-report.log
-          MATCHED=$(grep -cE '^\+ (@nexil/|create-nexil)' pack-report.log || true)
+          # Strictly match the 4 consolidated 0.1.0 packages
+          MATCHED=$(grep -cE '^\+ (@nexil/core@|@nexil/vite-plugin@|@nexil/cli@|create-nexil@)' pack-report.log || true)
           echo "Packages matched: $MATCHED"
-          if [ "$MATCHED" -lt 4 ]; then
-            echo '::error::Dry run matched fewer packages than expected — aborting'
+          # Verify each of the 4 expected packages appears exactly once
+          for pkg in "@nexil/core@" "@nexil/vite-plugin@" "@nexil/cli@" "create-nexil@"; do
+            if ! grep -qE "^\+\s*${pkg}" pack-report.log; then
+              echo "::error::Expected package ${pkg} not found in dry-run output"
+              tail -n 80 pack-report.log
+              exit 1
+            fi
+          done
+          if [ "$MATCHED" -ne 4 ]; then
+            echo "::error::Dry run matched $MATCHED packages, expected exactly 4 (@nexil/core, @nexil/vite-plugin, @nexil/cli, create-nexil) — aborting"
             tail -n 80 pack-report.log
+            exit 1
+          fi
+          # Verify version is 0.1.0 for all 4 packages
+          if ! grep -Eq '^\+\s*(@nexil/core@0\.1\.0|@nexil/vite-plugin@0\.1\.0|@nexil/cli@0\.1\.0|create-nexil@0\.1\.0)' pack-report.log; then
+            echo "::error::One or more packages not at expected version 0.1.0"
+            grep -E '^\+\s*(@nexil/|create-nexil)' pack-report.log || true
             exit 1
           fi
           if grep -q 'workspace:' pack-report.log; then
@@ -109,6 +124,27 @@ jobs:
           if grep -Eq 'notice .*(test\.js|test\.d\.ts)' pack-report.log; then
             echo '::error::Test artifacts leaked into tarball'
             grep -E 'notice .*(test\.js|test\.d\.ts)' pack-report.log
+            exit 1
+          fi
+          # Verify tarball entry files for each package contain expected dist artifacts
+          for check in "package: @nexil/core" "package: @nexil/vite-plugin" "package: @nexil/cli" "package: create-nexil"; do
+            if ! grep -q "$check" pack-report.log; then
+              echo "::error::Missing tarball header for $check"
+              exit 1
+            fi
+          done
+          # Core must emit api entry points
+          if ! grep -q 'dist/index\.d\.ts' pack-report.log; then
+            echo "::error::Missing dist/index.d.ts in tarball contents"
+            exit 1
+          fi
+          if ! grep -q 'dist/index\.js' pack-report.log; then
+            echo "::error::Missing dist/index.js in tarball contents"
+            exit 1
+          fi
+          # CLI and create-nexil must emit bins
+          if ! grep -q 'dist/bin\.js' pack-report.log; then
+            echo "::error::Missing dist/bin.js in tarball contents"
             exit 1
           fi
 

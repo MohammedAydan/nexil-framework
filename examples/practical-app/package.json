@@ -1,6 +1,6 @@
 {
   "name": "@nexil/example-practical-app",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.15.0",
@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@nexil/cli": "workspace:*",
-    "@nexil/nexil": "workspace:*"
+    "@nexil/core": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.0",

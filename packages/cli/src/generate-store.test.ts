@@ -40,7 +40,7 @@ describe('nexil generate store — CLI', () => {
       expect(actions).toContain('state: UserState')
 
       const store = await readFile(join(root, 'src/stores/user/store.ts'), 'utf8')
-      expect(store).toContain("from '@nexil/state'")
+      expect(store).toContain("from '@nexil/core'")
       expect(store).toContain('createStore({')
       expect(store).toContain("id: 'user'")
       expect(store).toContain('useUserStore')
@@ -56,7 +56,7 @@ describe('nexil generate store — CLI', () => {
       const files = await scaffoldStore(root, 'cart', 'unified')
       expect(files).toEqual(['src/stores/cart.ts'])
       const content = await readFile(join(root, 'src/stores/cart.ts'), 'utf8')
-      expect(content).toContain("from '@nexil/state'")
+      expect(content).toContain("from '@nexil/core'")
       expect(content).toContain("defineStore('cart'")
       expect(content).toContain('useCartStore')
       expect(content).toContain('getters')

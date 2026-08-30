@@ -1805,7 +1805,7 @@ export function nexil(options: { readonly root?: string } = {}): Plugin {
       return {
         esbuild: {
           jsx: 'automatic',
-          jsxImportSource: '@nexil/nexil',
+          jsxImportSource: '@nexil/core',
         },
       }
     },

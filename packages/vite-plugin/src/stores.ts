@@ -308,7 +308,10 @@ export function wrapActionsWithBatch(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   traverse(ast as any, {
     ImportDeclaration(path: any) {
-      if (path.node.source.value === '@nexil/reactivity') {
+      if (
+        path.node.source.value === '@nexil/core' ||
+        path.node.source.value === '@nexil/reactivity'
+      ) {
         for (const spec of path.node.specifiers) {
           if (spec.imported?.name === 'batch' || spec.local.name === 'batch') {
             hasBatchImport = true
@@ -433,7 +436,7 @@ export function wrapActionsWithBatch(
   }
 
   if (needsBatchImport && !hasBatchImport) {
-    s.prepend(`import { batch } from '@nexil/reactivity'\n`)
+    s.prepend(`import { batch } from '@nexil/core'\n`)
   }
 
   return { code: s.toString(), changed: true }

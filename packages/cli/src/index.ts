@@ -6,8 +6,8 @@ import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs
 import { dirname, extname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { build, createServer, transformWithEsbuild } from 'vite'
-import { createRequestContext, runWithScope, type Child, type ComponentContext } from '@nexil/nexil'
-import { __clearAccessedStoreIds, __getStoresScriptTag } from '@nexil/nexil'
+import { createRequestContext, runWithScope, type Child, type ComponentContext } from '@nexil/core'
+import { __clearAccessedStoreIds, __getStoresScriptTag } from '@nexil/core'
 import { assertBudget } from '@nexil/vite-plugin'
 import nexil, {
   externalizeScopeAttributes,
@@ -17,9 +17,9 @@ import nexil, {
   transformNexilSource,
 } from '@nexil/vite-plugin'
 import type { ExternalScopePayload } from '@nexil/vite-plugin'
-import { escapeHtml, renderToString } from '@nexil/nexil/server'
-import { generateOgImage } from '@nexil/nexil'
-import { buildImageVariants, imageVariantFileBase } from '@nexil/nexil'
+import { escapeHtml, renderToString } from '@nexil/core/server'
+import { generateOgImage } from '@nexil/core'
+import { buildImageVariants, imageVariantFileBase } from '@nexil/core'
 import {
   buildRobots,
   buildSitemap,
@@ -28,12 +28,12 @@ import {
   generateFeed,
   renderHead,
   withCanonical,
-} from '@nexil/nexil'
-import { matchRoute, NEXIL_NAVIGATION_RUNTIME, routeFromFile } from '@nexil/nexil/router'
+} from '@nexil/core'
+import { matchRoute, NEXIL_NAVIGATION_RUNTIME, routeFromFile } from '@nexil/core/router'
 import { nexilSSRPlugin } from './dev-server.js'
 import { createServer as createProductionServer } from './serve.js'
 import type { NexilConfig, RedirectRule } from './serve.js'
-import type { SeoMetadata } from '@nexil/nexil'
+import type { SeoMetadata } from '@nexil/core'
 export { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 import { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 
@@ -47,7 +47,25 @@ function workspaceAliases(): readonly {
   const nexilSrc = join(FRAMEWORK_ROOT, 'packages/nexil/src')
   const vitePluginSrc = join(FRAMEWORK_ROOT, 'packages/vite-plugin/src')
   return [
-    // @nexil/nexil subpaths – use exact strings for subpaths (prefix match is fine here)
+    // @nexil/core subpaths – use exact strings for subpaths (prefix match is fine here)
+    {
+      find: '@nexil/core/jsx-runtime/jsx-dev-runtime',
+      replacement: join(nexilSrc, 'jsx-runtime/jsx-runtime.ts'),
+    },
+    {
+      find: '@nexil/core/jsx-runtime/jsx-runtime',
+      replacement: join(nexilSrc, 'jsx-runtime/jsx-runtime.ts'),
+    },
+    {
+      find: '@nexil/core/jsx-dev-runtime',
+      replacement: join(nexilSrc, 'jsx-runtime/jsx-runtime.ts'),
+    },
+    { find: '@nexil/core/jsx-runtime', replacement: join(nexilSrc, 'jsx-runtime/index.ts') },
+    { find: '@nexil/core/client', replacement: join(nexilSrc, 'client/index.ts') },
+    { find: '@nexil/core/server', replacement: join(nexilSrc, 'server/index.ts') },
+    { find: '@nexil/core/router', replacement: join(nexilSrc, 'router/index.ts') },
+    { find: /^@nexil\/core$/, replacement: join(nexilSrc, 'index.ts') },
+    // Legacy @nexil/nexil aliases (kept for backward compat)
     {
       find: '@nexil/nexil/jsx-runtime/jsx-dev-runtime',
       replacement: join(nexilSrc, 'jsx-runtime/jsx-runtime.ts'),
@@ -66,6 +84,15 @@ function workspaceAliases(): readonly {
     { find: '@nexil/nexil/router', replacement: join(nexilSrc, 'router/index.ts') },
     // Use RegExp for exact match on the bare package to avoid prefix mis-match
     { find: /^@nexil\/nexil$/, replacement: join(nexilSrc, 'index.ts') },
+    // Legacy micro-package aliases consolidated into @nexil/core
+    { find: '@nexil/state', replacement: join(nexilSrc, 'index.ts') },
+    { find: '@nexil/reactivity', replacement: join(nexilSrc, 'core/reactivity.ts') },
+    { find: '@nexil/client', replacement: join(nexilSrc, 'client/index.ts') },
+    { find: '@nexil/server', replacement: join(nexilSrc, 'server/index.ts') },
+    { find: '@nexil/router', replacement: join(nexilSrc, 'router/index.ts') },
+    { find: '@nexil/actions', replacement: join(nexilSrc, 'server/actions.ts') },
+    { find: /^@nexil\/state$/, replacement: join(nexilSrc, 'index.ts') },
+    { find: /^@nexil\/reactivity$/, replacement: join(nexilSrc, 'core/reactivity.ts') },
     // Legacy nexil/* aliases (kept for backward compat with user source still importing 'nexil')
     {
       find: 'nexil/jsx-runtime/jsx-dev-runtime',
@@ -282,7 +309,7 @@ async function scaffoldCliArtifact(root: string, kind: string, name: string): Pr
     await mkdir(dirname(file), { recursive: true })
     await writeFile(
       file,
-      `import { action } from '@nexil/actions'\n\nexport const ${normalized.split('/').at(-1)} = action({\n  validate: (input: unknown) => input,\n  async handle(_context, input) {\n    return { input }\n  },\n})\n`,
+      `import { action } from '@nexil/core'\n\nexport const ${normalized.split('/').at(-1)} = action({\n  validate: (input: unknown) => input,\n  async handle(_context, input) {\n    return { input }\n  },\n})\n`,
       'utf8',
     )
     return relative(root, file).split(sep).join('/')
@@ -349,7 +376,7 @@ export async function scaffoldStore(
 
     await writeFile(
       storePath,
-      `import { createStore } from '@nexil/state'\nimport type { ${capName}State } from './types'\nimport { ${baseName}Actions } from './actions'\n\nconst initialState: ${capName}State = {\n  count: 0,\n}\n\nexport const use${capName}Store = createStore({\n  id: '${id}',\n  state: () => initialState,\n  actions: ${baseName}Actions,\n})\n`,
+      `import { createStore } from '@nexil/core'\nimport type { ${capName}State } from './types'\nimport { ${baseName}Actions } from './actions'\n\nconst initialState: ${capName}State = {\n  count: 0,\n}\n\nexport const use${capName}Store = createStore({\n  id: '${id}',\n  state: () => initialState,\n  actions: ${baseName}Actions,\n})\n`,
       'utf8',
     )
     created.push(relative(root, storePath).split(sep).join('/'))
@@ -372,7 +399,7 @@ export async function scaffoldStore(
   await mkdir(dirname(file), { recursive: true })
   await writeFile(
     file,
-    `import { defineStore } from '@nexil/state'\n\nexport interface ${capName}State {\n  count: number\n}\n\nexport const use${capName}Store = defineStore('${id}', {\n  state: (): ${capName}State => ({\n    count: 0,\n  }),\n\n  getters: {\n    doubled: (state) => state.count * 2,\n  },\n\n  actions: {\n    increment(): void {\n      this.count += 1\n    },\n\n    setCount(count: number): void {\n      this.count = count\n    },\n  },\n})\n`,
+    `import { defineStore } from '@nexil/core'\n\nexport interface ${capName}State {\n  count: number\n}\n\nexport const use${capName}Store = defineStore('${id}', {\n  state: (): ${capName}State => ({\n    count: 0,\n  }),\n\n  getters: {\n    doubled: (state) => state.count * 2,\n  },\n\n  actions: {\n    increment(): void {\n      this.count += 1\n    },\n\n    setCount(count: number): void {\n      this.count = count\n    },\n  },\n})\n`,
     'utf8',
   )
   created.push(relative(root, file).split(sep).join('/'))

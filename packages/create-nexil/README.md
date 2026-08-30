@@ -7,8 +7,8 @@ pnpm dlx create-nexil@0.1.0 my-nexil-app --yes --ts
 # or
 npx --yes create-nexil@0.1.0 my-nexil-app --yes --ts
 yarn dlx create-nexil@0.1.0 my-nexil-app --yes --ts
-npm create @nexil/nexil@0.1.0 my-nexil-app -- --yes --ts
-pnpm create @nexil/nexil@0.1.0 my-nexil-app -- --yes --ts
+npm create @nexil/core@0.1.0 my-nexil-app -- --yes --ts
+pnpm create @nexil/core@0.1.0 my-nexil-app -- --yes --ts
 # inside a Nexil workspace or with @nexil/cli installed:
 nexil create my-nexil-app --yes --ts
 ```

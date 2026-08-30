@@ -12,12 +12,12 @@ let server: { readonly close: () => Promise<void>; readonly listen: () => Promis
 
 test.beforeAll(async () => {
   const { createProject, runCli } = await import('../../packages/cli/dist/index.js')
-  const { createServer } = await import('../../packages/serve/dist/index.js')
+  const { createServer } = await import('../../packages/cli/dist/serve.js')
   parent = await mkdtemp(join(tmpdir(), 'nexil-link-e2e-'))
   appDir = await createProject('link-app', parent)
   await writeFile(
     join(appDir, 'src/routes/_layout.tsx'),
-    `import { createStore } from '@nexil/state'
+    `import { createStore } from '@nexil/core'
 const navigationState = createStore({ visits: 0 }, 'global')
 export default function Layout({ children }: { children: unknown }) {
   return <section><header><button id="global-increment" onClick$={({ element }) => { navigationState.set((value) => ({ visits: value.visits + 1 })); element.setAttribute('data-applied', 'true') }}>Increase global</button><button id="global-read" onClick$={({ element }) => { element.textContent = String(navigationState.value().visits) }}>Read global</button></header>{children}</section>

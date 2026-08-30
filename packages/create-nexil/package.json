@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "Create a Nexil application",
   "type": "module",
+  "main": "./dist/scaffold.js",
+  "module": "./dist/scaffold.js",
+  "types": "./dist/scaffold.d.ts",
   "exports": {
     ".": {
       "types": "./dist/scaffold.d.ts",

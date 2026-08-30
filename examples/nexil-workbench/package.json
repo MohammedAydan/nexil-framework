@@ -1,6 +1,6 @@
 {
   "name": "@nexil/example-nexil-workbench",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.15.0",
@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@nexil/cli": "workspace:*",
-    "@nexil/nexil": "workspace:*"
+    "@nexil/core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.8.0",
