@@ -4,7 +4,7 @@ This is a practical map of the public APIs. The installed TypeScript declaration
 
 ## Core
 
-`@nexil/core` exposes RenderNode, ElementNode, Child, and related rendering types, plus the authoring APIs used by routes: `component`, `text`, `element`, `For`, `Show`, `createContext`, `createContextScope`, `provideContext`, `withContext`, `createRequestContext`, `ErrorBoundary`, `Suspense`, `Form`, and `SubmitButton`. Context is explicit dependency injection with a synchronous Provider convenience; use a request-owned `ContextScope` for async work. It also re-exports the reactivity toolkit (`state`, `useState`, `computed`, `effect`, `watch`, `batch`, `untrack`, `createRoot`, `onCleanup`, and `resource`). Import reactive primitives from core or from `@nexil/reactivity` directly; stores come from `@nexil/state`, which generated projects depend on by default.
+`nexil` exposes RenderNode, ElementNode, Child, and related rendering types, plus the authoring APIs used by routes: `component`, `text`, `element`, `For`, `Show`, `createContext`, `createContextScope`, `provideContext`, `withContext`, `createRequestContext`, `ErrorBoundary`, `Suspense`, `Form`, and `SubmitButton`. Context is explicit dependency injection with a synchronous Provider convenience; use a request-owned `ContextScope` for async work. It also includes the reactivity toolkit (`state`, `useState`, `computed`, `effect`, `watch`, `batch`, `untrack`, `createRoot`, `onCleanup`, and `resource`) and stores (`createStore`, `defineStore`). Subpaths include `nexil/server`, `nexil/router`, `nexil/client`, and `nexil/jsx-runtime`.
 
 ## Renderer
 

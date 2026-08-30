@@ -98,4 +98,4 @@ Boundaries prevent SEO from depending on the DOM, Renderer from depending on Nod
 
 - [Package map](../architecture/package-map.md)
 - [Phase 2 architecture decision](../adr/phase-2-production-parity.md)
-- [Production server](../../packages/serve/README.md)
+- [CLI and Server](../../packages/cli/README.md)

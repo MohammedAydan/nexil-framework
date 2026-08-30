@@ -4,7 +4,7 @@
 
 ## Core
 
-توفر `@nexil/core` أنواع RenderNode وElementNode وChild، وواجهات التأليف `For` و`Show` و`createContext` و`createContextScope` و`provideContext` و`withContext` و`createRequestContext` و`ErrorBoundary` و`Suspense` و`Form` و`SubmitButton`، إضافة إلى إعادة تصدير أدوات reactivity. Context هو dependency injection صريح مع Provider متزامن للسهولة؛ استعمل `ContextScope` مملوكًا للطلب مع عمل async.
+توفر حزمة `nexil` أنواع RenderNode وElementNode وChild، وواجهات التأليف `For` و`Show` و`createContext` و`createContextScope` و`provideContext` و`withContext` و`createRequestContext` و`ErrorBoundary` و`Suspense` و`Form` و`SubmitButton`، ومكتبة التفاعلية والحالة (`createStore`, `defineStore`). تشمل المسارات الفرعية `nexil/server` و`nexil/router` و`nexil/client` و`nexil/jsx-runtime`. Context هو dependency injection صريح مع Provider متزامن للسهولة؛ استعمل `ContextScope` مملوكًا للطلب مع عمل async.
 
 ## Renderer
 

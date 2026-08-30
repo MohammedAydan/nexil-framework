@@ -1,44 +1,27 @@
 # Nexil Package Map
 
-## Dependency direction
+## Architecture Overview (v0.1.0)
 
-The dependency graph is intentionally one-directional. Low-level contracts do not import renderers, adapters, or CLI code. Server-only concerns cannot be imported by the client graph.
+Nexil is consolidated into **4 publishable packages**:
 
 ```text
-shared -> core -> jsx-runtime
-shared -> core -> reactivity
-shared -> core -> renderer
-core -> router -> compiler -> cli
-core -> server -> actions
-core -> server -> security
-core -> seo -> renderer
-core -> media -> compiler
-renderer -> adapters
-compiler -> dev-server -> cli
+nexil (core framework engine: core, reactivity, state, jsx-runtime, client, server, router)
+  ├── @nexil/vite-plugin (compiler, AST transforms, store auto-discovery, JSX runtime config)
+  ├── @nexil/cli (dev server, production serve, scaffolding, image optimizer, code generators)
+  └── create-nexil (standalone interactive scaffolding CLI)
 ```
 
-## Package ownership
+## Consolidated Package Structure
 
-| Package       | Initial status | Allowed responsibilities                                     |
-| ------------- | -------------- | ------------------------------------------------------------ |
-| `core`        | active         | nodes, components, serializable values, request context      |
-| `reactivity`  | active         | signals, computed values, subscriptions                      |
-| `jsx-runtime` | active         | JSX factory and intrinsic types                              |
-| `renderer`    | active         | escaped deterministic SSR output and render modes            |
-| `client`      | active         | versioned resumability payloads and handler references       |
-| `compiler`    | active         | boundary diagnostics and performance budgets                 |
-| `server`      | active         | request-scoped data, secure cookies, security headers        |
-| `router`      | active         | traversal-safe route discovery and matching                  |
-| `seo`         | active         | validated metadata, JSON-LD, sitemap, robots                 |
-| `media`       | active         | dimension-safe image and local font contracts                |
-| `css`         | active         | deterministic compile-time style extraction                  |
-| `actions`     | active         | validation, authorization, origin and idempotency primitives |
-| `security`    | active         | storage-agnostic sessions and authorization guards           |
-| `state`       | active         | scoped stores, selectors, snapshots, lifecycle               |
-| `dev-server`  | planned        | HMR and development diagnostics                              |
-| `cli`         | planned        | create, dev, build, start, check, analyze, routes            |
-| `adapters`    | active         | Node, Cloudflare, Deno runtime integration                   |
+| Package                     | Package Name         | Entry Points & Subpaths                                                                 | Allowed Responsibilities                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| :-------------------------- | :------------------- | :-------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`packages/nexil`**        | `nexil`              | `.`<br>`./jsx-runtime`<br>`./jsx-dev-runtime`<br>`./client`<br>`./server`<br>`./router` | • Fine-grained reactivity (`Signal`, `computed`, `effect`, `batch`)<br>• State & Proxy stores (`createStore`, `defineStore`)<br>• JSX factory, intrinsic elements, and `MaybeSignal<T>` definitions<br>• Client DOM event delegator & resumability dispatcher<br>• SSR streaming & HTML serializer<br>• Server actions, loaders, and HTTP adapters (`node`, `cloudflare`, `deno`)<br>• File-based router, navigation hooks, layout composition |
+| **`packages/vite-plugin`**  | `@nexil/vite-plugin` | `.`                                                                                     | • Resumability AST compiler (`$` dollar-suffix closure extractor)<br>• Store auto-discovery (`virtual:nexil-stores`, `$stores/*`)<br>• Boundary classification and budget analyzer<br>• Automatic JSX import source configuration                                                                                                                                                                                                              |
+| **`packages/cli`**          | `@nexil/cli`         | `.`                                                                                     | • `nexil dev` (HMR dev server)<br>• `nexil build` (SSR/SSG compiler)<br>• `nexil start` / `nexil serve` (production server)<br>• `nexil generate` / `nexil check` / `nexil doctor`<br>• Automated image variant generator                                                                                                                                                                                                                      |
+| **`packages/create-nexil`** | `create-nexil`       | `.`                                                                                     | • Standalone interactive scaffolder (`pnpm dlx create-nexil`)<br>• Embedded templates (`blank`, `fullstack`, `minimal`, `interactive`, `secure-node`)                                                                                                                                                                                                                                                                                          |
 
 ## Rules
 
-A package must not add a dependency upward in this graph. Public contracts must use Web Standard types where practical. Any dependency that can enter a client graph requires an explicit review of size, browser compatibility, and secret exposure. Database, authentication, payments, and UI libraries remain outside the core.
+- Internal modular code inside `packages/nexil` uses relative imports.
+- Public contracts must use Web Standard types (`Request`, `Response`, `Headers`, `ReadableStream`) where practical.
+- Server-only code (`nexil/server`) cannot be imported into client browser bundles.

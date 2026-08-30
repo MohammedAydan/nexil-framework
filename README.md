@@ -1,6 +1,6 @@
-﻿# Nexil Framework
+# Nexil Framework
 
-> **Migrated from `@mohammedaydan` to `@nexil` at `0.0.1` on npm (previously `1.3.x` on GitHub Packages).**
+> **Published on npm as `nexil`, `@nexil/vite-plugin`, `@nexil/cli`, and `create-nexil` at version `0.1.0`.**
 
 **Nexil is an HTML-first, resumable TypeScript framework for building server-rendered web applications.** It produces useful HTML first, keeps static routes free of route-specific client JavaScript, and loads interaction code only when a user reaches an interactive boundary. Nexil has no virtual DOM and does not hydrate or reconcile an entire component tree.
 
@@ -10,7 +10,7 @@ Nexil is designed for applications that need strong server rendering, small clie
 
 ## Current status
 
-The repository contains the v1.1.0 framework surface and its production verification fixtures. The main branch includes compiler-inferred resumability, hierarchical ScopeRef deduplication, nested layouts, inherited SEO metadata, out-of-order Suspense streaming, fine-grained Signal-to-DOM bindings, progressive Forms, typed loaders, static CSS extraction, SSG/ISR/SSR/PPR rendering modes, media processing, server Actions, Node/Deno/Cloudflare adapters, telemetry primitives, and release-oriented quality gates.
+The repository contains the v0.1.0 framework surface and its production verification fixtures. The main branch includes compiler-inferred resumability, hierarchical ScopeRef deduplication, nested layouts, inherited SEO metadata, out-of-order Suspense streaming, fine-grained Signal-to-DOM bindings, progressive Forms, typed loaders, static CSS extraction, SSG/ISR/SSR/PPR rendering modes, media processing, server Actions, Node/Deno/Cloudflare adapters, telemetry primitives, and release-oriented quality gates.
 
 The detailed documentation is available in the [English documentation package](docs/en/README.md). The equivalent Arabic package is available at [docs/ar/README.md](docs/ar/README.md).
 
@@ -35,36 +35,29 @@ These contracts are enforced by compiler tests, integration tests, runtime parit
 
 ## Quick start
 
-Published scoped packages are hosted on the public npm registry (`https://registry.npmjs.org/`). No special registry configuration is required for `@nexil` — install directly via `pnpm add @nexil/...`.
-
-```bash
-npm login
-# or set NPM_TOKEN for CI
-```
+Published packages are hosted on the public npm registry (`https://registry.npmjs.org/`). No special registry configuration is required for `nexil` or `@nexil/*` — install directly via `pnpm add nexil @nexil/vite-plugin`.
 
 Create a TypeScript application with the current initializer:
 
 ```bash
-pnpm dlx @nexil/create-nexil@0.0.1 my-nexil-app --yes --ts
+pnpm dlx create-nexil@0.1.0 my-nexil-app --yes --ts
 cd my-nexil-app
 pnpm install
 pnpm dev
 ```
 
-Equivalent forms (all create the same `my-nexil-app` via `@nexil/create-nexil`):
+Equivalent forms (all create the same `my-nexil-app` via `create-nexil`):
 
 ```bash
-npx --yes @nexil/create-nexil@0.0.1 my-nexil-app --yes --ts
-yarn dlx @nexil/create-nexil@0.0.1 my-nexil-app --yes --ts
-npm create @nexil/nexil@0.0.1 my-nexil-app -- --yes --ts
-pnpm create @nexil/nexil@0.0.1 my-nexil-app -- --yes --ts
+npx --yes create-nexil@0.1.0 my-nexil-app --yes --ts
+yarn dlx create-nexil@0.1.0 my-nexil-app --yes --ts
+npm create nexil@0.1.0 my-nexil-app -- --yes --ts
+pnpm create nexil@0.1.0 my-nexil-app -- --yes --ts
 # inside an existing Nexil workspace or after installing @nexil/cli:
 nexil create my-nexil-app --yes --ts
 ```
 
 The initializer supports `--yes`, `--ts`, `--js`, `--tailwind`, and `--no-tailwind`. Inside an existing application, the CLI exposes the same project operations through `nexil create <name>`. The generated project includes route files, an HTML shell, TypeScript configuration, public assets, and package scripts for development and production builds.
-
-> If package installation reports `ERR_PNPM_FETCH_404`, verify you are using the public npm registry (`https://registry.npmjs.org/`) and the package name is `@nexil/...`. No GitHub Packages token is required for public `@nexil` packages.
 
 ## Project structure
 
