@@ -754,10 +754,23 @@ function bindStorePathBindings(root: Document | HTMLElement, disposers: Array<()
         const signal = getStorePathSignalClient(
           binding.storeId,
           binding.path,
-        ) as unknown as BindingSignal
+        ) as unknown as BindingSignal & { set?: (v: unknown) => void }
         if (!isBindingSignal(signal)) {
           console.warn(`[nexil] store path signal unavailable: ${binding.storeId}:${binding.path}`)
           continue
+        }
+        // Preserve SSR-rendered text for getter bindings when pending signal is still null (store not yet created on client)
+        // This prevents the initial empty text before __linkPendingStorePathSignals links the real getter.
+        if (
+          signal() == null &&
+          typeof (signal as unknown as { set?: unknown }).set === 'function' &&
+          binding.target === 'text' &&
+          element.textContent != null &&
+          element.textContent.trim() !== ''
+        ) {
+          try {
+            ;(signal as unknown as { set: (v: unknown) => void }).set(element.textContent.trim())
+          } catch {}
         }
         disposers.push(bindReadableSignalToDOM(signal, { node: element, target: binding.target }))
       } catch (e) {

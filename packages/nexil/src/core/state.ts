@@ -222,6 +222,8 @@ export function __getGlobalStoreRegistrySnapshot(): ReadonlyMap<
 }
 
 // Snapshot only stores accessed in the current request (or global if no request)
+// Includes computed getters so that fine-grained DOM bindings (data-nx-store-bind="cart:doubled#text")
+// can be hydrated via __NEXIL_STORES__ without waiting for the store chunk to load.
 export function __snapshotAccessedStores(): Record<string, unknown> | undefined {
   const ids = __getAccessedStoreIds()
   if (ids.length === 0) return undefined
@@ -230,14 +232,26 @@ export function __snapshotAccessedStores(): Record<string, unknown> | undefined 
   for (const id of ids) {
     const store = registry.get(id)
     if (!store) continue
-    const snap = store.snapshot() as unknown
-    if (!isSerializable(snap)) {
+    const snap = store.snapshot() as Record<string, unknown>
+    const outSnap: Record<string, unknown> = { ...(snap as Record<string, unknown>) }
+    const getterSignals = (store as unknown as Record<string, unknown>).__nexil_getterSignals as
+      | Map<string, unknown>
+      | undefined
+    if (getterSignals) {
+      for (const [k, sig] of getterSignals.entries()) {
+        try {
+          const v = (sig as unknown as () => unknown)()
+          outSnap[k] = v as unknown
+        } catch {}
+      }
+    }
+    if (!isSerializable(outSnap)) {
       const msg = `[nexil:stores] Store "${id}" snapshot is not JSON-serializable — cannot be resumed. Ensure state contains only JSON values.`
       if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production')
         console.warn(msg)
       else throw new TypeError(msg)
     }
-    out[id] = snap
+    out[id] = outSnap
   }
   return Object.keys(out).length > 0 ? out : undefined
 }
@@ -261,14 +275,21 @@ export function __hydrateStoresFromJson(json: string): void {
   for (const [id, value] of Object.entries(data)) {
     const existing = registry.get(id)
     if (existing) {
-      // Update existing store's state via snapshot
+      // Update existing store's state via snapshot — strip computed getters (they are not part of state)
+      let stateOnly: Record<string, unknown> = value as Record<string, unknown>
+      const getterSignals = (existing as unknown as Record<string, unknown>)
+        .__nexil_getterSignals as Map<string, unknown> | undefined
+      if (getterSignals && getterSignals.size > 0) {
+        stateOnly = { ...(value as Record<string, unknown>) }
+        for (const k of getterSignals.keys()) delete stateOnly[k]
+      }
       try {
-        existing.set(value as never)
+        existing.set(stateOnly as never)
       } catch {}
     } else {
-      // No existing store instance yet — create a placeholder that will be used when the store is first accessed
-      // We store the hydrated value in the registry as a pending snapshot; the next useStore() call will use it as initial
-      // For now, just record it in a hydration cache
+      // No existing store instance yet — keep full value (including getters) in cache so that
+      // getStorePathSignal can resolve getter bindings like cart:doubled via __NEXIL_STORES__ fallback
+      // before the store chunk loads. The actual store initial state will be stripped when consumed.
       getHydrationCache().set(id, value)
     }
   }
@@ -1141,8 +1162,16 @@ export function defineStore<
     if (existing && typeof (existing as unknown as Store<T>).snapshot === 'function') {
       initial = (existing as unknown as Store<T>).snapshot() as T
     } else {
-      const hydrated = __consumeHydrationCache(id) as T | undefined
-      initial = hydrated !== undefined ? hydrated : options.state()
+      const hydratedRaw = __consumeHydrationCache(id) as Record<string, unknown> | undefined
+      if (hydratedRaw !== undefined) {
+        const copy: Record<string, unknown> = { ...hydratedRaw }
+        if (options.getters) {
+          for (const k of Object.keys(options.getters as Record<string, unknown>)) delete copy[k]
+        }
+        initial = copy as unknown as T
+      } else {
+        initial = options.state()
+      }
     }
     warnIfReservedStateKeys(id, initial)
     const created = createProxiedStore<T, G, A>({
