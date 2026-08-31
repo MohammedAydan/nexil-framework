@@ -28,7 +28,7 @@
 
 - **Docs**: `STATE_TYPES.md:360-363` added “Real-browser findings (0.2.1)” callout and `6. Anti-Patterns` rows for `String()`, `batch` in handler, and `Provider` function children. Header bumped to `0.2.1`.
 
-- **Infra**: `pnpm-lock.yaml:1876` `image-ssim@0.2.1` → `0.2.0` (0.2.1 tarball 404 on registry).
+- **Infra**: `pnpm-lock.yaml:1876` `image-ssim@0.2.3` → `0.2.0` (0.2.3 tarball 404 on registry).
 
 ## Edge cases handled
 

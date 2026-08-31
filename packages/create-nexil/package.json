@@ -1,6 +1,6 @@
 {
   "name": "create-nexil",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Create a Nexil application",
   "type": "module",
   "main": "./dist/scaffold.js",

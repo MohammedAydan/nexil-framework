@@ -117,3 +117,21 @@
   - Cleaned up obsolete package directories and unified all 40 test suites.
 - **Alternatives considered:** Keeping 19 micro-packages (rejected: complex release management and heavy consumer configs); Single monolithic package including CLI (rejected: CLI has CLI-specific runtime deps like prompts/sharp/vite not needed in browser runtimes).
 - **Consequences:** Consumer `package.json` only requires `nexil` and `@nexil/vite-plugin` (or `@nexil/cli`); workspace typecheck (`tsc -b`) and Vitest test suites (40 test files, 319 unit/integration tests) pass with 100% success.
+
+---
+
+## ADR-012: defineStoreContext — createContext-like Hierarchical Stores (Qwik + Astro hybrid)
+
+- **Date:** 2026-08-31
+- **Status:** Accepted — IMPLEMENTED
+- **Context:** `defineStore` était un singleton global plat (`Map<string,StoreInstance>` per-request via ALS `packages/nexil/src/core/state.ts:186`) sans arbre Provider, alors que l'objectif initial était `createContext` React (nearest-wins, defaultValue, Provider nesting). Les exemples Qwik (`createContextId`/`useContextProvider` stableId + Signal value fine-grained resumable) et Astro/nanostores (`atom` plat minimal cross-island) montrent les deux paradigmes. Le hardcode `cart:doubled` pending `packages/nexil/src/client/index.ts:679` + `vite-plugin/src/bootstrap.ts` cassait généricité.
+- **Decision:**
+  - Garder `defineStore` global (Pinia/nanostores) inchangé (non-breaking).
+  - Ajouter `defineStoreContext(id, {state, getters, actions}) → StoreContext<T,G,A> extends Context<StoreInstance<T,G,A>>` (`state.ts:124-145,1260`) : stableId `nexil:store:${id}` via `createContext` `index.ts:343`, `create(override?)` frais `createProxiedStore`, `Provider({value?,children,scope})` auto-create + `runWithScope`, `use(scope?)` nearest Provider sinon fallback singleton per-request (`getStoreRegistry` parent-chain + request marker `__nexil:request` `index.ts:109`).
+  - `getScopedRegistry`/`getScopedAccessLog` `state.ts:195` walk parents, si request marqué créer dans request root, sinon fallback `globalThis.__NEXIL_STORES_GLOBAL_REGISTRY__` → Global partage across Provider children hors request, per-request isolation sous `runWithScope(req.scope)`.
+  - `useContextProvider` sucre `state.ts:1413` : `provideContext(getActiveScope()??createContextScope(), ctx, val)`.
+  - Génériciser pending : suppression `cart:doubled` hardcode `client/index.ts:679`, `vite-plugin/src/bootstrap.ts`/`external-bindings.ts`, `notifyLenses` générique, seed via `__NEXIL_STORES__` hydration `__getStorePathSignal` `state.ts:328`.
+  - Vite : `index.ts:561` hookDef + `628/655` storeDefMatch incluent `defineStoreContext`, `transform.ts:214` idem, `stores.ts:283` `wrapActionsWithBatch` déjà générique.
+  - CLI : `scaffoldStore` variant `scoped|context` → `defineStoreContext` `src/stores/<id>.ts` `cli/src/index.ts:321`, help `--scoped`, parsing exclusive.
+- **Alternatives considered:** Remplacer `defineStore` par hiérarchique seul (rejected: breaking, nano global perdu); deep HMR (deferred); DevTools timeline (Non-Goal).
+- **Consequences:** `defineStore` et `defineStoreContext` coexistent distincts `context-store.test.ts:240` Global `count:1` vs contextual `count:0` puis Provider `99`; E2E `stores-smoke` 2/2 + `stores-level2` 2/2 intact; nouveau `context-store.test.ts` 10/10; full `pnpm test` 41/41 332/332; bundle dead code cart retiré; API `StoreContext` compatible `useContext(StoreContext)` et `StoreContext.Provider` React-like.

@@ -36,3 +36,41 @@
   - **Serializability + reserved keys:** `isSerializable` at every `set`/proxy write; `warnIfReservedStateKeys` warns in dev if state contains `value/snapshot/set/...`.
 - **Example:** `src/stores/user/{types,actions,store}.ts` (`createStore({id:'user', state, actions:userActions})`) and `src/stores/cart.ts` (`defineStore('cart', {state, getters:{doubled}, actions:{increment(){this.count++}}})`) both imported as `import { useUserStore } from '$stores/user'`.
 - **Gotchas:** `store.value` is the `Signal<T>` API, not a state key — don't name state fields `value`/`snapshot`/`set`/etc. (dev warns). `setAtPath` must handle array indices (`store.items[0].quantity`) via copy-on-write; direct `store.items.push` outside an action still batches but prefers `store.addItem()` actions for intent.
+
+## Pattern: StoreContext — createContext-like hierarchical stores [feature: defineStore-refonte]
+
+- **Problem:** `defineStore` plat global ne permettait pas `Provider` nesting nearest-wins comme React `createContext`; `cart:doubled` pending était hardcodé, `Global` singleton divergeait sous `Provider` child.
+- **Solution:**
+  - **Hierarchical:** `defineStoreContext(id, {state, getters, actions}) → StoreContext<T,G,A> extends Context<StoreInstance>` avec stableId `nexil:store:${id}` via `createContext` `packages/nexil/src/core/index.ts:343`. `Provider({value?,children,scope})` auto-create `create()` si `value` omis, `runWithScope` + `deepResolve` sync. `use(scope?)` nearest `innerCtx.use` sinon `getFallback` HMR-aware.
+  - **Request isolation:** `getScopedRegistry` `packages/nexil/src/core/state.ts:195` walk parents, si `__nexil:request` marqué créer dans request root, sinon fallback global — Global partage hors request, per-request sous `runWithScope(req.scope)`. `createRequestContext` marque `__nexil:request` `index.ts:109`.
+  - **Batch + Proxy:** même `createProxiedStore` `state.ts:543` root `Signal` + `computed` getters + `draftWithGetters` proxy, `isSerializable` + `batch`; `__linkPendingStorePathSignals` générique.
+  - **Generic pending:** suppression hardcode `client/index.ts:679` + `bootstrap.ts`; seed via `__NEXIL_STORES__` hydration incluant getters `__snapshotAccessedStores` `state.ts:227`.
+  - **Vite:** `index.ts:561` `defineStoreContext` regex, `transform.ts:214` idem.
+  - **CLI:** `scaffoldStore` variant `scoped` → `defineStoreContext` template `cli/src/index.ts:321`, `--scoped` flag.
+- **Example:**
+  ```ts
+  export const Counter = defineStoreContext('counter', {
+    state: () => ({ count: 0 }),
+    getters: { doubled: (s) => s.count * 2 },
+    actions: {
+      inc() {
+        this.count++
+      },
+    },
+  })
+  Counter.Provider({
+    value: Counter.create({ count: 5 }),
+    scope: ctx.scope,
+    children: () => Counter.use().count,
+  }) // 5
+  const fallback = Counter.use() // 0 sans Provider
+  Counter.Provider({
+    value: Counter.create({ count: 1 }),
+    children: () =>
+      Counter.Provider({
+        value: Counter.create({ count: 99 }),
+        children: () => Counter.use().count,
+      }),
+  }) // inner 99 shadow
+  ```
+- **Gotchas:** Capturer `originalUse`/`originalProvider` avant override `sc.Provider` sinon récursion infinie `state.ts:1367`; `value` key reserved; `Provider` children sync `deepResolve` throw si Promise; `Global` vs `StoreContext` registries distincts mais `Global` partage via parent walk.

@@ -197,6 +197,7 @@ function createClientStoreFallback(
         }
       }
     }
+    // No hard-coded cart:doubled — generic getter pending handled via hydration snapshot + __linkPendingStorePathSignals
   }
 
   const setPathHelper = (
@@ -669,6 +670,9 @@ function getStorePathSignalClient(storeId: string, path: string): BindingSignal 
       } catch {}
     }
   }
+  // Fallback: generic getter — rely on hydration cache / __NEXIL_STORES__ seeding
+  // No hard-coded cart:doubled derivation; getter values are seeded from __NEXIL_STORES__ which already snapshots getters (`__snapshotAccessedStores` includes generic getterSignals)
+  // If no hydration yet, keep pending null until real store links → prevents stale 0 before hydration
   // Fallback: try hydration cache or __NEXIL_STORES__ script
   let initial: unknown
   const hydMap = g['__nexil:stores:hydration'] as Map<string, unknown> | undefined

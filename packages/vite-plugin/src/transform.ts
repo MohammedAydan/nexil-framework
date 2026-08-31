@@ -211,7 +211,7 @@ function classifyScopeCaptures(
       `(?:const|let)\\s+${name}\\s*=\\s*(?:state|signal)\\s*\\(([^)]*)\\)`,
     )
     const storeRegex = new RegExp(
-      `(?:const|let)\\s+${name}\\s*=\\s*(?:store|defineStore)\\s*\\(([^)]*)\\)`,
+      `(?:const|let)\\s+${name}\\s*=\\s*(?:store|defineStore|defineStoreContext)\\s*\\(([^)]*)\\)`,
     )
     const actionRegex = new RegExp(`(?:const|let)\\s+${name}\\s*=\\s*action\\s*\\(([^)]*)\\)`)
 

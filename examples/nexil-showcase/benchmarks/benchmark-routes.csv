@@ -1,9 +1,9 @@
 path,status,bytes,gzipBytes,medianMs,interactive,seoPassCount
-/,200,9187,2936,1.4,true,8
-/features,200,5588,2075,1.2,false,8
-/labs,200,5325,2025,0.68,true,8
-/docs/architecture,200,2983,1114,0.64,false,8
-/docs/resumability,200,3009,1151,0.63,false,8
-/docs/performance,200,2975,1137,0.62,false,8
-/status,200,3669,1404,0.68,false,8
-/missing-benchmark-route,404,128,116,0.47,false,2
+/,200,8868,2933,7.4,true,8
+/features,200,5419,2046,5.27,false,8
+/labs,200,5291,2009,4.88,true,8
+/docs/architecture,200,2886,1087,3.93,false,8
+/docs/resumability,200,2912,1124,3.82,false,8
+/docs/performance,200,2878,1109,3.37,false,8
+/status,200,3572,1380,3.02,false,8
+/missing-benchmark-route,404,9,29,0.76,false,1

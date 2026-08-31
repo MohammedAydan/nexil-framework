@@ -5,7 +5,7 @@ This chapter assembles the patterns from the previous guides into a small docume
 ## 1. Create the project
 
 ```bash
-pnpm dlx create-nexil@0.2.1 my-docs --yes --ts
+pnpm dlx create-nexil@0.2.3  my-docs --yes --ts
 cd my-docs
 pnpm install
 ```

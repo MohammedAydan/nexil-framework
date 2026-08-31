@@ -1,6 +1,6 @@
 # Nexil Framework
 
-> **Published on npm as `@nexil/core`, `@nexil/vite-plugin`, `@nexil/cli`, and `create-nexil` at version `0.2.1`.**
+> **Published on npm as `@nexil/core`, `@nexil/vite-plugin`, `@nexil/cli`, and `create-nexil` at version `0.2.3`.**
 
 **Nexil is an HTML-first, resumable TypeScript framework for building server-rendered web applications.** It produces useful HTML first, keeps static routes free of route-specific client JavaScript, and loads interaction code only when a user reaches an interactive boundary. Nexil has no virtual DOM and does not hydrate or reconcile an entire component tree.
 
@@ -10,7 +10,7 @@ Nexil is designed for applications that need strong server rendering, small clie
 
 ## Current status
 
-The repository contains the v0.2.1 framework surface and its production verification fixtures. The main branch includes compiler-inferred resumability, hierarchical ScopeRef deduplication, nested layouts, inherited SEO metadata, out-of-order Suspense streaming, fine-grained Signal-to-DOM bindings, progressive Forms, typed loaders, static CSS extraction, SSG/ISR/SSR/PPR rendering modes, media processing, server Actions, Node/Deno/Cloudflare adapters, telemetry primitives, and release-oriented quality gates.
+The repository contains the v0.2.3 framework surface and its production verification fixtures. The main branch includes compiler-inferred resumability, hierarchical ScopeRef deduplication, nested layouts, inherited SEO metadata, out-of-order Suspense streaming, fine-grained Signal-to-DOM bindings, progressive Forms, typed loaders, static CSS extraction, SSG/ISR/SSR/PPR rendering modes, media processing, server Actions, Node/Deno/Cloudflare adapters, telemetry primitives, and release-oriented quality gates.
 
 The detailed documentation is available in the [English documentation package](docs/en/README.md). The equivalent Arabic package is available at [docs/ar/README.md](docs/ar/README.md).
 
@@ -40,7 +40,7 @@ Published packages are hosted on the public npm registry (`https://registry.npmj
 Create a TypeScript application with the current initializer:
 
 ```bash
-pnpm dlx create-nexil@0.2.1 my-nexil-app --yes --ts
+pnpm dlx create-nexil@0.2.3  my-nexil-app --yes --ts
 cd my-nexil-app
 pnpm install
 pnpm dev
@@ -49,10 +49,10 @@ pnpm dev
 Equivalent forms (all create the same `my-nexil-app` via `create-nexil`):
 
 ```bash
-npx --yes create-nexil@0.2.1 my-nexil-app --yes --ts
-yarn dlx create-nexil@0.2.1 my-nexil-app --yes --ts
-npm create nexil@0.2.1 my-nexil-app -- --yes --ts
-pnpm create nexil@0.2.1 my-nexil-app -- --yes --ts
+npx --yes create-nexil@0.2.3  my-nexil-app --yes --ts
+yarn dlx create-nexil@0.2.3  my-nexil-app --yes --ts
+npm create nexil@0.2.3  my-nexil-app -- --yes --ts
+pnpm create nexil@0.2.3  my-nexil-app -- --yes --ts
 # inside an existing Nexil workspace or after installing @nexil/cli:
 nexil create my-nexil-app --yes --ts
 ```

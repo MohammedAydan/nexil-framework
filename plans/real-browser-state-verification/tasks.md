@@ -1,6 +1,6 @@
 # Tasks
 
-[x] 1. Scaffold probe - verified @nexil/core@^0.2.1 in templates and starter (was nexil@^0.1.0 in test-f-123)
+[x] 1. Scaffold probe - verified @nexil/core@^0.2.3 in templates and starter (was nexil@^0.2.3 in test-f-123)
 [x] 2. Create fixture `tests/e2e/fixtures/state-verification/` with routes for: local state, computed, resource, shared/route/global stores, proxy, context, batch
 [x] 3. Create `tests/e2e/state-verification.spec.ts` - Playwright real-browser spec (one describe per state type, data-testid hooks)
 [x] 4. Run `pnpm build` + `npx playwright test tests/e2e/state-verification.spec.ts` - captured genuine browser failures (computed unsupported, batch import, store hook regex, String() wrapping, sessionStorage)

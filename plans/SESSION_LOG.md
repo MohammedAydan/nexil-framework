@@ -74,3 +74,39 @@ All monorepo builds, typechecks, linters, unit tests, and Playwright real-browse
 - Blockers: None.
 
 ---
+
+## Session: 2026-08-31 03:20:00
+
+### What was done
+
+- **Phase 1 Core** — Implémenté `StoreContext<T,G,A> extends Context<StoreInstance<T,G,A>>` (`packages/nexil/src/core/state.ts:124`) et `defineStoreContext(id, opts)` stableId `nexil:store:${id}` via `createContext` (`index.ts:343`), `create(override?)` frais, `Provider` auto-create + `originalProvider`/`originalUse` capture anti-récursion, fallback singleton HMR `mergeStateForHMR`, `getScopedRegistry` parent walk + `__nexil:request` marker `index.ts:109` (request-root vs global fallback), `useContextProvider` helper.
+- **Client** — Supprimé hardcode `cart:doubled` `packages/nexil/src/client/index.ts:679` + `notifyLenses` générique, `hydrate__NEXIL_STORES__` inclut getters via `__snapshotAccessedStores`.
+- **Vite runtime** — Nettoyé `packages/vite-plugin/src/bootstrap.ts` / `external-bindings.ts` dead `cart:doubled` (générique).
+- **Vite transform** — Étendu regex `defineStore` → `defineStore|defineStoreContext` `packages/vite-plugin/src/index.ts:561,628,655` + `transform.ts:214`.
+- **CLI** — `scaffoldStore` variant `scoped|context` → `defineStoreContext` template `packages/cli/src/index.ts:321`, help `--scoped`, parsing exclusive.
+- **Tests** — Nouveau `packages/nexil/src/core/context-store.test.ts` 10 tests (fallback, Provider override, nested shadow nearest-wins, create isolated, ALS concurrent, explicit scope, batch+getter this-aware, Global vs Context coexist, sync throw, access log) — 10/10. Full suite 41/41 332/332, build `tsc -b` 0 errors, `pnpm build` 13 packages green.
+
+### Decisions made
+
+- Hybride additif : garder `defineStore` global (non-breaking), ajouter `defineStoreContext` hiérarchique React-like (Qwik stableId + Astro nanostores global par défaut) — ADR-012.
+- `getScopedRegistry` walk parents + request marker pour partager Global hors request et per-request sous `runWithScope(req.scope)`.
+- Capturer `originalUse`/`originalProvider` avant override pour éviter `Maximum call stack`.
+- Nettoyer `cart:doubled` dead code, seed générique via `__NEXIL_STORES__`.
+
+### Files changed
+
+- `packages/nexil/src/core/state.ts` — StoreContext interface + defineStoreContext + useContextProvider + registry walk + createRequestContext marker usage.
+- `packages/nexil/src/core/index.ts` — `createRequestContext` marque `__nexil:request`.
+- `packages/nexil/src/client/index.ts` — generic pending, notifyLenses.
+- `packages/vite-plugin/src/bootstrap.ts` + `external-bindings.ts` — remove cart hardcode.
+- `packages/vite-plugin/src/index.ts` + `packages/vite-plugin/src/transform.ts` — defineStoreContext regex.
+- `packages/cli/src/index.ts` — scaffoldStore scoped, help, parsing.
+- `packages/nexil/src/core/context-store.test.ts` — nouveau 10 tests.
+- `plans/ARCH.md`, `plans/DECISIONS.md` ADR-012, `plans/PATTERNS.md` StoreContext, `plans/context.md`, `plans/defineStore-refonte/*`.
+
+### State at end of session
+
+- Active feature: `defineStore-refonte` **COMPLETE (2026-08-31)** — 41/41 tests 332/332 green, build/typecheck clean.
+- Next: docs `docs/en/25-nexil-stores.md` chapitre StoreContext, E2E `stores-context.spec.ts` avec `Link` outlet.
+
+---

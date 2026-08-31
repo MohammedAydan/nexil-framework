@@ -5,7 +5,7 @@
 Start with the scripts in `package.json` and the CLI help for the installed release. Workspace scripts are the stable entry point for this repository.
 
 ```bash
-pnpm dlx create-nexil@0.2.1 my-app --yes --ts
+pnpm dlx create-nexil@0.2.3  my-app --yes --ts
 cd my-app
 pnpm install
 pnpm dev

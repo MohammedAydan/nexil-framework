@@ -6,7 +6,7 @@ Prove that every state primitive documented in `STATE_TYPES.md` (local/shared/ro
 
 ## Acceptance Criteria (testable, not vague)
 
-1.  **Fresh scaffold is green:** `pnpm dlx create-nexil@0.2.1 test-verify --yes --ts` produces a project whose `package.json` contains `"@nexil/core": "^0.2.1"` (not `"nexil"`), whose `pnpm install && pnpm build` succeeds, and whose `pnpm dev` serves.
+1.  **Fresh scaffold is green:** `pnpm dlx create-nexil@0.2.3  test-verify --yes --ts` produces a project whose `package.json` contains `"@nexil/core": "^0.2.1"` (not `"nexil"`), whose `pnpm install && pnpm build` succeeds, and whose `pnpm dev` serves.
 2.  **Local signals:** `tests/e2e/state-verification.spec.ts` proves `state(0)` and `useState(0)` increment/decrement/reset in browser on first `onClick$` (chunk loads, scope materializes, value persists).
 3.  **Computed & Resource:** Computed derived from local signal updates without manual effect; `resource` shows `loading → value` transition in browser.
 4.  **Store scopes:** `local`, `shared` (via `createStateRegistry`), `route` (`registry.getOrCreate('route', ...)`), `global` (survives `Link` navigation, resets on full reload) — all verified via `lens`, `select`, `snapshot`, `setPath` in browser.
@@ -19,7 +19,7 @@ Prove that every state primitive documented in `STATE_TYPES.md` (local/shared/ro
 
 ## Approach
 
-- **Scaffold probe:** Re-run `create-nexil` with `--yes --ts` into a temp dir (like `scaffold-smoke.test.ts` does) and assert the generated `package.json` uses `@nexil/core@^0.2.1` (regression for `test-f-123` bug where `"nexil": "^0.1.0"` was emitted). Fix is in `packages/create-nexil/src/starter/**` + `packages/cli/src/starter/**` (already bumped to `0.2.1`, but verify name is `@nexil/core` not `nexil`).
+- **Scaffold probe:** Re-run `create-nexil` with `--yes --ts` into a temp dir (like `scaffold-smoke.test.ts` does) and assert the generated `package.json` uses `@nexil/core@^0.2.1` (regression for `test-f-123` bug where `"nexil": "^0.2.3"` was emitted). Fix is in `packages/create-nexil/src/starter/**` + `packages/cli/src/starter/**` (already bumped to `0.2.1`, but verify name is `@nexil/core` not `nexil`).
 - **Fixture app:** Create `tests/e2e/fixtures/state-verification/` — a minimal Nexil app (routes: `/`, `/about`, `/items/[id]`, `_layout`) that declaratively exercises every state primitive. Each route is a pure function of its state, with `data-testid` hooks for Playwright. Build it once in `playwright.config.ts:webServer` (like `basic-app`/`landing-page`).
 - **Playwright spec:** `tests/e2e/state-verification.spec.ts` — one `describe` per state type, each test does: `goto('/route')` → assert initial HTML (0 JS) → `click('[data-testid=inc]')` → assert DOM update → `click` again → assert persistence → `reload` or `click('a[href="/about"]')` → assert scope lifetime (global persists, route resets). Use `expect` + `page.waitForFunction` for `data-nx-store-bind` effects. No mocked browser — real Chromium via `playwright.config.ts`.
 - **Framework fixes (as they appear):**

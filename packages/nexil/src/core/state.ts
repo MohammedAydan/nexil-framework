@@ -1,8 +1,13 @@
 import type { ReadableSignal, Signal, Unsubscribe } from './reactivity.js'
 import { batch, computed, state } from './reactivity.js'
-import type { Serializable } from './index.js'
-import { getActiveScope, isSerializable } from './index.js'
-import type { ContextScope } from './index.js'
+import type { Serializable, Context, ContextScope, Child } from './index.js'
+import {
+  createContext,
+  createContextScope,
+  getActiveScope,
+  isSerializable,
+  provideContext,
+} from './index.js'
 
 export type StateScope = 'local' | 'shared' | 'route' | 'layout' | 'global'
 
@@ -127,6 +132,29 @@ export type StoreInstance<
     readonly [K in keyof A]: PublicAction<A[K & string], T>
   }
 
+/**
+ * `StoreContext` — `defineStore` meets `createContext`.
+ * Hierachical DI wrapper around a StoreInstance.
+ * Works like React `createContext`: Provider tree, nearest-wins, default fallback.
+ * Inspiré Qwik `createContextId` (stableId) + `useContextProvider` + Astro nanostores (global par défaut).
+ */
+export interface StoreContext<
+  T extends Serializable,
+  G extends Record<string, (state: T) => unknown> = Record<string, never>,
+  A extends Record<string, (this: any, ...args: any[]) => unknown> = Record<string, never>,
+> extends Context<StoreInstance<T, G, A>> {
+  /** Store id (same as defineStore id). */
+  readonly storeId: string
+  /** Create a fresh isolated StoreInstance (for Provider value). */
+  readonly create: (override?: Partial<T> | T) => StoreInstance<T, G, A>
+  /** Alias for Provider with optional auto-create when value omitted. */
+  readonly ProviderWithAutoCreate: (props: {
+    readonly value?: StoreInstance<T, G, A>
+    readonly children: Child | (() => Child)
+    readonly scope?: ContextScope
+  }) => Child
+}
+
 const STORE_ID_PATTERN = /^[a-zA-Z0-9:_/-]+$/
 
 function assertStoreId(id: string): void {
@@ -165,22 +193,55 @@ function getGlobalAccessLog(): Set<string> {
 }
 
 function getScopedRegistry(scope: ContextScope): Map<string, StoreInstance<any, any, any>> {
-  let map = scope.values.get(SCOPE_REGISTRY_KEY) as
-    Map<string, StoreInstance<any, any, any>> | undefined
-  if (!map) {
-    map = new Map<string, StoreInstance<any, any, any>>()
-    scope.values.set(SCOPE_REGISTRY_KEY, map)
+  // Walk parent chain to reuse request-level registry (so nested StoreContext Providers share Global fallback)
+  for (let cur: ContextScope | undefined = scope; cur; cur = cur.parent) {
+    const existing = cur.values.get(SCOPE_REGISTRY_KEY) as
+      Map<string, StoreInstance<any, any, any>> | undefined
+    if (existing) return existing
   }
-  return map
+  // No existing registry in chain — is this a request scope? Check for request marker
+  let requestScope: ContextScope | undefined
+  for (let cur: ContextScope | undefined = scope; cur; cur = cur.parent) {
+    if (cur.values.has('__nexil:request')) {
+      requestScope = cur
+      break
+    }
+  }
+  if (requestScope) {
+    // Create per-request registry in the request root
+    let map = requestScope.values.get(SCOPE_REGISTRY_KEY) as
+      Map<string, StoreInstance<any, any, any>> | undefined
+    if (!map) {
+      map = new Map<string, StoreInstance<any, any, any>>()
+      requestScope.values.set(SCOPE_REGISTRY_KEY, map)
+    }
+    return map
+  }
+  // Outside any request — share global registry (Provider children should see same Global singleton)
+  return getGlobalStoreRegistry()
 }
 
 function getScopedAccessLog(scope: ContextScope): Set<string> {
-  let set = scope.values.get(SCOPE_ACCESS_KEY) as Set<string> | undefined
-  if (!set) {
-    set = new Set<string>()
-    scope.values.set(SCOPE_ACCESS_KEY, set)
+  for (let cur: ContextScope | undefined = scope; cur; cur = cur.parent) {
+    const existing = cur.values.get(SCOPE_ACCESS_KEY) as Set<string> | undefined
+    if (existing) return existing
   }
-  return set
+  let requestScope: ContextScope | undefined
+  for (let cur: ContextScope | undefined = scope; cur; cur = cur.parent) {
+    if (cur.values.has('__nexil:request')) {
+      requestScope = cur
+      break
+    }
+  }
+  if (requestScope) {
+    let set = requestScope.values.get(SCOPE_ACCESS_KEY) as Set<string> | undefined
+    if (!set) {
+      set = new Set<string>()
+      requestScope.values.set(SCOPE_ACCESS_KEY, set)
+    }
+    return set
+  }
+  return getGlobalAccessLog()
 }
 
 function getStoreRegistry(): Map<string, StoreInstance<any, any, any>> {
@@ -240,17 +301,23 @@ export function __snapshotAccessedStores(): Record<string, unknown> | undefined 
       for (const [k, sig] of getterSignals.entries()) {
         try {
           const v = (sig as unknown as () => unknown)()
-          outSnap[k] = v as unknown
+          if (isSerializable(v)) outSnap[k] = v as unknown
         } catch {}
       }
     }
     if (!isSerializable(outSnap)) {
-      const msg = `[nexil:stores] Store "${id}" snapshot is not JSON-serializable — cannot be resumed. Ensure state contains only JSON values.`
-      if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production')
-        console.warn(msg)
-      else throw new TypeError(msg)
+      if (!isSerializable(snap)) {
+        const msg = `[nexil:stores] Store "${id}" snapshot is not JSON-serializable — cannot be resumed. Ensure state contains only JSON values.`
+        if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production')
+          console.warn(msg)
+        else throw new TypeError(msg)
+        continue
+      }
+      // Fall back to state-only snapshot if getters introduced non-serializable values (e.g. function-returning getters)
+      out[id] = snap
+    } else {
+      out[id] = outSnap
     }
-    out[id] = outSnap
   }
   return Object.keys(out).length > 0 ? out : undefined
 }
@@ -1187,6 +1254,218 @@ export function defineStore<
   }
   Object.defineProperty(useStore, 'id', { value: id })
   return useStore as unknown as () => StoreInstance<T, G, A>
+}
+
+export function defineStoreContext<
+  T extends Serializable,
+  G extends Record<string, (state: T) => unknown> = Record<string, never>,
+  A extends Record<string, (this: any, ...args: any[]) => unknown> = Record<string, never>,
+>(id: string, options: DefineStoreOptions<T, G, A>): StoreContext<T, G, A> {
+  assertStoreId(id)
+  if (!options || typeof options.state !== 'function')
+    throw new TypeError('Nexil defineStoreContext options.state must be a function.')
+
+  const stableId = `nexil:store:${id}`
+  // Inner context holds StoreInstance or undefined (no provider → fallback)
+  const innerCtx = createContext<StoreInstance<T, G, A> | undefined>(
+    undefined as unknown as StoreInstance<T, G, A> | undefined,
+    stableId,
+  )
+
+  const create = (override?: Partial<T> | T): StoreInstance<T, G, A> => {
+    let initial = options.state()
+    if (override !== undefined) {
+      if (
+        override !== null &&
+        typeof override === 'object' &&
+        !Array.isArray(override) &&
+        typeof initial === 'object' &&
+        initial !== null
+      ) {
+        initial = {
+          ...(initial as Record<string, unknown>),
+          ...(override as Record<string, unknown>),
+        } as unknown as T
+      } else {
+        initial = override as unknown as T
+      }
+    }
+    warnIfReservedStateKeys(id, initial)
+    const instance = createProxiedStore<T, G, A>({
+      id,
+      initial,
+      scope: 'global',
+      getters: options.getters as G,
+      unifiedActions: options.actions as A,
+      isModular: false,
+    })
+    return instance
+  }
+
+  // Fallback singleton (global registry per-request) when no Provider
+  const getFallback = (scope?: ContextScope): StoreInstance<T, G, A> => {
+    // If explicit scope given, use its registry directly
+    let registry: Map<string, StoreInstance<any, any, any>>
+    if (scope) {
+      const map = (scope as unknown as { values: Map<string, unknown> }).values.get(
+        SCOPE_REGISTRY_KEY,
+      ) as Map<string, StoreInstance<any, any, any>> | undefined
+      if (map && map.has(id)) return map.get(id) as StoreInstance<T, G, A>
+      // not in explicit scope → check that scope's registry via helper
+      // fallback to getStoreRegistry() which respects ALS correctly for current execution
+      registry = getStoreRegistry()
+      const existing = registry.get(id) as unknown as StoreInstance<T, G, A> | undefined
+      if (existing && (existing as unknown as Record<string, unknown>).__nexil_isRealStore) {
+        recordStoreAccess(id)
+        return existing
+      }
+      // Check hydration cache etc. — reuse defineStore logic
+      let initial: T
+      const hydratedRaw = __consumeHydrationCache(id) as Record<string, unknown> | undefined
+      if (hydratedRaw !== undefined) {
+        const copy: Record<string, unknown> = { ...hydratedRaw }
+        if (options.getters) {
+          for (const k of Object.keys(options.getters as Record<string, unknown>)) delete copy[k]
+        }
+        initial = copy as unknown as T
+      } else {
+        initial = options.state()
+      }
+      warnIfReservedStateKeys(id, initial)
+      const created = createProxiedStore<T, G, A>({
+        id,
+        initial,
+        scope: 'global',
+        getters: options.getters as G,
+        unifiedActions: options.actions as A,
+        isModular: false,
+      })
+      registry.set(id, created as StoreInstance<any, any, any>)
+      recordStoreAccess(id)
+      return created
+    }
+    // No explicit scope → standard defineStore-like path with HMR handling
+    registry = getStoreRegistry()
+    const existing = registry.get(id) as unknown as StoreInstance<T, G, A> | undefined
+    if (existing && (existing as unknown as Record<string, unknown>).__nexil_isRealStore) {
+      try {
+        const newInitial = options.state()
+        const current = (existing as unknown as Store<T>).snapshot() as unknown as Record<
+          string,
+          unknown
+        >
+        const merged = mergeStateForHMR(
+          current as any,
+          newInitial as unknown as Record<string, unknown>,
+        ) as unknown as T
+        if (JSON.stringify(merged) !== JSON.stringify(current)) {
+          ;(existing as unknown as Store<T>).set(merged)
+        }
+        const hmrUpdate = (existing as unknown as Record<string, unknown>).__nexil_hmrUpdate as
+          | ((
+              nextGetters?: Record<string, (state: T) => unknown>,
+              nextActions?: Record<string, (...args: any[]) => unknown>,
+            ) => void)
+          | undefined
+        if (hmrUpdate) {
+          hmrUpdate(
+            options.getters as unknown as Record<string, (state: T) => unknown>,
+            options.actions as unknown as Record<string, (...args: any[]) => unknown>,
+          )
+        }
+      } catch {}
+      recordStoreAccess(id)
+      return existing
+    }
+    let initial: T
+    if (existing && typeof (existing as unknown as Store<T>).snapshot === 'function') {
+      initial = (existing as unknown as Store<T>).snapshot() as T
+    } else {
+      const hydratedRaw = __consumeHydrationCache(id) as Record<string, unknown> | undefined
+      if (hydratedRaw !== undefined) {
+        const copy: Record<string, unknown> = { ...hydratedRaw }
+        if (options.getters) {
+          for (const k of Object.keys(options.getters as Record<string, unknown>)) delete copy[k]
+        }
+        initial = copy as unknown as T
+      } else {
+        initial = options.state()
+      }
+    }
+    warnIfReservedStateKeys(id, initial)
+    const created = createProxiedStore<T, G, A>({
+      id,
+      initial,
+      scope: 'global',
+      getters: options.getters as G,
+      unifiedActions: options.actions as A,
+      isModular: false,
+    })
+    registry.set(id, created as StoreInstance<any, any, any>)
+    recordStoreAccess(id)
+    return created
+  }
+
+  const originalUse = innerCtx.use.bind(innerCtx) as (
+    scope?: ContextScope,
+  ) => StoreInstance<T, G, A> | undefined
+  const originalProvider = innerCtx.Provider.bind(innerCtx) as (p: {
+    value: StoreInstance<T, G, A> | undefined
+    children: Child | (() => Child)
+    scope?: ContextScope
+  }) => Child
+
+  const use = (scope?: ContextScope): StoreInstance<T, G, A> => {
+    const provided = originalUse(scope) as StoreInstance<T, G, A> | undefined
+    if (provided !== undefined) {
+      recordStoreAccess(id)
+      return provided
+    }
+    return getFallback(scope)
+  }
+
+  const Provider = (props: {
+    readonly value?: StoreInstance<T, G, A>
+    readonly children: Child | (() => Child)
+    readonly scope?: ContextScope
+  }): Child => {
+    const value = props.value ?? create()
+    const providerArg: {
+      value: StoreInstance<T, G, A> | undefined
+      children: Child | (() => Child)
+      scope?: ContextScope
+    } = {
+      value: value as unknown as StoreInstance<T, G, A> | undefined,
+      children: props.children,
+      ...(props.scope !== undefined ? { scope: props.scope } : {}),
+    }
+    return originalProvider(providerArg) as unknown as Child
+  }
+
+  const ProviderWithAutoCreate = Provider
+
+  // Augment innerCtx to become StoreContext — keep its CONTEXT_KEY symbol and stableId
+  const sc = innerCtx as unknown as Record<string, unknown>
+  Object.defineProperty(sc, 'storeId', { value: id, writable: true, configurable: true })
+  Object.defineProperty(sc, 'create', { value: create, writable: true, configurable: true })
+  Object.defineProperty(sc, 'Provider', { value: Provider, writable: true, configurable: true })
+  Object.defineProperty(sc, 'ProviderWithAutoCreate', {
+    value: ProviderWithAutoCreate,
+    writable: true,
+    configurable: true,
+  })
+  Object.defineProperty(sc, 'use', { value: use, writable: true, configurable: true })
+  Object.defineProperty(sc, 'useContext', { value: use, writable: true, configurable: true })
+  return sc as unknown as StoreContext<T, G, A>
+}
+
+export function useContextProvider<T>(
+  context: Context<T>,
+  value: T,
+  scope?: ContextScope,
+): ContextScope {
+  const parent = scope ?? getActiveScope() ?? createContextScope()
+  return provideContext(parent, context, value)
 }
 
 export interface StateRegistry {

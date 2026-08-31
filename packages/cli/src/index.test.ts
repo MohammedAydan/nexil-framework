@@ -144,7 +144,7 @@ describe('Nexil CLI', () => {
         dependencies: { '@nexil/cli': string }
         nexil: { source: string; registry: string }
       }
-      expect(packageJson.dependencies['@nexil/cli']).toBe('^0.2.2')
+      expect(packageJson.dependencies['@nexil/cli']).toBe('^0.2.3')
       expect(packageJson.nexil).toEqual({
         routeExtension: 'tsx',
         source: 'npm',

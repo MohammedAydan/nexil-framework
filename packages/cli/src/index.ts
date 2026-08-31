@@ -249,8 +249,8 @@ export function helpText(): string {
     '  routes         List discovered routes',
     '  generate route <name>       Scaffold a route',
     '  generate component <name>  Scaffold a component',
-    '  generate store <name> [--split|--unified]  Scaffold a Nexil store',
-    '                 Alias: g store <name> [--split|--unified]',
+    '  generate store <name> [--split|--unified|--scoped]  Scaffold a Nexil store',
+    '                 Alias: g store <name> [--split|--unified|--scoped]',
     '  add action <name>           Scaffold a server action',
     '  doctor         Diagnose common project configuration issues',
     '                 Flag: --json for a stable CI-readable report',
@@ -321,7 +321,7 @@ async function scaffoldCliArtifact(root: string, kind: string, name: string): Pr
 export async function scaffoldStore(
   root: string,
   name: string,
-  variant: 'split' | 'unified' = 'unified',
+  variant: 'split' | 'unified' | 'scoped' | 'context' = 'unified',
 ): Promise<readonly string[]> {
   assertGeneratorPath(name)
   const normalized = name.replace(/\\/g, '/')
@@ -381,6 +381,29 @@ export async function scaffoldStore(
       'utf8',
     )
     created.push(relative(root, storePath).split(sep).join('/'))
+    return created
+  }
+
+  if (variant === 'scoped' || variant === 'context') {
+    const file = join(root, 'src', 'stores', `${normalized}.ts`)
+    const dirForUnified = join(root, 'src', 'stores', normalized)
+    if (existsSync(file)) {
+      throw new Error(
+        `Scoped store "${normalized}" already exists at ${relative(root, file).split(sep).join('/')}.`,
+      )
+    }
+    if (existsSync(join(dirForUnified, 'store.ts'))) {
+      throw new Error(
+        `Cannot create scoped store "${normalized}": split store directory ${relative(root, dirForUnified).split(sep).join('/')} already exists. Remove it or use a different name.`,
+      )
+    }
+    await mkdir(dirname(file), { recursive: true })
+    await writeFile(
+      file,
+      `import { defineStoreContext } from '@nexil/core'\n\nexport interface ${capName}State {\n  count: number\n}\n\nexport const ${baseName}StoreContext = defineStoreContext('${id}', {\n  state: (): ${capName}State => ({\n    count: 0,\n  }),\n\n  getters: {\n    doubled: (state) => state.count * 2,\n  },\n\n  actions: {\n    increment(): void {\n      this.count += 1\n    },\n\n    setCount(count: number): void {\n      this.count = count\n    },\n  },\n})\n\n// Context-like usage (React createContext analogue):\n// import { ${baseName}StoreContext } from '$stores/${id}'\n// ${baseName}StoreContext.Provider({ value: ${baseName}StoreContext.create(), children: () => <App /> })\n// const store = ${baseName}StoreContext.use()\n//\n// Global fallback (no Provider) also works: ${baseName}StoreContext.use().count\n`,
+      'utf8',
+    )
+    created.push(relative(root, file).split(sep).join('/'))
     return created
   }
 
@@ -1854,7 +1877,9 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
   if (parsed.command === 'generate') {
     const [kind, name, ...rest] = parsed.args
     if (!kind || !name)
-      throw new Error('Usage: nexil generate <route|component|store> <name> [--split|--unified]')
+      throw new Error(
+        'Usage: nexil generate <route|component|store> <name> [--split|--unified|--scoped]',
+      )
     if (['route', 'component'].includes(kind)) {
       if (rest.length > 0) throw new Error(`Unknown flag for generate ${kind}: ${rest.join(' ')}`)
       return `Created ${await scaffoldCliArtifact(root, kind, name)}`
@@ -1863,16 +1888,25 @@ export async function runCli(argv: readonly string[], cwd = process.cwd()): Prom
       const flags = rest
       const hasSplit = flags.includes('--split')
       const hasUnified = flags.includes('--unified')
-      if (hasSplit && hasUnified)
-        throw new Error('Cannot use both --split and --unified for store generation.')
-      const variant = hasSplit ? 'split' : hasUnified ? 'unified' : 'unified'
-      const unknownFlags = flags.filter((f) => f !== '--split' && f !== '--unified')
+      const hasScoped = flags.includes('--scoped') || flags.includes('--context')
+      const count = [hasSplit, hasUnified, hasScoped].filter(Boolean).length
+      if (count > 1)
+        throw new Error('Cannot combine --split, --unified, --scoped for store generation.')
+      let variant: 'split' | 'unified' | 'scoped' = 'unified'
+      if (hasSplit) variant = 'split'
+      else if (hasScoped) variant = 'scoped'
+      else if (hasUnified) variant = 'unified'
+      const unknownFlags = flags.filter(
+        (f) => f !== '--split' && f !== '--unified' && f !== '--scoped' && f !== '--context',
+      )
       if (unknownFlags.length > 0)
         throw new Error(`Unknown flag for generate store: ${unknownFlags.join(' ')}`)
-      const files = await scaffoldStore(root, name, variant as 'split' | 'unified')
+      const files = await scaffoldStore(root, name, variant)
       return `Created ${files.join(', ')}`
     }
-    throw new Error('Usage: nexil generate <route|component|store> <name> [--split|--unified]')
+    throw new Error(
+      'Usage: nexil generate <route|component|store> <name> [--split|--unified|--scoped]',
+    )
   }
   if (parsed.command === 'add') {
     const [kind, name] = parsed.args

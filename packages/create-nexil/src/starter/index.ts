@@ -49,7 +49,7 @@ export function resolveStarterOptions(options: StarterOptions): ResolvedStarterO
   const language = options.language ?? 'ts'
   if (language !== 'ts' && language !== 'js')
     throw new TypeError(`Unknown starter language: ${language}`)
-  const dependencyVersion = options.dependencyVersion ?? '^0.2.2'
+  const dependencyVersion = options.dependencyVersion ?? '^0.2.3'
   if (!/^\^?\d+\.\d+\.\d+$/.test(dependencyVersion) && dependencyVersion !== 'workspace:*')
     throw new TypeError('Starter dependencyVersion must be a semver range or workspace:*.')
   return {

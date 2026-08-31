@@ -2,7 +2,7 @@
 
 > **Source of truth:** `packages/nexil/src/core/reactivity.ts:14-26`, `packages/nexil/src/core/state.ts:7-19,92-128`, `packages/nexil/src/core/index.ts:1-8,85-98`, `packages/nexil/src/client/index.ts:847-891` and `docs/en/07-state-and-reactivity.md` + `docs/en/25-nexil-stores.md`. Every pattern below compiles against `0.2.1` (`package.json:3` `"version": "0.2.1"`). When in doubt, read the `src/*.ts` files — not this document.
 
-> **Consolidated packages (v0.2.1):** ` @nexil/core` (engine), `@nexil/vite-plugin`, `@nexil/cli`, `create-nexil`. Old split packages `@nexil/reactivity` / `@nexil/state` are now re-exported by `@nexil/core`.
+> **Consolidated packages (v0.2.3):** ` @nexil/core` (engine), `@nexil/vite-plugin`, `@nexil/cli`, `create-nexil`. Old split packages `@nexil/reactivity` / `@nexil/state` are now re-exported by `@nexil/core`.
 
 ---
 
@@ -395,10 +395,10 @@ Limit `MAX_RESUME_DEPTH = 8`, `MAX_RESUME_PAYLOAD_BYTES = 32*1024` (`client/inde
 > - `batch(() => ...)` inside an `onClick$` handler is **not** resumable (bare `import { batch }` in the lazy chunk cannot be resolved). Use sequential `set` calls; the runtime already coalesces via `pendingNotifications`.
 > - Local `computed(() => local() * 2)` is **not** resumable as an automatic text binding — its initial cannot be statically extracted. Prefer store getters (`defineStore({ getters: { doubled: s => s.count*2 } })`) which are resumable via `data-nx-store-bind`, or keep derived values as `state` and update them manually in the handler (`count.set(n); doubled.set(n*2)`).
 > - `resource(() => ...)` for local scope is not resumable for the same reason; use plain `state` with manual `setTimeout`/`fetch` inside an `onClick$` handler.
-> - Store hooks may be `useCounter` **or** `useCounterStore` (0.2.1 fixes a regex that previously required the `Store` suffix). `$stores/counter` virtual is resolved via `useCounter`.
+> - Store hooks may be `useCounter` **or** `useCounterStore` (0.2.3 fixes a regex that previously required the `Store` suffix). `$stores/counter` virtual is resolved via `useCounter`.
 > - `Context.Provider` JSX children are evaluated **before** the Provider sets the scope. For SSR to see the provided value, pass children as a function: `Ctx.Provider({ value: "dark", children: () => <span>{Ctx.use()}</span> })`. Plain `<Ctx.Provider value="dark"><span>{Ctx.use()}</span></Ctx.Provider>` will read the default.
 
-### 3.6 Context — Explicit Shared Ownership (0.2.1 ALS + Explicit Stack)
+### 3.6 Context — Explicit Shared Ownership (0.2.3 ALS + Explicit Stack)
 
 ```ts
 import { createContext, createContextScope, provideContext, state } from '@nexil/core'
@@ -427,7 +427,7 @@ Rules `core/index.ts:157-169, 171-226`:
 
 - `Provider` children must resolve **synchronously** — async throws (`deepResolve` 299-329).
 - For async work, carry scope explicitly via `withContext(scope, ctx, value, render)` or `provideContext` + `runWithScope`.
-- 0.2.1 `getActiveScope()` = `als.getStore() ?? getExplicitScope()` (`getExplicitStack` at `globalThis.__nexil:explicitScopeStack`), `runWithScope` pushes/pops with `Promise.finally` for Cloudflare/Deno (tested `edge-isolation.test.ts`).
+- 0.2.3 `getActiveScope()` = `als.getStore() ?? getExplicitScope()` (`getExplicitStack` at `globalThis.__nexil:explicitScopeStack`), `runWithScope` pushes/pops with `Promise.finally` for Cloudflare/Deno (tested `edge-isolation.test.ts`).
 - Context values not serialized automatically; use `global` store if browser persistence needed.
 
 ### 3.7 Effects, Watch, Batch, Untrack, Lifecycle — `packages/nexil/src/core/reactivity.ts:264-323`
@@ -480,7 +480,7 @@ export default component(() => {
       <output>{count()}</output> {/* auto-lowered when compiler can prove target */}
       <button bindDisabled$={disabled}>Save</button>
       <p bindText$={computed(() => `${count()} items`)}>0 items</p>
-      {/* store-path bindings (Level 2) — new 0.2.1 */}
+      {/* store-path bindings (Level 2) — new 0.2.3  */}
       <p bindText$={store.lens('user.profile.name')}>Ada</p>
       <span data-nx-store-bind="cart:items.length#text">0</span>
     </section>
@@ -717,7 +717,7 @@ type CountValue = SignalValue<typeof count> // number
 
 ---
 
-## 9. Quick Reference — Import Map (0.2.1 Consolidated)
+## 9. Quick Reference — Import Map (0.2.3 Consolidated)
 
 | What                                                                                                                                   | Import from                                                 | Type              |
 | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ----------------- |

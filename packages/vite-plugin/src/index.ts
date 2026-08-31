@@ -558,7 +558,7 @@ function resolveStoreIdForBase(
     }
     // Try to find hook definition in same file: `const useXStore = defineStore('id', ...)`
     const hookDef = new RegExp(
-      `(?:const|let|var)\\s+${escapeRegExp(hook)}\\s*=\\s*(?:defineStore|createStore)\\s*\\(\\s*['"]([^'"]+)['"]`,
+      `(?:const|let|var)\\s+${escapeRegExp(hook)}\\s*=\\s*(?:defineStore|defineStoreContext|createStore)\\s*\\(\\s*['"]([^'"]+)['"]`,
     ).exec(source)
     if (hookDef?.[1]) return hookDef[1]
     const hookCreate = new RegExp(
@@ -625,7 +625,7 @@ function extractStaticInitial(
         let storeInitial: ScopeCaptureInitial | undefined
         // First try to find defineStore in same file
         const storeDefMatch = new RegExp(
-          `defineStore\\s*\\(\\s*['"]${escapeRegExp(storeId)}['"]\\s*,\\s*\\{[\\s\\S]*?state\\s*:\\s*\\(\\s*\\)\\s*=>\\s*\\(?\\s*(\\{[\\s\\S]*?\\})\\s*\\)?\\s*[,}]`,
+          `(?:defineStore|defineStoreContext)\\s*\\(\\s*['"]${escapeRegExp(storeId)}['"]\\s*,\\s*\\{[\\s\\S]*?state\\s*:\\s*\\(\\s*\\)\\s*=>\\s*\\(?\\s*(\\{[\\s\\S]*?\\})\\s*\\)?\\s*[,}]`,
         ).exec(source)
         if (storeDefMatch?.[1]) {
           try {
@@ -652,7 +652,7 @@ function extractStaticInitial(
       }
       let storeInitial: ScopeCaptureInitial | undefined
       const storeDefMatch = new RegExp(
-        `defineStore\\s*\\(\\s*['"]${escapeRegExp(storeId)}['"]\\s*,\\s*\\{[\\s\\S]*?state\\s*:\\s*\\(\\s*\\)\\s*=>\\s*\\(?\\s*(\\{[\\s\\S]*?\\})\\s*\\)?\\s*[,}]`,
+        `(?:defineStore|defineStoreContext)\\s*\\(\\s*['"]${escapeRegExp(storeId)}['"]\\s*,\\s*\\{[\\s\\S]*?state\\s*:\\s*\\(\\s*\\)\\s*=>\\s*\\(?\\s*(\\{[\\s\\S]*?\\})\\s*\\)?\\s*[,}]`,
       ).exec(source)
       if (storeDefMatch?.[1]) {
         try {

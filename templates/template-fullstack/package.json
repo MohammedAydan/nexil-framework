@@ -10,11 +10,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@nexil/cli": "^0.2.2",
-    "@nexil/core": "^0.2.2"
+    "@nexil/cli": "^0.2.3",
+    "@nexil/core": "^0.2.3"
   },
   "devDependencies": {
-    "@nexil/vite-plugin": "^0.2.2",
+    "@nexil/vite-plugin": "^0.2.3",
     "@tailwindcss/vite": "^4.1.0",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.8.0",

@@ -1,6 +1,6 @@
 {
   "name": "@nexil/cli",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Next-generation CLI toolchain and production server for Nexil",
   "type": "module",
   "license": "MIT",

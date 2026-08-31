@@ -156,7 +156,7 @@ export default function CartPage() {
   )
   expect(cartMatch).not.toBeNull()
   const cartJson = JSON.parse((cartMatch?.[1] ?? '').replace(/\\u003c/g, '<'))
-  expect(cartJson.cart).toEqual({ count: 7 })
+  expect(cartJson.cart).toEqual({ count: 7, doubled: 14 })
 
   // Start preview for client resume test
   const vitePreview = await preview({

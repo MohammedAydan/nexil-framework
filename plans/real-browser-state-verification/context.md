@@ -4,7 +4,7 @@
 
 - `tests/e2e/fixtures/state-verification/` — new minimal Nexil app (src/routes/*, vite.config.ts, package.json)
 - `tests/e2e/state-verification.spec.ts` — new Playwright spec (real-browser, not mocked)
-- `packages/create-nexil/src/starter/*` — verify already @0.2.1, fix name `nexil`→`@nexil/core` if found
+- `packages/create-nexil/src/starter/*` — verify already @0.2.3, fix name `nexil`→`@nexil/core` if found
 - `packages/nexil/src/core/*` — potential fixes: state.ts proxy, reactivity.ts, client/index.ts materializeScope, og-image.ts lazy
 - `packages/vite-plugin/src/*` — potential fixes: scope capture for store.lens/select, data-nx-store-bind emission
 - `packages/cli/src/*` — potential fixes: dev-server injection
@@ -35,5 +35,5 @@ None
 ## Current state
 
 - `test-f-123` demonstrates incorrect usage that a developer would naturally write after reading old docs
-- `pnpm build` currently green at 0.2.1 after `cd47d18` (format fix)
+- `pnpm build` currently green at 0.2.3 after `cd47d18` (format fix)
 - `quality` `33318593551` success, `publish-npmjs` `33318593540` success

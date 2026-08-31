@@ -1,37 +1,40 @@
 {
-  "generatedAt": "2026-08-26T18:33:15.391Z",
+  "generatedAt": "2026-08-31T17:30:12.369Z",
   "environment": {
-    "node": "v22.13.0",
-    "platform": "linux",
+    "node": "v25.9.0",
+    "platform": "win32",
     "port": 5173
   },
   "routes": {
     "manifest": [
       {
         "route": "/docs/architecture",
-        "source": "docs/[slug].tsx",
+        "source": "docs\\[slug].tsx",
         "interactive": false,
         "clientJsBytes": 0,
         "clientJsGzipBytes": 0,
         "bootstrapGzipBytes": 0,
+        "navigationGzipBytes": 0,
         "cssBytes": 0
       },
       {
         "route": "/docs/resumability",
-        "source": "docs/[slug].tsx",
+        "source": "docs\\[slug].tsx",
         "interactive": false,
         "clientJsBytes": 0,
         "clientJsGzipBytes": 0,
         "bootstrapGzipBytes": 0,
+        "navigationGzipBytes": 0,
         "cssBytes": 0
       },
       {
         "route": "/docs/performance",
-        "source": "docs/[slug].tsx",
+        "source": "docs\\[slug].tsx",
         "interactive": false,
         "clientJsBytes": 0,
         "clientJsGzipBytes": 0,
         "bootstrapGzipBytes": 0,
+        "navigationGzipBytes": 0,
         "cssBytes": 0
       },
       {
@@ -41,24 +44,27 @@
         "clientJsBytes": 0,
         "clientJsGzipBytes": 0,
         "bootstrapGzipBytes": 0,
+        "navigationGzipBytes": 0,
         "cssBytes": 0
       },
       {
         "route": "/",
         "source": "index.tsx",
         "interactive": true,
-        "clientJsBytes": 236,
+        "clientJsBytes": 242,
         "clientJsGzipBytes": 219,
-        "bootstrapGzipBytes": 993,
+        "bootstrapGzipBytes": 1947,
+        "navigationGzipBytes": 0,
         "cssBytes": 52
       },
       {
         "route": "/labs",
         "source": "labs.tsx",
         "interactive": true,
-        "clientJsBytes": 236,
-        "clientJsGzipBytes": 215,
-        "bootstrapGzipBytes": 993,
+        "clientJsBytes": 633,
+        "clientJsGzipBytes": 428,
+        "bootstrapGzipBytes": 1947,
+        "navigationGzipBytes": 0,
         "cssBytes": 0
       },
       {
@@ -68,6 +74,7 @@
         "clientJsBytes": 0,
         "clientJsGzipBytes": 0,
         "bootstrapGzipBytes": 0,
+        "navigationGzipBytes": 0,
         "cssBytes": 0
       }
     ],
@@ -75,14 +82,14 @@
       {
         "path": "/",
         "status": 200,
-        "bytes": 9187,
-        "gzipBytes": 2936,
+        "bytes": 8868,
+        "gzipBytes": 2933,
         "latencyMs": {
-          "min": 0.9,
-          "median": 1.4,
-          "max": 2.03
+          "min": 5.72,
+          "median": 7.4,
+          "max": 10.73
         },
-        "cacheControl": "public, max-age=0, must-revalidate",
+        "cacheControl": "no-store",
         "contentType": "text/html; charset=utf-8",
         "interactive": true,
         "seo": {
@@ -99,14 +106,14 @@
       {
         "path": "/features",
         "status": 200,
-        "bytes": 5588,
-        "gzipBytes": 2075,
+        "bytes": 5419,
+        "gzipBytes": 2046,
         "latencyMs": {
-          "min": 0.81,
-          "median": 1.2,
-          "max": 1.43
+          "min": 4.53,
+          "median": 5.27,
+          "max": 5.68
         },
-        "cacheControl": "public, max-age=0, must-revalidate",
+        "cacheControl": "no-store",
         "contentType": "text/html; charset=utf-8",
         "interactive": false,
         "seo": {
@@ -123,14 +130,14 @@
       {
         "path": "/labs",
         "status": 200,
-        "bytes": 5325,
-        "gzipBytes": 2025,
+        "bytes": 5291,
+        "gzipBytes": 2009,
         "latencyMs": {
-          "min": 0.64,
-          "median": 0.68,
-          "max": 0.74
+          "min": 4.24,
+          "median": 4.88,
+          "max": 5.42
         },
-        "cacheControl": "public, max-age=0, must-revalidate",
+        "cacheControl": "no-store",
         "contentType": "text/html; charset=utf-8",
         "interactive": true,
         "seo": {
@@ -147,14 +154,14 @@
       {
         "path": "/docs/architecture",
         "status": 200,
-        "bytes": 2983,
-        "gzipBytes": 1114,
+        "bytes": 2886,
+        "gzipBytes": 1087,
         "latencyMs": {
-          "min": 0.62,
-          "median": 0.64,
-          "max": 0.96
+          "min": 3.85,
+          "median": 3.93,
+          "max": 4.33
         },
-        "cacheControl": "public, max-age=0, must-revalidate",
+        "cacheControl": "no-store",
         "contentType": "text/html; charset=utf-8",
         "interactive": false,
         "seo": {
@@ -171,14 +178,14 @@
       {
         "path": "/docs/resumability",
         "status": 200,
-        "bytes": 3009,
-        "gzipBytes": 1151,
+        "bytes": 2912,
+        "gzipBytes": 1124,
         "latencyMs": {
-          "min": 0.6,
-          "median": 0.63,
-          "max": 0.88
+          "min": 3.52,
+          "median": 3.82,
+          "max": 4.55
         },
-        "cacheControl": "public, max-age=0, must-revalidate",
+        "cacheControl": "no-store",
         "contentType": "text/html; charset=utf-8",
         "interactive": false,
         "seo": {
@@ -195,14 +202,14 @@
       {
         "path": "/docs/performance",
         "status": 200,
-        "bytes": 2975,
-        "gzipBytes": 1137,
+        "bytes": 2878,
+        "gzipBytes": 1109,
         "latencyMs": {
-          "min": 0.6,
-          "median": 0.62,
-          "max": 0.67
+          "min": 2.81,
+          "median": 3.37,
+          "max": 4.29
         },
-        "cacheControl": "public, max-age=0, must-revalidate",
+        "cacheControl": "no-store",
         "contentType": "text/html; charset=utf-8",
         "interactive": false,
         "seo": {
@@ -219,14 +226,14 @@
       {
         "path": "/status",
         "status": 200,
-        "bytes": 3669,
-        "gzipBytes": 1404,
+        "bytes": 3572,
+        "gzipBytes": 1380,
         "latencyMs": {
-          "min": 0.63,
-          "median": 0.68,
-          "max": 0.91
+          "min": 2.79,
+          "median": 3.02,
+          "max": 3.87
         },
-        "cacheControl": "public, max-age=0, must-revalidate",
+        "cacheControl": "no-store",
         "contentType": "text/html; charset=utf-8",
         "interactive": false,
         "seo": {
@@ -244,18 +251,18 @@
     "missingRoute": {
       "path": "/missing-benchmark-route",
       "status": 404,
-      "bytes": 128,
-      "gzipBytes": 116,
+      "bytes": 9,
+      "gzipBytes": 29,
       "latencyMs": {
-        "min": 0.44,
-        "median": 0.47,
-        "max": 0.67
+        "min": 0.7,
+        "median": 0.76,
+        "max": 1.03
       },
       "cacheControl": "no-store",
-      "contentType": "text/html; charset=utf-8",
+      "contentType": "text/plain; charset=utf-8",
       "interactive": false,
       "seo": {
-        "title": true,
+        "title": false,
         "description": false,
         "canonical": false,
         "openGraph": false,
@@ -264,34 +271,34 @@
         "jsonLdSchema": false,
         "noDangerousUrl": true
       },
-      "body": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>Not Found</title></head><body><h1>Not Found</h1></body></html>"
+      "body": "Not Found"
     }
   },
   "endpoints": {
     "/sitemap.xml": {
       "status": 200,
       "contentType": "application/xml; charset=utf-8",
-      "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\" xmlns:xhtml=\"http://www.w3.org/1999/xhtml\" xmlns:image=\"http://www.google.com/schemas/sitemap-image/1.1\"><url><loc>https://nexil-showcase.example/docs/architecture</loc><changefreq>weekly</changefreq></url><url><loc>https://nexil-showcase.example/docs/resumability</loc><changefreq>weekly</changefreq></url><url><loc>https://nexil-showcase.example/docs/performance</loc><changefreq>weekly</changefreq></url><url><loc>https://nexil-showcase.example/features</loc><changefreq>weekly</changefreq></url><url><loc>https://nexil-showcase.example/</loc><changefreq>weekly</changefreq></url><url><loc>https://nexil-showcase.example/labs</loc><changefreq>weekly</changefreq></url><url><loc>https://nexil-showcase.example/status</loc><changefreq>weekly</changefreq></url></urlset>"
+      "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\" xmlns:xhtml=\"http://www.w3.org/1999/xhtml\" xmlns:image=\"http://www.google.com/schemas/sitemap-image/1.1\"><url><loc>http://localhost:4173/docs/architecture</loc><changefreq>weekly</changefreq></url><url><loc>http://localhost:4173/docs/resumability</loc><changefreq>weekly</changefreq></url><url><loc>http://localhost:4173/docs/performance</loc><changefreq>weekly</changefreq></url><url><loc>http://localhost:4173/features</loc><changefreq>weekly</changefreq></url><url><loc>http://localhost:4173/</loc><changefreq>weekly</changefreq></url><url><loc>http://localhost:4173/labs</loc><changefreq>weekly</changefreq></url><url><loc>http://localhost:4173/status</loc><changefreq>weekly</changefreq></url></urlset>"
     },
     "/robots.txt": {
       "status": 200,
       "contentType": "text/plain; charset=utf-8",
-      "body": "User-agent: *\nSitemap: https://nexil-showcase.example/sitemap.xml\n"
+      "body": "User-agent: *\nSitemap: http://localhost:4173/sitemap.xml\n"
     },
     "/feed.xml": {
       "status": 200,
-      "contentType": "application/xml; charset=utf-8",
-      "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\"><channel><title>Nexil Showcase Updates</title><link>https://nexil-showcase.example/</link><description>Nexil HTML-first framework routes, runtime notes, and benchmark updates.</description><language>en-US</language><atom:link href=\"https://nexil-showcase.example/feed.xml\" rel=\"self\" type=\"application/rss+xml\"/><item><title>Nexil Documentation — Architecture note</title><link>https://nexil-showcase.example/docs/architecture</link><guid isPermaLink=\"true\">https://nexil-showcase.example/docs/architecture</guid><description>Static documentation generated from a dynamic Nexil route.</description></item><item><title>Nexil Documentation — Architecture note</title><link>https://nexil-showcase.example/docs/resumability</link><guid isPermaLink=\"true\">https://nexil-showcase.example/docs/resumability</guid><description>Static documentation generated from a dynamic Nexil route.</description></item><item><title>Nexil Documentation — Architecture note</title><link>https://nexil-showcase.example/docs/performance</link><guid isPermaLink=\"true\">https://nexil-showcase.example/docs/performance</guid><description>Static documentation generated from a dynamic Nexil route.</description></item><item><title>Nexil Features — Runtime surface area</title><link>https://nexil-showcase.example/features</link><guid isPermaLink=\"true\">https://nexil-showcase.example/features</guid><description>A route-by-route inventory of the Nexil framework features exercised by the showcase.</description></item><item><title>Nexil Showcase — HTML-first, resumable applications</title><link>https://nexil-showcase.example/</link><guid isPermaLink=\"true\">https://nexil-showcase.example/</guid><description>A complete, runnable feature showcase for the Nexil HTML-first and resumable web framework.</description></item><item><title>Nexil Labs — Runtime evaluation surface</title><link>https://nexil-showcase.example/labs</link><guid isPermaLink=\"true\">https://nexil-showcase.example/labs</guid><description>Interactive runtime, serialization, server action, and platform adapter tests for Nexil.</description></item><item><title>Nexil Showcase Status — Runtime health</title><link>https://nexil-showcase.example/status</link><guid isPermaLink=\"true\">https://nexil-showcase.example/status</guid><description>Health and coverage status for the Nexil showcase application.</description></item></channel></rss>"
+      "contentType": "text/html",
+      "body": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <meta name=\"theme-color\" content=\"#0b1020\" />\n    <link rel=\"stylesheet\" href=\"/src/styles.css\" />\n    <link rel=\"icon\" href=\"/nexil-showcase.svg\" type=\"image/svg+xml\" />\n    <!--nexil-head-outlet-->\n  </head>\n  <body>\n    <div id=\"app\"><!--nexil-app-outlet--></div>\n    <!--nexil-scripts-outlet-->\n  </body>\n</html>\n"
     },
     "/atom.xml": {
       "status": 200,
-      "contentType": "application/xml; charset=utf-8",
-      "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><feed xmlns=\"http://www.w3.org/2005/Atom\"><title>Nexil Showcase Updates</title><id>https://nexil-showcase.example/</id><link href=\"https://nexil-showcase.example/\"/><updated>1970-01-01T00:00:00.000Z</updated><entry><title>Nexil Documentation — Architecture note</title><id>https://nexil-showcase.example/docs/architecture</id><link href=\"https://nexil-showcase.example/docs/architecture\"/><updated>1970-01-01T00:00:00.000Z</updated><summary>Static documentation generated from a dynamic Nexil route.</summary></entry><entry><title>Nexil Documentation — Architecture note</title><id>https://nexil-showcase.example/docs/resumability</id><link href=\"https://nexil-showcase.example/docs/resumability\"/><updated>1970-01-01T00:00:00.000Z</updated><summary>Static documentation generated from a dynamic Nexil route.</summary></entry><entry><title>Nexil Documentation — Architecture note</title><id>https://nexil-showcase.example/docs/performance</id><link href=\"https://nexil-showcase.example/docs/performance\"/><updated>1970-01-01T00:00:00.000Z</updated><summary>Static documentation generated from a dynamic Nexil route.</summary></entry><entry><title>Nexil Features — Runtime surface area</title><id>https://nexil-showcase.example/features</id><link href=\"https://nexil-showcase.example/features\"/><updated>1970-01-01T00:00:00.000Z</updated><summary>A route-by-route inventory of the Nexil framework features exercised by the showcase.</summary></entry><entry><title>Nexil Showcase — HTML-first, resumable applications</title><id>https://nexil-showcase.example/</id><link href=\"https://nexil-showcase.example/\"/><updated>1970-01-01T00:00:00.000Z</updated><summary>A complete, runnable feature showcase for the Nexil HTML-first and resumable web framework.</summary></entry><entry><title>Nexil Labs — Runtime evaluation surface</title><id>https://nexil-showcase.example/labs</id><link href=\"https://nexil-showcase.example/labs\"/><updated>1970-01-01T00:00:00.000Z</updated><summary>Interactive runtime, serialization, server action, and platform adapter tests for Nexil.</summary></entry><entry><title>Nexil Showcase Status — Runtime health</title><id>https://nexil-showcase.example/status</id><link href=\"https://nexil-showcase.example/status\"/><updated>1970-01-01T00:00:00.000Z</updated><summary>Health and coverage status for the Nexil showcase application.</summary></entry></feed>"
+      "contentType": "text/html",
+      "body": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <meta name=\"theme-color\" content=\"#0b1020\" />\n    <link rel=\"stylesheet\" href=\"/src/styles.css\" />\n    <link rel=\"icon\" href=\"/nexil-showcase.svg\" type=\"image/svg+xml\" />\n    <!--nexil-head-outlet-->\n  </head>\n  <body>\n    <div id=\"app\"><!--nexil-app-outlet--></div>\n    <!--nexil-scripts-outlet-->\n  </body>\n</html>\n"
     },
     "/docs": {
-      "status": 308,
+      "status": 404,
       "contentType": "text/plain; charset=utf-8",
-      "body": "Redirecting to /docs/architecture"
+      "body": "Not Found"
     }
   },
   "action": {
@@ -311,28 +318,28 @@
         "format": "webp",
         "width": 320,
         "fileName": "nexil-showcase-320.webp",
-        "bytes": 2278,
+        "bytes": 2258,
         "cacheHit": false
       },
       {
         "format": "avif",
         "width": 320,
         "fileName": "nexil-showcase-320.avif",
-        "bytes": 2113,
+        "bytes": 2083,
         "cacheHit": false
       },
       {
         "format": "webp",
         "width": 640,
         "fileName": "nexil-showcase-640.webp",
-        "bytes": 5786,
+        "bytes": 5796,
         "cacheHit": false
       },
       {
         "format": "avif",
         "width": 640,
         "fileName": "nexil-showcase-640.avif",
-        "bytes": 4101,
+        "bytes": 4251,
         "cacheHit": false
       }
     ],
@@ -340,41 +347,46 @@
   },
   "assets": {
     "bootstrap": {
-      "bytes": 1732,
-      "gzipBytes": 993
+      "bytes": 4304,
+      "gzipBytes": 1947
     },
     "chunks": [
       {
         "name": "chunk_1aa4d5defcaf.js",
-        "bytes": 236,
-        "gzipBytes": 192
+        "bytes": 242,
+        "gzipBytes": 196
       },
       {
         "name": "chunk_47c56b2c9215.js",
-        "bytes": 236,
-        "gzipBytes": 195
+        "bytes": 242,
+        "gzipBytes": 199
+      },
+      {
+        "name": "chunk_51a773efb1af.js",
+        "bytes": 391,
+        "gzipBytes": 290
       }
     ],
     "assets": [
       {
         "name": "images/nexil-showcase-320.avif",
-        "bytes": 2113,
-        "gzipBytes": 2042
+        "bytes": 2083,
+        "gzipBytes": 2021
       },
       {
         "name": "images/nexil-showcase-320.webp",
-        "bytes": 2278,
-        "gzipBytes": 2301
+        "bytes": 2258,
+        "gzipBytes": 2281
       },
       {
         "name": "images/nexil-showcase-640.avif",
-        "bytes": 4101,
-        "gzipBytes": 4030
+        "bytes": 4251,
+        "gzipBytes": 4148
       },
       {
         "name": "images/nexil-showcase-640.webp",
-        "bytes": 5786,
-        "gzipBytes": 5809
+        "bytes": 5796,
+        "gzipBytes": 5819
       },
       {
         "name": "nexil.css",
@@ -389,32 +401,32 @@
     ],
     "ogCards": [
       {
-        "name": "acb7aace2c620ebf2ef71023.png",
-        "bytes": 83570,
-        "gzipBytes": 77292
+        "name": "86536a71b78eb0dc313760f5.png",
+        "bytes": 77641,
+        "gzipBytes": 71156
       },
       {
-        "name": "ae6fbb2390f383afacc00541.png",
-        "bytes": 77228,
-        "gzipBytes": 70888
+        "name": "ec1d5175c9f6dd51f0be1748.png",
+        "bytes": 81688,
+        "gzipBytes": 75359
       },
       {
-        "name": "d78034addec6c5e1136c3485.png",
-        "bytes": 79233,
-        "gzipBytes": 72632
+        "name": "f2e1e07199ae5134e837c755.png",
+        "bytes": 75214,
+        "gzipBytes": 68562
       },
       {
-        "name": "f874a4e3d2f2094b94c53d85.png",
-        "bytes": 81471,
-        "gzipBytes": 75188
+        "name": "f60abc249e6a67ef4e31d2fc.png",
+        "bytes": 79668,
+        "gzipBytes": 73249
       }
     ]
   },
   "totals": {
     "routeCount": 7,
     "interactiveRoutes": 2,
-    "chunkCount": 2,
-    "clientJsBytes": 2204,
-    "clientJsGzipBytes": 1380
+    "chunkCount": 3,
+    "clientJsBytes": 5179,
+    "clientJsGzipBytes": 2632
   }
 }

@@ -1,8 +1,8 @@
 // Bump scaffold dependency ranges after a version-line change.
 import { readFile, writeFile } from 'node:fs/promises'
 
-const OLD = "'^0.2.2'"
-const NEW = "'^0.2.2'"
+const OLD = "'^0.2.3'"
+const NEW = "'^0.2.3'"
 const files = [
   'packages/create-nexil/src/starter/index.ts',
   'packages/create-nexil/src/starter/node.ts',
@@ -13,7 +13,7 @@ const files = [
 for (const file of files) {
   const source = await readFile(file, 'utf8')
   if (!source.includes(OLD)) {
-    console.log(`no ^0.1.0 ranges in ${file}`)
+    console.log(`no ^0.2.3 ranges in ${file}`)
     continue
   }
   await writeFile(file, source.split(OLD).join(NEW), 'utf8')

@@ -24,16 +24,24 @@ pnpm workspace monorepo with 4 consolidated packages. TypeScript project referen
 | **cli**          | `@nexil/cli`         | `.`                                                                                                                                                                                                                                                                                                                                                         | CLI runner for dev server, production server, generators, diagnostics, image optimization             | `packages/cli`          |
 | **create-nexil** | `create-nexil`       | `.`                                                                                                                                                                                                                                                                                                                                                         | Standalone scaffolding CLI for template generation                                                    | `packages/create-nexil` |
 
-## Nexil Stores Subsystem (ADR-010)
+## Nexil Stores Subsystem (ADR-010 + ADR-012)
 
 Convention-based state layer under `src/stores/`:
 
-- **Folder contracts:** Modular `src/stores/<id>/{types.ts,actions.ts,store.ts}` vs Unified `src/stores/<id>.ts` or `src/stores/<id>/index.ts` (`defineStore`).
-- **APIs:** `createStore({ id, state: () => T, actions: { fn(state, ...) } })` and `defineStore(id, { state, getters, actions })`. Legacy `createStore(initial, scope)` overload.
-- **Reactivity:** Single root `Signal<T>` + transitive `Proxy` (`createPathProxy`) + `batch()` for structural-sharing updates; `isSerializable` enforced at every write.
-- **Vite:** `discoverStores(root)` scans `src/stores`, generates `virtual:nexil-stores` barrel + `$stores/*` aliases via `resolveId`/`load`, writes `.nexil/stores.d.ts`.
-- **SSR & Request Isolation:** Per-request `AsyncLocalStorage` (`runWithScope`), state snapshot serialized into `<script type="nexil/state" id="__NEXIL_STORES__">`.
-- **Zero-Hydration Client:** `hydrateNexilStoresFromDocument()` deserializes accessed stores into cache upon initial user interaction.
+- **Folder contracts:** Modular `src/stores/<id>/{types.ts,actions.ts,store.ts}` vs Unified `src/stores/<id>.ts` or `src/stores/<id>/index.ts` (`defineStore`). Scoped `src/stores/<id>.ts` via `defineStoreContext` (hierarchical).
+- **APIs:** `createStore({ id, state: () => T, actions: { fn(state, ...) } })`, `defineStore(id, { state, getters, actions })` (global singleton), `defineStoreContext(id, {state, getters, actions}) → StoreContext<StoreInstance>` (createContext-like: `Provider`/`use`/`create`). Legacy `createStore(initial, scope)` overload.
+- **Reactivity:** Single root `Signal<T>` + transitive `Proxy` (`createPathProxy`) + `batch()` for structural-sharing updates; `isSerializable` enforced at every write; getters `computed`, actions `this` draftWithGetters.
+- **Vite:** `discoverStores(root)` scans `src/stores`, generates `virtual:nexil-stores` barrel + `$stores/*` aliases via `resolveId`/`load`, writes `.nexil/stores.d.ts`. `transform` handles `defineStoreContext` same as `defineStore`.
+- **SSR & Request Isolation:** Per-request `AsyncLocalStorage` + explicit `__nexil:request` marker (`runWithScope`), `getScopedRegistry` parent walk + request-root vs global fallback, snapshot via `__NEXIL_STORES__`.
+- **Zero-Hydration Client:** `hydrateNexilStoresFromDocument()` + generic `__getStorePathSignal` via `__nexil:store-path:pending` (no hardcode `cart:doubled`).
+
+## StoreContext (ADR-012) — Context-like Layer
+
+Hierarchical wrapper around StoreInstance using `ContextScope` stableId `nexil:store:${id}`:
+
+- **Creation:** `defineStoreContext(id, opts)` → `createContext<StoreInstance|undefined>(undef, stableId)` + fallback per-request singleton.
+- **Usage:** `Counter.Provider({value: Counter.create({count:5}), children:()=> Counter.use().count})` nearest-wins, `Counter.use()` fallback 0, `Counter.create()` isolated, `useContextProvider` helper.
+- **Isolation:** Global stores partage via `getScopedRegistry` parent walk + global fallback; Request stores per-`runWithScope(req.scope)`; concurrent `Promise.all(runWithScope(reqA), runWithScope(reqB))` isolated.
 
 ## Dependency Graph (Internal)
 

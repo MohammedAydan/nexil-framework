@@ -108,7 +108,9 @@ export function createRequestContext(
     ? globalThis.crypto.randomUUID()
     : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`,
 ): RequestContext {
-  return { request, id, values: new Map(), scope: createContextScope() }
+  const scope = createContextScope()
+  scope.values.set('__nexil:request', true)
+  return { request, id, values: new Map(), scope }
 }
 
 export function component<Props>(fn: Component<Props>): Component<Props> {

@@ -21,7 +21,7 @@ This chapter is a complete, practical path for an application built with Nexil `
 Configure access to the `@nexil` package scope through your user or CI environment. Do not commit a registry token or paste it into `.npmrc`. Then use the current initializer and commit the lockfile produced by your own installation.
 
 ```bash
-pnpm dlx create-nexil@0.2.1 nexil-workbench --yes --ts --template interactive
+pnpm dlx create-nexil@0.2.3  nexil-workbench --yes --ts --template interactive
 cd nexil-workbench
 pnpm install
 pnpm dev
