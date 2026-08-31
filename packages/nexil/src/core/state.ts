@@ -235,8 +235,7 @@ export function __snapshotAccessedStores(): Record<string, unknown> | undefined 
     const snap = store.snapshot() as Record<string, unknown>
     const outSnap: Record<string, unknown> = { ...(snap as Record<string, unknown>) }
     const getterSignals = (store as unknown as Record<string, unknown>).__nexil_getterSignals as
-      | Map<string, unknown>
-      | undefined
+      Map<string, unknown> | undefined
     if (getterSignals) {
       for (const [k, sig] of getterSignals.entries()) {
         try {
