@@ -1,9 +1,21 @@
-import { isIP } from 'node:net'
-import { createHash } from 'node:crypto'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
 import { element } from './index.js'
 import type { ElementNode } from './index.js'
+
+function isIP(host: string): number {
+  if (
+    /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
+      host,
+    )
+  )
+    return 4
+  if (
+    /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::1$|^::$|^([0-9a-fA-F]{1,4}:)+[0-9a-fA-F]{1,4}$/.test(
+      host,
+    )
+  )
+    return 6
+  return 0
+}
 
 export interface ImageProps {
   readonly src: string
@@ -366,6 +378,9 @@ export async function buildImageVariants(
   options: BuildImageOptions,
 ): Promise<readonly BuiltImageVariant[]> {
   if (!/^[a-zA-Z0-9_-]+$/.test(options.fileBase)) throw new TypeError('Invalid image file base.')
+  const { createHash } = await import('node:crypto')
+  const { mkdir, readFile, writeFile } = await import('node:fs/promises')
+  const { join } = await import('node:path')
   const widths = [...(options.widths ?? [320, 640, 960])]
   const source = new Uint8Array(await readFile(options.sourcePath))
   const key = createHash('sha256')

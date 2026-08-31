@@ -8,7 +8,7 @@ const versionArg = args.find((a) => !a.startsWith('-')) || 'patch'
 
 const rootPkgPath = join(process.cwd(), 'package.json')
 const rootPkg = JSON.parse(readFileSync(rootPkgPath, 'utf8'))
-const currentVersion = rootPkg.version || '0.2.0'
+const currentVersion = rootPkg.version || '0.2.1'
 
 function bumpVersion(current, type) {
   const parts = current.split('.').map(Number)

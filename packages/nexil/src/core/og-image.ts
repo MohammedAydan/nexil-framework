@@ -1,7 +1,3 @@
-import { createHash } from 'node:crypto'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
-
 export interface OgImageOptions {
   readonly title: string
   readonly description: string
@@ -65,6 +61,9 @@ export async function generateOgImage(
   options: OgImageOptions,
   outputDir: string,
 ): Promise<GeneratedOgImage> {
+  const { createHash } = await import('node:crypto')
+  const { mkdir, readFile, writeFile } = await import('node:fs/promises')
+  const { join } = await import('node:path')
   const svg = renderOgImageSvg(options)
   const hash = createHash('sha256').update(svg).digest('hex').slice(0, 24)
   const fileName = `${hash}.png`

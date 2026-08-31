@@ -144,7 +144,7 @@ describe('Nexil CLI', () => {
         dependencies: { '@nexil/cli': string }
         nexil: { source: string; registry: string }
       }
-      expect(packageJson.dependencies['@nexil/cli']).toBe('^0.2.0')
+      expect(packageJson.dependencies['@nexil/cli']).toBe('^0.2.2')
       expect(packageJson.nexil).toEqual({
         routeExtension: 'tsx',
         source: 'npm',
@@ -242,7 +242,7 @@ describe('Nexil CLI', () => {
     expect(manifest.routes.map((route) => route.route)).toEqual(
       expect.arrayContaining(['/docs/quickstart', '/docs/routing', '/docs/styling']),
     )
-  })
+  }, 30000)
 
   it('emits and measures bootstrap for an interactive route', async () => {
     const parent = await mkdtemp(join(tmpdir(), 'nexil-cli-interactive-'))

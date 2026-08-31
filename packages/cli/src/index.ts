@@ -5,6 +5,7 @@ import { promisify } from 'node:util'
 import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { dirname, extname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import * as esbuild from 'esbuild'
 import { build, createServer, transformWithEsbuild } from 'vite'
 import { createRequestContext, runWithScope, type Child, type ComponentContext } from '@nexil/core'
 import { __clearAccessedStoreIds, __getStoresScriptTag } from '@nexil/core'
@@ -34,8 +35,8 @@ import { nexilSSRPlugin } from './dev-server.js'
 import { createServer as createProductionServer } from './serve.js'
 import type { NexilConfig, RedirectRule } from './serve.js'
 import type { SeoMetadata } from '@nexil/core'
-export { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 import { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
+export { parseScaffoldArgs, scaffoldProject } from './scaffold.js'
 
 const FRAMEWORK_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..')
 
@@ -1294,18 +1295,79 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
     await writeFile(join(serverRoot, outputName), transformed.code, 'utf8')
     let clientBytes = 0
     for (const chunk of transformed.chunks) {
-      const minified = await transformWithEsbuild(chunk.source, chunk.fileName, {
-        loader: 'js',
-        minify: true,
-      })
+      let chunkCode = ''
+      try {
+        const bundled = await esbuild.build({
+          stdin: {
+            contents: chunk.source,
+            resolveDir: dirname(sourcePath),
+            sourcefile: chunk.fileName,
+            loader: 'js',
+          },
+          bundle: true,
+          format: 'esm',
+          platform: 'browser',
+          target: 'es2022',
+          minify: true,
+          write: false,
+          external: [
+            'sharp',
+            'node:*',
+            'fs',
+            'path',
+            'crypto',
+            'child_process',
+            'util',
+            'events',
+            'os',
+            'stream',
+            'module',
+          ],
+          plugins: [
+            {
+              name: 'nexil-absolute-src-resolver',
+              setup(build) {
+                build.onResolve({ filter: /^\/src\// }, (args) => ({
+                  path: join(root, args.path.slice(1)),
+                }))
+                // Resolve workspace aliases for @nexil/* inside store modules
+                for (const alias of workspaceAliases()) {
+                  const isString = typeof alias.find === 'string'
+                  const pattern = isString
+                    ? new RegExp(`^${alias.find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`)
+                    : (alias.find as RegExp)
+                  build.onResolve({ filter: pattern }, (args) => ({
+                    path: alias.replacement,
+                  }))
+                }
+              },
+            },
+          ],
+        })
+        chunkCode = bundled.outputFiles?.[0]?.text ?? ''
+        if (!chunkCode) throw new Error('Empty bundle')
+      } catch (error) {
+        // Fallback to minify without bundling (keeps import as-is for dev-like serve)
+        // Log bundling failure for diagnostics without breaking build
+        if (process.env.DEBUG_NEXIL_BUILD) {
+          console.warn(
+            `[nexil] Chunk bundling failed for ${chunk.fileName}: ${error instanceof Error ? error.message : String(error)}`,
+          )
+        }
+        const minified = await transformWithEsbuild(chunk.source, chunk.fileName, {
+          loader: 'js',
+          minify: true,
+        })
+        chunkCode = minified.code
+      }
       if (!emittedChunks.has(chunk.fileName)) {
         emittedChunks.add(chunk.fileName)
-        await writeFile(join(chunkRoot, chunk.fileName), minified.code, 'utf8')
+        await writeFile(join(chunkRoot, chunk.fileName), chunkCode, 'utf8')
         const chunkClientPath = join(clientRoot, CHUNK_DIRECTORY, chunk.fileName)
         await mkdir(join(clientRoot, CHUNK_DIRECTORY), { recursive: true })
-        await writeFile(chunkClientPath, minified.code, 'utf8')
+        await writeFile(chunkClientPath, chunkCode, 'utf8')
       }
-      clientBytes += Buffer.byteLength(minified.code)
+      clientBytes += Buffer.byteLength(chunkCode)
     }
     for (const css of transformed.css) cssAssets.add(css)
     const routeTemplate =

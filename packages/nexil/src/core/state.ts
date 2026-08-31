@@ -494,6 +494,8 @@ function createPathProxy<T extends Serializable>(
       if (typeof prop === 'symbol') return undefined
       const current = getAtPath(rootSignal(), path) as Record<string, unknown> | null | undefined
       if (current && typeof current === 'object' && prop in (current as Record<string, unknown>)) {
+        const desc = Reflect.getOwnPropertyDescriptor(current as unknown as object, prop as string)
+        if (desc) return desc
         return {
           configurable: true,
           enumerable: true,
@@ -504,7 +506,12 @@ function createPathProxy<T extends Serializable>(
       return undefined
     },
   }
-  return new Proxy({} as Record<string, unknown>, handler)
+  const currentAtCreation = getAtPath(rootSignal(), path) as unknown
+  const target: Record<string, unknown> =
+    currentAtCreation !== null && typeof currentAtCreation === 'object'
+      ? (currentAtCreation as unknown as Record<string, unknown>)
+      : ({} as Record<string, unknown>)
+  return new Proxy(target as Record<string, unknown>, handler)
 }
 
 function createProxiedStore<
@@ -626,6 +633,7 @@ function createProxiedStore<
 
   const handler: ProxyHandler<Record<string, unknown>> = {
     get(_target, prop, receiver) {
+      if (prop === '__nexil_isRealStore') return true
       if (prop === '__nexil_hmrUpdate') return hmrUpdate
       if (prop === '__nexil_getterSignals') return getterSignals
       if (typeof prop === 'symbol') return Reflect.get(_target, prop, receiver)
@@ -964,7 +972,7 @@ export function createStore<
       const registry = getStoreRegistry()
       const existing = registry.get(options.id) as unknown as
         StoreInstance<T, Record<string, never>, A> | undefined
-      if (existing) {
+      if (existing && (existing as unknown as Record<string, unknown>).__nexil_isRealStore) {
         // HMR: merge shape changes (add/remove keys) while preserving live values
         try {
           const newInitial = options.state()
@@ -992,8 +1000,13 @@ export function createStore<
         recordStoreAccess(options.id)
         return existing
       }
-      const hydrated = __consumeHydrationCache(options.id) as T | undefined
-      const initial = hydrated !== undefined ? hydrated : options.state()
+      let initial: T
+      if (existing && typeof (existing as unknown as Store<T>).snapshot === 'function') {
+        initial = (existing as unknown as Store<T>).snapshot() as T
+      } else {
+        const hydrated = __consumeHydrationCache(options.id) as T | undefined
+        initial = hydrated !== undefined ? hydrated : options.state()
+      }
       warnIfReservedStateKeys(options.id, initial)
       const created = createProxiedStore<T, Record<string, never>, A>({
         id: options.id,
@@ -1093,7 +1106,7 @@ export function defineStore<
   const useStore = (): StoreInstance<T, G, A> => {
     const registry = getStoreRegistry()
     const existing = registry.get(id) as unknown as StoreInstance<T, G, A> | undefined
-    if (existing) {
+    if (existing && (existing as unknown as Record<string, unknown>).__nexil_isRealStore) {
       // HMR: merge shape and update getters/actions without full reload
       try {
         const newInitial = options.state()
@@ -1124,8 +1137,13 @@ export function defineStore<
       recordStoreAccess(id)
       return existing
     }
-    const hydrated = __consumeHydrationCache(id) as T | undefined
-    const initial = hydrated !== undefined ? hydrated : options.state()
+    let initial: T
+    if (existing && typeof (existing as unknown as Store<T>).snapshot === 'function') {
+      initial = (existing as unknown as Store<T>).snapshot() as T
+    } else {
+      const hydrated = __consumeHydrationCache(id) as T | undefined
+      initial = hydrated !== undefined ? hydrated : options.state()
+    }
     warnIfReservedStateKeys(id, initial)
     const created = createProxiedStore<T, G, A>({
       id,

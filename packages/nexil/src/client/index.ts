@@ -168,6 +168,172 @@ function parseScopePayload(raw: string | null): Readonly<Record<string, ScopeRef
   }
 }
 
+function createClientStoreFallback(
+  initial: Serializable,
+  storeId?: string,
+  lifetime?: 'global' | 'route' | 'session',
+): unknown {
+  const g = globalThis as unknown as Record<string, unknown>
+  let gReg = g['__NEXIL_STORES_GLOBAL_REGISTRY__'] as Map<string, unknown> | undefined
+  if (!gReg) {
+    gReg = new Map<string, unknown>()
+    g['__NEXIL_STORES_GLOBAL_REGISTRY__'] = gReg
+  }
+  if (storeId && gReg.has(storeId)) return gReg.get(storeId)
+
+  const sig = createSignal(initial)
+  const notifyLenses = () => {
+    if (!storeId) return
+    const pendingMap = g['__nexil:store-path:pending'] as
+      Map<string, Set<{ set: (v: unknown) => void }>> | undefined
+    if (!pendingMap) return
+    const curState = sig() as Record<string, unknown> | undefined
+    for (const [k, sigs] of pendingMap.entries()) {
+      if (k.startsWith(storeId + ':')) {
+        const p = k.slice(storeId.length + 1)
+        const val = getAtPathClient(curState, p.split('.'))
+        if (val !== undefined) {
+          for (const s of sigs) s.set(val)
+        }
+      }
+    }
+  }
+
+  const setPathHelper = (
+    obj: unknown,
+    path: readonly string[],
+    val: unknown,
+  ): Record<string, unknown> | unknown[] => {
+    if (!path || path.length === 0) return val as Record<string, unknown> | unknown[]
+    const [h, ...tl] = path
+    if (!h) return val as Record<string, unknown> | unknown[]
+    if (Array.isArray(obj)) {
+      const copy = [...obj]
+      copy[Number(h)] =
+        tl.length > 0
+          ? setPathHelper(copy[Number(h)] ?? {}, tl, val)
+          : (val as Record<string, unknown> | unknown[])
+      return copy
+    }
+    const copy = { ...((obj as Record<string, unknown>) || {}) }
+    copy[h] =
+      tl.length > 0
+        ? setPathHelper(copy[h] ?? {}, tl, val)
+        : (val as Record<string, unknown> | unknown[])
+    return copy
+  }
+
+  const makeProxy = (basePath: string[]): unknown => {
+    return new Proxy(
+      {},
+      {
+        get(tg, pr) {
+          if (typeof pr === 'symbol') return undefined
+          const cur = getAtPathClient(sig(), basePath)
+          if (cur && typeof cur === 'object') {
+            if (
+              Array.isArray(cur) &&
+              typeof pr === 'string' &&
+              ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'].includes(pr)
+            ) {
+              return (...args: unknown[]) => {
+                const copy = [...cur]
+                const fn = (Array.prototype as unknown as Record<string, Function>)[pr]
+                const res = fn?.apply(copy, args)
+                const nRoot = setPathHelper(sig(), basePath, copy)
+                sig.set(nRoot as Serializable)
+                notifyLenses()
+                return res
+              }
+            }
+            const v = (cur as Record<string, unknown>)[pr]
+            if (v !== null && typeof v === 'object') return makeProxy([...basePath, pr])
+            if (v !== undefined) return v
+          }
+          return undefined
+        },
+        set(tg, pr, val) {
+          if (typeof pr === 'symbol') return false
+          const nRoot = setPathHelper(sig(), [...basePath, pr], val)
+          sig.set(nRoot as Serializable)
+          notifyLenses()
+          return true
+        },
+      },
+    )
+  }
+
+  const base: Record<string, unknown> = {
+    value: sig,
+    snapshot: () => sig(),
+    set: (n: unknown) => {
+      const nxt = typeof n === 'function' ? (n as (p: unknown) => Serializable)(sig()) : n
+      sig.set(nxt as Serializable)
+      notifyLenses()
+    },
+    setPath: (p: string, v: unknown) => {
+      const nxt = setPathHelper(sig(), p.split('.'), v)
+      sig.set(nxt as Serializable)
+      notifyLenses()
+    },
+    lens: (p: string) => getStorePathSignalClient(storeId || 'store', p),
+    select: (sel: (s: unknown) => unknown) => {
+      const c = () => sel(sig())
+      ;(c as unknown as { subscribe: unknown }).subscribe = sig.subscribe
+      return c
+    },
+    subscribe: sig.subscribe,
+    dispose: () => sig.dispose(),
+    g: lifetime === 'global',
+  }
+
+  const proxy = new Proxy(base, {
+    get(tg, pr) {
+      if (typeof pr === 'symbol') return undefined
+      if (pr in tg) return tg[pr as string]
+      const cur = sig()
+      if (cur && typeof cur === 'object') {
+        if (
+          Array.isArray(cur) &&
+          typeof pr === 'string' &&
+          ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'].includes(pr)
+        ) {
+          return (...args: unknown[]) => {
+            const copy = [...cur]
+            const fn = (Array.prototype as unknown as Record<string, Function>)[pr]
+            const res = fn?.apply(copy, args)
+            sig.set(copy as Serializable)
+            notifyLenses()
+            return res
+          }
+        }
+        const v = (cur as Record<string, unknown>)[pr as string]
+        if (v !== null && typeof v === 'object') return makeProxy([pr as string])
+        if (v !== undefined) return v
+      }
+      return undefined
+    },
+    set(tg, pr, val) {
+      if (typeof pr === 'symbol') return false
+      if (pr in tg) {
+        tg[pr as string] = val
+        return true
+      }
+      const cur = sig()
+      const nxt =
+        cur && typeof cur === 'object' && !Array.isArray(cur)
+          ? { ...cur, [pr as string]: val }
+          : { [pr as string]: val }
+      sig.set(nxt as Serializable)
+      notifyLenses()
+      return true
+    },
+  })
+
+  if (storeId) gReg.set(storeId, proxy)
+  return proxy
+}
+
 /**
  * Resolves a boundary's serialized ScopeRefs into live browser objects,
  * caching signal/store/action instances by reference ID so every boundary
@@ -216,14 +382,11 @@ export function materializeScope(
         if (realStore) {
           live = realStore
         } else {
-          const signal = createSignal((ref as ScopeRefStore).initial)
-          live = {
-            value: signal,
-            snapshot: () => JSON.parse(JSON.stringify(signal())) as Serializable,
-            set: (next: Serializable | ((previous: Serializable) => Serializable)) =>
-              signal.set(next),
-            dispose: () => signal.dispose(),
-          }
+          live = createClientStoreFallback(
+            (ref as ScopeRefStore).initial,
+            storeId,
+            (ref as ScopeRefStore).lifetime,
+          )
         }
       } else if (ref.kind === 'action') {
         const endpoint = (ref as ScopeRefAction).endpoint
@@ -522,46 +685,6 @@ function getStorePathSignalClient(storeId: string, path: string): BindingSignal 
         if (storeData) initial = getAtPathClient(storeData, path.split('.'))
       } catch {}
     }
-  }
-  // Special handling for `cart:doubled` when store not yet created — derive from count
-  if (storeId === 'cart' && path === 'doubled') {
-    let countInitial: unknown = 0
-    const hydMap2 = g['__nexil:stores:hydration'] as Map<string, unknown> | undefined
-    const hydData2 = hydMap2?.get('cart') as Record<string, unknown> | undefined
-    if (hydData2 && typeof hydData2 === 'object') {
-      countInitial = getAtPathClient(hydData2, ['count'])
-    }
-    if (countInitial === undefined && typeof document !== 'undefined') {
-      const el = document.getElementById('__NEXIL_STORES__') as HTMLScriptElement | null
-      if (el?.textContent) {
-        try {
-          const data = JSON.parse(el.textContent.replace(/\\u003c/g, '<')) as Record<
-            string,
-            unknown
-          >
-          const storeData = data['cart'] as Record<string, unknown> | undefined
-          if (storeData) countInitial = getAtPathClient(storeData, ['count'])
-        } catch {}
-      }
-    }
-    if (countInitial === undefined) countInitial = 0
-    const countSig = getStorePathSignalClient('cart', 'count') as unknown as BindingSignal & {
-      (): number
-    }
-    const doubledSig = state(((countInitial as number) ?? 0) * 2) as unknown as BindingSignal & {
-      set: (v: unknown) => void
-    }
-    effect(() => {
-      doubledSig.set(((countSig() as unknown as number) * 2) as unknown as Serializable)
-    })
-    // Register doubled as pending as well
-    let set2 = pendingMap.get(key)
-    if (!set2) {
-      set2 = new Set<unknown>()
-      pendingMap.set(key, set2)
-    }
-    set2.add(doubledSig as unknown)
-    return doubledSig as unknown as BindingSignal
   }
   if (initial === undefined) initial = null
   const pendingSignal = state(initial as Serializable) as unknown as BindingSignal & {
@@ -862,6 +985,7 @@ export interface ScopeRefStore {
   readonly id: string
   readonly initial: Serializable
   readonly storeId?: string
+  readonly lifetime?: 'route' | 'global' | 'session'
 }
 
 export interface ScopeRefAction {

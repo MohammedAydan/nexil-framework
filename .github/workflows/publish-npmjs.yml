@@ -95,7 +95,7 @@ jobs:
         run: |
           pnpm publish:npm:dry > pack-report.log 2>&1 || { cat pack-report.log; exit 1; }
           sed -i 's/\x1b\[[0-9;]*m//g' pack-report.log
-          # Strictly match the 4 consolidated 0.2.0 packages
+          # Strictly match the 4 consolidated 0.2.1 packages
           MATCHED=$(grep -cE '^\+ (@nexil/core@|@nexil/vite-plugin@|@nexil/cli@|create-nexil@)' pack-report.log || true)
           echo "Packages matched: $MATCHED"
           # Verify each of the 4 expected packages appears exactly once

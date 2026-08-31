@@ -13,7 +13,7 @@
 - [x] Add project .npmrc (scope routing only); verify no secrets
 - [x] Fix recursive publish filter failure (quote stripping) via pnpm -C packages
 - [x] Dry-run publish + inspect tarballs (no workspace:* leaks)
-- [x] Publish 18 public packages v0.2.0; cli+create-nexil bumped to 0.2.0
+- [x] Publish 18 public packages v0.2.1; cli+create-nexil bumped to 0.2.1
 - [x] Verify npm view from GitHub Packages
 - [x] Scaffold app OUTSIDE repo via pnpm dlx; install/build/dev/start/smoke OK
 - [x] Verify generated consumer has no local/workspace deps (pkg.json + lockfile)

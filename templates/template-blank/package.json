@@ -9,10 +9,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@nexil/core": "^0.2.0"
+    "@nexil/core": "^0.2.2"
   },
   "devDependencies": {
-    "@nexil/vite-plugin": "^0.2.0",
+    "@nexil/vite-plugin": "^0.2.2",
     "typescript": "^5.8.0",
     "vite": "^7.3.6"
   }

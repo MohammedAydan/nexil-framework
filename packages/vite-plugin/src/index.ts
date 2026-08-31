@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
-import { readFileSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import { existsSync, readFileSync } from 'node:fs'
+import { dirname, relative, resolve } from 'node:path'
 import { parse } from '@babel/parser'
 import traverseModule from '@babel/traverse'
 import MagicString from 'magic-string'
@@ -242,8 +242,6 @@ function captureExpressionWithImports(
           /Context$/.test(name)
         // Imported Contexts must be serialized via ctx registry, not direct ESM import
         if (isCtxImport && sourceFileContext !== undefined) {
-          // Verify source file actually uses this name as Context (createContext or alias)
-          // Fallback heuristic: treat Context-suffixed imports as ctx
           const start = path.node.start
           const end = path.node.end
           scopeReplacements.push({
@@ -283,15 +281,46 @@ function buildImportHeader(
     string,
     { source: string; imported: string; kind: 'named' | 'default' | 'namespace' }
   >,
+  fileId?: string,
 ): string {
   const lines: string[] = []
+  let projectRoot: string | undefined
+  if (fileId) {
+    const normalized = fileId.replace(/\\/g, '/')
+    const idx = normalized.lastIndexOf('/src/')
+    if (idx >= 0) projectRoot = fileId.slice(0, idx)
+  }
+
   for (const name of importNames) {
     const info = importMap.get(name)
     if (!info) continue
-    if (info.kind === 'namespace') lines.push(`import * as ${name} from "${info.source}";`)
-    else if (info.kind === 'default') lines.push(`import ${name} from "${info.source}";`)
-    else if (info.imported === name) lines.push(`import { ${name} } from "${info.source}";`)
-    else lines.push(`import { ${info.imported} as ${name} } from "${info.source}";`)
+    let importSrc = info.source
+    if (importSrc.startsWith('.') && fileId && projectRoot) {
+      const dir = dirname(fileId)
+      let abs = resolve(dir, importSrc)
+      let resolvedFile: string | undefined
+      if (existsSync(abs)) {
+        resolvedFile = abs
+      } else if (existsSync(abs.replace(/\.js$/, '.ts'))) {
+        resolvedFile = abs.replace(/\.js$/, '.ts')
+      } else if (existsSync(abs.replace(/\.js$/, '.tsx'))) {
+        resolvedFile = abs.replace(/\.js$/, '.tsx')
+      } else if (existsSync(abs + '.ts')) {
+        resolvedFile = abs + '.ts'
+      } else if (existsSync(abs + '.tsx')) {
+        resolvedFile = abs + '.tsx'
+      } else if (existsSync(resolve(abs, 'index.ts'))) {
+        resolvedFile = resolve(abs, 'index.ts')
+      }
+      if (resolvedFile) {
+        const relToRoot = relative(projectRoot, resolvedFile).replace(/\\/g, '/')
+        importSrc = '/' + relToRoot
+      }
+    }
+    if (info.kind === 'namespace') lines.push(`import * as ${name} from "${importSrc}";`)
+    else if (info.kind === 'default') lines.push(`import ${name} from "${importSrc}";`)
+    else if (info.imported === name) lines.push(`import { ${name} } from "${importSrc}";`)
+    else lines.push(`import { ${info.imported} as ${name} } from "${importSrc}";`)
   }
   return lines.join('\n')
 }
@@ -353,8 +382,26 @@ function evaluateStaticLiteral(node: unknown): ScopeCaptureInitial | undefined {
   const value = node as {
     type?: string
     value?: unknown
+    operator?: string
+    argument?: unknown
+    expression?: unknown
     elements?: unknown[]
     properties?: unknown[]
+  }
+  if (
+    value.type === 'TSAsExpression' ||
+    value.type === 'TSTypeAssertion' ||
+    value.type === 'TSNonNullExpression' ||
+    value.type === 'ParenthesizedExpression' ||
+    value.type === 'TSSatisfiesExpression'
+  ) {
+    return evaluateStaticLiteral(value.expression)
+  }
+  if (value.type === 'UnaryExpression' && (value.operator === '-' || value.operator === '+')) {
+    const evaluated = evaluateStaticLiteral(value.argument)
+    if (typeof evaluated === 'number') {
+      return (value.operator === '-' ? -evaluated : evaluated) as ScopeCaptureInitial
+    }
   }
   if (
     value.type === 'StringLiteral' ||
@@ -493,15 +540,21 @@ function resolveStoreIdForBase(
   importMap?: ReadonlyMap<string, { source: string; imported: string; kind: string }>,
   fileId?: string,
 ): string | undefined {
-  // Check `const base = useXStore()`
+  // Check `const base = useXStore()` or `const base = useX()`
   const hookMatch = new RegExp(
-    `(?:const|let|var)\\s+${escapeRegExp(baseName)}\\s*=\\s*(use[A-Za-z0-9_]+Store)\\s*\\(`,
+    `(?:const|let|var)\\s+${escapeRegExp(baseName)}\\s*=\\s*(use(?!State|Context)[A-Za-z0-9_]+)\\s*\\(`,
   ).exec(source.replace(/\s+/g, ' '))
   if (hookMatch) {
     const hook = hookMatch[1] ?? ''
     const imp = importMap?.get(hook)
-    if (imp && imp.source.startsWith('$stores/')) {
-      return imp.source.slice('$stores/'.length)
+    if (imp) {
+      if (imp.source.startsWith('$stores/')) {
+        return imp.source.slice('$stores/'.length)
+      }
+      const storeMatch = imp.source.match(/stores\/(.+?)(?:\.[a-z]+)?$/)
+      if (storeMatch?.[1]) {
+        return storeMatch[1].replace(/\/index$/, '').replace(/\/store$/, '')
+      }
     }
     // Try to find hook definition in same file: `const useXStore = defineStore('id', ...)`
     const hookDef = new RegExp(
@@ -513,10 +566,11 @@ function resolveStoreIdForBase(
     ).exec(source)
     if (hookCreate?.[1]) return hookCreate[1]
     // Fallback: derive from hook name
-    if (hook.startsWith('use') && hook.endsWith('Store')) {
-      const derived = hook.slice(3, -5)
-      // Convert PascalCase to kebab? For now lower case first char
-      return derived.charAt(0).toLowerCase() + derived.slice(1)
+    if (hook.startsWith('use')) {
+      const raw = hook.endsWith('Store') ? hook.slice(3, -5) : hook.slice(3)
+      if (raw) {
+        return raw.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()
+      }
     }
   }
   // Check `const base = createStore({id: '...'})` directly
@@ -559,11 +613,13 @@ function extractStaticInitial(
     if (!init || init.type !== 'CallExpression') return
     const callee = (init as AstNode & { readonly callee?: AstNode }).callee
     const calleeName = astIdentifierName(callee)
-    // Handle `useCartStore()` where cartStore is from defineStore/createStore — look up the store's state
-    if (calleeName?.endsWith('Store') && calleeName.startsWith('use')) {
+    // Handle `useCartStore()` / `useCart()` / `useCounter()` where hook is from defineStore/createStore
+    if (calleeName?.startsWith('use') && !['useState', 'useContext'].includes(calleeName)) {
       const storeId =
         resolveStoreIdForBase(baseName, source, importMap, fileId) ??
-        calleeName.slice(3, -5).toLowerCase()
+        (calleeName.endsWith('Store') ? calleeName.slice(3, -5) : calleeName.slice(3))
+          .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+          .toLowerCase()
       if (propPath) {
         // Try to get full initial for the store, then traverse path
         let storeInitial: ScopeCaptureInitial | undefined
@@ -778,9 +834,9 @@ function classifyScopeCaptures(
         `(?:const|let|var) \\[\\s*[A-Za-z_$][\\w$]*\\s*,\\s*${basePattern}\\s*\\]\\s*=\\s*useState\\(`,
       ).test(compactSource)
 
-    // Check for store created via useXxxStore() where XxxStore is from $stores/* or defineStore/createStore
+    // Check for store created via useXxxStore() or useXxx() where hook is from $stores/* or defineStore/createStore
     const declaresStoreHook = new RegExp(
-      `(?:const|let|var) ${basePattern} = use[A-Za-z]+Store\\(`,
+      `(?:const|let|var) ${basePattern} = use(?!State|Context)[A-Za-z0-9_]+\\(`,
     ).test(compactSource)
     const originalKind: 'signal' | 'store' | 'action' | undefined =
       declares('createStore') || declaresStoreHook
@@ -1109,11 +1165,17 @@ function mergeBindingAttributes(code: string): string {
   let previous = ''
   while (merged !== previous) {
     previous = merged
-    merged = merged.replace(
-      /data-nx-bind="([^"]+)"(\s+)data-nx-bind="([^"]+)"/g,
-      (_match, first: string, spacing: string, second: string) =>
-        `data-nx-bind="${first};${second}"${spacing}`,
-    )
+    merged = merged
+      .replace(
+        /data-nx-bind="([^"]+)"(\s+)data-nx-bind="([^"]+)"/g,
+        (_match, first: string, spacing: string, second: string) =>
+          `data-nx-bind="${first === second ? first : `${first};${second}`}"${spacing}`,
+      )
+      .replace(
+        /data-nx-store-bind="([^"]+)"(\s+)data-nx-store-bind="([^"]+)"/g,
+        (_match, first: string, spacing: string, second: string) =>
+          `data-nx-store-bind="${first === second ? first : `${first};${second}`}"${spacing}`,
+      )
   }
   return merged
 }
@@ -1717,13 +1779,40 @@ export async function transformNexilSource(
       if (capture.kind === 'unsupported')
         warnings.push(capture.reason ?? `Unsupported capture: ${capture.name}`)
     }
-    const importHeader = buildImportHeader(capturedExpression.importNames, importMap)
+    const storeInitCalls: string[] = []
+    const finalImportNames = new Set(capturedExpression.importNames)
+    for (const capture of captures) {
+      if (capture.kind === 'store' && (capture as unknown as { storeId?: string }).storeId) {
+        const sId = (capture as unknown as { storeId: string }).storeId
+        for (const [impName, impInfo] of importMap.entries()) {
+          const src = impInfo.source.toLowerCase()
+          if (
+            src.includes(`stores/${sId}`) ||
+            src.includes(`/${sId}`) ||
+            src.endsWith(`/${sId}.js`) ||
+            src.endsWith(`/${sId}.ts`) ||
+            impName.toLowerCase().includes(sId)
+          ) {
+            finalImportNames.add(impName)
+            storeInitCalls.push(
+              `try { if (typeof ${impName} === 'function') ${impName}(); } catch {}`,
+            )
+            storeInitCalls.push(
+              `const __live_${sId} = globalThis.__NEXIL_STORES_GLOBAL_REGISTRY__?.get('${sId}'); if (__live_${sId} && scope['${capture.name}']) { scope['${capture.name}'] = __live_${sId}; }`,
+            )
+          }
+        }
+      }
+    }
+    const importHeader = buildImportHeader([...finalImportNames], importMap, id)
     const header = importHeader ? `${importHeader}\n` : ''
-    const raw = `${header}export async function ${exportName}({ element, scope = {}, event }) { return (${capturedExpression.code})({ element, event, scope }) }\n`
+    const initCode = storeInitCalls.length > 0 ? `  ${storeInitCalls.join('\n  ')}\n` : ''
+    const raw = `${header}export async function ${exportName}({ element, scope = {}, event }) {\n${initCode}  return (${capturedExpression.code})({ element, event, scope })\n}\n`
     const source_ = isTypeScript
       ? (
           await transformWithEsbuild(raw, `${fileName}.ts`, {
             loader: 'ts',
+            treeShaking: false,
           })
         ).code
       : raw

@@ -13,6 +13,8 @@ test-results/
 *.log
 .DS_Store
 my-nexil-app/
+test-f-123/
+mcp_config.json
 .nexil/
 docs/nexil-arabic-documentation.zip
 docs/nexil-english-documentation.zip

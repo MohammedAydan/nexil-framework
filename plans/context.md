@@ -6,7 +6,7 @@ HTML-first, resumable TypeScript web framework. Monorepo of scoped packages (`@n
 
 ## Current Status
 
-- Active feature: link-navigation-fix — **COMPLETE (2026-08-30)**
+- Active feature: real-browser-state-verification — **COMPLETE (2026-08-30)**
 - Overall health: green
 - Last updated: 2026-08-30
 
@@ -20,6 +20,7 @@ HTML-first, resumable TypeScript web framework. Monorepo of scoped packages (`@n
 
 ## Active Features
 
+- real-browser-state-verification: **COMPLETE (2026-08-30)** — 6-browser matrix (local/batch/store-proxy/shared/resource/context) via `tests/e2e/state-verification.spec.ts` (6/6 green on Chromium, `vite preview`), vite-plugin `use*` hook regex fix (`useCounter` without `Store` suffix), `resolveStoreIdForBase` fallback for `$stores/*`, `String()` wrapping docs, `Context.Provider` function-children, `STATE_TYPES.md` real-browser findings; see `plans/real-browser-state-verification/review.md`.
 - link-navigation-fix: **COMPLETE (2026-08-30)** — Dev server injection of `/nexil-navigation.js` and `/nexil-forms.js`, Vite dev server runtime serving and bundle emission, client text-node click traversal and error-tolerant dynamic script imports.
 - nexil-stores: **COMPLETE — Stabilization Mode (2026-08-30)** — `createStore`/`defineStore` Proxy (state 23/23 with request-isolation 4 tests), Vite `discoverStores` + `virtual:nexil-stores`/`$stores/*` + `.nexil/stores.d.ts` (vite-plugin 37/37), CLI `nexil g store --split|--unified` (cli 24/24), SSR ALS + `__NEXIL_STORES__` per-route (home `user:42` / cart `cart:7` via `buildArtifacts` + `dev-server` `runWithScope`, client `hydrateNexilStoresFromDocument` before `bootstrapResumability`), reserved-key dev warning + per-request `__nexil:stores:registry`/`__nexil:stores:access` + `globalThis.__nexil_buildRequestContext` fallback. See `plans/nexil-stores/review.md` → **Current Capabilities & Limitations** and **Prioritized Follow-ups**.
 - windows-build-publish: complete

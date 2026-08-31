@@ -19,7 +19,7 @@
 
 ## Version strategy
 
-All 18 public packages bumped 0.2.x/0.2.0 → 2.0.0 to match the v2.0.0 GA tag.
+All 18 public packages bumped 0.2.x/0.2.1 → 2.0.0 to match the v2.0.0 GA tag.
 create-nexil-app package remains private/superseded; its NAME survives as a bin
 alias on create-nexil (amends ADR-002).
 

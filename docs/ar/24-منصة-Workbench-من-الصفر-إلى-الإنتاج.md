@@ -21,7 +21,7 @@
 هيئ صلاحية نطاق `@nexil` في بيئة المستخدم أو CI. لا تضع registry token في المستودع أو في `.npmrc` المتتبع. أنشئ المشروع بالإصدار الحالي وثبّت lockfile الناتج من تثبيتك أنت.
 
 ```bash
-pnpm dlx create-nexil@0.2.0 nexil-workbench --yes --ts --template interactive
+pnpm dlx create-nexil@0.2.1 nexil-workbench --yes --ts --template interactive
 cd nexil-workbench
 pnpm install
 pnpm dev

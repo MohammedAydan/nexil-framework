@@ -90,7 +90,7 @@ function decodeSegment(value: string): string | undefined {
 
 export function routeFromFile(file: string): RouteRecord {
   let segments = normalizeFile(file)
-  if (/(?:^|\/)(?:[^/]+\.)?(?:d|spec|test)\.(?:tsx|ts|jsx|js)$/.test(segments.at(-1) ?? ''))
+  if (/\.(?:d|spec|test)\.(?:tsx|ts|jsx|js)$/.test(segments.at(-1) ?? ''))
     throw new TypeError('Declaration and test files cannot define routes.')
   const routesIndex = segments.indexOf('routes')
   if (routesIndex >= 0) segments = segments.slice(routesIndex + 1)

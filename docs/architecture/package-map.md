@@ -1,6 +1,6 @@
 # Nexil Package Map
 
-## Architecture Overview (v0.2.0)
+## Architecture Overview (v0.2.1)
 
 Nexil is consolidated into **4 publishable packages**:
 
