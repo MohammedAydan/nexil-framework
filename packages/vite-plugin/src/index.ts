@@ -11,6 +11,7 @@ import { RESUMABILITY_BINDINGS, RESUMABILITY_BOOTSTRAP, RESUMABILITY_FORMS } fro
 import { RESUMABILITY_BOOTSTRAP_EXTERNAL } from './external-bootstrap.js'
 import { RESUMABILITY_BINDINGS_EXTERNAL } from './external-bindings.js'
 import { NEXIL_NAVIGATION_RUNTIME } from '@nexil/core/router'
+export const NEXIL_RUNTIME = `export const batch=(fn)=>{try{return fn();}catch(e){throw e;}};export const state=(v)=>{let cur=v;const s=new Set;const f=()=>cur;f.get=()=>cur;Object.defineProperty(f,'value',{get:()=>cur});f.set=n=>{const nv=typeof n==='function'?n(cur):n;if(Object.is(cur,nv))return;cur=nv;for(const l of[...s])l()};f.subscribe=l=>(s.add(l),()=>s.delete(l));return f;};export const computed=(fn)=>{let v=fn();const s=new Set;const f=()=>v;f.subscribe=l=>(s.add(l),()=>s.delete(l));return f;};export const effect=(fn)=>{try{fn()}catch{};return()=>{}};`
 import {
   discoverStores,
   generateVirtualBarrel,
@@ -295,6 +296,35 @@ function buildImportHeader(
     const info = importMap.get(name)
     if (!info) continue
     let importSrc = info.source
+    // Bare specifiers (e.g. "@nexil/core") would fail in native browser ESM without an importmap.
+    // Rewrite framework imports to an inline shim that is guaranteed to be browser-resolvable.
+    // The shim preserves the API surface used by extracted handler chunks (currently `batch`).
+    const isBareSpecifier = !importSrc.startsWith('.') && !importSrc.startsWith('/') && !importSrc.startsWith('$')
+    if (isBareSpecifier) {
+      if (importSrc.startsWith('@nexil/') || importSrc === '@nexil/core' || importSrc.startsWith('nexil')) {
+        if (info.kind === 'namespace') {
+          lines.push(`const ${name} = globalThis.__nexil || {};`)
+        } else if (info.kind === 'default') {
+          lines.push(`const ${name} = (globalThis.__nexil && globalThis.__nexil.default) || {};`)
+        } else {
+          // Named import – provide minimal shims for known helpers used in lazy chunks
+          if (info.imported === 'batch') {
+            lines.push(`const ${name} = (fn) => { try { return fn(); } catch (e) { throw e; } };`)
+          } else if (info.imported === 'state' || info.imported === 'computed' || info.imported === 'effect' || info.imported === 'resource') {
+            lines.push(`const ${name} = globalThis.__nexil && globalThis.__nexil.${info.imported} ? globalThis.__nexil.${info.imported} : (...args) => { throw new Error('[nexil] ${info.imported} not available in chunk'); };`)
+          } else {
+            lines.push(`import { ${info.imported} as ${name} } from "/__nexil/runtime.js";`)
+          }
+        }
+        continue
+      }
+      // Unknown bare specifier – keep as-is but warn; browser will need an importmap
+      if (info.kind === 'namespace') lines.push(`import * as ${name} from "${importSrc}";`)
+      else if (info.kind === 'default') lines.push(`import ${name} from "${importSrc}";`)
+      else if (info.imported === name) lines.push(`import { ${name} } from "${importSrc}";`)
+      else lines.push(`import { ${info.imported} as ${name} } from "${importSrc}";`)
+      continue
+    }
     if (importSrc.startsWith('$stores/') && fileId && projectRoot) {
       const storeId = importSrc.slice('$stores/'.length)
       const candidates = [
@@ -1964,12 +1994,26 @@ export function nexil(options: { readonly root?: string } = {}): Plugin {
       }
       return null
     },
+    transformIndexHtml(html) {
+      if (!html.includes('type="importmap"') && !html.includes("type='importmap'")) {
+        const importMap = `<script type="importmap">{"imports":{"@nexil/core":"/__nexil/runtime.js","@nexil/core/server":"/__nexil/runtime.js","@nexil/core/client":"/__nexil/runtime.js","@nexil/core/router":"/__nexil/runtime.js","nexil":"/__nexil/runtime.js"}}</script>`
+        if (html.includes('</head>')) return html.replace('</head>', `  ${importMap}\n</head>`)
+        return `${importMap}\n${html}`
+      }
+      return html
+    },
     configureServer(server) {
       // Serve the resumability runtime and lazily extracted handler chunks under
       // stable URLs so interactive routes work identically in dev and production.
       server.middlewares.use((request, response, next) => {
         if (request.method !== 'GET') return next()
-        const url = request.url ?? ''
+        const rawUrl = request.url ?? ''
+        const url = rawUrl.split('?')[0] ?? ''
+        if (url === '/__nexil/runtime.js') {
+          response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-store' })
+          response.end(NEXIL_RUNTIME)
+          return
+        }
         if (
           url === '/nexil-bootstrap.js' ||
           url === '/nexil-bindings.js' ||
@@ -2062,6 +2106,11 @@ export function nexil(options: { readonly root?: string } = {}): Plugin {
     generateBundle() {
       for (const [fileName, source] of generatedChunks) {
         this.emitFile({ type: 'asset', fileName: `nexil-chunks/${fileName}`, source })
+      }
+      // Always emit the browser runtime that backs bare "@nexil/core" imports in lazy chunks.
+      // The importmap injected via transformIndexHtml resolves "@nexil/core" to this URL.
+      if (generatedChunks.size > 0) {
+        this.emitFile({ type: 'asset', fileName: '__nexil/runtime.js', source: NEXIL_RUNTIME })
       }
       if (generatedChunks.size > 0 || hasBindings) {
         this.emitFile({

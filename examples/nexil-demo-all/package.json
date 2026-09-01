@@ -4,12 +4,12 @@
   "type": "module",
   "packageManager": "pnpm@10.15.0",
   "scripts": {
-    "dev": "nexil dev",
-    "build": "nexil build",
-    "start": "nexil start",
+    "dev": "node ../../packages/cli/dist/bin.js dev",
+    "build": "node ../../packages/cli/dist/bin.js build",
+    "start": "node ../../packages/cli/dist/bin.js start",
     "typecheck": "tsc --noEmit",
-    "check": "nexil check --budget",
-    "analyze": "nexil analyze"
+    "check": "node ../../packages/cli/dist/bin.js check --budget",
+    "analyze": "node ../../packages/cli/dist/bin.js analyze"
   },
   "dependencies": {
     "@nexil/cli": "workspace:*",

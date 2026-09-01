@@ -60,7 +60,7 @@ export default component(() => {
             <button class="rounded bg-slate-800 px-3 py-1 text-xs text-white" onClick$={() => user.toggleTheme()}>
               toggle theme ({user.theme})
             </button>
-            <button class="rounded bg-slate-800 px-3 py-1 text-xs text-white" onClick$={() => (user.user.profile.name = 'Ali')}>
+            <button class="rounded bg-slate-800 px-3 py-1 text-xs text-white" onClick$={() => { if (user.profile) user.profile.name = 'Ali'; }}>
               proxy: name = Ali
             </button>
           </div>

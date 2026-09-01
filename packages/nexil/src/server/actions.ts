@@ -28,6 +28,13 @@ type ActionHandler<Input, Output> = (
   input: Input,
 ) => Output | Promise<Output>
 
+let __nexilActionCounter = 0
+
+function getAutoEndpoint(): string {
+  __nexilActionCounter += 1
+  return `/__nexil/actions/action_${__nexilActionCounter}`
+}
+
 export function action<Input, Output>(
   options: ActionOptions<Input, Output>,
 ): ServerAction<Input, Output>
@@ -63,8 +70,12 @@ export function action<Input, Output>(
   if (typeof options.handle !== 'function')
     throw new TypeError('A server action requires a handle function.')
 
+  const endpoint = options.endpoint ?? getAutoEndpoint()
+  if (!endpoint.startsWith('/') || endpoint.startsWith('//'))
+    throw new TypeError('Action endpoint must be a local absolute path.')
+
   return {
-    ...(options.endpoint ? { endpoint: options.endpoint } : {}),
+    endpoint,
     async execute(context, input) {
       const validated = await options.validate(input)
       if (options.authorize) await options.authorize(context, validated)

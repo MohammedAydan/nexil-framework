@@ -64,8 +64,8 @@ export default component(() => {
         </div>
         <div class="mt-4 rounded bg-slate-950 p-4 text-sm">
           {(() => {
-            const outerStore = ThemeStore.create({ mode: 'outer', accent: 'cyan' })
-            const innerStore = ThemeStore.create({ mode: 'inner', accent: 'pink' })
+            const outerStore = ThemeStore.create({ mode: 'light', accent: 'cyan' })
+            const innerStore = ThemeStore.create({ mode: 'dark', accent: 'pink' })
             const demo = ThemeStore.Provider({
               value: outerStore,
               children: () => {

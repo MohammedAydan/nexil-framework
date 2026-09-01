@@ -1,4 +1,5 @@
 import type { Child, ReadableSignal, Signal } from '../core/index.js'
+import type { Store } from '../core/state.js'
 
 /**
  * Wraps a value type T to allow raw values, readable signals, writable signals,
@@ -38,13 +39,13 @@ export type NexilEventHandler<E = Event, Target = HTMLElement> =
         readonly target: Target
         readonly element: Target
       },
-    ) => void | Promise<void>)
+    ) => any)
   | ((context: {
       readonly element: Target
       readonly event?: E
       readonly [key: string]: unknown
-    }) => void | Promise<void>)
-  | ((event: any) => void | Promise<void>)
+    }) => any)
+  | ((event: any) => any)
   | string
 
 /**
@@ -319,16 +320,16 @@ export interface NexilHTMLAttributes<T extends HTMLElement = HTMLElement>
   'data-nx-submit-button'?: MaybeSignal<string>
   'data-nx-loading-text'?: MaybeSignal<string>
   // Nexil Fine-Grained Directives (resumable bindings)
-  bindText$?: MaybeSignal<string | number>
-  bindValue$?: MaybeSignal<string | number>
-  bindChecked$?: MaybeSignal<boolean>
-  bindDisabled$?: MaybeSignal<boolean>
-  bindHidden$?: MaybeSignal<boolean>
-  bindClass$?: MaybeSignal<ClassValue>
-  bindStyle$?: MaybeSignal<StyleValue>
-  bindHref$?: MaybeSignal<string>
-  bindSrc$?: MaybeSignal<string>
-  bindAriaLabel$?: MaybeSignal<string>
+  bindText$?: Signal<any> | ReadableSignal<any> | Store<any> | MaybeSignal<string | number>
+  bindValue$?: Signal<string> | ReadableSignal<string> | Store<string> | MaybeSignal<string | number>
+  bindChecked$?: Signal<boolean> | ReadableSignal<boolean> | Store<boolean> | MaybeSignal<boolean>
+  bindDisabled$?: Signal<boolean> | ReadableSignal<boolean> | Store<boolean> | MaybeSignal<boolean>
+  bindHidden$?: Signal<boolean> | ReadableSignal<boolean> | Store<boolean> | MaybeSignal<boolean>
+  bindClass$?: Signal<ClassValue> | ReadableSignal<ClassValue> | Store<ClassValue> | MaybeSignal<ClassValue>
+  bindStyle$?: Signal<StyleValue> | ReadableSignal<StyleValue> | Store<StyleValue> | MaybeSignal<StyleValue>
+  bindHref$?: Signal<string> | ReadableSignal<string> | Store<string> | MaybeSignal<string>
+  bindSrc$?: Signal<string> | ReadableSignal<string> | Store<string> | MaybeSignal<string>
+  bindAriaLabel$?: Signal<string> | ReadableSignal<string> | Store<string> | MaybeSignal<string>
   'data-nx-state'?: MaybeSignal<string | number>
   [key: `data-${string}`]: unknown
 
@@ -580,6 +581,8 @@ export interface NexilInputAttributes extends NexilHTMLAttributes<HTMLInputEleme
   formTarget?: MaybeSignal<string>
   formtarget?: MaybeSignal<string>
   capture?: MaybeSignal<boolean | 'user' | 'environment'>
+  // Override to ensure bindValue$ is correctly typed for inputs (audit requirement)
+  bindValue$?: Signal<string> | ReadableSignal<string> | Store<string> | MaybeSignal<string>
 }
 
 export interface NexilInsAttributes extends NexilHTMLAttributes<HTMLModElement> {

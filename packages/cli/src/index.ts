@@ -12,6 +12,7 @@ import { __clearAccessedStoreIds, __getStoresScriptTag } from '@nexil/core'
 import { assertBudget } from '@nexil/vite-plugin'
 import nexil, {
   externalizeScopeAttributes,
+  NEXIL_RUNTIME,
   RESUMABILITY_BINDINGS_EXTERNAL,
   RESUMABILITY_BOOTSTRAP_EXTERNAL,
   RESUMABILITY_FORMS,

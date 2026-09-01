@@ -6,6 +6,7 @@ export type Serializable =
   | undefined
   | Serializable[]
   | { readonly [key: string]: Serializable }
+  | object
 
 export type Child =
   RenderNode | string | number | boolean | null | undefined | Child[] | (() => Child)

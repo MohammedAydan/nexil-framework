@@ -96,7 +96,7 @@ function mergeStateForHMR<T extends Record<string, unknown>>(current: T, nextIni
 
 export interface CreateStoreOptions<
   T extends Serializable,
-  A extends Record<string, (state: T, ...args: any[]) => unknown> = Record<string, never>,
+  A = any,
 > {
   readonly id: string
   readonly state: () => T
@@ -105,8 +105,8 @@ export interface CreateStoreOptions<
 
 export interface DefineStoreOptions<
   T extends Serializable,
-  G extends Record<string, (state: T) => unknown> = Record<string, never>,
-  A extends Record<string, (this: any, ...args: any[]) => unknown> = Record<string, never>,
+  G = any,
+  A = any,
 > {
   readonly state: () => T
   readonly getters?: G
@@ -123,11 +123,11 @@ type PublicAction<F, T> = F extends (state: T, ...args: infer P) => infer R
 
 export type StoreInstance<
   T extends Serializable,
-  G extends Record<string, (state: T) => unknown> = Record<string, never>,
-  A extends Record<string, (...args: any[]) => unknown> = Record<string, never>,
+  G = any,
+  A = any,
 > = Store<T> &
   T & {
-    readonly [K in keyof G]: G[K & string] extends (state: T) => infer R ? R : unknown
+    readonly [K in keyof G]: G[K & string] extends (...args: any[]) => infer R ? R : unknown
   } & {
     readonly [K in keyof A]: PublicAction<A[K & string], T>
   }
@@ -140,8 +140,8 @@ export type StoreInstance<
  */
 export interface StoreContext<
   T extends Serializable,
-  G extends Record<string, (state: T) => unknown> = Record<string, never>,
-  A extends Record<string, (this: any, ...args: any[]) => unknown> = Record<string, never>,
+  G = any,
+  A = any,
 > extends Context<StoreInstance<T, G, A>> {
   /** Store id (same as defineStore id). */
   readonly storeId: string
@@ -503,7 +503,7 @@ function warnIfReservedStateKeys<T extends Serializable>(id: string, initial: T)
   }
 }
 
-function isCreateStoreOptions(value: unknown): value is CreateStoreOptions<Serializable, any> {
+function isCreateStoreOptions(value: unknown): value is CreateStoreOptions<Record<string, any>, any> {
   return (
     !!value &&
     typeof value === 'object' &&
@@ -615,8 +615,8 @@ function createPathProxy<T extends Serializable>(
 
 function createProxiedStore<
   T extends Serializable,
-  G extends Record<string, (state: T) => unknown> = Record<string, never>,
-  A extends Record<string, (this: any, ...args: any[]) => unknown> = Record<string, never>,
+  G = any,
+  A = any,
 >(params: {
   readonly id: string
   readonly initial: T
@@ -1049,14 +1049,14 @@ function createProxiedStore<
 
 // -- Legacy overload implementation + new overload dispatch ---------------
 
+export function createStore<
+  T extends Serializable,
+  A = any,
+>(options: CreateStoreOptions<T, A>): () => StoreInstance<T, Record<string, never>, A>
 export function createStore<T extends Serializable>(initial: T, scope?: StateScope): Store<T>
 export function createStore<
   T extends Serializable,
-  A extends Record<string, (state: T, ...args: any[]) => unknown> = Record<string, never>,
->(options: CreateStoreOptions<T, A>): () => StoreInstance<T, Record<string, never>, A>
-export function createStore<
-  T extends Serializable,
-  A extends Record<string, (state: T, ...args: any[]) => unknown> = Record<string, never>,
+  A = any,
 >(
   first: T | CreateStoreOptions<T, A>,
   scope: StateScope = 'local',
@@ -1196,8 +1196,8 @@ function createLegacyStore<T extends Serializable>(initial: T, scope: StateScope
 
 export function defineStore<
   T extends Serializable,
-  G extends Record<string, (state: T) => unknown> = Record<string, never>,
-  A extends Record<string, (this: any, ...args: any[]) => unknown> = Record<string, never>,
+  G = any,
+  A = any,
 >(id: string, options: DefineStoreOptions<T, G, A>): () => StoreInstance<T, G, A> {
   assertStoreId(id)
   if (!options || typeof options.state !== 'function')
@@ -1270,8 +1270,8 @@ export function defineStore<
 
 export function defineStoreContext<
   T extends Serializable,
-  G extends Record<string, (state: T) => unknown> = Record<string, never>,
-  A extends Record<string, (this: any, ...args: any[]) => unknown> = Record<string, never>,
+  G = any,
+  A = any,
 >(id: string, options: DefineStoreOptions<T, G, A>): StoreContext<T, G, A> {
   assertStoreId(id)
   if (!options || typeof options.state !== 'function')
@@ -1490,15 +1490,15 @@ export interface StateRegistry {
 }
 
 export function createStateRegistry(): StateRegistry {
-  const stores = new Map<string, Store<Serializable>>()
+  const stores = new Map<string, Store<Record<string, any>>>()
   return {
     getOrCreate: <T extends Serializable>(scope: StateScope, key: string, initial: T) => {
       if (!/^[a-zA-Z0-9:_-]+$/.test(key)) throw new TypeError('Invalid state store key.')
       const id = `${scope}:${key}`
       const existing = stores.get(id)
       if (existing) return existing as unknown as Store<T>
-      const created = createLegacyStore(initial, scope) as unknown as Store<Serializable>
-      stores.set(id, created)
+      const created = createLegacyStore(initial, scope) as unknown as Store<Record<string, any>>
+      stores.set(id, created as unknown as Store<Record<string, any>>)
       return created as unknown as Store<T>
     },
     dispose: () => {
