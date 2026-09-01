@@ -321,12 +321,15 @@ export interface NexilHTMLAttributes<T extends HTMLElement = HTMLElement>
   'data-nx-loading-text'?: MaybeSignal<string>
   // Nexil Fine-Grained Directives (resumable bindings)
   bindText$?: Signal<any> | ReadableSignal<any> | Store<any> | MaybeSignal<string | number>
-  bindValue$?: Signal<string> | ReadableSignal<string> | Store<string> | MaybeSignal<string | number>
+  bindValue$?:
+    Signal<string> | ReadableSignal<string> | Store<string> | MaybeSignal<string | number>
   bindChecked$?: Signal<boolean> | ReadableSignal<boolean> | Store<boolean> | MaybeSignal<boolean>
   bindDisabled$?: Signal<boolean> | ReadableSignal<boolean> | Store<boolean> | MaybeSignal<boolean>
   bindHidden$?: Signal<boolean> | ReadableSignal<boolean> | Store<boolean> | MaybeSignal<boolean>
-  bindClass$?: Signal<ClassValue> | ReadableSignal<ClassValue> | Store<ClassValue> | MaybeSignal<ClassValue>
-  bindStyle$?: Signal<StyleValue> | ReadableSignal<StyleValue> | Store<StyleValue> | MaybeSignal<StyleValue>
+  bindClass$?:
+    Signal<ClassValue> | ReadableSignal<ClassValue> | Store<ClassValue> | MaybeSignal<ClassValue>
+  bindStyle$?:
+    Signal<StyleValue> | ReadableSignal<StyleValue> | Store<StyleValue> | MaybeSignal<StyleValue>
   bindHref$?: Signal<string> | ReadableSignal<string> | Store<string> | MaybeSignal<string>
   bindSrc$?: Signal<string> | ReadableSignal<string> | Store<string> | MaybeSignal<string>
   bindAriaLabel$?: Signal<string> | ReadableSignal<string> | Store<string> | MaybeSignal<string>

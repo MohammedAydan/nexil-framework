@@ -94,20 +94,13 @@ function mergeStateForHMR<T extends Record<string, unknown>>(current: T, nextIni
 // Legacy createStore (permanent overload) + new proxy-based APIs
 // ---------------------------------------------------------------------------
 
-export interface CreateStoreOptions<
-  T extends Serializable,
-  A = any,
-> {
+export interface CreateStoreOptions<T extends Serializable, A = any> {
   readonly id: string
   readonly state: () => T
   readonly actions?: A
 }
 
-export interface DefineStoreOptions<
-  T extends Serializable,
-  G = any,
-  A = any,
-> {
+export interface DefineStoreOptions<T extends Serializable, G = any, A = any> {
   readonly state: () => T
   readonly getters?: G
   readonly actions?: A
@@ -121,11 +114,7 @@ type PublicAction<F, T> = F extends (state: T, ...args: infer P) => infer R
       ? (...args: P) => R
       : never
 
-export type StoreInstance<
-  T extends Serializable,
-  G = any,
-  A = any,
-> = Store<T> &
+export type StoreInstance<T extends Serializable, G = any, A = any> = Store<T> &
   T & {
     readonly [K in keyof G]: G[K & string] extends (...args: any[]) => infer R ? R : unknown
   } & {
@@ -138,11 +127,9 @@ export type StoreInstance<
  * Works like React `createContext`: Provider tree, nearest-wins, default fallback.
  * Inspiré Qwik `createContextId` (stableId) + `useContextProvider` + Astro nanostores (global par défaut).
  */
-export interface StoreContext<
-  T extends Serializable,
-  G = any,
-  A = any,
-> extends Context<StoreInstance<T, G, A>> {
+export interface StoreContext<T extends Serializable, G = any, A = any> extends Context<
+  StoreInstance<T, G, A>
+> {
   /** Store id (same as defineStore id). */
   readonly storeId: string
   /** Create a fresh isolated StoreInstance (for Provider value). */
@@ -503,7 +490,9 @@ function warnIfReservedStateKeys<T extends Serializable>(id: string, initial: T)
   }
 }
 
-function isCreateStoreOptions(value: unknown): value is CreateStoreOptions<Record<string, any>, any> {
+function isCreateStoreOptions(
+  value: unknown,
+): value is CreateStoreOptions<Record<string, any>, any> {
   return (
     !!value &&
     typeof value === 'object' &&
@@ -613,11 +602,7 @@ function createPathProxy<T extends Serializable>(
   return new Proxy(target as Record<string, unknown>, handler)
 }
 
-function createProxiedStore<
-  T extends Serializable,
-  G = any,
-  A = any,
->(params: {
+function createProxiedStore<T extends Serializable, G = any, A = any>(params: {
   readonly id: string
   readonly initial: T
   readonly scope: StateScope
@@ -1049,15 +1034,11 @@ function createProxiedStore<
 
 // -- Legacy overload implementation + new overload dispatch ---------------
 
-export function createStore<
-  T extends Serializable,
-  A = any,
->(options: CreateStoreOptions<T, A>): () => StoreInstance<T, Record<string, never>, A>
+export function createStore<T extends Serializable, A = any>(
+  options: CreateStoreOptions<T, A>,
+): () => StoreInstance<T, Record<string, never>, A>
 export function createStore<T extends Serializable>(initial: T, scope?: StateScope): Store<T>
-export function createStore<
-  T extends Serializable,
-  A = any,
->(
+export function createStore<T extends Serializable, A = any>(
   first: T | CreateStoreOptions<T, A>,
   scope: StateScope = 'local',
 ): Store<T> | (() => StoreInstance<T, Record<string, never>, A>) {
@@ -1194,11 +1175,10 @@ function createLegacyStore<T extends Serializable>(initial: T, scope: StateScope
   return store
 }
 
-export function defineStore<
-  T extends Serializable,
-  G = any,
-  A = any,
->(id: string, options: DefineStoreOptions<T, G, A>): () => StoreInstance<T, G, A> {
+export function defineStore<T extends Serializable, G = any, A = any>(
+  id: string,
+  options: DefineStoreOptions<T, G, A>,
+): () => StoreInstance<T, G, A> {
   assertStoreId(id)
   if (!options || typeof options.state !== 'function')
     throw new TypeError('Nexil defineStore options.state must be a function.')
@@ -1268,11 +1248,10 @@ export function defineStore<
   return useStore as unknown as () => StoreInstance<T, G, A>
 }
 
-export function defineStoreContext<
-  T extends Serializable,
-  G = any,
-  A = any,
->(id: string, options: DefineStoreOptions<T, G, A>): StoreContext<T, G, A> {
+export function defineStoreContext<T extends Serializable, G = any, A = any>(
+  id: string,
+  options: DefineStoreOptions<T, G, A>,
+): StoreContext<T, G, A> {
   assertStoreId(id)
   if (!options || typeof options.state !== 'function')
     throw new TypeError('Nexil defineStoreContext options.state must be a function.')

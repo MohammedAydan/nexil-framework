@@ -299,9 +299,14 @@ function buildImportHeader(
     // Bare specifiers (e.g. "@nexil/core") would fail in native browser ESM without an importmap.
     // Rewrite framework imports to an inline shim that is guaranteed to be browser-resolvable.
     // The shim preserves the API surface used by extracted handler chunks (currently `batch`).
-    const isBareSpecifier = !importSrc.startsWith('.') && !importSrc.startsWith('/') && !importSrc.startsWith('$')
+    const isBareSpecifier =
+      !importSrc.startsWith('.') && !importSrc.startsWith('/') && !importSrc.startsWith('$')
     if (isBareSpecifier) {
-      if (importSrc.startsWith('@nexil/') || importSrc === '@nexil/core' || importSrc.startsWith('nexil')) {
+      if (
+        importSrc.startsWith('@nexil/') ||
+        importSrc === '@nexil/core' ||
+        importSrc.startsWith('nexil')
+      ) {
         if (info.kind === 'namespace') {
           lines.push(`const ${name} = globalThis.__nexil || {};`)
         } else if (info.kind === 'default') {
@@ -310,8 +315,15 @@ function buildImportHeader(
           // Named import – provide minimal shims for known helpers used in lazy chunks
           if (info.imported === 'batch') {
             lines.push(`const ${name} = (fn) => { try { return fn(); } catch (e) { throw e; } };`)
-          } else if (info.imported === 'state' || info.imported === 'computed' || info.imported === 'effect' || info.imported === 'resource') {
-            lines.push(`const ${name} = globalThis.__nexil && globalThis.__nexil.${info.imported} ? globalThis.__nexil.${info.imported} : (...args) => { throw new Error('[nexil] ${info.imported} not available in chunk'); };`)
+          } else if (
+            info.imported === 'state' ||
+            info.imported === 'computed' ||
+            info.imported === 'effect' ||
+            info.imported === 'resource'
+          ) {
+            lines.push(
+              `const ${name} = globalThis.__nexil && globalThis.__nexil.${info.imported} ? globalThis.__nexil.${info.imported} : (...args) => { throw new Error('[nexil] ${info.imported} not available in chunk'); };`,
+            )
           } else {
             lines.push(`import { ${info.imported} as ${name} } from "/__nexil/runtime.js";`)
           }
@@ -2010,7 +2022,10 @@ export function nexil(options: { readonly root?: string } = {}): Plugin {
         const rawUrl = request.url ?? ''
         const url = rawUrl.split('?')[0] ?? ''
         if (url === '/__nexil/runtime.js') {
-          response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-store' })
+          response.writeHead(200, {
+            'Content-Type': 'text/javascript; charset=utf-8',
+            'Cache-Control': 'no-store',
+          })
           response.end(NEXIL_RUNTIME)
           return
         }

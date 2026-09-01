@@ -2,7 +2,10 @@ import { component, state } from '@nexil/core'
 import { Form, SubmitButton } from '@nexil/core'
 import { newsletter } from '../actions/newsletter'
 
-export const seo = { title: 'Forms — Nexil Demo', description: 'Progressive forms with server actions and resumability.' }
+export const seo = {
+  title: 'Forms — Nexil Demo',
+  description: 'Progressive forms with server actions and resumability.',
+}
 
 export default component(() => {
   const email = state('')
@@ -12,12 +15,16 @@ export default component(() => {
     <div class="space-y-8">
       <header>
         <h1 class="text-3xl font-black tracking-tight text-white">Forms & Actions</h1>
-        <p class="mt-2 text-slate-400">Progressive enhancement: works without JS, enhanced with `nexil-forms.js`.</p>
+        <p class="mt-2 text-slate-400">
+          Progressive enhancement: works without JS, enhanced with `nexil-forms.js`.
+        </p>
       </header>
 
       <section class="rounded-2xl border border-slate-800 bg-slate-900 p-6">
         <h2 class="font-bold text-white">Newsletter · Server Action</h2>
-        <p class="mt-1 text-sm text-slate-400">`src/actions/newsletter.ts` — validates, then `handle`.</p>
+        <p class="mt-1 text-sm text-slate-400">
+          `src/actions/newsletter.ts` — validates, then `handle`.
+        </p>
         <Form
           action={newsletter}
           class="mt-4 space-y-3"
@@ -39,9 +46,14 @@ export default component(() => {
               class="mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white placeholder:text-slate-500"
               bindValue$={email}
             />
-            <p class="mt-1 text-xs text-slate-500">Bound via `bindValue$` — signal → input, input → signal.</p>
+            <p class="mt-1 text-xs text-slate-500">
+              Bound via `bindValue$` — signal → input, input → signal.
+            </p>
           </div>
-          <SubmitButton class="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-cyan-400" loadingText="Sending…">
+          <SubmitButton
+            class="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-cyan-400"
+            loadingText="Sending…"
+          >
             Subscribe
           </SubmitButton>
         </Form>
@@ -49,7 +61,8 @@ export default component(() => {
           {result()}
         </p>
         <p class="mt-2 text-xs text-slate-500">
-          Without JS: form POSTs to `newsletter` endpoint. With JS: `enhanceForms()` intercepts, adds `aria-busy`, `Idempotency-Key`, handles JSON.
+          Without JS: form POSTs to `newsletter` endpoint. With JS: `enhanceForms()` intercepts,
+          adds `aria-busy`, `Idempotency-Key`, handles JSON.
         </p>
       </section>
 
@@ -62,7 +75,10 @@ export default component(() => {
             bindValue$={email}
           />
           <p class="text-sm text-slate-300">
-            You typed: <b class="text-white" bindText$={email}>{email()}</b>
+            You typed:{' '}
+            <b class="text-white" bindText$={email}>
+              {email()}
+            </b>
           </p>
         </div>
       </section>

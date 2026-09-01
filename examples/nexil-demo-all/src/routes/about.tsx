@@ -8,7 +8,9 @@ export default component(() => (
     <header>
       <h1 class="text-3xl font-black tracking-tight text-white">About Nexil</h1>
       <p class="mt-2 max-w-2xl text-slate-400">
-        Nexil is an <strong class="text-white">HTML-first, resumable</strong> TypeScript framework. Server renders streaming HTML with fine-grained signals; browser wakes only the button you click — zero hydration.
+        Nexil is an <strong class="text-white">HTML-first, resumable</strong> TypeScript framework.
+        Server renders streaming HTML with fine-grained signals; browser wakes only the button you
+        click — zero hydration.
       </p>
     </header>
 
@@ -17,16 +19,20 @@ export default component(() => (
         <h2 class="font-bold text-white">Four Principles</h2>
         <ul class="mt-3 space-y-2 text-sm text-slate-300">
           <li>
-            <span class="font-bold text-cyan-400">Fine-Grained</span> — O(1) DOM via `Signal` + `lens` + `Proxy`, no VDOM
+            <span class="font-bold text-cyan-400">Fine-Grained</span> — O(1) DOM via `Signal` +
+            `lens` + `Proxy`, no VDOM
           </li>
           <li>
-            <span class="font-bold text-cyan-400">Zero-Hydration</span> — `__NEXIL_STORES__` snapshot, `data-nx-store-bind` bindings, lazy chunks on `onClick$`
+            <span class="font-bold text-cyan-400">Zero-Hydration</span> — `__NEXIL_STORES__`
+            snapshot, `data-nx-store-bind` bindings, lazy chunks on `onClick$`
           </li>
           <li>
-            <span class="font-bold text-cyan-400">Serializable</span> — `isSerializable` guards at every `set`/proxy
+            <span class="font-bold text-cyan-400">Serializable</span> — `isSerializable` guards at
+            every `set`/proxy
           </li>
           <li>
-            <span class="font-bold text-cyan-400">Isolated</span> — `AsyncLocalStorage` + explicit `ContextScope` for Cloudflare/Deno
+            <span class="font-bold text-cyan-400">Isolated</span> — `AsyncLocalStorage` + explicit
+            `ContextScope` for Cloudflare/Deno
           </li>
         </ul>
       </div>
@@ -42,7 +48,10 @@ Build: tsc -b + vite + esbuild chunks`}
           <Link href="/" class="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-bold text-slate-950">
             ← Home
           </Link>
-          <Link href="/stores" class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-bold text-slate-200">
+          <Link
+            href="/stores"
+            class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-bold text-slate-200"
+          >
             Stores →
           </Link>
         </div>
@@ -52,13 +61,18 @@ Build: tsc -b + vite + esbuild chunks`}
     <section class="rounded-2xl border border-slate-800 bg-slate-900 p-6">
       <h2 class="font-bold text-white">Docs</h2>
       <div class="mt-3 grid gap-2 text-sm sm:grid-cols-2">
-        <a href="https://github.com/MohammedAydan/nexil-framework" class="rounded-xl border border-slate-700 bg-slate-800 p-4 hover:border-cyan-400">
+        <a
+          href="https://github.com/MohammedAydan/nexil-framework"
+          class="rounded-xl border border-slate-700 bg-slate-800 p-4 hover:border-cyan-400"
+        >
           <p class="font-bold text-white">GitHub</p>
           <p class="text-xs text-slate-400">Source, issues, and releases</p>
         </a>
         <div class="rounded-xl border border-slate-700 bg-slate-800 p-4">
           <p class="font-bold text-white">Local Guides</p>
-          <p class="text-xs text-slate-400">See `NEXIL-STATE-INTERNALS.md` & `GUIDE-PROGRAMMEUR-ETAT.md` in repo</p>
+          <p class="text-xs text-slate-400">
+            See `NEXIL-STATE-INTERNALS.md` & `GUIDE-PROGRAMMEUR-ETAT.md` in repo
+          </p>
         </div>
       </div>
     </section>

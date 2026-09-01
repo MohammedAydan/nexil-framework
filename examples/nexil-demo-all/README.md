@@ -25,29 +25,29 @@ pnpm build && pnpm start
 
 ## Routes (file-based, `src/routes/`)
 
-| Route | File | Feature |
-|-------|------|---------|
-| `/` | `index.tsx` | `state`, `computed`, `batch`, `For`/`Show`, `useCounterStore`/`useCartStore`/`useUserStore`, `ThemeStore` StoreContext, `Link`, `onClick$` resumability |
-| `/about` | `about.tsx` | Static SSR, SEO `export const seo` |
-| `/stores` | `stores.tsx` | Unified `defineStore` + modular `createStore` + array proxy `push`/`splice` + `lens`/`select` |
-| `/context` | `context.tsx` | `createContext` (value) + `defineStoreContext` hierarchical (nearest-wins, `Provider` nesting, explicit `scope`) |
-| `/shop` | `shop.tsx` | `For`, `Link`, cart `addItem` via store proxy |
-| `/shop/[id]` | `shop/[id].tsx` | Dynamic `routeLoader$` per-request, `Link` back |
-| `/cart` | `cart.tsx` | Global `cart` store survives `Link` via `__NEXIL_STORES__`, `data-nx-store-bind="cart:totalItems#text"` O(1) |
-| `/forms` | `forms.tsx` | `Form` + `SubmitButton` + `action` (`src/actions/newsletter.ts`) progressive, `bindValue$` |
-| `/media` | `media.tsx` | Tailwind, `sharp` image pipeline, SEO |
-| `/labs` | `labs.tsx` | `resource`, `effect`, `watch`, `batch` coalesce, `For`/`Show` |
+| Route        | File            | Feature                                                                                                                                                 |
+| ------------ | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`          | `index.tsx`     | `state`, `computed`, `batch`, `For`/`Show`, `useCounterStore`/`useCartStore`/`useUserStore`, `ThemeStore` StoreContext, `Link`, `onClick$` resumability |
+| `/about`     | `about.tsx`     | Static SSR, SEO `export const seo`                                                                                                                      |
+| `/stores`    | `stores.tsx`    | Unified `defineStore` + modular `createStore` + array proxy `push`/`splice` + `lens`/`select`                                                           |
+| `/context`   | `context.tsx`   | `createContext` (value) + `defineStoreContext` hierarchical (nearest-wins, `Provider` nesting, explicit `scope`)                                        |
+| `/shop`      | `shop.tsx`      | `For`, `Link`, cart `addItem` via store proxy                                                                                                           |
+| `/shop/[id]` | `shop/[id].tsx` | Dynamic `routeLoader$` per-request, `Link` back                                                                                                         |
+| `/cart`      | `cart.tsx`      | Global `cart` store survives `Link` via `__NEXIL_STORES__`, `data-nx-store-bind="cart:totalItems#text"` O(1)                                            |
+| `/forms`     | `forms.tsx`     | `Form` + `SubmitButton` + `action` (`src/actions/newsletter.ts`) progressive, `bindValue$`                                                              |
+| `/media`     | `media.tsx`     | Tailwind, `sharp` image pipeline, SEO                                                                                                                   |
+| `/labs`      | `labs.tsx`      | `resource`, `effect`, `watch`, `batch` coalesce, `For`/`Show`                                                                                           |
 
 Layout `src/routes/_layout.tsx` uses `element` + `Link` + `Slot` with sticky header and 8 nav links.
 
 ## Stores (`src/stores/`)
 
-| Store | File | API | State | Getters | Actions |
-|-------|------|-----|-------|---------|---------|
-| `counter` | `counter.ts` | `defineStore('counter')` unified | `count: number` | `doubled`, `isEven` | `inc`/`dec`/`setCount`/`reset` (`this`) |
-| `cart` | `cart.ts` | `defineStore('cart')` unified | `items: CartItem[]`, `coupon` | `totalItems`, `totalPrice`, `hasItems` | `addItem`/`removeItem`/`incQty`/`decQty`/`clear`/`applyCoupon` (proxy array) |
-| `user` | `user/` | `createStore({id:'user'})` modular | `count`, `profile`, `isAuthenticated`, `theme` | — | `setProfile`/`logout`/`toggleTheme`/`increment` (draft `state`) |
-| `theme` | `theme.ts` | `defineStoreContext('theme')` hierarchical | `mode`, `accent` | `isDark` | `toggle`/`setMode`/`setAccent` — `Provider`/`use`/`create` |
+| Store     | File         | API                                        | State                                          | Getters                                | Actions                                                                      |
+| --------- | ------------ | ------------------------------------------ | ---------------------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------- |
+| `counter` | `counter.ts` | `defineStore('counter')` unified           | `count: number`                                | `doubled`, `isEven`                    | `inc`/`dec`/`setCount`/`reset` (`this`)                                      |
+| `cart`    | `cart.ts`    | `defineStore('cart')` unified              | `items: CartItem[]`, `coupon`                  | `totalItems`, `totalPrice`, `hasItems` | `addItem`/`removeItem`/`incQty`/`decQty`/`clear`/`applyCoupon` (proxy array) |
+| `user`    | `user/`      | `createStore({id:'user'})` modular         | `count`, `profile`, `isAuthenticated`, `theme` | —                                      | `setProfile`/`logout`/`toggleTheme`/`increment` (draft `state`)              |
+| `theme`   | `theme.ts`   | `defineStoreContext('theme')` hierarchical | `mode`, `accent`                               | `isDark`                               | `toggle`/`setMode`/`setAccent` — `Provider`/`use`/`create`                   |
 
 Discovery: `src/stores/*` → `discoverStores` → `virtual:nexil-stores` + `$stores/*` + `.nexil/stores.d.ts`.
 
@@ -72,7 +72,10 @@ const user = resource(async () => fetch('/api/user').then(r=>r.json()))
 import { createContext } from '@nexil/core'
 const Ctx = createContext<string>('default', 'demo:simple')
 Ctx.Provider({ value: 'outer', children: () => Ctx.use() }) // 'outer'
-Ctx.Provider({ value: 'outer', children: () => Ctx.Provider({ value: 'inner', children: () => Ctx.use() }) }) // inner shadow
+Ctx.Provider({
+  value: 'outer',
+  children: () => Ctx.Provider({ value: 'inner', children: () => Ctx.use() }),
+}) // inner shadow
 
 import { ThemeStore } from '$stores/theme'
 const custom = ThemeStore.create({ mode: 'dark' })
@@ -82,7 +85,11 @@ ThemeStore.Provider({ value: custom, children: () => ThemeStore.use().mode }) //
 ## Resumability (`$`)
 
 ```tsx
-<button onClick$={({ element }) => { element.textContent = 'Woke! ' + new Date().toLocaleTimeString() }}>
+<button
+  onClick$={({ element }) => {
+    element.textContent = 'Woke! ' + new Date().toLocaleTimeString()
+  }}
+>
   Click to wake (resumable)
 </button>
 ```
@@ -102,7 +109,7 @@ export const newsletter = action({
     return { email }
   },
   async handle(_event, { email }) {
-    await new Promise(r=>setTimeout(r,200))
+    await new Promise((r) => setTimeout(r, 200))
     return { ok: true, email }
   },
 })
