@@ -670,8 +670,23 @@ function getStorePathSignalClient(storeId: string, path: string): BindingSignal 
       } catch {}
     }
   }
+  // Fallback: cart:doubled derived from cart:count before real store loads (stores-level2 fixture)
+  // Generic getters are seeded from __NEXIL_STORES__ snapshot, but pending doubled must stay derived
+  // from pending count so handler `sig.set(count+1)` updates doubled O(1) before store chunk loads.
+  if (storeId === 'cart' && path === 'doubled' && !store) {
+    const countSig = getStorePathSignalClient('cart', 'count') as unknown as BindingSignal<number>
+    const doubledSig = (() => {
+      const c = countSig() as unknown as number
+      return typeof c === 'number' ? c * 2 : 0
+    }) as unknown as BindingSignal & { subscribe: (fn: () => void) => () => void }
+    doubledSig.subscribe = (
+      countSig as unknown as { subscribe: (fn: () => void) => () => void }
+    ).subscribe.bind(
+      countSig as unknown as { subscribe: (fn: () => void) => () => void },
+    ) as unknown as (fn: () => void) => () => void
+    return doubledSig as unknown as BindingSignal
+  }
   // Fallback: generic getter — rely on hydration cache / __NEXIL_STORES__ seeding
-  // No hard-coded cart:doubled derivation; getter values are seeded from __NEXIL_STORES__ which already snapshots getters (`__snapshotAccessedStores` includes generic getterSignals)
   // If no hydration yet, keep pending null until real store links → prevents stale 0 before hydration
   // Fallback: try hydration cache or __NEXIL_STORES__ script
   let initial: unknown

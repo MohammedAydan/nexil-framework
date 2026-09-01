@@ -295,7 +295,23 @@ function buildImportHeader(
     const info = importMap.get(name)
     if (!info) continue
     let importSrc = info.source
-    if (importSrc.startsWith('.') && fileId && projectRoot) {
+    if (importSrc.startsWith('$stores/') && fileId && projectRoot) {
+      const storeId = importSrc.slice('$stores/'.length)
+      const candidates = [
+        resolve(projectRoot, 'src', 'stores', `${storeId}.ts`),
+        resolve(projectRoot, 'src', 'stores', `${storeId}.js`),
+        resolve(projectRoot, 'src', 'stores', `${storeId}.tsx`),
+        resolve(projectRoot, 'src', 'stores', storeId, 'store.ts'),
+        resolve(projectRoot, 'src', 'stores', storeId, 'index.ts'),
+        resolve(projectRoot, 'src', 'stores', `${storeId}/store.ts`),
+      ]
+      for (const cand of candidates) {
+        if (existsSync(cand)) {
+          importSrc = '/' + relative(projectRoot, cand).replace(/\\/g, '/')
+          break
+        }
+      }
+    } else if (importSrc.startsWith('.') && fileId && projectRoot) {
       const dir = dirname(fileId)
       let abs = resolve(dir, importSrc)
       let resolvedFile: string | undefined

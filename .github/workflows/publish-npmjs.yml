@@ -219,8 +219,8 @@ jobs:
         if: success()
         run: |
           echo "Checking that the versions from package.json are actually on the registry..."
-          # Give registry a moment to replicate after publish (can take >60s for new versions)
-          sleep 15
+          # Give registry a moment to replicate after publish (can take >120s for new versions, especially unscoped create-nexil)
+          sleep 30
           for dir in packages/*; do
             [ -f "$dir/package.json" ] || continue
             name=$(node -p "require('./$dir/package.json').name")
@@ -229,12 +229,12 @@ jobs:
               continue
             fi
             ok=false
-            for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
               if npm view "$name@$ver" version --registry https://registry.npmjs.org >/dev/null 2>&1; then
                 ok=true
                 break
               fi
-              echo "Waiting for $name@$ver to appear on registry (attempt $i/12)..."
+              echo "Waiting for $name@$ver to appear on registry (attempt $i/20)..."
               sleep 10
             done
             if [ "$ok" = true ]; then

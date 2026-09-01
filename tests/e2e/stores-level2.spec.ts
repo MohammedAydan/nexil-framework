@@ -208,5 +208,5 @@ test('SSR still serializes correct values into __NEXIL_STORES__', async () => {
   expect(match).not.toBeNull()
   const data = JSON.parse((match?.[1] ?? '').replace(/\\u003c/g, '<'))
   expect(data.user).toEqual({ count: 5, user: { profile: { name: 'Ada' } } })
-  expect(data.cart).toEqual({ count: 3 })
+  expect(data.cart).toEqual({ count: 3, doubled: 6 })
 })

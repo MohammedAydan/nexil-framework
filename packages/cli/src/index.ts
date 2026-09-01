@@ -1353,6 +1353,25 @@ async function buildArtifacts(root: string): Promise<BuildManifest> {
                 build.onResolve({ filter: /^\/src\// }, (args) => ({
                   path: join(root, args.path.slice(1)),
                 }))
+                build.onResolve({ filter: /^\$stores\// }, (args) => {
+                  const storeId = args.path.slice('$stores/'.length)
+                  const candidates = [
+                    join(root, 'src', 'stores', `${storeId}.ts`),
+                    join(root, 'src', 'stores', `${storeId}.js`),
+                    join(root, 'src', 'stores', `${storeId}.tsx`),
+                    join(root, 'src', 'stores', storeId, 'store.ts'),
+                    join(root, 'src', 'stores', storeId, 'index.ts'),
+                    join(root, 'src', 'stores', `${storeId}/store.ts`),
+                  ]
+                  for (const cand of candidates) {
+                    if (existsSync(cand)) return { path: cand }
+                  }
+                  return undefined
+                })
+                build.onResolve({ filter: /^virtual:nexil-stores/ }, () => ({
+                  path: join(root, 'src', 'stores', 'virtual-stub.ts'),
+                  external: true,
+                }))
                 // Resolve workspace aliases for @nexil/* inside store modules
                 for (const alias of workspaceAliases()) {
                   const isString = typeof alias.find === 'string'
