@@ -318,6 +318,17 @@ export interface NexilHTMLAttributes<T extends HTMLElement = HTMLElement>
   'data-nx-csrf'?: MaybeSignal<string>
   'data-nx-submit-button'?: MaybeSignal<string>
   'data-nx-loading-text'?: MaybeSignal<string>
+  // Nexil Fine-Grained Directives (resumable bindings)
+  bindText$?: MaybeSignal<string | number>
+  bindValue$?: MaybeSignal<string | number>
+  bindChecked$?: MaybeSignal<boolean>
+  bindDisabled$?: MaybeSignal<boolean>
+  bindHidden$?: MaybeSignal<boolean>
+  bindClass$?: MaybeSignal<ClassValue>
+  bindStyle$?: MaybeSignal<StyleValue>
+  bindHref$?: MaybeSignal<string>
+  bindSrc$?: MaybeSignal<string>
+  bindAriaLabel$?: MaybeSignal<string>
   'data-nx-state'?: MaybeSignal<string | number>
   [key: `data-${string}`]: unknown
 

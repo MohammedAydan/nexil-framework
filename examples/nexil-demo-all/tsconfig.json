@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "jsxImportSource": "@nexil/core",
+    "allowJs": false,
+    "strict": false,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "$stores/*": ["src/stores/*"],
+      "virtual:nexil-stores": ["src/stores/counter.ts"]
+    }
+  },
+  "include": ["src/**/*.tsx", "src/**/*.ts", ".nexil/**/*.d.ts"]
+}

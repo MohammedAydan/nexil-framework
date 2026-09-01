@@ -97,6 +97,31 @@ importers:
         specifier: workspace:*
         version: link:../../packages/nexil
 
+  examples/nexil-demo-all:
+    dependencies:
+      '@nexil/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
+      '@nexil/core':
+        specifier: workspace:*
+        version: link:../../packages/nexil
+    devDependencies:
+      '@nexil/vite-plugin':
+        specifier: workspace:*
+        version: link:../../packages/vite-plugin
+      '@tailwindcss/vite':
+        specifier: ^4.1.0
+        version: 4.3.3(vite@7.3.6(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0))
+      tailwindcss:
+        specifier: ^4.1.0
+        version: 4.3.3
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+      vite:
+        specifier: ^7.3.6
+        version: 7.3.6(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.32.0)
+
   examples/nexil-showcase:
     dependencies:
       '@nexil/cli':
