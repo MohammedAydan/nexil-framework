@@ -1,4 +1,4 @@
-import { createSession, requireAccess, requirePermission, type SessionStore } from 'nexil'
+import { createSession, requireAccess, requirePermission, type SessionStore } from '@nexil/core'
 
 export interface WorkbenchUser {
   readonly id: string

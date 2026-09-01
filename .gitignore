@@ -18,3 +18,7 @@ mcp_config.json
 .nexil/
 docs/nexil-arabic-documentation.zip
 docs/nexil-english-documentation.zip
+.tmp-*/
+.tmp-*
+patch-*.mjs
+*.tmp

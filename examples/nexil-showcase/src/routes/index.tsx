@@ -1,12 +1,12 @@
 import { action, assertTrustedOrigin } from 'nexil/server'
 import { adapterCapabilities, createNodeAdapter } from 'nexil/server'
 import { createHandlerReference, createResumeAttribute, serializeResumeState } from 'nexil/client'
-import { component, computed, state } from 'nexil'
-import { cn, extractStyle } from 'nexil'
-import { Image, imageAttributes, fontFace } from 'nexil'
-import { batch } from 'nexil'
-import { buildRobots, buildSitemap } from 'nexil'
-import { createStateRegistry } from 'nexil'
+import { component, computed, state } from '@nexil/core'
+import { cn, extractStyle } from '@nexil/core'
+import { Image, imageAttributes, fontFace } from '@nexil/core'
+import { batch } from '@nexil/core'
+import { buildRobots, buildSitemap } from '@nexil/core'
+import { createStateRegistry } from '@nexil/core'
 import { createDataContext, createSecurityHeaders, data, serializeCookie } from 'nexil/server'
 
 export const seo = {

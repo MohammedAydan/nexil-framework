@@ -271,7 +271,7 @@ describe('Nexil CLI', () => {
       const directory = await createProject('external-state-app', parent)
       await writeFile(
         join(directory, 'src/routes/index.tsx'),
-        `import { state } from 'nexil'
+        `import { state } from '@nexil/core'
 const accountBalance = state(1200)
 export default function Home() { return <button onClick$={() => accountBalance.set((value) => value + 1)}>{accountBalance()}</button> }
 `,
@@ -350,7 +350,7 @@ export default function Home() { return <main><Link href="/about" prefetch="inte
       const directory = await createProject('context-scope-app', parent)
       await writeFile(
         join(directory, 'src/routes/_layout.tsx'),
-        `import { createContext, provideContext } from 'nexil'
+        `import { createContext, provideContext } from '@nexil/core'
 const RequestIdentity = createContext('missing')
 export default function Layout({ children }: { children: unknown }, context?: { readonly requestId?: string; readonly scope?: unknown }) {
   const scope = provideContext(context?.scope as never, RequestIdentity, context?.requestId ?? 'missing')
@@ -418,7 +418,7 @@ it('emits the automatic progressive-form runtime only for Form routes', async ()
     const directory = await createProject('forms-app', parent)
     await writeFile(
       join(directory, 'src/routes/index.tsx'),
-      `import { Form, SubmitButton } from 'nexil'\nexport default function Home() { return <Form action="/save"><input name="name" /><SubmitButton loadingText="Saving">Save</SubmitButton></Form> }\n`,
+      `import { Form, SubmitButton } from '@nexil/core'\nexport default function Home() { return <Form action="/save"><input name="name" /><SubmitButton loadingText="Saving">Save</SubmitButton></Form> }\n`,
       'utf8',
     )
     await runCli(['build'], directory)
@@ -452,7 +452,7 @@ it('isolates the binding runtime to binding-enabled routes', async () => {
     const bindingDirectory = await createProject('binding-app', parent)
     await writeFile(
       join(bindingDirectory, 'src/routes/index.tsx'),
-      `import { state } from 'nexil'
+      `import { state } from '@nexil/core'
 const count = state(0)
 export default function Home() { return <output>{count()}</output> }
 `,

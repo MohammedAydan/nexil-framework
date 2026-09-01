@@ -151,7 +151,7 @@ a{color:inherit}.shell{width:min(72rem,100% - 2rem);margin:auto;padding:clamp(2r
 function routeSource(options: ResolvedStarterOptions): string {
   const typedEvent = options.language === 'ts' ? ': { element: HTMLElement }' : ''
   if (options.template === 'interactive') {
-    return `import { component, state } from 'nexil'
+    return `import { component, state } from '@nexil/core'
 
 export const seo = { title: '${options.projectName} — Nexil', description: 'An HTML-first Nexil starter with one resumable interaction boundary.' }
 
@@ -178,7 +178,7 @@ export default component(() => {
     options.template === 'secure-node'
       ? '<p>Security headers are configured explicitly in <code>nexil.config.ts</code>. Review CSP and trustProxy before deployment.</p>'
       : '<p>This project starts with useful server-rendered HTML and no client boundary.</p>'
-  return `import { component } from 'nexil'
+  return `import { component } from '@nexil/core'
 
 export const seo = { title: '${options.projectName} — Nexil', description: 'An HTML-first Nexil starter project.' }
 
@@ -209,7 +209,7 @@ export default defineConfig({
 
 function counterRouteSource(options: ResolvedStarterOptions): string | undefined {
   if (options.template !== 'interactive') return undefined
-  return `import { component, state } from 'nexil'
+  return `import { component, state } from '@nexil/core'
 
 export const seo = { title: 'Counter — ${options.projectName}', description: 'A focused resumable Nexil state boundary.' }
 
@@ -225,7 +225,7 @@ function fullstackFiles(options: ResolvedStarterOptions): StarterFile[] {
   return [
     {
       path: `src/routes/_layout.${extension}`,
-      content: `import { element } from 'nexil'
+      content: `import { element } from '@nexil/core'
 import { Link, Slot } from 'nexil/router'
 
 export default function Layout() {
@@ -248,7 +248,7 @@ export default function Layout() {
     },
     {
       path: `src/routes/about.${extension}`,
-      content: `import { element } from 'nexil'
+      content: `import { element } from '@nexil/core'
 
 export default function AboutPage() {
   return element(
@@ -262,7 +262,7 @@ export default function AboutPage() {
     },
     {
       path: `src/routes/items/[id].${extension}`,
-      content: `import { element } from 'nexil'
+      content: `import { element } from '@nexil/core'
 import { routeLoader$ } from 'nexil/server'
 
 export const useItem = routeLoader$(async (event) => {

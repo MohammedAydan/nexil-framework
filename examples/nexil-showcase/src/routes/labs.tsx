@@ -6,10 +6,10 @@ import {
   deserializeResumeState,
   serializeResumeState,
 } from 'nexil/client'
-import { component, computed, Form, SubmitButton, state } from 'nexil'
-import { batch } from 'nexil'
+import { component, computed, Form, SubmitButton, state } from '@nexil/core'
+import { batch } from '@nexil/core'
 import { createSecurityHeaders, serializeCookie } from 'nexil/server'
-import { createStateRegistry } from 'nexil'
+import { createStateRegistry } from '@nexil/core'
 
 export const seo = {
   title: 'Nexil Labs — Runtime evaluation surface',

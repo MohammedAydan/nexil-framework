@@ -1,5 +1,5 @@
-import { useState } from 'nexil'
-import { cn, cx } from 'nexil'
+import { useState } from '@nexil/core'
+import { cn, cx } from '@nexil/core'
 
 export const seo = {
   title: 'Nexil Practical Lab',

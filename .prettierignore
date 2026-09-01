@@ -1,4 +1,11 @@
 pnpm-lock.yaml
 playwright-report
 test-results
+.tmp-*/
+.tmp-*
+.tmp-stores-*
+patch-*.mjs
+examples/nexil-showcase/benchmarks/
+.tmp-stores-resume-*
+.tmp-stores-smoke-*
 
